@@ -420,86 +420,95 @@ html, body {
 
 
   // 🔹 Inicializa o Firebase
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+ // 🔹 Inicializa o Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-  // 🔹 LOGIN (usuário + senha)
-  window.fazerLogin = async function() {
-    const usuario = document.getElementById("usuario").value.trim();
-    const senha = document.getElementById("senha").value.trim();
+// 🔹 Verifica automaticamente se o usuário está logado
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    // ✅ Usuário logado → mostra o sistema
+    document.getElementById("login").style.display = "none";
+    document.getElementById("mainApp").style.display = "block";
+    document.getElementById("painel").style.display = "none";
 
-    if (!usuario || !senha) {
-      alert("Por favor, preencha usuário e senha.");
-      return;
-    }
+    // Exibe a saudação e seção inicial
+    const nomeUsuario = user.email.split("@")[0];
+    document.getElementById("userName").innerText = nomeUsuario;
+    document.getElementById("nomeUsuarioBemVindo").innerText = nomeUsuario;
+    showSection("boasVindas");
+  } else {
+    // 🚪 Usuário não logado → volta para tela de login
+    document.getElementById("login").style.display = "flex";
+    document.getElementById("mainApp").style.display = "none";
+    document.getElementById("painel").style.display = "none";
+  }
+});
 
-    // Cria um e-mail virtual com base no nome do usuário
-    const emailFake = `${usuario}@oralunic.local`;
+// 🔹 LOGIN (usuário + senha)
+window.fazerLogin = async function() {
+  const usuario = document.getElementById("usuario").value.trim();
+  const senha = document.getElementById("senha").value.trim();
+  const emailFake = `${usuario}@oralunic.local`;
 
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, emailFake, senha);
-      alert("✅ Login realizado com sucesso!");
-      console.log("Usuário logado:", userCredential.user.email);
+  try {
+    // 🔑 Login no Firebase
+    const userCredential = await signInWithEmailAndPassword(auth, emailFake, senha);
+    const user = userCredential.user;
 
-              // Esconde a tela de login e mostra o painel principal
- document.getElementById("login").style.display = "none";
-  document.getElementById("painel").style.display = "block";
+    // ✅ Mostra o sistema e oculta o login
+    document.getElementById("login").style.display = "none";
+    document.getElementById("painel").style.display = "none";
+    document.getElementById("mainApp").style.display = "block";
 
-    // Exibe automaticamente a seção "dashboard"
-    showSection('dashboard');
+    // Atualiza nome nos elementos de boas-vindas e topo
+    document.getElementById("userName").innerText = usuario;
+    document.getElementById("nomeUsuarioBemVindo").innerText = usuario;
 
-    // Garante que o menu lateral e cabeçalho fiquem visíveis
-    document.getElementById("sidebar").classList.add("active");
-
-
-
-    } catch (error) {
-      if (error.code === "auth/user-not-found") {
-        alert("Usuário não encontrado. Verifique seu nome e senha.");
-      } else if (error.code === "auth/wrong-password") {
-        alert("Senha incorreta!");
-      } else {
-        alert("Erro no login: " + error.message);
-      }
-      console.error(error);
-    }
-  };
-
-  // 🔹 CADASTRO DE NOVO USUÁRIO (opcional)
-  window.cadastrarUsuario = async function() {
-    const usuario = prompt("Digite o novo nome de usuário:");
-    const senha = prompt("Digite a senha para o novo usuário:");
-
-    if (!usuario || !senha) {
-      alert("Usuário e senha são obrigatórios.");
-      return;
-    }
-
-    const emailFake = `${usuario}@oralunic.local`;
-
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, emailFake, senha);
-      alert("✅ Novo usuário cadastrado com sucesso!");
-      console.log("Usuário criado:", userCredential.user.email);
-    } catch (error) {
-      alert("Erro ao criar usuário: " + error.message);
-    }
-  };
-
-  // 🔹 LOGOUT
-window.sair = async function() {
-  await signOut(auth);
-  alert("Você saiu do sistema.");
-  
-  // Esconde painel e mostra login
- document.getElementById("painel").style.display = "none";
-document.getElementById("login").style.display = "flex";
-
-  // Limpa campos de login
-  document.getElementById("usuario").value = "";
-  document.getElementById("senha").value = "";
+    showSection("boasVindas");
+    console.log("✅ Login realizado:", usuario);
+  } catch (error) {
+    alert("Erro no login: " + error.message);
+    console.error(error);
+  }
 };
+
+// 🔹 CADASTRO DE NOVO USUÁRIO (opcional - para teste interno)
+window.cadastrarUsuario = async function() {
+  const usuario = prompt("Digite o novo nome de usuário:");
+  const senha = prompt("Digite a senha para o novo usuário:");
+
+  if (!usuario || !senha) {
+    alert("Usuário e senha são obrigatórios.");
+    return;
+  }
+
+  const emailFake = `${usuario}@oralunic.local`;
+
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, emailFake, senha);
+    alert("✅ Novo usuário cadastrado com sucesso!");
+    console.log("Usuário criado:", userCredential.user.email);
+  } catch (error) {
+    alert("Erro ao criar usuário: " + error.message);
+  }
+};
+
+// 🔹 LOGOUT
+window.logout = async function() {
+  try {
+    await signOut(auth);
+    document.getElementById("mainApp").style.display = "none";
+    document.getElementById("login").style.display = "flex";
+    document.getElementById("usuario").value = "";
+    document.getElementById("senha").value = "";
+    console.log("🚪 Logout realizado com sucesso.");
+  } catch (error) {
+    console.error("Erro ao sair:", error);
+  }
+};
+
 
 </script>
 
@@ -3327,6 +3336,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
