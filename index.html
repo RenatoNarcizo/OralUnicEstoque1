@@ -171,17 +171,19 @@
   </div>
 
   <!-- FIREBASE + LOGIN SCRIPT -->
+<!-- ====== SCRIPT ÚNICO E CORRIGIDO ====== -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { 
-    getAuth, 
-    onAuthStateChanged, 
-    signInWithEmailAndPassword, 
-    createUserWithEmailAndPassword, 
-    signOut 
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-  import { getFirestore }
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+  // --- CONFIGURAÇÃO ---
   const firebaseConfig = {
     apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
     authDomain: "oralunicestoque.firebaseapp.com",
@@ -195,27 +197,29 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  // Monitora o login
+  // --- MONITORA LOGIN ---
   onAuthStateChanged(auth, (user) => {
-    const login = document.getElementById("login");
-    const main = document.getElementById("mainApp");
-    if (!login || !main) return;
+    const loginDiv = document.getElementById("login");
+    const mainApp = document.getElementById("mainApp");
+    if (!loginDiv || !mainApp) return;
 
     if (user) {
-      login.style.display = "none";
-      main.style.display = "block";
-      document.getElementById("nomeUsuarioBemVindo").textContent = user.email.split("@")[0];
-      showSection("boasVindas");
+      loginDiv.style.display = "none";
+      mainApp.style.display = "block";
+      const nome = user.email ? user.email.split("@")[0] : "Usuário";
+      const span = document.getElementById("nomeUsuarioBemVindo");
+      if (span) span.textContent = nome;
+      if (typeof showSection === "function") showSection("boasVindas");
     } else {
-      login.style.display = "flex";
-      main.style.display = "none";
+      loginDiv.style.display = "flex";
+      mainApp.style.display = "none";
     }
   });
 
-  // Login
+  // --- LOGIN ---
   window.fazerLogin = async function () {
-    const usuario = document.getElementById("usuario").value.trim();
-    const senha = document.getElementById("senha").value.trim();
+    const usuario = document.getElementById("usuario")?.value.trim();
+    const senha = document.getElementById("senha")?.value.trim();
     if (!usuario || !senha) {
       alert("Preencha usuário e senha");
       return;
@@ -223,26 +227,25 @@
     const emailFake = `${usuario}@oralunic.local`;
     try {
       await signInWithEmailAndPassword(auth, emailFake, senha);
-    } catch (e) {
-      alert("Erro no login: " + e.message);
+    } catch (error) {
+      alert("Erro no login: " + error.message);
+      console.error(error);
     }
   };
 
-  // Logout
+  // --- LOGOUT ---
   window.logout = async function () {
     await signOut(auth);
   };
 
-  // Muda de seção
+  // --- TROCA DE SEÇÕES ---
   window.showSection = function (id) {
-    document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
-    const s = document.getElementById(id);
-    if (s) s.classList.add("active");
+    document.querySelectorAll(".section").forEach((sec) => sec.classList.remove("active"));
+    const alvo = document.getElementById(id);
+    if (alvo) alvo.classList.add("active");
   };
 </script>
 
-</body>
-</html>
 
 
 
@@ -3070,6 +3073,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
