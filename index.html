@@ -442,9 +442,16 @@ html, body {
       alert("✅ Login realizado com sucesso!");
       console.log("Usuário logado:", userCredential.user.email);
 
-      // Exemplo: mostrar painel principal após login
-      document.getElementById("login").style.display = "none";
-      document.getElementById("painel").style.display = "block";
+          // Esconde a tela de login e mostra o painel principal
+    document.getElementById("loginView").style.display = "none";
+    document.getElementById("mainApp").style.display = "block";
+
+    // Exibe automaticamente a seção "dashboard"
+    showSection('dashboard');
+
+    // Garante que o menu lateral e cabeçalho fiquem visíveis
+    document.getElementById("sidebar").classList.add("active");
+
 
     } catch (error) {
       if (error.code === "auth/user-not-found") {
@@ -480,12 +487,19 @@ html, body {
   };
 
   // 🔹 LOGOUT
-  window.sair = async function() {
-    await signOut(auth);
-    alert("Você saiu do sistema.");
-    document.getElementById("painel").style.display = "none";
-    document.getElementById("login").style.display = "block";
-  };
+ window.sair = async function() {
+  await signOut(auth);
+  alert("Você saiu do sistema.");
+  
+  // Esconde painel e mostra login
+  document.getElementById("mainApp").style.display = "none";
+  document.getElementById("loginView").style.display = "flex";
+
+  // Limpa campos de login
+  document.getElementById("usuario").value = "";
+  document.getElementById("senha").value = "";
+};
+
 </script>
 
 
@@ -3312,6 +3326,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
