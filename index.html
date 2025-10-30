@@ -183,7 +183,6 @@
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
   import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  // --- CONFIGURAÇÃO ---
   const firebaseConfig = {
     apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
     authDomain: "oralunicestoque.firebaseapp.com",
@@ -197,7 +196,6 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  // --- MONITORA LOGIN ---
   onAuthStateChanged(auth, (user) => {
     const loginDiv = document.getElementById("login");
     const mainApp = document.getElementById("mainApp");
@@ -207,8 +205,7 @@
       loginDiv.style.display = "none";
       mainApp.style.display = "block";
       const nome = user.email ? user.email.split("@")[0] : "Usuário";
-      const span = document.getElementById("nomeUsuarioBemVindo");
-      if (span) span.textContent = nome;
+      document.getElementById("nomeUsuarioBemVindo").textContent = nome;
       if (typeof showSection === "function") showSection("boasVindas");
     } else {
       loginDiv.style.display = "flex";
@@ -216,7 +213,6 @@
     }
   });
 
-  // --- LOGIN ---
   window.fazerLogin = async function () {
     const usuario = document.getElementById("usuario")?.value.trim();
     const senha = document.getElementById("senha")?.value.trim();
@@ -233,21 +229,16 @@
     }
   };
 
-  // --- LOGOUT ---
   window.logout = async function () {
     await signOut(auth);
   };
 
-  // --- TROCA DE SEÇÕES ---
   window.showSection = function (id) {
     document.querySelectorAll(".section").forEach((sec) => sec.classList.remove("active"));
     const alvo = document.getElementById(id);
     if (alvo) alvo.classList.add("active");
   };
 </script>
-
-
-
 
 
   <!-- IMAGEM AMPLIADA (modal) -->
@@ -1051,9 +1042,6 @@ function voltarParaLogin() {
   localStorage.removeItem("usuarioLogado");
 }
 
-
-
-
 /* =========================
    🔹 Permissões
 ========================= */
@@ -1099,9 +1087,7 @@ function bloquearAcoesSimples2() {
   });
 }
 
-/* =========================
-   🔹 Cadastro de produtos
-========================= */
+
 /* =========================
    🔹 Cadastro de produtos
 ========================= */
@@ -3073,6 +3059,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
