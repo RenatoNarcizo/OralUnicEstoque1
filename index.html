@@ -394,73 +394,45 @@ html, body {
 <body>
 <!-- Firebase SDK -->
 <script type="module">
-  // Importa as funções do Firebase
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } 
-    from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-  import { getFirestore, collection, addDoc, getDocs, setDoc, doc } 
-    from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import { getFirestore, collection, addDoc, getDocs, setDoc, doc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  // 🔹 Configurações do seu projeto Firebase (você copia do painel do Firebase > Configurações > SDK Web)
   const firebaseConfig = {
-    apiKey: "SUA_API_KEY_AQUI",
+    apiKey: "SUA_API_KEY",
     authDomain: "oralunicestoque.firebaseapp.com",
     projectId: "oralunicestoque",
     storageBucket: "oralunicestoque.appspot.com",
-    messagingSenderId: "xxxxxxxxxx",
-    appId: "1:xxxxxxxxxx:web:xxxxxxxxxx"
+    messagingSenderId: "XXXXXXXXX",
+    appId: "1:XXXXXXXXX:web:XXXXXXXXX"
   };
 
-  // 🔹 Inicializa o Firebase
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  // 🔹 Exemplo: login
-  async function fazerLoginFirebase(email, senha) {
+  // Função de login acessível no HTML
+  window.fazerLogin = async function() {
+    const usuario = document.getElementById("usuario").value;
+    const senha = document.getElementById("senha").value;
+    const emailFake = `${usuario}@oralunic.local`;
+
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
-      console.log("✅ Login ok:", userCredential.user.email);
-      // Aqui você chama sua função mostrarSistema(sessao)
+      const userCredential = await signInWithEmailAndPassword(auth, emailFake, senha);
+      alert("✅ Login realizado com sucesso!");
     } catch (error) {
-      console.error("Erro no login:", error.message);
       alert("Erro: " + error.message);
     }
+  };
+
+  // Exemplo de função async correta
+  async function iniciarSistema() {
+    const produtosRef = collection(db, "produtos");
+    const snapshot = await getDocs(produtosRef);
+    console.log("Produtos carregados:", snapshot.docs.map(doc => doc.data()));
   }
 
-  // 🔹 Exemplo: salvar produto no Firestore
-  async function salvarProdutoFirebase(produto) {
-    try {
-      await addDoc(collection(db, "produtos"), produto);
-      console.log("Produto salvo:", produto.nome);
-    } catch (e) {
-      console.error("Erro ao salvar produto:", e);
-    }
-  }
-  // --- Funções Firebase para Produtos ---
-import { getFirestore, collection, addDoc, getDocs, setDoc, doc } 
-  from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-const db = getFirestore();
-
-// Salvar todos os produtos no Firestore
-async function salvarProdutosNoFirebase(produtos) {
-  const produtosRef = collection(db, "produtos");
-  for (const produto of produtos) {
-    await setDoc(doc(produtosRef, produto.nome), produto);
-  }
-  console.log("✅ Produtos salvos no Firestore!");
-}
-
-// Carregar produtos do Firestore
-async function carregarProdutosDoFirebase() {
-  const produtosRef = collection(db, "produtos");
-  const snapshot = await getDocs(produtosRef);
-  const lista = snapshot.docs.map(doc => doc.data());
-  console.log("✅ Produtos carregados:", lista);
-  return lista;
-}
-
+  iniciarSistema();
 </script>
 
   <!-- IMAGEM AMPLIADA (modal) -->
@@ -3283,4 +3255,5 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 </body>
+
 </html>
