@@ -127,9 +127,6 @@
     }
   </style>
 </head>
-
-
-
     
   <!-- FIREBASE + LOGIN SCRIPT -->
 <!-- ====== SCRIPT ÚNICO E CORRIGIDO ====== -->
@@ -208,38 +205,38 @@
   </div>
 
   <!-- TELA DE LOGIN -->
- <div id="loginView">
-  <h2>Sistema de Controle de Estoque</h2>
-  <input type="text" id="usuario" placeholder="Usuário">
-  <input type="password" id="senha" placeholder="Senha">
-  <button onclick="fazerLogin()">Entrar</button>
-</div>
+   <!-- LOGIN -->
+  <div id="loginView" class="login-container">
+    <div class="login-card">
+      <h2>🔐 Sistema de Controle de Estoque</h2>
+      <input type="text" id="usuarioLogin" placeholder="Usuário" />
+      <input type="password" id="senhaLogin" placeholder="Senha" />
+      <button onclick="fazerLogin()">Entrar</button>
+      <p id="loginMsg" style="display:none;"></p>
+    </div>
+  </div>
 
-<div id="painel" style="display:none;">
-  <h2>Bem-vindo ao Sistema!</h2>
-  <button onclick="sair()">Sair</button>
-</div>
 
 
-  <!-- APLICATIVO PRINCIPAL (escondido até login) -->
+   <!-- APP PRINCIPAL -->
   <div id="mainApp" style="display:none;">
 
     <!-- CABEÇALHO -->
     <header>
       <div style="display:flex;align-items:center;gap:12px;">
         <button id="menuToggle" onclick="toggleSidebar()"><i class="fa fa-bars"></i></button>
-        <h1><i class="fa fa-boxes-stacked"></i> Sistema de Controle de Estoque – Oral Unic Campo Grande</h1>
+        <h1><i class="fa fa-boxes-stacked"></i> Oral Unic - Controle de Estoque</h1>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
-        <div id="userName" style="font-weight:700">Visitante</div>
-        <div id="perfilBadge" style="background:rgba(255,255,255,0.12);padding:6px 10px;border-radius:8px;font-size:13px;">PERFIL</div>
+        <div id="userName" style="font-weight:700">Usuário</div>
         <button onclick="logout()" title="Sair"><i class="fa fa-sign-out-alt"></i></button>
       </div>
     </header>
 
-    <!-- SIDEBAR -->
-    <aside id="sidebar" aria-hidden="true">
-	  <button onclick="showSection('dashboard')"><i class="fa fa-chart-pie"></i> Dashboard</button>
+
+    <!-- MENU LATERAL -->
+    <aside id="sidebar">
+      <button onclick="showSection('dashboard')"><i class="fa fa-chart-pie"></i> Dashboard</button>
       <button onclick="showSection('cadastro')"><i class="fa fa-box"></i> Cadastro de Produtos</button>
       <button onclick="showSection('entrada')"><i class="fa fa-arrow-down"></i> Entrada de Materiais</button>
       <button onclick="showSection('saida')"><i class="fa fa-arrow-up"></i> Saída de Materiais</button>
@@ -248,7 +245,6 @@
       <button onclick="showSection('financeiro')"><i class="fa fa-coins"></i> Financeiro</button>
       <button onclick="showSection('relatorios')"><i class="fa fa-file-excel"></i> Relatórios</button>
       <button onclick="showSection('usuarios')"><i class="fa fa-users"></i> Usuários e Perfis</button>
-
     </aside>
 
     <!-- CONTEÚDO PRINCIPAL -->
@@ -753,9 +749,10 @@ let entradas = JSON.parse(localStorage.getItem("entradas")) || [];
 let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 let saidas = JSON.parse(localStorage.getItem("saidas")) || [];
 
-function toggleSidebar() {
+function toggleSidebar(forceClose = false) {
   const sidebar = document.getElementById("sidebar");
-  if (sidebar) sidebar.classList.toggle("active");
+  if (forceClose) sidebar.classList.remove("active");
+  else sidebar.classList.toggle("active");
 }
 
 // Fecha o menu lateral se o usuário clicar fora dele
@@ -780,12 +777,10 @@ document.addEventListener("click", (e) => {
    🔹 Mostrar seção
 ========================= */
 function showSection(id) {
-  // 🔹 Oculta todas as seções
-  document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
-
-  // 🔹 Mostra apenas a seção selecionada
-  const alvo = document.getElementById(id);
-  if (alvo) alvo.style.display = "block";
+  document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  toggleSidebar(false);
+}
 
   // 🔹 Fecha automaticamente o menu lateral em qualquer tamanho de tela
   const sidebar = document.getElementById("sidebar");
@@ -815,13 +810,12 @@ window.scrollTo(0, 0);
    🔹 Logout
 ========================= */
 
-function logout() {
-  // 🔹 Remove sessão salva
-  localStorage.removeItem("usuarioLogado");
 
-  // 🔹 Esconde o app e volta para tela de login
-  document.getElementById("painel").style.display = "none";
-document.getElementById("login").style.display = "flex";
+ function logout() {
+  localStorage.removeItem("usuarioLogado");
+  document.getElementById("mainApp").style.display = "none";
+  document.getElementById("loginView").style.display = "flex";
+;
 
   // 🔹 Limpa os campos de login e mensagem
   const usuarioEl = document.getElementById("usuarioLogin");
@@ -853,73 +847,57 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // === FUNÇÃO DE LOGIN ===
+// =============================
+// 🔹 Controle de Login
+// =============================
 function fazerLogin() {
-  const nome = document.getElementById("usuarioLogin")?.value.trim();
-  const senha = document.getElementById("senhaLogin")?.value.trim();
-  let msg = document.getElementById("loginMsg");
+  const usuario = document.getElementById("usuarioLogin").value.trim();
+  const senha = document.getElementById("senhaLogin").value.trim();
+  const msg = document.getElementById("loginMsg");
 
-  if (!msg) {
-    msg = document.createElement("p");
-    msg.id = "loginMsg";
-    msg.style.cssText = "margin-top:10px; font-weight:bold; text-align:center;";
-    document.getElementById("loginView").appendChild(msg);
-  }
-
-  msg.style.display = "none";
-  msg.textContent = "";
-
-  if (!nome || !senha) {
-    msg.textContent = "⚠️ Preencha usuário e senha.";
-    msg.style.display = "block";
+  if (!usuario || !senha) {
+    msg.textContent = "⚠️ Informe usuário e senha.";
     msg.style.color = "red";
+    msg.style.display = "block";
     return;
   }
 
-  const usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
-  const usuarioEncontrado = usuarios.find(u => u.nome?.toLowerCase() === nome.toLowerCase());
+  // Usuário fixo (pode mudar depois para Firestore)
+  const usuarios = JSON.parse(localStorage.getItem("usuarios")) || [
+    { nome: "admin", senha: "1234" }
+  ];
 
-  if (!usuarioEncontrado) {
-    msg.textContent = "❌ Usuário não encontrado!";
-    msg.style.display = "block";
+  const encontrado = usuarios.find(u => u.nome === usuario && u.senha === senha);
+
+  if (!encontrado) {
+    msg.textContent = "❌ Usuário ou senha incorretos.";
     msg.style.color = "red";
+    msg.style.display = "block";
     return;
   }
 
-  if (usuarioEncontrado.senha !== senha) {
-    msg.textContent = "🔒 Senha incorreta! Tente novamente.";
-    msg.style.display = "block";
-    msg.style.color = "red";
-    return;
-  }
-
-  // ✅ Login bem-sucedido
-  msg.textContent = "✅ Login realizado com sucesso!";
-  msg.style.display = "block";
+  // Sucesso
+  msg.textContent = "✅ Login realizado!";
   msg.style.color = "green";
+  msg.style.display = "block";
 
-  const sessao = { ...usuarioEncontrado, logado: true, loginTime: Date.now() };
-  localStorage.setItem("usuarioLogado", JSON.stringify(sessao));
+  localStorage.setItem("usuarioLogado", usuario);
 
-  // 🔹 Exibe o sistema após um pequeno delay
-  setTimeout(() => mostrarSistema(sessao), 600);
+  setTimeout(() => {
+    document.getElementById("loginView").style.display = "none";
+    document.getElementById("mainApp").style.display = "block";
+    document.getElementById("userName").textContent = usuario;
+    document.getElementById("nomeUsuarioBemVindo").textContent = usuario;
+  }, 800);
 }
-// === PERMITIR LOGIN COM ENTER ===
-document.addEventListener("keydown", function (event) {
-  const loginView = document.getElementById("loginView");
-  const mainApp = document.getElementById("mainApp");
 
-  if (loginView && loginView.style.display !== "none" && event.key === "Enter") {
-    event.preventDefault();
-    const usuario = document.getElementById("usuarioLogin").value.trim();
-    const senha = document.getElementById("senhaLogin").value.trim();
-
-    if (usuario && senha) {
-      fazerLogin();
-    } else {
-      alert("Digite usuário e senha antes de continuar!");
-    }
+// Permite login com Enter
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && document.getElementById("loginView").style.display !== "none") {
+    fazerLogin();
   }
 });
+
 
 
 
@@ -3020,6 +2998,7 @@ await function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
