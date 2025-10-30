@@ -782,28 +782,6 @@ function showSection(id) {
   toggleSidebar(false);
 }
 
-  // 🔹 Fecha automaticamente o menu lateral em qualquer tamanho de tela
-  const sidebar = document.getElementById("sidebar");
-  if (sidebar && sidebar.classList.contains("active")) {
-    sidebar.classList.remove("active");
-  }
-
-  // 🔹 Reposiciona o scroll no topo
-  window.scrollTo({ top: 0, behavior: "smooth" });
-
-  // 🔹 Atualiza dados se for painel financeiro
-  if (id === "financeiro" && typeof atualizarPainelFinanceiro === "function") {
-    atualizarPainelFinanceiro();
-  }
-
-  // 🔹 Atualiza dados se for o dashboard
-  if (id === "dashboard" && typeof atualizarDashboard === "function") {
-    atualizarDashboard();
-  }
-}
-
-// 🔹 Mantém a tela centralizada no login
-window.scrollTo(0, 0);
 
 
 /* =========================
@@ -2998,6 +2976,7 @@ await function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
