@@ -442,15 +442,16 @@ html, body {
       alert("✅ Login realizado com sucesso!");
       console.log("Usuário logado:", userCredential.user.email);
 
-          // Esconde a tela de login e mostra o painel principal
-    document.getElementById("loginView").style.display = "none";
-    document.getElementById("mainApp").style.display = "block";
+              // Esconde a tela de login e mostra o painel principal
+ document.getElementById("login").style.display = "none";
+  document.getElementById("painel").style.display = "block";
 
     // Exibe automaticamente a seção "dashboard"
     showSection('dashboard');
 
     // Garante que o menu lateral e cabeçalho fiquem visíveis
     document.getElementById("sidebar").classList.add("active");
+
 
 
     } catch (error) {
@@ -487,13 +488,13 @@ html, body {
   };
 
   // 🔹 LOGOUT
- window.sair = async function() {
+window.sair = async function() {
   await signOut(auth);
   alert("Você saiu do sistema.");
   
   // Esconde painel e mostra login
-  document.getElementById("mainApp").style.display = "none";
-  document.getElementById("loginView").style.display = "flex";
+ document.getElementById("painel").style.display = "none";
+document.getElementById("login").style.display = "flex";
 
   // Limpa campos de login
   document.getElementById("usuario").value = "";
@@ -1121,8 +1122,8 @@ function logout() {
   localStorage.removeItem("usuarioLogado");
 
   // 🔹 Esconde o app e volta para tela de login
-  document.getElementById("mainApp").style.display = "none";
-  document.getElementById("loginView").style.display = "flex";
+  document.getElementById("painel").style.display = "none";
+document.getElementById("login").style.display = "flex";
 
   // 🔹 Limpa os campos de login e mensagem
   const usuarioEl = document.getElementById("usuarioLogin");
@@ -2540,8 +2541,8 @@ window.addEventListener("load", () => {
   const sess = JSON.parse(localStorage.getItem("usuarioLogado"));
   if (sess) {
     window.usuarioLogado = sess;
-    document.getElementById("loginView").style.display = "none";
-    document.getElementById("mainApp").style.display = "block";
+    document.getElementById("login").style.display = "none";
+document.getElementById("painel").style.display = "block";
     document.getElementById("userName").textContent = sess.nome;
     document.getElementById("perfilBadge").textContent = "Perfil: " + sess.perfil.toUpperCase();
     aplicarPermissoes();
@@ -3326,6 +3327,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
