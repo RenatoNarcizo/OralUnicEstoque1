@@ -1266,10 +1266,10 @@ sincronizarNomeProdutoAntigo(novoNome, nomeAntigo);
 /* =========================
    🔹 Registrar Entrada (versão final)
 ========================= */
-function registrarEntrada() {
-  // 🔹 Carrega arrays globais
+async function registrarEntrada() {
   entradas = JSON.parse(localStorage.getItem("entradas")) || [];
-  produtos = await carregarProdutosDoFirebase();
+  produtos = await carregarProdutosDoFirebase(); // ✅ agora permitido
+
 
   // 🔹 Referências dos campos
   const produtoEl = document.getElementById("entradaProduto");
@@ -1556,8 +1556,8 @@ function buscarProdutoPorCodigo(contexto) {
 
 
 // Função principal: valida e grava a saída (retorna true em sucesso, false em erro)
-function registrarSaida() {
-  if (typeof padronizarCamposAntesDeSalvar === "function") padronizarCamposAntesDeSalvar();
+async function registrarSaida() {
+  produtos = await carregarProdutosDoFirebase();
 
   const produtoEl = document.getElementById("saidaProduto");
   const qtdEl = document.getElementById("saidaQuantidade");
@@ -3058,6 +3058,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
