@@ -171,67 +171,76 @@
   </div>
 
   <!-- FIREBASE + LOGIN SCRIPT -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } 
-      from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+ <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { 
+    getAuth, 
+    onAuthStateChanged, 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword, 
+    signOut 
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
-      authDomain: "oralunicestoque.firebaseapp.com",
-      projectId: "oralunicestoque",
-      storageBucket: "oralunicestoque.firebasestorage.app",
-      messagingSenderId: "660233908877",
-      appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
+    authDomain: "oralunicestoque.firebaseapp.com",
+    projectId: "oralunicestoque",
+    storageBucket: "oralunicestoque.firebasestorage.app",
+    messagingSenderId: "660233908877",
+    appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-    // Estado de autenticação
-    onAuthStateChanged(auth, (user) => {
-      const loginDiv = document.getElementById("login");
-      const mainApp = document.getElementById("mainApp");
+  // Monitora o login
+  onAuthStateChanged(auth, (user) => {
+    const login = document.getElementById("login");
+    const main = document.getElementById("mainApp");
+    if (!login || !main) return;
 
-      if (loginDiv && mainApp) {
-        if (user) {
-          loginDiv.style.display = "none";
-          mainApp.style.display = "block";
-          document.getElementById("nomeUsuarioBemVindo").innerText = user.email.split("@")[0];
-        } else {
-          loginDiv.style.display = "flex";
-          mainApp.style.display = "none";
-        }
-      }
-    });
+    if (user) {
+      login.style.display = "none";
+      main.style.display = "block";
+      document.getElementById("nomeUsuarioBemVindo").textContent = user.email.split("@")[0];
+      showSection("boasVindas");
+    } else {
+      login.style.display = "flex";
+      main.style.display = "none";
+    }
+  });
 
-    // LOGIN
-    window.fazerLogin = async function() {
-      const usuario = document.getElementById("usuario").value.trim();
-      const senha = document.getElementById("senha").value.trim();
-      const emailFake = `${usuario}@oralunic.local`;
+  // Login
+  window.fazerLogin = async function () {
+    const usuario = document.getElementById("usuario").value.trim();
+    const senha = document.getElementById("senha").value.trim();
+    if (!usuario || !senha) {
+      alert("Preencha usuário e senha");
+      return;
+    }
+    const emailFake = `${usuario}@oralunic.local`;
+    try {
+      await signInWithEmailAndPassword(auth, emailFake, senha);
+    } catch (e) {
+      alert("Erro no login: " + e.message);
+    }
+  };
 
-      try {
-        await signInWithEmailAndPassword(auth, emailFake, senha);
-      } catch (error) {
-        alert("Erro no login: " + error.message);
-      }
-    };
+  // Logout
+  window.logout = async function () {
+    await signOut(auth);
+  };
 
-    // BOTÃO DE LOGIN
-    document.getElementById("btnLogin").addEventListener("click", fazerLogin);
+  // Muda de seção
+  window.showSection = function (id) {
+    document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
+    const s = document.getElementById(id);
+    if (s) s.classList.add("active");
+  };
+</script>
 
-    // LOGOUT
-    window.logout = async function() {
-      await signOut(auth);
-    };
-
-    // TROCAR SEÇÕES
-    window.showSection = function(id) {
-      document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
-      document.getElementById(id).classList.add("active");
-    };
-  </script>
 </body>
 </html>
 
@@ -3061,6 +3070,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
