@@ -1013,7 +1013,7 @@ function voltarParaLogin() {
 
 
 // ============================
-// 🔹 FUNÇÃO DE LOGIN (CORRIGIDA)
+// 🔹 FUNÇÃO DE LOGIN (DENTRO DO MÓDULO)
 // ============================
 window.fazerLogin = async function () {
   const usuario = document.getElementById("usuario").value.trim();
@@ -1034,6 +1034,10 @@ window.fazerLogin = async function () {
     alert("Erro no login: " + error.message);
   }
 };
+
+// 🔹 Conecta o botão ao login
+document.getElementById("btnLogin").addEventListener("click", fazerLogin);
+
 
 
 
@@ -3009,6 +3013,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
