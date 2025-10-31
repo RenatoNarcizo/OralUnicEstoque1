@@ -181,9 +181,8 @@
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-    // ============================
-    // 🔹 CONFIGURAÇÃO DO FIREBASE
-    // ============================
+
+	
     const firebaseConfig = {
       apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
       authDomain: "oralunicestoque.firebaseapp.com",
@@ -1223,7 +1222,11 @@ function atualizarTabelaProdutos() {
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${i + 1}</td>
-      <td>${p.foto ? `<img src="${p.foto}" class="thumb" onclick="ampliarImagem('${p.foto}')">` : "-"}</td>
+    td>${
+  p.foto && p.foto.startsWith("data:")
+    ? `<img src="${p.foto}" class="thumb">`
+    : "-"
+}</td>
       <td>${p.nome}</td>
       <td>${p.categoria}</td>
       <td>${p.embalagem}</td>
@@ -3012,6 +3015,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
