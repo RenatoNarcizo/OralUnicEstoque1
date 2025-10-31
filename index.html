@@ -955,13 +955,15 @@ function mostrarSistema(sessao) {
     mainApp.style.display = "block";
   }
 
-  if (userName && sessao?.nome) userName.textContent = sessao.nome;
-  if (perfilBadge && sessao?.perfil)
-    perfilBadge.textContent = "Perfil: " + sessao.perfil.toUpperCase();
+  const nomeUsuario = sessao?.nome || sessao?.email?.split("@")[0] || "Usuário";
 
-  // 🔹 Mostra mensagem de boas-vindas
-  const nomeBemVindo = document.getElementById("nomeUsuarioBemVindo");
-  if (nomeBemVindo) nomeBemVindo.textContent = sessao.nome;
+if (userName) userName.textContent = nomeUsuario;
+if (perfilBadge && sessao?.perfil)
+  perfilBadge.textContent = "Perfil: " + sessao.perfil.toUpperCase();
+
+const nomeBemVindo = document.getElementById("nomeUsuarioBemVindo");
+if (nomeBemVindo) nomeBemVindo.textContent = nomeUsuario;
+
 
   // 🔹 Oculta todas as outras seções e mostra apenas a de boas-vindas
   document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
@@ -979,7 +981,6 @@ function mostrarSistema(sessao) {
   if (typeof aplicarPermissoes === "function") aplicarPermissoes();
   if (typeof bloquearAcoesSimples2 === "function") bloquearAcoesSimples2();
 }
-
 // === VERIFICAÇÃO DE SESSÃO (ao carregar) ===
 function verificarSessao() {
   const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado") || "{}");
@@ -1021,31 +1022,43 @@ window.onload = function () {
 
     localStorage.removeItem("usuarioLogado");
   };
-};
-
 
   // ============================
-    // 🔹 FUNÇÃO DE LOGIN (CORRIGIDA)
-    // ============================
-    window.fazerLogin = async function () {
-      const usuario = document.getElementById("usuario").value.trim();
-      const senha = document.getElementById("senha").value.trim();
+  // 🔹 FUNÇÃO DE LOGIN (CORRIGIDA)
+  // ============================
+  window.fazerLogin = async function () {
+    const usuario = document.getElementById("usuario").value.trim();
+    const senha = document.getElementById("senha").value.trim();
 
-      if (!usuario || !senha) {
-        alert("Preencha usuário e senha");
-        return;
-      }
+    if (!usuario || !senha) {
+      alert("Preencha usuário e senha!");
+      return;
+    }
 
-      const emailFake = `${usuario}@oralunic.local`;
+    // ✅ Corrigido: usa domínio real ou permite e-mail completo
+    const email = usuario.includes("@") ? usuario : `${usuario}@oralunic.com`;
 
-      try {
-        await signInWithEmailAndPassword(auth, emailFake, senha);
-        alert("✅ Login realizado com sucesso!");
-      } catch (error) {
-        console.error("Erro no login:", error);
-        alert("Erro no login: " + error.message);
-      }
-    };
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+      const user = userCredential.user;
+
+      localStorage.setItem(
+        "usuarioLogado",
+        JSON.stringify({ email: user.email, logado: true })
+      );
+
+      alert("✅ Login realizado com sucesso!");
+      mostrarSistema({ email: user.email });
+    } catch (error) {
+      console.error("Erro no login:", error);
+      alert("Erro no login: " + error.message);
+    }
+  };
+
+  // ✅ Chama a verificação assim que tudo carregar
+  verificarSessao();
+};
+
 
 
 // ============================
@@ -3043,6 +3056,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
