@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -8,302 +7,124 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <style>
-  :root {
-  --azul: #0d6efd;
-  --azul-escuro: #003b88;
-  --cinza-fundo: #f4f6f9;
-  --branco: #ffffff;
-  --cinza: #e0e0e0;
-}
+    :root {
+      --azul: #0d6efd;
+      --azul-escuro: #003b88;
+      --cinza-fundo: #f4f6f9;
+      --branco: #ffffff;
+    }
 
-/* ========================= GERAL ========================= */
-html, body {
-  margin: 0;
-  padding: 0;
-  font-family: "Segoe UI", Roboto, Arial, sans-serif;
-  background: var(--cinza-fundo);
-  color: #222;
-  height: 100%;
-  overflow-x: hidden;
-}
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--cinza-fundo);
+      color: #222;
+    }
 
-/* ========================= HEADER ========================= */
-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--azul);
-  color: var(--branco);
-  padding: 12px 20px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  position: sticky;
-  top: 0;
-  z-index: 900;
-}
+    /* ===== LOGIN ===== */
+    #login {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(135deg, var(--azul), var(--azul-escuro));
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+    }
 
-header h1 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+    .login-card {
+      background: var(--branco);
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      width: 320px;
+    }
 
-header button {
-  background: none;
-  border: none;
-  color: var(--branco);
-  cursor: pointer;
-  font-size: 1.3rem;
-}
+    .login-card h2 {
+      color: var(--azul-escuro);
+      margin-bottom: 20px;
+    }
 
-header button:hover {
-  color: #e2e2e2;
-}
+    .login-card input {
+      width: 100%;
+      margin: 6px 0;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
 
-/* ========================= SIDEBAR ========================= */
-#sidebar {
-  position: fixed;
-  top: 0;
-  left: -260px;
-  width: 250px;
-  height: 100%;
-  background: var(--azul-escuro);
-  color: var(--branco);
-  overflow-y: auto;
-  transition: left 0.3s ease;
-  z-index: 800;
-  padding-top: 60px;
-  border-right: none;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
-}
+    .login-card button {
+      width: 100%;
+      margin-top: 10px;
+      background: var(--azul);
+      color: var(--branco);
+      border: none;
+      padding: 8px;
+      border-radius: 5px;
+      font-size: 15px;
+      cursor: pointer;
+    }
 
-#sidebar.active {
-  left: 0;
-}
+    .login-card button:hover {
+      background: var(--azul-escuro);
+    }
 
-#sidebar button {
-  display: block;
-  width: 100%;
-  border: none;
-  background: none;
-  color: var(--branco);
-  text-align: left;
-  padding: 14px 18px;
-  font-size: 15px;
-  cursor: pointer;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-  transition: background 0.2s;
-}
+    /* ===== MAIN APP ===== */
+    #mainApp {
+      display: none;
+    }
 
-#sidebar button i {
-  margin-right: 8px;
-  width: 18px;
-  text-align: center;
-}
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--azul);
+      color: var(--branco);
+      padding: 12px 20px;
+    }
 
-#sidebar button:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
+    #sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 220px;
+      height: 100%;
+      background: var(--azul-escuro);
+      color: white;
+      padding-top: 60px;
+    }
 
-/* ========================= MAIN ========================= */
-main {
-  margin: 20px;
-  padding-left: 0;
-  transition: margin-left 0.3s ease;
-  overflow-x: hidden;
-}
+    #sidebar button {
+      display: block;
+      width: 100%;
+      border: none;
+      background: none;
+      color: white;
+      text-align: left;
+      padding: 14px 20px;
+      cursor: pointer;
+    }
 
-@media (min-width: 900px) {
-  #sidebar.active + main {
-    margin-left: 250px;
-  }
-}
+    #sidebar button:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
 
-/* ========================= SEÇÕES ========================= */
-section {
-  display: none;
-  background: var(--branco);
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
+    main {
+      margin-left: 240px;
+      padding: 20px;
+    }
 
-.section.active {
-  display: block;
-  animation: fadeIn 0.3s ease;
-}
+    .section {
+      display: none;
+    }
 
-section h2 {
-  color: var(--azul-escuro);
-  border-left: 5px solid var(--azul);
-  padding-left: 10px;
-  margin-bottom: 15px;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ========================= TABELAS ========================= */
-.table-wrap {
-  max-height: 60vh;
-  overflow-y: auto;
-  overflow-x: auto;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.table-wrap table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 800px;
-}
-
-.table-wrap table thead th {
-  position: sticky;
-  top: 0;
-  background: var(--azul);
-  color: #fff;
-  z-index: 10;
-  text-align: left;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
-}
-
-.table-wrap table td {
-  border: 1px solid #ddd;
-  padding: 10px 12px;
-  font-size: 14px;
-}
-
-.table-wrap table tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-/* Scrollbar */
-.table-wrap::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-.table-wrap::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 8px;
-}
-.table-wrap::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-/* ========================= BOTÕES ========================= */
-button {
-  background: var(--azul);
-  color: var(--branco);
-  border: none;
-  padding: 7px 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.2s;
-  font-size: 14px;
-}
-
-button:hover {
-  background: var(--azul-escuro);
-}
-
-/* ========================= INPUTS ========================= */
-input, select {
-  padding: 6px 8px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-  margin: 3px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-input:focus, select:focus {
-  border-color: var(--azul);
-}
-
-/* ========================= LOGIN ========================= */
-.login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background: linear-gradient(135deg, var(--azul), var(--azul-escuro));
-}
-
-.login-card {
-  background: var(--branco);
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  text-align: center;
-  width: 320px;
-}
-
-.login-card h2 {
-  color: var(--azul-escuro);
-  margin-bottom: 20px;
-}
-
-.login-card input {
-  width: 100%;
-  margin: 6px 0;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.login-card button {
-  width: 100%;
-  margin-top: 10px;
-}
-
-/* ========================= IMAGENS ========================= */
-.thumb {
-  width: 60px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.thumb:hover {
-  transform: scale(1.08);
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
-}
-
-#imagemAmpliada {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
-}
-
-#imagemAmpliada img {
-  max-width: 90%;
-  max-height: 90%;
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-/* ========================= ANIMAÇÕES ========================= */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+    .section.active {
+      display: block;
+    }
   </style>
 </head>
 
@@ -319,74 +140,81 @@ input:focus, select:focus {
   </div>
 
   <!-- SISTEMA -->
- <!-- 🔹 Sistema principal -->
-  <div id="mainApp" style="display:none;">
-
-    <!-- 🔹 Cabeçalho -->
+  <div id="mainApp">
     <header>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <button id="menuToggle" onclick="toggleSidebar()"><i class="fa fa-bars"></i></button>
-        <h1><i class="fa fa-boxes-stacked"></i> Sistema de Controle de Estoque – Oral Unic Campo Grande</h1>
-      </div>
-
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div id="userName" style="font-weight:700">Usuário</div>
-        <button onclick="logout()" title="Sair"><i class="fa fa-sign-out-alt"></i></button>
-      </div>
+      <h1><i class="fa fa-boxes-stacked"></i> Oral Unic Campo Grande</h1>
+      <button onclick="logout()"><i class="fa fa-sign-out-alt"></i> Sair</button>
     </header>
 
-    <!-- 🔹 Menu lateral -->
-    <aside id="sidebar" aria-hidden="true">
-      <button onclick="showSection('dashboard')"><i class="fa fa-chart-pie"></i> Dashboard</button>
-      <button onclick="showSection('cadastro')"><i class="fa fa-box"></i> Cadastro de Produtos</button>
-      <button onclick="showSection('entrada')"><i class="fa fa-arrow-down"></i> Entrada de Materiais</button>
-      <button onclick="showSection('saida')"><i class="fa fa-arrow-up"></i> Saída de Materiais</button>
-      <button onclick="showSection('estoque')"><i class="fa fa-warehouse"></i> Estoque Atual</button>
-      <button onclick="showSection('limites')"><i class="fa fa-sliders-h"></i> Estoque Mín/Máx</button>
-      <button onclick="showSection('financeiro')"><i class="fa fa-coins"></i> Financeiro</button>
-      <button onclick="showSection('relatorios')"><i class="fa fa-file-excel"></i> Relatórios</button>
-      <button onclick="showSection('usuarios')"><i class="fa fa-users"></i> Usuários e Perfis</button>
+    <aside id="sidebar">
+      <button onclick="showSection('boasVindas')">🏠 Início</button>
+      <button onclick="showSection('cadastro')">📦 Cadastro</button>
+      <button onclick="showSection('estoque')">📊 Estoque</button>
     </aside>
 
-    <!-- 🔹 Conteúdo principal -->
     <main>
-      <!-- Tela de boas-vindas -->
-      <section id="boasVindas" class="section active" style="text-align:center; padding:100px 20px;">
-        <h1 style="color:#003b88;">👋 Bem-vindo(a) <span id="nomeUsuarioBemVindo"></span>!</h1>
-        <h2 style="color:#0d6efd;">ao Sistema de Controle de Estoque – Oral Unic Campo Grande</h2>
-        <p style="margin-top:20px; color:#555;">Use o menu lateral para iniciar suas atividades.</p>
+      <section id="boasVindas" class="section active">
+        <h2>👋 Bem-vindo(a) <span id="nomeUsuarioBemVindo"></span>!</h2>
+        <p>Use o menu lateral para navegar no sistema.</p>
       </section>
-     <!-- Outras seções (mantidas 100%) -->
-      <section id="dashboard" class="section"><h2>📊 Dashboard</h2></section>
-      <section id="cadastro" class="section"><h2>📦 Cadastro de Produtos</h2></section>
-      <section id="entrada" class="section"><h2>📥 Entrada de Materiais</h2></section>
-      <section id="saida" class="section"><h2>📤 Saída de Materiais</h2></section>
-      <section id="estoque" class="section"><h2>🏷️ Estoque Atual</h2></section>
-      <section id="limites" class="section"><h2>⚖️ Estoque Mín/Máx</h2></section>
-      <section id="financeiro" class="section"><h2>💰 Financeiro</h2></section>
-      <section id="relatorios" class="section"><h2>📑 Relatórios</h2></section>
-      <section id="usuarios" class="section"><h2>👥 Usuários e Perfis</h2></section>
-    </main>
 
+      <section id="cadastro" class="section">
+        <h2>📦 Cadastro de Produtos</h2>
+        <p>Aqui vai o conteúdo do cadastro.</p>
+      </section>
+
+      <section id="estoque" class="section">
+        <h2>📊 Estoque Atual</h2>
+        <p>Aqui vai a tabela de estoque.</p>
+      </section>
+    </main>
   </div>
 
-</body>
-</html>
-
   <!-- FIREBASE + LOGIN SCRIPT -->
-<!-- ====== SCRIPT ÚNICO E CORRIGIDO ====== -->
-<script type="module">
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } 
+      from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
+      authDomain: "oralunicestoque.firebaseapp.com",
+      projectId: "oralunicestoque",
+      storageBucket: "oralunicestoque.firebasestorage.app",
+      messagingSenderId: "660233908877",
+      appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Estado de autenticação
+    onAuthStateChanged(auth, (user) => {
+      const loginDiv = document.getElementById("login");
+      const mainApp = document.getElementById("mainApp");
+
+      if (loginDiv && mainApp) {
+        if (user) {
+          loginDiv.style.display = "none";
+          mainApp.style.display = "block";
+          document.getElementById("nomeUsuarioBemVindo").innerText = user.email.split("@")[0];
+        } else {
+          loginDiv.style.display = "flex";
+          mainApp.style.display = "none";
+        }
+      }
+    });
+ <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import {
-    getAuth,
-    onAuthStateChanged,
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    signOut
+  import { 
+    getAuth, 
+    onAuthStateChanged, 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword, 
+    signOut 
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
   import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  // --- CONFIGURAÇÃO ---
   const firebaseConfig = {
     apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
     authDomain: "oralunicestoque.firebaseapp.com",
@@ -396,33 +224,36 @@ input:focus, select:focus {
     appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
   };
 
+    // LOGIN
+    window.fazerLogin = async function() {
+      const usuario = document.getElementById("usuario").value.trim();
+      const senha = document.getElementById("senha").value.trim();
+      const emailFake = `${usuario}@oralunic.local`;
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  // --- MONITORA LOGIN ---
+  // Monitora o login
   onAuthStateChanged(auth, (user) => {
-    const loginDiv = document.getElementById("login");
-    const mainApp = document.getElementById("mainApp");
-    if (!loginDiv || !mainApp) return;
+    const login = document.getElementById("login");
+    const main = document.getElementById("mainApp");
+    if (!login || !main) return;
 
     if (user) {
-      loginDiv.style.display = "none";
-      mainApp.style.display = "block";
-      const nome = user.email ? user.email.split("@")[0] : "Usuário";
-      const span = document.getElementById("nomeUsuarioBemVindo");
-      if (span) span.textContent = nome;
-      if (typeof showSection === "function") showSection("boasVindas");
+      login.style.display = "none";
+      main.style.display = "block";
+      document.getElementById("nomeUsuarioBemVindo").textContent = user.email.split("@")[0];
+      showSection("boasVindas");
     } else {
-      loginDiv.style.display = "flex";
-      mainApp.style.display = "none";
+      login.style.display = "flex";
+      main.style.display = "none";
     }
   });
 
-  // --- LOGIN ---
+  // Login
   window.fazerLogin = async function () {
-    const usuario = document.getElementById("usuario")?.value.trim();
-    const senha = document.getElementById("senha")?.value.trim();
+    const usuario = document.getElementById("usuario").value.trim();
+    const senha = document.getElementById("senha").value.trim();
     if (!usuario || !senha) {
       alert("Preencha usuário e senha");
       return;
@@ -430,25 +261,47 @@ input:focus, select:focus {
     const emailFake = `${usuario}@oralunic.local`;
     try {
       await signInWithEmailAndPassword(auth, emailFake, senha);
-    } catch (error) {
-      alert("Erro no login: " + error.message);
-      console.error(error);
+    } catch (e) {
+      alert("Erro no login: " + e.message);
     }
   };
 
-  // --- LOGOUT ---
+  // Logout
   window.logout = async function () {
     await signOut(auth);
   };
 
-  // --- TROCA DE SEÇÕES ---
+  // Muda de seção
   window.showSection = function (id) {
-    document.querySelectorAll(".section").forEach((sec) => sec.classList.remove("active"));
-    const alvo = document.getElementById(id);
-    if (alvo) alvo.classList.add("active");
+    document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
+    const s = document.getElementById(id);
+    if (s) s.classList.add("active");
   };
 </script>
 
+      try {
+        await signInWithEmailAndPassword(auth, emailFake, senha);
+      } catch (error) {
+        alert("Erro no login: " + error.message);
+      }
+    };
+
+    // BOTÃO DE LOGIN
+    document.getElementById("btnLogin").addEventListener("click", fazerLogin);
+
+    // LOGOUT
+    window.logout = async function() {
+      await signOut(auth);
+    };
+
+    // TROCAR SEÇÕES
+    window.showSection = function(id) {
+      document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    };
+  </script>
+</body>
+</html>
 
 
 
@@ -517,7 +370,7 @@ input:focus, select:focus {
 
         <div class="input-row" style="margin-bottom:10px;gap:8px;">
           <input id="produtoNome" type="text" placeholder="Nome do produto" class="flex" />
-		  
+
           <select id="produtoCategoria">
   <option value="">Selecione a categoria</option>
   <option>Material de Uso e Consumo</option>
@@ -592,7 +445,7 @@ input:focus, select:focus {
     <input id="entradaCNPJ" type="text" placeholder="CNPJ" />
     <input id="entradaLote" type="text" placeholder="Lote" />
     <input id="entradaValidade" type="date" placeholder="Validade" />
-    
+
     <select id="entradaSetor">
       <option value="">Selecione o Setor Utilizado</option>
       <option>Limpeza da Clínica</option>
@@ -644,7 +497,7 @@ input:focus, select:focus {
   <div class="input-row" style="margin-bottom:10px;gap:8px;">
   <input id="saidaCodigoBarras" type="text" placeholder="📷 Ler código de barras" oninput="atualizarSetorAutomatico()" />
 
-           
+
     <input id="saidaProduto" type="text" placeholder="Nome do produto" style="min-width:220px" oninput="atualizarSetorAutomatico()" />
     <input id="saidaQuantidade" type="number" placeholder="Quantidade" style="width:120px" />
     <input id="saidaResponsavel" type="text" placeholder="Responsável" />
@@ -771,7 +624,7 @@ input:focus, select:focus {
 
   </div>
 
-  
+
   <!-- 🛒 Lista de compra -->
 <div id="listaCompraContainer" style="display:none; margin-top:20px;">
   <h3><i class="fa fa-shopping-cart"></i> Lista de Compra Gerada</h3>
@@ -819,7 +672,7 @@ input:focus, select:focus {
 
 
       <!-- SEÇÃO: FINANCEIRO -->
-     
+
 <!-- SEÇÃO: PAINEL FINANCEIRO -->
 <!-- SEÇÃO: PAINEL FINANCEIRO -->
 <section id="financeiro" class="section" style="display:none;">
@@ -987,8 +840,8 @@ input:focus, select:focus {
     </div>
 
   </div>
-  
-  
+
+
 </section>
 
     </main>
@@ -1473,7 +1326,7 @@ function editarProduto(i) {
   produtos.splice(i, 1);
   localStorage.setItem("produtos", JSON.stringify(produtos));
   atualizarTabelaProdutos();
-  
+
 sincronizarNomeProdutoAntigo(novoNome, nomeAntigo);
   alert("Edite os campos e clique em 'Cadastrar' para salvar as alterações.");
 }
@@ -2796,7 +2649,7 @@ function ordenarListasAlfabeticamente() {
   if (typeof produtos !== "undefined" && Array.isArray(produtos)) {
     produtos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
     localStorage.setItem("produtos", JSON.stringify(produtos));
-	
+
   }
 
   // 🔹 Entradas (Painel Financeiro – fornecedor)
@@ -2823,9 +2676,9 @@ function ordenarListasAlfabeticamente() {
   if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
   if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
      if (typeof atualizarDashboard === "function") atualizarDashboard();
-  
+
      if (typeof atualizarDashboard === "function") atualizarDashboard();
-  
+
 
   // 🔹 Atualiza selects de produto (Entrada e Saída)
   atualizarSelectProdutos();
@@ -3135,7 +2988,7 @@ function definirPeriodoRapido(tipo) {
   inicioEl.value = inicio.toISOString().split("T")[0];
   fimEl.value = fim.toISOString().split("T")[0];
 
-  
+
 }
 
 function limparPeriodo() {
@@ -3276,19 +3129,3 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
