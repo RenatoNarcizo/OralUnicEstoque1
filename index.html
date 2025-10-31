@@ -675,16 +675,17 @@
 </section>
 
     </main>
- <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+	  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js?v=1";
   import {
     getAuth,
     onAuthStateChanged,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signOut
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js?v=1";
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js?v=1";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
@@ -701,6 +702,7 @@
 
   console.log("✅ Firebase inicializado com sucesso!");
 </script>
+
 
 
 // ============================
@@ -3054,6 +3056,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 
 </body>
 </html>
+
 
 
 
