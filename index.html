@@ -3002,10 +3002,10 @@ function exportarRelatorioFiltrado(lista) {
   link.click();
   document.body.removeChild(link);
 }
+
 function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
   let alterado = false;
 
-  // Atualiza nome nas entradas
   entradas.forEach(e => {
     if (e.produto === nomeAntigo) {
       e.produto = novoNome;
@@ -3013,7 +3013,6 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
     }
   });
 
-  // Atualiza nome nas saídas
   saidas.forEach(s => {
     if (s.produto === nomeAntigo) {
       s.produto = novoNome;
@@ -3021,7 +3020,6 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
     }
   });
 
-  // Atualiza nome no estoque (caso mantenha cache separado)
   produtos.forEach(p => {
     if (p.nome === nomeAntigo) {
       p.nome = novoNome;
@@ -3040,8 +3038,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
     if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
   }
 }
-
-
+</script>  <!-- ✅ Fecha o script aqui, antes das tags HTML -->
 
 <!-- 🔹 Bibliotecas externas -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
@@ -3050,6 +3047,8 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 
 </body>
 </html>
+
+
 
 
 
