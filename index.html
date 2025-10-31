@@ -1014,6 +1014,9 @@ function voltarParaLogin() {
 // ============================
 // 🔹 LOGIN
 // ============================
+// ============================
+// 🔹 FUNÇÃO DE LOGIN (corrigida)
+// ============================
 window.fazerLogin = async function () {
   const usuario = document.getElementById("usuario").value.trim();
   const senha = document.getElementById("senha").value.trim();
@@ -1027,10 +1030,13 @@ window.fazerLogin = async function () {
 
   try {
     await signInWithEmailAndPassword(auth, emailFake, senha);
+    alert("✅ Login bem-sucedido!");
   } catch (error) {
+    console.error("Erro no login:", error);
     alert("Erro no login: " + error.message);
   }
 };
+
 
 // ============================
 // 🔹 TROCAR SEÇÃO
@@ -3006,6 +3012,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
