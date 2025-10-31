@@ -1218,15 +1218,17 @@ async function cadastrarProduto() {
 function atualizarTabelaProdutos() {
   const tbody = document.querySelector("#tabelaProdutos tbody");
   tbody.innerHTML = "";
+
   produtos.forEach((p, i) => {
     const row = document.createElement("tr");
+
     row.innerHTML = `
       <td>${i + 1}</td>
-    td>${
-  p.foto && p.foto.startsWith("data:")
-    ? `<img src="${p.foto}" class="thumb">`
-    : "-"
-}</td>
+      <td>${
+        p.foto && p.foto.startsWith("data:")
+          ? `<img src="${p.foto}" class="thumb">`
+          : "-"
+      }</td>
       <td>${p.nome}</td>
       <td>${p.categoria}</td>
       <td>${p.embalagem}</td>
@@ -1237,9 +1239,11 @@ function atualizarTabelaProdutos() {
         <button onclick="excluirProduto(${i})"><i class="fa fa-trash"></i></button>
       </td>
     `;
+
     tbody.appendChild(row);
   });
 }
+
 
 
 function excluirProduto(i) {
@@ -2577,7 +2581,6 @@ function ordenarListasAlfabeticamente() {
   atualizarSelectProdutos();
 }
 
-/* 🔸 Atualiza todos os <select> de produtos em ordem alfabética */
 /* =========================
    🔹 Atualiza o <select> de produtos em ordem alfabética
 ========================= */
@@ -3015,6 +3018,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
