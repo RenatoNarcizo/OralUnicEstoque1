@@ -676,17 +676,19 @@
 
     </main>
 
-	  <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js?v=1";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
   import {
     getAuth,
-    onAuthStateChanged,
     signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
+    onAuthStateChanged,
     signOut
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js?v=1";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js?v=1";
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+  console.log("🔥 Firebase importado com sucesso!");
+
+  // ✅ Inicialização Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
     authDomain: "oralunicestoque.firebaseapp.com",
@@ -697,64 +699,56 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
+  const auth = getAuth(app);     // ✅ auth depende de app, então precisa vir depois
   const db = getFirestore(app);
 
-  console.log("✅ Firebase inicializado com sucesso!");
+  // ============================
+  // 🔹 FUNÇÃO DE LOGIN
+  // ============================
+  window.fazerLogin = async function () {
+    const usuario = document.getElementById("usuario").value.trim();
+    const senha = document.getElementById("senha").value.trim();
+    if (!usuario || !senha) {
+      alert("Preencha usuário e senha!");
+      return;
+    }
+    const email = usuario.includes("@") ? usuario : `${usuario}@oralunic.com`;
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, senha);
+      console.log("✅ Login bem-sucedido:", cred.user.email);
+      alert("Login realizado com sucesso!");
+    } catch (error) {
+      console.error("❌ Erro no login:", error);
+      alert("Erro no login: " + error.message);
+    }
+  };
+
+  // ============================
+  // 🔹 MONITORA LOGIN
+  // ============================
+  onAuthStateChanged(auth, (user) => {
+    const loginDiv = document.getElementById("login");
+    const mainApp = document.getElementById("mainApp");
+    if (user) {
+      loginDiv.style.display = "none";
+      mainApp.style.display = "block";
+      document.getElementById("nomeUsuarioBemVindo").innerText =
+        user.email.split("@")[0];
+    } else {
+      loginDiv.style.display = "flex";
+      mainApp.style.display = "none";
+    }
+  });
+
+  // ============================
+  // 🔹 LOGOUT
+  // ============================
+  window.logout = async function () {
+    await signOut(auth);
+    alert("Sessão encerrada!");
+  };
 </script>
 
-
-
-// ============================
-// 🔹 FUNÇÃO DE LOGIN
-// ============================
-window.fazerLogin = async function () {
-  const usuario = document.getElementById("usuario").value.trim();
-  const senha = document.getElementById("senha").value.trim();
-
-  if (!usuario || !senha) {
-    alert("Preencha usuário e senha!");
-    return;
-  }
-
-  // 🟡 Se quiser permitir que o usuário digite só “joao”, o código completa o e-mail:
-  const email = usuario.includes("@") ? usuario : `${usuario}@oralunic.com`;
-
-  try {
-    const cred = await signInWithEmailAndPassword(auth, email, senha);
-    console.log("✅ Login bem-sucedido:", cred.user.email);
-    alert("Login realizado com sucesso!");
-  } catch (error) {
-    console.error("❌ Erro no login:", error);
-    alert("Erro no login: " + error.message);
-  }
-};
-// ============================
-// 🔹 MONITORA LOGIN (mostra ou esconde telas)
-// ============================
-onAuthStateChanged(auth, (user) => {
-  const loginDiv = document.getElementById("login");
-  const mainApp = document.getElementById("mainApp");
-
-  if (user) {
-    loginDiv.style.display = "none";
-    mainApp.style.display = "block";
-    document.getElementById("nomeUsuarioBemVindo").innerText =
-      user.email.split("@")[0];
-  } else {
-    loginDiv.style.display = "flex";
-    mainApp.style.display = "none";
-  }
-});
-// ============================
-// 🔹 LOGOUT
-// ============================
-window.logout = async function () {
-  await signOut(auth);
-  alert("Sessão encerrada!");
-  console.log("Usuário deslogado.");
-};
-</script>
 
 <script>
 /* =========================
@@ -3056,6 +3050,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 
 </body>
 </html>
+
 
 
 
