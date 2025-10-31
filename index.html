@@ -1259,7 +1259,7 @@ sincronizarNomeProdutoAntigo(novoNome, nomeAntigo);
 /* =========================
    🔹 Registrar Entrada (versão final)
 ========================= */
-function registrarEntrada() {
+async function registrarEntrada() {
   // 🔹 Carrega arrays globais
   entradas = JSON.parse(localStorage.getItem("entradas")) || [];
   produtos = await carregarProdutosDoFirebase();
@@ -2999,6 +2999,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
