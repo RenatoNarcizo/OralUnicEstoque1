@@ -1048,7 +1048,9 @@ window.showSection = function (id) {
   const alvo = document.getElementById(id);
   if (alvo) alvo.classList.add("active");
 };
-
+document.getElementById("btnLogin").addEventListener("click", () => {
+  fazerLogin();
+});
 
 </script>
 
@@ -3007,6 +3009,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
