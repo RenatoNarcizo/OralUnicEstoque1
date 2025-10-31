@@ -1143,35 +1143,31 @@ async function cadastrarProduto() {
     if (el) el.style.border = "1px solid #ccc";
   });
 
-  // 🔹 Validações — mantém o que foi digitado
+  // 🔹 Validações
   if (!nomeEl.value.trim()) {
     alert("Informe o nome do produto!");
     nomeEl.style.border = "2px solid red";
     nomeEl.focus();
     return false;
   }
-
   if (!categoriaEl.value.trim()) {
     alert("Selecione a categoria do produto!");
     categoriaEl.style.border = "2px solid red";
     categoriaEl.focus();
     return false;
   }
-
   if (!embalagemEl.value.trim()) {
     alert("Selecione o tipo de embalagem!");
     embalagemEl.style.border = "2px solid red";
     embalagemEl.focus();
     return false;
   }
-
   if (!qtdEl.value || Number(qtdEl.value) <= 0) {
     alert("Informe a quantidade por embalagem!");
     qtdEl.style.border = "2px solid red";
     qtdEl.focus();
     return false;
   }
-
   if (!fotoInput.files || !fotoInput.files[0]) {
     alert("É obrigatório inserir uma foto do produto!");
     fotoInput.style.border = "2px solid red";
@@ -1179,7 +1175,7 @@ async function cadastrarProduto() {
     return false;
   }
 
-  // 🔹 Verifica se já existe um produto com o mesmo nome
+  // 🔹 Verifica duplicidades
   const nome = nomeEl.value.trim();
   const nomeNormalizado = nome.toLowerCase();
   const produtoDuplicado = produtos.some(
@@ -1193,7 +1189,6 @@ async function cadastrarProduto() {
     return false;
   }
 
-  // 🔹 Verifica duplicidade de código de barras
   if (codigoBarras) {
     const existeCodigo = produtos.some(p => p.codigoBarras === codigoBarras);
     if (existeCodigo) {
@@ -1204,14 +1199,13 @@ async function cadastrarProduto() {
     }
   }
 
-  // 🔹 Coleta dados restantes
   const categoria = categoriaEl.value.trim();
   const embalagem = embalagemEl.value.trim();
   const qtdEmbalagem = qtdEl.value;
 
-  // 🔹 Lê a imagem antes de salvar
+  // ✅ Aqui está a correção principal:
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = async (e) => {
     const foto = e.target.result;
 
     produtos.push({
@@ -1224,20 +1218,24 @@ async function cadastrarProduto() {
       codigoBarras: codigoBarras || ""
     });
 
-    await salvarProdutosNoFirebase(produtos);
-    atualizarTabelaProdutos();
+    // 🔹 Agora o await funciona dentro do async onload
+    if (typeof salvarProdutosNoFirebase === "function") {
+      await salvarProdutosNoFirebase(produtos);
+    }
 
+    atualizarTabelaProdutos();
     if (typeof ordenarListasAlfabeticamente === "function") ordenarListasAlfabeticamente();
 
     alert("Produto cadastrado com sucesso!");
 
-    // ✅ Limpa os campos somente após sucesso
+    // ✅ Limpa os campos após salvar
     [nomeEl, categoriaEl, embalagemEl, qtdEl, fotoInput, codigoBarrasEl].forEach(el => el.value = "");
   };
 
   reader.readAsDataURL(fotoInput.files[0]);
   return true;
 }
+
 
 function atualizarTabelaProdutos() {
   const tbody = document.querySelector("#tabelaProdutos tbody");
