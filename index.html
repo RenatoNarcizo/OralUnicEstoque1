@@ -677,36 +677,32 @@
     </main>
   </div> <!-- fim do mainApp -->
 	<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-import {
-  getAuth,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut
-} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.mjs";
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.mjs";
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.mjs";
 
-console.log("Firebase importado com sucesso!");
+  const firebaseConfig = {
+    apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
+    authDomain: "oralunicestoque.firebaseapp.com",
+    projectId: "oralunicestoque",
+    storageBucket: "oralunicestoque.firebasestorage.app",
+    messagingSenderId: "660233908877",
+    appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  console.log("✅ Firebase importado e inicializado com sucesso!");
 </script>
 
-
-
-// ============================
-// 🔹 CONFIGURAÇÃO FIREBASE
-// ============================
-const firebaseConfig = {
-  apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
-  authDomain: "oralunicestoque.firebaseapp.com",
-  projectId: "oralunicestoque",
-  storageBucket: "oralunicestoque.firebasestorage.app",
-  messagingSenderId: "660233908877",
-  appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
 // ============================
 // 🔹 FUNÇÃO DE LOGIN
 // ============================
@@ -3058,6 +3054,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 
 </body>
 </html>
+
 
 
 
