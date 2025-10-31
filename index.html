@@ -204,7 +204,7 @@
         }
       }
     });
- <script type="module">
+</script>
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
   import { 
     getAuth, 
@@ -1161,7 +1161,7 @@ function bloquearAcoesSimples2() {
 /* =========================
    🔹 Cadastro de produtos
 ========================= */
-function cadastrarProduto() {
+async function cadastrarProduto() {
   if (typeof padronizarCamposAntesDeSalvar === "function") padronizarCamposAntesDeSalvar();
 
   const nomeEl = document.getElementById("produtoNome");
@@ -3129,3 +3129,4 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
