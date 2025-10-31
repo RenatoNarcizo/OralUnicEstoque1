@@ -3003,6 +3003,9 @@ function exportarRelatorioFiltrado(lista) {
   document.body.removeChild(link);
 }
 
+/* =========================
+   🔁 Sincroniza nomes antigos de produto
+========================= */
 function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
   let alterado = false;
 
@@ -3031,22 +3034,26 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
     localStorage.setItem("entradas", JSON.stringify(entradas));
     localStorage.setItem("saidas", JSON.stringify(saidas));
     localStorage.setItem("produtos", JSON.stringify(produtos));
-    atualizarTabelaEntradas();
-    atualizarTabelaSaidas();
-    atualizarTabelaEstoque();
+
+    if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
+    if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
+    if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
     if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
     if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
   }
 }
-</script>  <!-- ✅ Fecha o script aqui, antes das tags HTML -->
+</script> <!-- ✅ FECHA O SCRIPT PRINCIPAL -->
 
-<!-- 🔹 Bibliotecas externas -->
+<!-- =========================
+     🔹 Bibliotecas externas
+========================= -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 </body>
 </html>
+
 
 
 
