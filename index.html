@@ -170,55 +170,50 @@
     </main>
   </div>
 
-  <!-- FIREBASE + LOGIN SCRIPT -->
  <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import {
-  getAuth,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+    // ============================
+    // 🔹 CONFIGURAÇÃO DO FIREBASE
+    // ============================
+    const firebaseConfig = {
+      apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
+      authDomain: "oralunicestoque.firebaseapp.com",
+      projectId: "oralunicestoque",
+      storageBucket: "oralunicestoque.firebasestorage.app",
+      messagingSenderId: "660233908877",
+      appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
+    };
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
-  authDomain: "oralunicestoque.firebaseapp.com",
-  projectId: "oralunicestoque",
-  storageBucket: "oralunicestoque.firebasestorage.app",
-  messagingSenderId: "660233908877",
-  appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
-};
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+    // ============================
+    // 🔹 MONITORA LOGIN
+    // ============================
+    onAuthStateChanged(auth, (user) => {
+      const loginDiv = document.getElementById("login");
+      const mainApp = document.getElementById("mainApp");
 
-// ============================
-// 🔹 MONITORA AUTENTICAÇÃO
-// ============================
-onAuthStateChanged(auth, (user) => {
-  const loginDiv = document.getElementById("login");
-  const mainApp = document.getElementById("mainApp");
-
-  if (loginDiv && mainApp) {
-    if (user) {
-      loginDiv.style.display = "none";
-      mainApp.style.display = "block";
-      document.getElementById("nomeUsuarioBemVindo").innerText =
-        user.email.split("@")[0];
-    } else {
-      loginDiv.style.display = "flex";
-      mainApp.style.display = "none";
-    }
-  }
-});
-
-
-  </script>
-</body>
-</html>
+      if (user) {
+        loginDiv.style.display = "none";
+        mainApp.style.display = "block";
+        document.getElementById("nomeUsuarioBemVindo").innerText =
+          user.email.split("@")[0];
+      } else {
+        loginDiv.style.display = "flex";
+        mainApp.style.display = "none";
+      }
+    });
 
 
 
@@ -832,9 +827,13 @@ function showSection(id) {
 window.scrollTo(0, 0);
 
 
-/* =========================
-   🔹 Logout
-========================= */
+   // ============================
+    // 🔹 LOGOUT
+    // ============================
+    window.logout = async function () {
+      await signOut(auth);
+      alert("Sessão encerrada!");
+    };
 
 function logout() {
   // 🔹 Remove sessão salva
@@ -1013,28 +1012,29 @@ function voltarParaLogin() {
 
 
 
-window.fazerLogin = async function () {
-  const usuario = document.getElementById("usuario").value.trim();
-  const senha = document.getElementById("senha").value.trim();
+  // ============================
+    // 🔹 FUNÇÃO DE LOGIN (CORRIGIDA)
+    // ============================
+    window.fazerLogin = async function () {
+      const usuario = document.getElementById("usuario").value.trim();
+      const senha = document.getElementById("senha").value.trim();
 
-  if (!usuario || !senha) {
-    alert("Preencha usuário e senha");
-    return;
-  }
+      if (!usuario || !senha) {
+        alert("Preencha usuário e senha");
+        return;
+      }
 
-  const emailFake = `${usuario}@oralunic.local`;
+      const emailFake = `${usuario}@oralunic.local`;
 
-  try {
-    await signInWithEmailAndPassword(auth, emailFake, senha);
-    alert("✅ Login realizado com sucesso!");
-  } catch (error) {
-    console.error("Erro no login:", error);
-    alert("Erro no login: " + error.message);
-  }
-};
+      try {
+        await signInWithEmailAndPassword(auth, emailFake, senha);
+        alert("✅ Login realizado com sucesso!");
+      } catch (error) {
+        console.error("Erro no login:", error);
+        alert("Erro no login: " + error.message);
+      }
+    };
 
-// 🔹 Conecta o botão ao login
-document.getElementById("btnLogin").addEventListener("click", fazerLogin);
 
 
 
@@ -1051,7 +1051,7 @@ window.showSection = function (id) {
   const alvo = document.getElementById(id);
   if (alvo) alvo.classList.add("active");
 };
-document.getElementById("btnLogin").addEventListener("click", () => {
+ document.getElementById("btnLogin").addEventListener("click", fazerLogin);
   fazerLogin();
 });
 
@@ -3012,6 +3012,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
