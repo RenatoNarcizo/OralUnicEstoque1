@@ -1011,11 +1011,9 @@ function voltarParaLogin() {
   localStorage.removeItem("usuarioLogado");
 }
 
+
 // ============================
-// 🔹 LOGIN
-// ============================
-// ============================
-// 🔹 FUNÇÃO DE LOGIN (corrigida)
+// 🔹 FUNÇÃO DE LOGIN (CORRIGIDA)
 // ============================
 window.fazerLogin = async function () {
   const usuario = document.getElementById("usuario").value.trim();
@@ -1030,12 +1028,14 @@ window.fazerLogin = async function () {
 
   try {
     await signInWithEmailAndPassword(auth, emailFake, senha);
-    alert("✅ Login bem-sucedido!");
+    alert("✅ Login realizado com sucesso!");
   } catch (error) {
     console.error("Erro no login:", error);
     alert("Erro no login: " + error.message);
   }
 };
+
+
 
 
 // ============================
@@ -3012,6 +3012,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
