@@ -180,7 +180,7 @@ import {
   createUserWithEmailAndPassword,
   signOut
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
@@ -1012,9 +1012,7 @@ function voltarParaLogin() {
 }
 
 
-// ============================
-// 🔹 FUNÇÃO DE LOGIN (DENTRO DO MÓDULO)
-// ============================
+
 window.fazerLogin = async function () {
   const usuario = document.getElementById("usuario").value.trim();
   const senha = document.getElementById("senha").value.trim();
@@ -1037,6 +1035,7 @@ window.fazerLogin = async function () {
 
 // 🔹 Conecta o botão ao login
 document.getElementById("btnLogin").addEventListener("click", fazerLogin);
+
 
 
 
@@ -3013,6 +3012,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
