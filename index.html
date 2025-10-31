@@ -2969,6 +2969,10 @@ function gerarRelatorio() {
   alert(`📊 Relatório de Entradas gerado de ${inicio} até ${fim}`);
 }
 
+<!-- =========================
+   🔹 Funções Finais
+========================= -->
+<script>
 /* =========================
    📦 Exportar Relatório Filtrado para Excel
 ========================= */
@@ -3009,6 +3013,10 @@ function exportarRelatorioFiltrado(lista) {
 function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
   let alterado = false;
 
+  if (!Array.isArray(entradas)) entradas = [];
+  if (!Array.isArray(saidas)) saidas = [];
+  if (!Array.isArray(produtos)) produtos = [];
+
   entradas.forEach(e => {
     if (e.produto === nomeAntigo) {
       e.produto = novoNome;
@@ -3042,10 +3050,10 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
     if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
   }
 }
-</script> <!-- ✅ FECHA O SCRIPT PRINCIPAL -->
+</script>
 
 <!-- =========================
-     🔹 Bibliotecas externas
+   🔹 Bibliotecas externas
 ========================= -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -3053,6 +3061,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 
 </body>
 </html>
+
 
 
 
