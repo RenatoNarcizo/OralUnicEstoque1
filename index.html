@@ -131,8 +131,8 @@
     }
   </style>
 </head>
-
 <body>
+
   <!-- LOGIN -->
   <div id="login">
     <div class="login-card">
@@ -493,9 +493,6 @@
 
 </section>
 
-      <!-- SEÇÃO: FINANCEIRO -->
-
-<!-- SEÇÃO: PAINEL FINANCEIRO -->
 <!-- SEÇÃO: PAINEL FINANCEIRO -->
 <section id="financeiro" class="section" style="display:none;">
   <h2><i class="fa fa-chart-line"></i> Painel Financeiro</h2>
@@ -725,9 +722,7 @@
     }
   });
 
-  // ============================
-  // 🔹 LOGOUT
-  // ============================
+  
   window.logout = async function () {
     await signOut(auth);
     alert("Sessão encerrada!");
@@ -736,9 +731,7 @@
 
 
 <script>
-/* =========================
-   🔹 Alternar menu lateral
-========================= */
+
 let entradas = JSON.parse(localStorage.getItem("entradas")) || [];
 let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 let saidas = JSON.parse(localStorage.getItem("saidas")) || [];
@@ -762,9 +755,7 @@ document.addEventListener("click", (e) => {
 });
 
 
-/* =========================
-   🔹 Mostrar seção
-========================= */
+
 function showSection(id) {
   // 🔹 Oculta todas as seções
   document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
@@ -1252,6 +1243,7 @@ cadastrarProduto = async function () {
   }
 };
 
+
 /* =========================
    🔹 Atualizar tabela
 ========================= */
@@ -1692,8 +1684,11 @@ function registrarSaida() {
   return true;
 }
 
-// Wrapper: chama registrarSaida e limpa os campos somente se retornar true
+/* =========================
+   🔹 Wrapper — limpa campos após registrar saída com sucesso
+========================= */
 const _registrarSaidaOriginal = registrarSaida;
+
 registrarSaida = function() {
   try {
     const result = _registrarSaidaOriginal();
@@ -1703,12 +1698,14 @@ registrarSaida = function() {
     } else {
       // mantém os dados e navega até o campo com erro (se houver)
       const erroEl = document.querySelector("#saida input[style*='red'], #saida select[style*='red']");
-      if (erroEl) erroEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (erroEl)
+        erroEl.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   } catch (err) {
     console.error("Erro ao registrar saída:", err);
   }
 };
+
 
 
 function atualizarTabelaSaidas() {
@@ -1917,7 +1914,7 @@ function atualizarTabelaLimites() {
       recomendacao = "OK";
     }
 
-    // ------- FILTROS -------
+    
     // filtroCategoria (mantém comportamento anterior)
     if (filtroCategoria && filtroCategoria !== "" && categoria !== filtroCategoria) return;
 
@@ -2078,9 +2075,8 @@ function salvarLimites(i) {
   atualizarTabelaLimites();
   ordenarListasAlfabeticamente();
 }
-</script>
-</body>
-</html>
+
+
 /* =========================
    🔹 Financeiro
 ========================= */
@@ -2628,11 +2624,8 @@ function ordenarListasAlfabeticamente() {
   if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
   if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
   if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
-     if (typeof atualizarDashboard === "function") atualizarDashboard();
-
-     if (typeof atualizarDashboard === "function") atualizarDashboard();
-
-
+  if (typeof atualizarDashboard === "function") atualizarDashboard();
+ 
   // 🔹 Atualiza selects de produto (Entrada e Saída)
   atualizarSelectProdutos();
 }
@@ -2661,11 +2654,7 @@ function atualizarSelectProdutos() {
   });
 }
 
-/* =========================
-   🔍 FILTROS DE BUSCA
-========================= */
 
-// 🔹 Produtos: busca por nome ou categoria
 function filtrarProdutos() {
   const termo = document.getElementById("filtroProduto").value.toLowerCase();
   const tbody = document.querySelector("#tabelaProdutos tbody");
@@ -2704,11 +2693,7 @@ function filtrarEstoque() {
     tr.style.display = texto.includes(termo) ? "" : "none";
   });
 }
-/* =========================
-   🧹 LIMPAR CAMPOS AUTOMATICAMENTE (GLOBAL)
-========================= */
 
-// 🔹 Função genérica — limpa todos os inputs e selects dentro de uma seção
 function limparCampos(secaoId) {
   const secao = document.getElementById(secaoId);
   if (!secao) return;
@@ -2750,9 +2735,7 @@ if (typeof salvarUsuario === "function") {
   };
 }
 
-/* =========================
-   📦 AÇÕES NO ESTOQUE MÍNIMO E MÁXIMO
-========================= */
+
 
 // 🔹 Após gerar lista de compra → exibe e permite nova ação
 const _gerarListaCompraOriginal = gerarListaCompra;
@@ -2815,9 +2798,6 @@ function limparErros(secaoId) {
 }
 
 
-/* =========================
-   📦 Exportar Lista de Compra para Excel (compatível com Excel BR)
-========================= */
 function exportarListaExcel() {
   const container = document.getElementById("listaCompraContainer");
   const tabela = document.getElementById("tabelaListaCompra");
@@ -2992,9 +2972,7 @@ function exportarRelatorioFiltrado(lista) {
   document.body.removeChild(link);
 }
 
-/* =========================
-   🔁 Sincroniza nomes antigos de produto
-========================= */
+
 function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
   let alterado = false;
 
@@ -3036,12 +3014,14 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
   }
 }
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
-</script>
+
 </body>
 </html>
+
 
 
 
