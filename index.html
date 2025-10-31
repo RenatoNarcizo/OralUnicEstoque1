@@ -999,25 +999,30 @@ function verificarSessao() {
   }
 }
 
-// === FUNÇÃO DE LOGOUT ===
-function sairDoSistema() {
-  localStorage.removeItem("usuarioLogado");
-  alert("Sessão encerrada. Faça login novamente.");
-  voltarParaLogin();
-}
+window.onload = function () {
+  // === FUNÇÃO DE LOGOUT ===
+  window.sairDoSistema = function () {
+    localStorage.removeItem("usuarioLogado");
+    alert("Sessão encerrada. Faça login novamente.");
+    voltarParaLogin();
+  };
 
-// === VOLTAR PARA LOGIN ===
-function voltarParaLogin() {
-  const loginView = document.getElementById("loginView");
-  const mainApp = document.getElementById("mainApp");
+  // === VOLTAR PARA LOGIN ===
+  window.voltarParaLogin = function () {
+    const loginView = document.getElementById("loginView");
+    const mainApp = document.getElementById("mainApp");
 
-  if (loginView && mainApp) {
-    loginView.style.display = "block";
-    mainApp.style.display = "none";
-  }
+    if (loginView && mainApp) {
+      loginView.style.display = "block";
+      mainApp.style.display = "none";
+    } else {
+      console.warn("⚠️ Estrutura de interface ainda não carregada.");
+    }
 
-  localStorage.removeItem("usuarioLogado");
-}
+    localStorage.removeItem("usuarioLogado");
+  };
+};
+
 
   // ============================
     // 🔹 FUNÇÃO DE LOGIN (CORRIGIDA)
@@ -3038,6 +3043,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
