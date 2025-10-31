@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <body>
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-      console.log("Firebase importado com sucesso!");
+<head>
+  <meta charset="UTF-8" />
+  <title>Sistema de Controle de Estoque</title>
+
+  <!-- Suas importações -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    console.log("Firebase importado com sucesso!");
     </script>
-  </body>
-</html>
+  
+
 
 
   <style>
@@ -141,11 +145,6 @@
       <button id="btnLogin">Entrar</button>
     </div>
   </div>
-
-
-
-
-
 
   <!-- IMAGEM AMPLIADA (modal) -->
   <div id="imagemAmpliada" onclick="this.style.display='none'">
@@ -322,8 +321,6 @@
 
 </section>
 
-
-
  <!-- SEÇÃO: SAÍDA DE MATERIAIS -->
 <section id="saida" class="section" style="display:none;">
   <h2><i class="fa fa-arrow-up"></i> Saída de Materiais</h2>
@@ -499,12 +496,6 @@
 
 </section>
 
-
-
-
-
-
-
       <!-- SEÇÃO: FINANCEIRO -->
 
 <!-- SEÇÃO: PAINEL FINANCEIRO -->
@@ -670,10 +661,7 @@
     </div>
 
   </div>
-
-
 </section>
-
     </main>
 
 <script type="module">
@@ -1953,7 +1941,7 @@ function atualizarTabelaLimites() {
 
       if (!matches) return; // não passa no filtro
     }
-    // ------------------------
+   
 
     total++;
 
@@ -3055,6 +3043,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </script>
 </body>
 </html>
+
 
 
 
