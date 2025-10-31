@@ -860,14 +860,6 @@ document.getElementById("login").style.display = "flex";
   usuarioEl.focus();
 }
 
-/* =========================
-   🔹 Login
-========================= */
-
-/* ================================
-   🔐 LOGIN, VERIFICAÇÃO E LOGOUT
-================================ */
-
 // Executa quando o DOM estiver pronto
 document.addEventListener("DOMContentLoaded", () => {
   verificarSessao();
@@ -942,9 +934,6 @@ document.addEventListener("keydown", function (event) {
   }
 });
 
-
-
-
 // === MOSTRA SISTEMA ===
 function mostrarSistema(sessao) {
   const loginView = document.getElementById("loginView");
@@ -982,8 +971,6 @@ function mostrarSistema(sessao) {
   if (typeof aplicarPermissoes === "function") aplicarPermissoes();
   if (typeof bloquearAcoesSimples2 === "function") bloquearAcoesSimples2();
 }
-
-
 
 // === VERIFICAÇÃO DE SESSÃO (ao carregar) ===
 function verificarSessao() {
@@ -1042,17 +1029,6 @@ window.fazerLogin = async function () {
     await signInWithEmailAndPassword(auth, emailFake, senha);
   } catch (error) {
     alert("Erro no login: " + error.message);
-  }
-};
-
-// ============================
-// 🔹 LOGOUT
-// ============================
-window.logout = async function () {
-  try {
-    await signOut(auth);
-  } catch (error) {
-    console.error("Erro ao sair:", error);
   }
 };
 
@@ -1121,9 +1097,6 @@ function bloquearAcoesSimples2() {
   });
 }
 
-/* =========================
-   🔹 Cadastro de produtos
-========================= */
 /* =========================
    🔹 Cadastro de produtos
 ========================= */
@@ -1290,9 +1263,6 @@ sincronizarNomeProdutoAntigo(novoNome, nomeAntigo);
 }
 
 /* =========================
-   🔹 Registrar Entrada (versão corrigida)
-========================= */
-/* =========================
    🔹 Registrar Entrada (versão final)
 ========================= */
 function registrarEntrada() {
@@ -1382,21 +1352,11 @@ function registrarEntrada() {
   return true;
 }
 
-
-
-
-
-
-
 function buscarCodigoBarrasDoProduto(nomeProduto) {
   if (!Array.isArray(produtos)) return "-";
   const prod = produtos.find(p => p.nome === nomeProduto);
   return prod ? prod.codigoBarras : "-";
 }
-
-
-
-
 
 function atualizarTabelaEntradas() {
   const tbody = document.querySelector("#tabelaEntradas tbody");
@@ -1577,8 +1537,6 @@ function buscarProdutoPorCodigo(contexto) {
   if (campoProduto) campoProduto.value = produto.nome;
 }
 
-
-
 /* =========================
    🔹 Saídas
 ========================= */
@@ -1734,13 +1692,6 @@ function atualizarSetoresPorProduto() {
     .join("");
 }
 
-
-
-
-
-
-
-
 function editarSaida(i) {
   const s = saidas[i];
   document.getElementById("saidaProduto").value = s.produto;
@@ -1805,8 +1756,6 @@ function atualizarSetorAutomatico() {
     setorSelect.innerHTML = `<option value="">Setor não encontrado</option>`;
   }
 }
-
-
 
 /* =========================
    🔹 Atualizar Estoque
@@ -1957,10 +1906,6 @@ function atualizarTabelaLimites() {
     `;
 }
 
-
-
-
-
 // 🔹 Gera lista de compra (todos os produtos abaixo do mínimo)
 
 function gerarListaCompra() {
@@ -2050,9 +1995,6 @@ function limparListaCompra() {
   atualizarTabelaLimites(); // 👈 volta a mostrar todos os produtos no estoque
 }
 
-
-
-
 function salvarLimites(i) {
   const min = +document.getElementById(`min-${i}`).value;
   const max = +document.getElementById(`max-${i}`).value;
@@ -2069,9 +2011,6 @@ function salvarLimites(i) {
   atualizarTabelaLimites();
   ordenarListasAlfabeticamente();
 }
-
-
-
 
 /* =========================
    🔹 Financeiro
@@ -2197,13 +2136,6 @@ function atualizarPainelFinanceiro() {
   });
 }
 
-
-
-
-
-/* =========================
-   🔹 Relatórios
-========================= */
 /* =========================
    🔹 Relatórios (corrigido)
 ========================= */
@@ -2393,8 +2325,6 @@ function gerarPedidoPDF() {
   const data = new Date().toLocaleDateString().replace(/\//g, "-");
   doc.save(`Pedido_de_Orcamento_${data}.pdf`);
 }
-
-
 
 
 /* =========================
@@ -2595,10 +2525,6 @@ function atualizarDashboard() {
   `;
 }
 
-
-
-
-
 /* =========================
    🔹 Ordenação geral (produtos, fornecedores, usuários)
 ========================= */
@@ -2773,10 +2699,6 @@ registrarEntrada = function() {
     console.error("Erro ao registrar entrada:", err);
   }
 };
-
-
-
-
 
 
 // 🔹 GERENCIAR USUÁRIOS E PERFIS
@@ -2955,9 +2877,6 @@ function limparPeriodo() {
 }
 
 /* =========================
-   🔹 Gerar relatório por data (genérico)
-========================= */
-/* =========================
    🔹 Gerar relatório por data (sem exibir tabela, exporta direto)
 ========================= */
 function gerarRelatorio() {
@@ -3087,5 +3006,6 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
