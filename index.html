@@ -1009,20 +1009,6 @@ window.onload = function () {
     voltarParaLogin();
   };
 
-  // === VOLTAR PARA LOGIN ===
-  window.voltarParaLogin = function () {
-    const loginView = document.getElementById("loginView");
-    const mainApp = document.getElementById("mainApp");
-
-    if (loginView && mainApp) {
-      loginView.style.display = "block";
-      mainApp.style.display = "none";
-    } else {
-      console.warn("⚠️ Estrutura de interface ainda não carregada.");
-    }
-
-    localStorage.removeItem("usuarioLogado");
-  };
 
   // ============================
   // 🔹 FUNÇÃO DE LOGIN (CORRIGIDA)
@@ -3057,6 +3043,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
