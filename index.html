@@ -1084,116 +1084,97 @@ function bloquearAcoesSimples2() {
 }
 
 /* =========================
-   🔹 Cadastro de produtos
+   🔹 Registrar Entrada (versão final)
 ========================= */
-async function cadastrarProduto() {
-  if (typeof padronizarCamposAntesDeSalvar === "function") padronizarCamposAntesDeSalvar();
+async function registrarEntrada() {
+  // 🔹 Carrega arrays globais
+  entradas = JSON.parse(localStorage.getItem("entradas")) || [];
+  produtos = await carregarProdutosDoFirebase(); // ✅ agora o await é válido
 
-  const nomeEl = document.getElementById("produtoNome");
-  const categoriaEl = document.getElementById("produtoCategoria");
-  const embalagemEl = document.getElementById("produtoEmbalagem");
-  const qtdEl = document.getElementById("produtoQtdEmbalagem");
-  const fotoInput = document.getElementById("produtoFoto");
-  const codigoBarrasEl = document.getElementById("produtoCodigoBarras");
-  const codigoBarras = codigoBarrasEl ? codigoBarrasEl.value.trim() : "";
+  // 🔹 Referências dos campos
+  const produtoEl = document.getElementById("entradaProduto");
+  const qtdEl = document.getElementById("entradaQuantidade");
+  const valorEl = document.getElementById("entradaValor");
+  const dataEl = document.getElementById("entradaData");
+  const notaEl = document.getElementById("entradaNota");
+  const fornecedorEl = document.getElementById("entradaFornecedor");
+  const cnpjEl = document.getElementById("entradaCNPJ");
+  const loteEl = document.getElementById("entradaLote");
+  const validadeEl = document.getElementById("entradaValidade");
+  const setorEl = document.getElementById("entradaSetor");
 
-  // 🔹 Remove marcações anteriores
-  [nomeEl, categoriaEl, embalagemEl, qtdEl, fotoInput, codigoBarrasEl].forEach(el => {
-    if (el) el.style.border = "1px solid #ccc";
-  });
+  const campos = [produtoEl, qtdEl, valorEl, dataEl, notaEl, fornecedorEl, cnpjEl, loteEl, validadeEl, setorEl];
+  campos.forEach(el => (el.style.border = "1px solid #ccc"));
 
-  // 🔹 Validações
-  if (!nomeEl.value.trim()) {
-    alert("Informe o nome do produto!");
-    nomeEl.style.border = "2px solid red";
-    nomeEl.focus();
-    return false;
-  }
-  if (!categoriaEl.value.trim()) {
-    alert("Selecione a categoria do produto!");
-    categoriaEl.style.border = "2px solid red";
-    categoriaEl.focus();
-    return false;
-  }
-  if (!embalagemEl.value.trim()) {
-    alert("Selecione o tipo de embalagem!");
-    embalagemEl.style.border = "2px solid red";
-    embalagemEl.focus();
-    return false;
-  }
-  if (!qtdEl.value || Number(qtdEl.value) <= 0) {
-    alert("Informe a quantidade por embalagem!");
-    qtdEl.style.border = "2px solid red";
-    qtdEl.focus();
-    return false;
-  }
-  if (!fotoInput.files || !fotoInput.files[0]) {
-    alert("É obrigatório inserir uma foto do produto!");
-    fotoInput.style.border = "2px solid red";
-    fotoInput.focus();
+  // 🔹 Validação simples
+  if (!produtoEl.value.trim()) return alert("Informe o nome do produto!");
+  if (!qtdEl.value || Number(qtdEl.value) <= 0) return alert("Informe a quantidade!");
+  if (!valorEl.value || Number(valorEl.value) <= 0) return alert("Informe o valor unitário!");
+  if (!dataEl.value) return alert("Selecione a data!");
+  if (!notaEl.value.trim()) return alert("Informe a nota fiscal!");
+  if (!fornecedorEl.value.trim()) return alert("Informe o fornecedor!");
+
+  // 🔹 CNPJ (deve ter 14 dígitos)
+  const cnpj = cnpjEl.value.trim();
+  const apenasNums = cnpj.replace(/\D/g, "");
+  if (apenasNums.length !== 14) {
+    alert("CNPJ deve conter 14 números. Exemplo: 12.345.678/0001-90");
+    cnpjEl.style.border = "2px solid red";
     return false;
   }
 
-  // 🔹 Verifica duplicidades
-  const nome = nomeEl.value.trim();
-  const nomeNormalizado = nome.toLowerCase();
-  const produtoDuplicado = produtos.some(
-    (p) => p.nome && p.nome.trim().toLowerCase() === nomeNormalizado
-  );
+  if (!loteEl.value.trim()) return alert("Informe o número do lote!");
+  if (!validadeEl.value) return alert("Selecione a validade!");
+  if (!setorEl.value.trim()) return alert("Selecione o setor!");
 
-  if (produtoDuplicado) {
-    alert(`Já existe um produto cadastrado com o nome "${nome}".`);
-    nomeEl.style.border = "2px solid red";
-    nomeEl.focus();
-    return false;
-  }
-
-  if (codigoBarras) {
-    const existeCodigo = produtos.some(p => p.codigoBarras === codigoBarras);
-    if (existeCodigo) {
-      alert("Já existe um produto cadastrado com este código de barras!");
-      codigoBarrasEl.style.border = "2px solid red";
-      codigoBarrasEl.focus();
-      return false;
-    }
-  }
-
-  const categoria = categoriaEl.value.trim();
-  const embalagem = embalagemEl.value.trim();
-  const qtdEmbalagem = qtdEl.value;
-
-  // ✅ Aqui está a correção principal:
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    const foto = e.target.result;
-
-    produtos.push({
-      nome,
-      categoria,
-      embalagem,
-      qtdEmbalagem,
-      foto,
-      quantidade: 0,
-      codigoBarras: codigoBarras || ""
-    });
-
-    // 🔹 Agora o await funciona dentro do async onload
-    if (typeof salvarProdutosNoFirebase === "function") {
-      await salvarProdutosNoFirebase(produtos);
-    }
-
-    atualizarTabelaProdutos();
-    if (typeof ordenarListasAlfabeticamente === "function") ordenarListasAlfabeticamente();
-
-    alert("Produto cadastrado com sucesso!");
-
-    // ✅ Limpa os campos após salvar
-    [nomeEl, categoriaEl, embalagemEl, qtdEl, fotoInput, codigoBarrasEl].forEach(el => el.value = "");
+  // 🔹 Monta o objeto da nova entrada
+  const novaEntrada = {
+    produto: produtoEl.value.trim(),
+    qtd: Number(qtdEl.value),
+    valor: Number(valorEl.value),
+    data: dataEl.value,
+    nota: notaEl.value.trim(),
+    fornecedor: fornecedorEl.value.trim(),
+    cnpj: cnpj,
+    lote: loteEl.value.trim(),
+    validade: validadeEl.value,
+    setor: setorEl.value.trim(),
   };
 
-  reader.readAsDataURL(fotoInput.files[0]);
+  // 🔹 Salva no localStorage
+  entradas.push(novaEntrada);
+  localStorage.setItem("entradas", JSON.stringify(entradas));
+
+  // 🔹 Atualiza produto relacionado
+  const produtoRef = produtos.find(
+    (p) => p.nome.trim().toLowerCase() === novaEntrada.produto.trim().toLowerCase()
+  );
+  if (produtoRef) {
+    produtoRef.lote = novaEntrada.lote;
+    produtoRef.validade = novaEntrada.validade;
+    localStorage.setItem("produtos", JSON.stringify(produtos));
+  }
+
+  // 🔹 Atualiza as tabelas
+  atualizarEstoque(novaEntrada.produto, novaEntrada.qtd);
+  atualizarTabelaEntradas();
+  atualizarTabelaEstoque();
+  if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
+
+  alert("Entrada registrada com sucesso!");
+
+  // 🔹 Limpa todos os campos para novo lançamento
+  campos.forEach((el) => {
+    if (el.tagName === "SELECT") el.selectedIndex = 0;
+    else el.value = "";
+  });
+
+  // 🔹 Posiciona o cursor no campo de produto
+  produtoEl.focus();
+
   return true;
 }
+
 
 
 function atualizarTabelaProdutos() {
@@ -2999,6 +2980,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
