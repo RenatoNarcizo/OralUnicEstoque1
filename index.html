@@ -1002,6 +1002,27 @@ function verificarSessao() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+// === FUNÇÃO AUXILIAR: Espera o DOM estar pronto ===
+async function aguardarInterface() {
+  // aguarda até que #loginView e #mainApp existam no DOM
+  return new Promise((resolve) => {
+    const tentar = () => {
+      const loginView = document.getElementById("loginView");
+      const mainApp = document.getElementById("mainApp");
+      if (loginView && mainApp) resolve();
+      else setTimeout(tentar, 100);
+    };
+    tentar();
+  });
+}
+
+// === INICIALIZAÇÃO PRINCIPAL ===
+(async function iniciarSistema() {
+  // aguarda o DOM completo antes de continuar
+  await aguardarInterface();
+
+  console.log("✅ Estrutura de interface carregada com sucesso.");
+
   // === FUNÇÃO DE LOGOUT ===
   window.sairDoSistema = function () {
     localStorage.removeItem("usuarioLogado");
@@ -1017,14 +1038,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (loginView && mainApp) {
       loginView.style.display = "block";
       mainApp.style.display = "none";
-    } else {
-      console.warn("⚠️ Estrutura de interface ainda não carregada.");
     }
 
     localStorage.removeItem("usuarioLogado");
   };
 
-  // === FUNÇÃO DE LOGIN ===
+  // === LOGIN ===
   window.fazerLogin = async function () {
     const usuario = document.getElementById("usuario").value.trim();
     const senha = document.getElementById("senha").value.trim();
@@ -1053,10 +1072,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // ✅ chama a verificação depois que o DOM e o Firebase estão prontos
-  setTimeout(verificarSessao, 200);
-});
+  // === VERIFICAR SESSÃO ===
+  function verificarSessao() {
+    const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado") || "{}");
+    const loginView = document.getElementById("loginView");
+    const mainApp = document.getElementById("mainApp");
 
+    if (!loginView || !mainApp) {
+      console.warn("⚠️ Estrutura de interface ainda não carregada.");
+      return;
+    }
+
+    if (usuarioLogado.logado) {
+      mostrarSistema(usuarioLogado);
+    } else {
+      voltarParaLogin();
+    }
+  }
+
+  // ✅ Chama a verificação final após DOM e Firebase prontos
+  verificarSessao();
+})();
+
+	
 
 
 // ============================
@@ -3054,6 +3092,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 </body>
 
 </html>
+
 
 
 
