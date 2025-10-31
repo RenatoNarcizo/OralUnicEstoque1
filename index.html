@@ -172,82 +172,7 @@
     </main>
   </div>
   </body>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import {
-  getAuth,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-// ============================
-// 🔹 CONFIGURAÇÃO FIREBASE
-// ============================
-const firebaseConfig = {
-  apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
-  authDomain: "oralunicestoque.firebaseapp.com",
-  projectId: "oralunicestoque",
-  storageBucket: "oralunicestoque.firebasestorage.app",
-  messagingSenderId: "660233908877",
-  appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-// ============================
-// 🔹 FUNÇÃO DE LOGIN
-// ============================
-window.fazerLogin = async function () {
-  const usuario = document.getElementById("usuario").value.trim();
-  const senha = document.getElementById("senha").value.trim();
-
-  if (!usuario || !senha) {
-    alert("Preencha usuário e senha!");
-    return;
-  }
-
-  // 🟡 Se quiser permitir que o usuário digite só “joao”, o código completa o e-mail:
-  const email = usuario.includes("@") ? usuario : `${usuario}@oralunic.com`;
-
-  try {
-    const cred = await signInWithEmailAndPassword(auth, email, senha);
-    console.log("✅ Login bem-sucedido:", cred.user.email);
-    alert("Login realizado com sucesso!");
-  } catch (error) {
-    console.error("❌ Erro no login:", error);
-    alert("Erro no login: " + error.message);
-  }
-};
-// ============================
-// 🔹 MONITORA LOGIN (mostra ou esconde telas)
-// ============================
-onAuthStateChanged(auth, (user) => {
-  const loginDiv = document.getElementById("login");
-  const mainApp = document.getElementById("mainApp");
-
-  if (user) {
-    loginDiv.style.display = "none";
-    mainApp.style.display = "block";
-    document.getElementById("nomeUsuarioBemVindo").innerText =
-      user.email.split("@")[0];
-  } else {
-    loginDiv.style.display = "flex";
-    mainApp.style.display = "none";
-  }
-});
-// ============================
-// 🔹 LOGOUT
-// ============================
-window.logout = async function () {
-  await signOut(auth);
-  alert("Sessão encerrada!");
-  console.log("Usuário deslogado.");
-};
-</script>
 
 
   <!-- IMAGEM AMPLIADA (modal) -->
@@ -780,9 +705,84 @@ window.logout = async function () {
     </main>
   </div> <!-- fim do mainApp -->
 	
-<!-- ===================== -->
-<!-- ⚙️ SCRIPT PRINCIPAL -->
-<!-- ===================== -->
+	<script type="module">
+	
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+// ============================
+// 🔹 CONFIGURAÇÃO FIREBASE
+// ============================
+const firebaseConfig = {
+  apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
+  authDomain: "oralunicestoque.firebaseapp.com",
+  projectId: "oralunicestoque",
+  storageBucket: "oralunicestoque.firebasestorage.app",
+  messagingSenderId: "660233908877",
+  appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+// ============================
+// 🔹 FUNÇÃO DE LOGIN
+// ============================
+window.fazerLogin = async function () {
+  const usuario = document.getElementById("usuario").value.trim();
+  const senha = document.getElementById("senha").value.trim();
+
+  if (!usuario || !senha) {
+    alert("Preencha usuário e senha!");
+    return;
+  }
+
+  // 🟡 Se quiser permitir que o usuário digite só “joao”, o código completa o e-mail:
+  const email = usuario.includes("@") ? usuario : `${usuario}@oralunic.com`;
+
+  try {
+    const cred = await signInWithEmailAndPassword(auth, email, senha);
+    console.log("✅ Login bem-sucedido:", cred.user.email);
+    alert("Login realizado com sucesso!");
+  } catch (error) {
+    console.error("❌ Erro no login:", error);
+    alert("Erro no login: " + error.message);
+  }
+};
+// ============================
+// 🔹 MONITORA LOGIN (mostra ou esconde telas)
+// ============================
+onAuthStateChanged(auth, (user) => {
+  const loginDiv = document.getElementById("login");
+  const mainApp = document.getElementById("mainApp");
+
+  if (user) {
+    loginDiv.style.display = "none";
+    mainApp.style.display = "block";
+    document.getElementById("nomeUsuarioBemVindo").innerText =
+      user.email.split("@")[0];
+  } else {
+    loginDiv.style.display = "flex";
+    mainApp.style.display = "none";
+  }
+});
+// ============================
+// 🔹 LOGOUT
+// ============================
+window.logout = async function () {
+  await signOut(auth);
+  alert("Sessão encerrada!");
+  console.log("Usuário deslogado.");
+};
+</script>
+
 <script>
 /* =========================
    🔹 Alternar menu lateral
@@ -3076,22 +3076,15 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 
 
 
-
-
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-</body>
-</html>
-
-
-</script>
+<!-- 🔹 Bibliotecas externas -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 </body>
-
 </html>
+
+
 
 
 
