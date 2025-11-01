@@ -658,19 +658,13 @@
 </head>
  <body>
 
-<script type="module">
+  <!-- Firebase login básico -->
+ <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import {
-    getAuth,
-    signInWithEmailAndPassword,
-    onAuthStateChanged,
-    signOut
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut }
+    from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-  console.log("🔥 Firebase importado com sucesso!");
-
-  // ✅ Inicialização Firebase
+  // Configuração do Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
     authDomain: "oralunicestoque.firebaseapp.com",
@@ -680,50 +674,47 @@
     appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
   };
 
+  // Inicialização
   const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);     // ✅ auth depende de app, então precisa vir depois
-  const db = getFirestore(app);
+  const auth = getAuth(app);
 
-  // ============================
-  // 🔹 FUNÇÃO DE LOGIN
-  // ============================
-  window.fazerLogin = async function () {
+  // === LOGIN CORRIGIDO ===
+  window.fazerLogin = async function() {
     const usuario = document.getElementById("usuario").value.trim();
     const senha = document.getElementById("senha").value.trim();
+
     if (!usuario || !senha) {
       alert("Preencha usuário e senha!");
       return;
     }
-    const email = usuario.includes("@") ? usuario : `${usuario}@oralunic.com`;
+
+    // Usa o e-mail exatamente como digitado (não adiciona domínio automático)
+    const email = usuario.trim();
+
     try {
-      const cred = await signInWithEmailAndPassword(auth, email, senha);
-      console.log("✅ Login bem-sucedido:", cred.user.email);
-      alert("Login realizado com sucesso!");
+      await signInWithEmailAndPassword(auth, email, senha);
     } catch (error) {
-      console.error("❌ Erro no login:", error);
-      alert("Erro no login: " + error.message);
+      console.error(error.code, error.message);
+      alert(`Erro de login: ${error.code}`);
     }
   };
 
-  // ============================
-  // 🔹 MONITORA LOGIN
-  // ============================
+  // === MONITORAR LOGIN ===
   onAuthStateChanged(auth, (user) => {
-    const loginDiv = document.getElementById("login");
-    const mainApp = document.getElementById("mainApp");
+    const login = document.getElementById("login");
+    const appDiv = document.getElementById("mainApp");
     if (user) {
-      loginDiv.style.display = "none";
-      mainApp.style.display = "block";
-      document.getElementById("nomeUsuarioBemVindo").innerText =
-        user.email.split("@")[0];
+      login.style.display = "none";
+      appDiv.style.display = "block";
+      document.getElementById("userName").innerText = user.email;
     } else {
-      loginDiv.style.display = "flex";
-      mainApp.style.display = "none";
+      login.style.display = "flex";
+      appDiv.style.display = "none";
     }
   });
 
-  
-  window.logout = async function () {
+  // === LOGOUT ===
+  window.logout = async function() {
     await signOut(auth);
     alert("Sessão encerrada!");
   };
@@ -3021,6 +3012,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 
 </body>
 </html>
+
 
 
 
