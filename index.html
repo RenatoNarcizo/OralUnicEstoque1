@@ -275,21 +275,10 @@
     alert("Sessão encerrada!");
   };
 </script>
+.logout=()=>signOut(auth);
+  </script>
  
-
-    
-  
-
-    <!-- CONTEÚDO PRINCIPAL -->
-    <main>
-<!-- SEÇÃO: BOAS-VINDAS -->
-<section id="boasVindas" class="section active" style="text-align:center; padding:100px 20px;">
-  <h1 style="color:#003b88;">👋 Bem-vindo(a) <span id="nomeUsuarioBemVindo"></span>!</h1>
-  <h2 style="color:#0d6efd;">ao Sistema de Controle de Estoque – Oral Unic Campo Grande</h2>
-  <p style="margin-top:20px; color:#555;">Use o menu lateral para iniciar suas atividades.</p>
-</section>
-
-      <!-- SEÇÃO: CADASTRO DE PRODUTOS -->
+  <!-- SEÇÃO: CADASTRO DE PRODUTOS -->
       <section id="cadastro" class="section">
         <h2><i class="fa fa-box"></i> Cadastro de Produtos</h2>
 
@@ -455,648 +444,14 @@
     </table>
   </div>
 </section>
-
-
-
-      <!-- SEÇÃO: ESTOQUE ATUAL -->
-      <section id="estoque" class="section" style="display:none;">
-        <h2><i class="fa fa-warehouse"></i> Estoque Atual</h2>
-
-        <div style="margin-bottom:10px;">
-          <input id="filtroEstoque" type="text" placeholder="🔍 Buscar no estoque (produto, categoria)" style="width:98%" oninput="filtrarEstoque()" />
-        </div>
-
-        <div class="table-wrap">
-        <table id="tabelaEstoque">
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>Produto</th>
-      <th>Código de Barras</th>
-      <th>Categoria</th>
-      <th>Quantidade</th>
-      <th>Lote</th>
-      <th>Validade</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
-        </div>
-      </section>
-
-<!-- FIM DO BLOCO 2/5 -->
-<!-- 📦 SEÇÃO: ESTOQUE MÍNIMO E MÁXIMO -->
-<section id="limites" class="section" style="display:none;">
-  <h2><i class="fa fa-boxes"></i> Estoque Mínimo e Máximo</h2>
-
-  <!-- 🔹 Resumo de contagem -->
-  <div id="resumoEstoque" style="margin-bottom:10px; font-weight:bold; color:#333;">
-    🧾 Total de Produtos: 0 |
-    ⚠️ Abaixo do Mínimo: 0 |
-    ✅ Dentro do Limite: 0 |
-    📦 Acima do Máximo: 0
-  </div>
-
-  <!-- 🔍 Filtros -->
-  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
-    <input
-      id="filtroLimite"
-      type="text"
-      placeholder="🔍 Buscar por produto"
-      style="flex:1; min-width:220px"
-      oninput="atualizarTabelaLimites()"
-    />
-
-    <select id="filtroCategoria" onchange="atualizarTabelaLimites()" style="min-width:220px;">
-      <option value="">Todas as Categorias</option>
-      <option>Material de Uso e Consumo</option>
-      <option>Copa e Cozinha</option>
-      <option>Escritório</option>
-      <option>Implante e Componentes</option>
-      <option>Insumo Dental</option>
-      <option>Insumo Laboratório</option>
-      <option>Medicamentos</option>
-      <option>Material de Limpeza</option>
-    </select>
-
-    <button onclick="gerarListaCompra()"><i class="fa fa-list"></i> Gerar Lista de Compra</button>
-    <button onclick="limparListaCompra()"><i class="fa fa-trash"></i> Limpar Lista</button>
-  </div>
-
-  <!-- 📋 Tabela principal -->
-  <div class="table-wrap">
-  <table id="tabelaLimites">
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>Produto</th>
-      <th>Código de Barras</th>
-      <th>Categoria</th>
-      <th>Qtd Atual</th>
-      <th>Mínimo</th>
-      <th>Máximo</th>
-      <th>Status</th>
-      <th>Recomendação</th>
-      <th>Ações</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
-
-
-  </div>
-
-
-  <!-- 🛒 Lista de compra -->
-<div id="listaCompraContainer" style="display:none; margin-top:20px;">
-  <h3><i class="fa fa-shopping-cart"></i> Lista de Compra Gerada</h3>
-
- <div class="table-wrap" style="max-height:400px; overflow-y:auto; overflow-x:auto; border:1px solid #ccc;">
-    <table id="tabelaListaCompra" class="tabela-padrao">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Produto</th>
-          <th>Código de Barras</th>
-          <th>Categoria</th>
-          <th>Qtd Atual</th>
-          <th>Mínimo</th>
-          <th>Recomendado Comprar</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-      <tfoot>
-        <tr>
-          <td colspan="6" style="text-align:right; font-weight:bold;">Total de Itens:</td>
-          <td id="totalItensCompra" style="font-weight:bold;">0</td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
-
-  <!-- 🔹 Ações de exportação -->
-  <div style="margin-top:10px;">
-    <button onclick="exportarListaExcel()">
-      <i class="fa fa-file-excel"></i> Exportar para Excel
-    </button>
-    <button onclick="gerarPedidoPDF()">
-      <i class="fa fa-file-pdf"></i> Gerar Pedido de Orçamento (PDF)
-    </button>
-  </div>
-</div>
-
-</section>
-
-<!-- SEÇÃO: PAINEL FINANCEIRO -->
-<section id="financeiro" class="section" style="display:none;">
-  <h2><i class="fa fa-chart-line"></i> Painel Financeiro</h2>
-
-  <!-- 🔸 Indicadores financeiros detalhados -->
-  <div style="display:flex; flex-wrap:wrap; gap:15px; margin-bottom:20px;">
-
-    <!-- Último valor de entrada -->
-    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-      <h3>💰 Último Valor de Entrada</h3>
-      <p id="valorUltimaEntrada" style="font-size:1.4em; font-weight:bold; color:#007bff;">R$ 0,00</p>
-    </div>
-
-    <!-- Custo médio ponderado -->
-    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-      <h3>📊 Custo Médio Ponderado</h3>
-      <p id="valorCustoMedio" style="font-size:1.4em; font-weight:bold; color:#6f42c1;">R$ 0,00</p>
-    </div>
-
-    <!-- Valor total do estoque atual -->
-    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-      <h3>📦 Valor Total do Estoque Atual</h3>
-      <p id="valorEstoqueAtualPainel" style="font-size:1.4em; font-weight:bold; color:#28a745;">R$ 0,00</p>
-    </div>
-  </div>
-
-  <!-- 🔸 Indicadores principais existentes -->
-  <div style="display:flex; flex-wrap:wrap; gap:15px; margin-bottom:20px;">
-    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-      <h3>💰 Valor Total do Estoque Atual (Contábil)</h3>
-      <p id="valorEstoque" style="font-size:1.4em; font-weight:bold; color:#28a745;">R$ 0,00</p>
-    </div>
-
-    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-      <h3>💸 Valor Total das Saídas (Estimado)</h3>
-      <p id="valorSaidas" style="font-size:1.4em; font-weight:bold; color:#dc3545;">R$ 0,00</p>
-    </div>
-  </div>
-
-  <!-- 🔸 Entradas agrupadas -->
-  <h3 style="margin-top:25px;"><i class="fa fa-file-invoice"></i> Entradas Agrupadas por Nota Fiscal</h3>
-  <div class="table-wrap">
-    <table id="tabelaFinanceiro">
-      <thead>
-        <tr>
-          <th>Fornecedor</th>
-          <th>Nota Fiscal</th>
-          <th>Valor Total da Nota (R$)</th>
-          <th>Saldo da Nota (R$)</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</section>
-
-    <!-- SEÇÃO: RELATÓRIOS -->
-<section id="relatorios" class="section" style="display:none;">
-  <h2><i class="fa fa-chart-line"></i> Relatórios</h2>
-
-  <!-- 🔹 Botões principais -->
-  <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
-    <button onclick="gerarRelatorioProdutos()"><i class="fa fa-file-excel"></i> Produtos</button>
-    <button onclick="gerarRelatorioEntradas()"><i class="fa fa-file-excel"></i> Entradas</button>
-    <button onclick="gerarRelatorioSaidas()"><i class="fa fa-file-excel"></i> Saídas</button>
-    <button onclick="gerarRelatorioEstoque()"><i class="fa fa-file-excel"></i> Estoque</button>
-  </div>
-
-  <!-- 🔹 Filtro de período -->
-  <div id="filtroPeriodo" style="margin: 15px 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
-    <label><b>Data Início:</b></label>
-    <input type="date" id="dataInicioRelatorio" style="padding: 4px 6px;">
-
-    <label><b>Data Fim:</b></label>
-    <input type="date" id="dataFimRelatorio" style="padding: 4px 6px;">
-
-    <button onclick="gerarRelatorio()" style="background:#2b6cb0;color:#fff;padding:4px 8px;border:none;border-radius:4px;">
-      <i class="fa fa-filter"></i> Filtrar
-    </button>
-
-    <button onclick="definirPeriodoRapido('hoje')">Hoje</button>
-    <button onclick="definirPeriodoRapido('7dias')">Últimos 7 dias</button>
-    <button onclick="definirPeriodoRapido('30dias')">Últimos 30 dias</button>
-    <button onclick="definirPeriodoRapido('mes')">Mês Atual</button>
-    <button onclick="limparPeriodo()">Limpar</button>
-  </div>
-
-  <!-- 🔹 Informativo -->
-  <div style="background:#fff;padding:10px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
-    <p>Os relatórios são gerados em formato Excel (.csv) e incluem todos os dados das tabelas correspondentes.</p>
-  </div>
-</section>
-
-
-      <!-- SEÇÃO: USUÁRIOS E PERFIS -->
-      <section id="usuarios" class="section" style="display:none;">
-        <h2><i class="fa fa-users"></i> Gerenciar Usuários e Perfis</h2>
-
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
-          <input id="usuarioNome" type="text" placeholder="Nome" />
-          <input id="usuarioCPF" type="text" placeholder="CPF" />
-          <input id="usuarioEmail" type="email" placeholder="E-mail" />
-          <input id="usuarioSenha" type="password" placeholder="Senha" />
-          <select id="usuarioPerfil">
-            <option value="admin">Administrador</option>
-            <option value="simples1">Simples 01</option>
-            <option value="simples2">Simples 02</option>
-          </select>
-          <button onclick="salvarUsuario()"><i class="fa fa-save"></i> Salvar</button>
-        </div>
-
-        <div class="table-wrap">
-          <table id="tabelaUsuarios">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Nome</th>
-                <th>CPF</th>
-                <th>Email</th>
-                <th>Perfil</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </section>
-
-
- </style>
-</head>
- <body>
-
- 
-
-
-<script>
-
+   <script>
 let entradas = JSON.parse(localStorage.getItem("entradas")) || [];
 let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
-let saidas = JSON.parse(localStorage.getItem("saidas")) || [];
-
-function toggleSidebar() {
-  const sidebar = document.getElementById("sidebar");
-  if (sidebar) sidebar.classList.toggle("active");
-}
-
-// Fecha o menu lateral se o usuário clicar fora dele
-document.addEventListener("click", (e) => {
-  const sidebar = document.getElementById("sidebar");
-  const menuBtn = document.getElementById("menuToggle");
-  if (
-    sidebar.classList.contains("active") &&
-    !sidebar.contains(e.target) &&
-    !menuBtn.contains(e.target)
-  ) {
-    sidebar.classList.remove("active");
-  }
-});
-
-
-
-function showSection(id) {
-  // 🔹 Oculta todas as seções
-  document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
-
-  // 🔹 Mostra apenas a seção selecionada
-  const alvo = document.getElementById(id);
-  if (alvo) alvo.style.display = "block";
-
-  // 🔹 Fecha automaticamente o menu lateral em qualquer tamanho de tela
-  const sidebar = document.getElementById("sidebar");
-  if (sidebar && sidebar.classList.contains("active")) {
-    sidebar.classList.remove("active");
-  }
-
-  // 🔹 Reposiciona o scroll no topo
-  window.scrollTo({ top: 0, behavior: "smooth" });
-
-  // 🔹 Atualiza dados se for painel financeiro
-  if (id === "financeiro" && typeof atualizarPainelFinanceiro === "function") {
-    atualizarPainelFinanceiro();
-  }
-
-  // 🔹 Atualiza dados se for o dashboard
-  if (id === "dashboard" && typeof atualizarDashboard === "function") {
-    atualizarDashboard();
-  }
-}
-
-// 🔹 Mantém a tela centralizada no login
-window.scrollTo(0, 0);
-
-
-function logout() {
-  // 🔹 Remove sessão salva
-  localStorage.removeItem("usuarioLogado");
-
-  // 🔹 Esconde o app e volta para tela de login
-  document.getElementById("painel").style.display = "none";
-document.getElementById("login").style.display = "flex";
-
-  // 🔹 Limpa os campos de login e mensagem
-  const usuarioEl = document.getElementById("usuarioLogin");
-  const senhaEl = document.getElementById("senhaLogin");
-  const msg = document.getElementById("loginMsg");
-
-  if (usuarioEl) usuarioEl.value = "";
-  if (senhaEl) senhaEl.value = "";
-  if (msg) {
-    msg.textContent = "";
-    msg.style.display = "none";
-  }
-
-  // 🔹 Opcional: foco no campo usuário
-  usuarioEl.focus();
-}
-
-// Executa quando o DOM estiver pronto
-document.addEventListener("DOMContentLoaded", () => {
-  verificarSessao();
-});
-
-// === FUNÇÃO DE LOGIN ===
-function fazerLogin() {
-  const nome = document.getElementById("usuarioLogin")?.value.trim();
-  const senha = document.getElementById("senhaLogin")?.value.trim();
-  let msg = document.getElementById("loginMsg");
-
-  if (!msg) {
-    msg = document.createElement("p");
-    msg.id = "loginMsg";
-    msg.style.cssText = "margin-top:10px; font-weight:bold; text-align:center;";
-    document.getElementById("loginView").appendChild(msg);
-  }
-
-  msg.style.display = "none";
-  msg.textContent = "";
-
-  if (!nome || !senha) {
-    msg.textContent = "⚠️ Preencha usuário e senha.";
-    msg.style.display = "block";
-    msg.style.color = "red";
-    return;
-  }
-
-  const usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
-  const usuarioEncontrado = usuarios.find(u => u.nome?.toLowerCase() === nome.toLowerCase());
-
-  if (!usuarioEncontrado) {
-    msg.textContent = "❌ Usuário não encontrado!";
-    msg.style.display = "block";
-    msg.style.color = "red";
-    return;
-  }
-
-  if (usuarioEncontrado.senha !== senha) {
-    msg.textContent = "🔒 Senha incorreta! Tente novamente.";
-    msg.style.display = "block";
-    msg.style.color = "red";
-    return;
-  }
-
-  // ✅ Login bem-sucedido
-  msg.textContent = "✅ Login realizado com sucesso!";
-  msg.style.display = "block";
-  msg.style.color = "green";
-
-  const sessao = { ...usuarioEncontrado, logado: true, loginTime: Date.now() };
-  localStorage.setItem("usuarioLogado", JSON.stringify(sessao));
-
-  // 🔹 Exibe o sistema após um pequeno delay
-  setTimeout(() => mostrarSistema(sessao), 600);
-}
-// === PERMITIR LOGIN COM ENTER ===
-document.addEventListener("keydown", function (event) {
-  const loginView = document.getElementById("loginView");
-  const mainApp = document.getElementById("mainApp");
-
-  if (loginView && loginView.style.display !== "none" && event.key === "Enter") {
-    event.preventDefault();
-    const usuario = document.getElementById("usuarioLogin").value.trim();
-    const senha = document.getElementById("senhaLogin").value.trim();
-
-    if (usuario && senha) {
-      fazerLogin();
-    } else {
-      alert("Digite usuário e senha antes de continuar!");
+let saidas = JSON.parse(localStorage.getItem("saidas")) || []; 
+  function showSection(id){
+      document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
     }
-  }
-});
-
-// === MOSTRA SISTEMA ===
-function mostrarSistema(sessao) {
-  const loginView = document.getElementById("loginView");
-  const mainApp = document.getElementById("mainApp");
-  const userName = document.getElementById("userName");
-  const perfilBadge = document.getElementById("perfilBadge");
-  const sidebar = document.getElementById("sidebar");
-
-  if (loginView && mainApp) {
-    loginView.style.display = "none";
-    mainApp.style.display = "block";
-  }
-
-  const nomeUsuario = sessao?.nome || sessao?.email?.split("@")[0] || "Usuário";
-
-if (userName) userName.textContent = nomeUsuario;
-if (perfilBadge && sessao?.perfil)
-  perfilBadge.textContent = "Perfil: " + sessao.perfil.toUpperCase();
-
-const nomeBemVindo = document.getElementById("nomeUsuarioBemVindo");
-if (nomeBemVindo) nomeBemVindo.textContent = nomeUsuario;
-
-
-  // 🔹 Oculta todas as outras seções e mostra apenas a de boas-vindas
-  document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
-  const boasVindas = document.getElementById("boasVindas");
-  if (boasVindas) boasVindas.style.display = "block";
-
-  // 🔹 Garante que o menu lateral esteja fechado
-  if (sidebar && sidebar.classList.contains("active")) {
-    sidebar.classList.remove("active");
-  }
-
-  // 🔹 Atualiza variáveis e permissões
-  window.usuarioLogado = sessao;
-
-  if (typeof aplicarPermissoes === "function") aplicarPermissoes();
-  if (typeof bloquearAcoesSimples2 === "function") bloquearAcoesSimples2();
-}
-// === VERIFICAÇÃO DE SESSÃO (ao carregar) ===
-function verificarSessao() {
-  const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado") || "{}");
-
-  const loginView = document.getElementById("loginView");
-  const mainApp = document.getElementById("mainApp");
-
-  if (!loginView || !mainApp) {
-    console.warn("⚠️ Estrutura de interface ainda não carregada.");
-    return;
-  }
-
-  if (usuarioLogado.logado) {
-    mostrarSistema(usuarioLogado);
-  } else {
-    voltarParaLogin();
-  }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-// === FUNÇÃO AUXILIAR: Espera o DOM estar pronto ===
-async function aguardarInterface() {
-  // aguarda até que #loginView e #mainApp existam no DOM
-  return new Promise((resolve) => {
-    const tentar = () => {
-      const loginView = document.getElementById("loginView");
-      const mainApp = document.getElementById("mainApp");
-      if (loginView && mainApp) resolve();
-      else setTimeout(tentar, 100);
-    };
-    tentar();
-  });
-}
-
-// === INICIALIZAÇÃO PRINCIPAL ===
-(async function iniciarSistema() {
-  // aguarda o DOM completo antes de continuar
-  await aguardarInterface();
-
-  console.log("✅ Estrutura de interface carregada com sucesso.");
-
-  // === FUNÇÃO DE LOGOUT ===
-  window.sairDoSistema = function () {
-    localStorage.removeItem("usuarioLogado");
-    alert("Sessão encerrada. Faça login novamente.");
-    voltarParaLogin();
-  };
-
-  // === VOLTAR PARA LOGIN ===
-  window.voltarParaLogin = function () {
-    const loginView = document.getElementById("loginView");
-    const mainApp = document.getElementById("mainApp");
-
-    if (loginView && mainApp) {
-      loginView.style.display = "block";
-      mainApp.style.display = "none";
-    }
-
-    localStorage.removeItem("usuarioLogado");
-  };
-
-  // === LOGIN ===
-  window.fazerLogin = async function () {
-    const usuario = document.getElementById("usuario").value.trim();
-    const senha = document.getElementById("senha").value.trim();
-
-    if (!usuario || !senha) {
-      alert("Preencha usuário e senha!");
-      return;
-    }
-
-    const email = usuario.includes("@") ? usuario : `${usuario}@oralunic.com`;
-
-    try {
-      const cred = await signInWithEmailAndPassword(auth, email, senha);
-      const user = cred.user;
-
-      localStorage.setItem(
-        "usuarioLogado",
-        JSON.stringify({ email: user.email, logado: true })
-      );
-
-      alert("✅ Login realizado com sucesso!");
-      mostrarSistema({ email: user.email });
-    } catch (error) {
-      console.error("Erro no login:", error);
-      alert("Erro no login: " + error.message);
-    }
-  };
-
-  // === VERIFICAR SESSÃO ===
-  function verificarSessao() {
-    const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado") || "{}");
-    const loginView = document.getElementById("loginView");
-    const mainApp = document.getElementById("mainApp");
-
-    if (!loginView || !mainApp) {
-      console.warn("⚠️ Estrutura de interface ainda não carregada.");
-      return;
-    }
-
-    if (usuarioLogado.logado) {
-      mostrarSistema(usuarioLogado);
-    } else {
-      voltarParaLogin();
-    }
-  }
-
-  // ✅ Chama a verificação final após DOM e Firebase prontos
-  verificarSessao();
-})();
-
-	
-
-
-// ============================
-// 🔹 TROCAR SEÇÃO
-// ============================
-window.showSection = function (id) {
-  document
-    .querySelectorAll(".section")
-    .forEach((sec) => sec.classList.remove("active"));
-  const alvo = document.getElementById(id);
-  if (alvo) alvo.classList.add("active");
-};
-
-
-
-/* =========================
-   🔹 Permissões
-========================= */
-function aplicarPermissoes() {
-  const perfil = window.usuarioLogado?.perfil;
-  const botoes = document.querySelectorAll("#sidebar button");
-  botoes.forEach((b) => (b.style.display = "block"));
-
-  if (perfil === "simples1") {
-    ocultarBotoes(["financeiro"]);
-  } else if (perfil === "simples2") {
-    ocultarBotoes([
-      "cadastro",
-      "entrada",
-      "saida",
-      "limites",
-      "financeiro",
-      "usuarios",
-    ]);
-  }
-}
-
-function ocultarBotoes(lista) {
-  lista.forEach((id) => {
-    const botao = document.querySelector(`#sidebar button[onclick*="${id}"]`);
-    if (botao) botao.style.display = "none";
-  });
-}
-
-/* =========================
-   🔹 Bloquear ações Simples 02
-========================= */
-function bloquearAcoesSimples2() {
-  const usuario = JSON.parse(localStorage.getItem("usuarioLogado"));
-  if (!usuario || usuario.perfil !== "simples2") return;
-  document.querySelectorAll("button").forEach((btn) => {
-    const t = btn.textContent.toLowerCase();
-    if (
-      t.includes("salvar") ||
-      t.includes("editar") ||
-      t.includes("excluir") ||
-      t.includes("registrar")
-    ) {
-      btn.disabled = true;
-      btn.style.opacity = "0.6";
-      btn.style.cursor = "not-allowed";
-    }
-  });
-} 
-
 	/* =========================
    🔹 Cadastro de produtos
 ========================= */
@@ -1819,6 +1174,659 @@ function atualizarSetorAutomatico() {
     setorSelect.innerHTML = `<option value="">Setor não encontrado</option>`;
   }
 }
+document.addEventListener("DOMContentLoaded",()=>{
+      atualizarTabelaProdutos();atualizarEntradas();atualizarSaidas();
+    });	  
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main>
+<!-- SEÇÃO: BOAS-VINDAS -->
+<section id="boasVindas" class="section active" style="text-align:center; padding:100px 20px;">
+  <h1 style="color:#003b88;">👋 Bem-vindo(a) <span id="nomeUsuarioBemVindo"></span>!</h1>
+  <h2 style="color:#0d6efd;">ao Sistema de Controle de Estoque – Oral Unic Campo Grande</h2>
+  <p style="margin-top:20px; color:#555;">Use o menu lateral para iniciar suas atividades.</p>
+</section>
+
+    
+
+
+
+      <!-- SEÇÃO: ESTOQUE ATUAL -->
+      <section id="estoque" class="section" style="display:none;">
+        <h2><i class="fa fa-warehouse"></i> Estoque Atual</h2>
+
+        <div style="margin-bottom:10px;">
+          <input id="filtroEstoque" type="text" placeholder="🔍 Buscar no estoque (produto, categoria)" style="width:98%" oninput="filtrarEstoque()" />
+        </div>
+
+        <div class="table-wrap">
+        <table id="tabelaEstoque">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Produto</th>
+      <th>Código de Barras</th>
+      <th>Categoria</th>
+      <th>Quantidade</th>
+      <th>Lote</th>
+      <th>Validade</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+        </div>
+      </section>
+
+<!-- FIM DO BLOCO 2/5 -->
+<!-- 📦 SEÇÃO: ESTOQUE MÍNIMO E MÁXIMO -->
+<section id="limites" class="section" style="display:none;">
+  <h2><i class="fa fa-boxes"></i> Estoque Mínimo e Máximo</h2>
+
+  <!-- 🔹 Resumo de contagem -->
+  <div id="resumoEstoque" style="margin-bottom:10px; font-weight:bold; color:#333;">
+    🧾 Total de Produtos: 0 |
+    ⚠️ Abaixo do Mínimo: 0 |
+    ✅ Dentro do Limite: 0 |
+    📦 Acima do Máximo: 0
+  </div>
+
+  <!-- 🔍 Filtros -->
+  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+    <input
+      id="filtroLimite"
+      type="text"
+      placeholder="🔍 Buscar por produto"
+      style="flex:1; min-width:220px"
+      oninput="atualizarTabelaLimites()"
+    />
+
+    <select id="filtroCategoria" onchange="atualizarTabelaLimites()" style="min-width:220px;">
+      <option value="">Todas as Categorias</option>
+      <option>Material de Uso e Consumo</option>
+      <option>Copa e Cozinha</option>
+      <option>Escritório</option>
+      <option>Implante e Componentes</option>
+      <option>Insumo Dental</option>
+      <option>Insumo Laboratório</option>
+      <option>Medicamentos</option>
+      <option>Material de Limpeza</option>
+    </select>
+
+    <button onclick="gerarListaCompra()"><i class="fa fa-list"></i> Gerar Lista de Compra</button>
+    <button onclick="limparListaCompra()"><i class="fa fa-trash"></i> Limpar Lista</button>
+  </div>
+
+  <!-- 📋 Tabela principal -->
+  <div class="table-wrap">
+  <table id="tabelaLimites">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Produto</th>
+      <th>Código de Barras</th>
+      <th>Categoria</th>
+      <th>Qtd Atual</th>
+      <th>Mínimo</th>
+      <th>Máximo</th>
+      <th>Status</th>
+      <th>Recomendação</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+
+  </div>
+
+
+  <!-- 🛒 Lista de compra -->
+<div id="listaCompraContainer" style="display:none; margin-top:20px;">
+  <h3><i class="fa fa-shopping-cart"></i> Lista de Compra Gerada</h3>
+
+ <div class="table-wrap" style="max-height:400px; overflow-y:auto; overflow-x:auto; border:1px solid #ccc;">
+    <table id="tabelaListaCompra" class="tabela-padrao">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Produto</th>
+          <th>Código de Barras</th>
+          <th>Categoria</th>
+          <th>Qtd Atual</th>
+          <th>Mínimo</th>
+          <th>Recomendado Comprar</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="6" style="text-align:right; font-weight:bold;">Total de Itens:</td>
+          <td id="totalItensCompra" style="font-weight:bold;">0</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- 🔹 Ações de exportação -->
+  <div style="margin-top:10px;">
+    <button onclick="exportarListaExcel()">
+      <i class="fa fa-file-excel"></i> Exportar para Excel
+    </button>
+    <button onclick="gerarPedidoPDF()">
+      <i class="fa fa-file-pdf"></i> Gerar Pedido de Orçamento (PDF)
+    </button>
+  </div>
+</div>
+
+</section>
+
+<!-- SEÇÃO: PAINEL FINANCEIRO -->
+<section id="financeiro" class="section" style="display:none;">
+  <h2><i class="fa fa-chart-line"></i> Painel Financeiro</h2>
+
+  <!-- 🔸 Indicadores financeiros detalhados -->
+  <div style="display:flex; flex-wrap:wrap; gap:15px; margin-bottom:20px;">
+
+    <!-- Último valor de entrada -->
+    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+      <h3>💰 Último Valor de Entrada</h3>
+      <p id="valorUltimaEntrada" style="font-size:1.4em; font-weight:bold; color:#007bff;">R$ 0,00</p>
+    </div>
+
+    <!-- Custo médio ponderado -->
+    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+      <h3>📊 Custo Médio Ponderado</h3>
+      <p id="valorCustoMedio" style="font-size:1.4em; font-weight:bold; color:#6f42c1;">R$ 0,00</p>
+    </div>
+
+    <!-- Valor total do estoque atual -->
+    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+      <h3>📦 Valor Total do Estoque Atual</h3>
+      <p id="valorEstoqueAtualPainel" style="font-size:1.4em; font-weight:bold; color:#28a745;">R$ 0,00</p>
+    </div>
+  </div>
+
+  <!-- 🔸 Indicadores principais existentes -->
+  <div style="display:flex; flex-wrap:wrap; gap:15px; margin-bottom:20px;">
+    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+      <h3>💰 Valor Total do Estoque Atual (Contábil)</h3>
+      <p id="valorEstoque" style="font-size:1.4em; font-weight:bold; color:#28a745;">R$ 0,00</p>
+    </div>
+
+    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+      <h3>💸 Valor Total das Saídas (Estimado)</h3>
+      <p id="valorSaidas" style="font-size:1.4em; font-weight:bold; color:#dc3545;">R$ 0,00</p>
+    </div>
+  </div>
+
+  <!-- 🔸 Entradas agrupadas -->
+  <h3 style="margin-top:25px;"><i class="fa fa-file-invoice"></i> Entradas Agrupadas por Nota Fiscal</h3>
+  <div class="table-wrap">
+    <table id="tabelaFinanceiro">
+      <thead>
+        <tr>
+          <th>Fornecedor</th>
+          <th>Nota Fiscal</th>
+          <th>Valor Total da Nota (R$)</th>
+          <th>Saldo da Nota (R$)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+    <!-- SEÇÃO: RELATÓRIOS -->
+<section id="relatorios" class="section" style="display:none;">
+  <h2><i class="fa fa-chart-line"></i> Relatórios</h2>
+
+  <!-- 🔹 Botões principais -->
+  <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+    <button onclick="gerarRelatorioProdutos()"><i class="fa fa-file-excel"></i> Produtos</button>
+    <button onclick="gerarRelatorioEntradas()"><i class="fa fa-file-excel"></i> Entradas</button>
+    <button onclick="gerarRelatorioSaidas()"><i class="fa fa-file-excel"></i> Saídas</button>
+    <button onclick="gerarRelatorioEstoque()"><i class="fa fa-file-excel"></i> Estoque</button>
+  </div>
+
+  <!-- 🔹 Filtro de período -->
+  <div id="filtroPeriodo" style="margin: 15px 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+    <label><b>Data Início:</b></label>
+    <input type="date" id="dataInicioRelatorio" style="padding: 4px 6px;">
+
+    <label><b>Data Fim:</b></label>
+    <input type="date" id="dataFimRelatorio" style="padding: 4px 6px;">
+
+    <button onclick="gerarRelatorio()" style="background:#2b6cb0;color:#fff;padding:4px 8px;border:none;border-radius:4px;">
+      <i class="fa fa-filter"></i> Filtrar
+    </button>
+
+    <button onclick="definirPeriodoRapido('hoje')">Hoje</button>
+    <button onclick="definirPeriodoRapido('7dias')">Últimos 7 dias</button>
+    <button onclick="definirPeriodoRapido('30dias')">Últimos 30 dias</button>
+    <button onclick="definirPeriodoRapido('mes')">Mês Atual</button>
+    <button onclick="limparPeriodo()">Limpar</button>
+  </div>
+
+  <!-- 🔹 Informativo -->
+  <div style="background:#fff;padding:10px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+    <p>Os relatórios são gerados em formato Excel (.csv) e incluem todos os dados das tabelas correspondentes.</p>
+  </div>
+</section>
+
+
+      <!-- SEÇÃO: USUÁRIOS E PERFIS -->
+      <section id="usuarios" class="section" style="display:none;">
+        <h2><i class="fa fa-users"></i> Gerenciar Usuários e Perfis</h2>
+
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+          <input id="usuarioNome" type="text" placeholder="Nome" />
+          <input id="usuarioCPF" type="text" placeholder="CPF" />
+          <input id="usuarioEmail" type="email" placeholder="E-mail" />
+          <input id="usuarioSenha" type="password" placeholder="Senha" />
+          <select id="usuarioPerfil">
+            <option value="admin">Administrador</option>
+            <option value="simples1">Simples 01</option>
+            <option value="simples2">Simples 02</option>
+          </select>
+          <button onclick="salvarUsuario()"><i class="fa fa-save"></i> Salvar</button>
+        </div>
+
+        <div class="table-wrap">
+          <table id="tabelaUsuarios">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Email</th>
+                <th>Perfil</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+
+ </style>
+</head>
+ <body>
+
+ 
+
+
+
+
+function toggleSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  if (sidebar) sidebar.classList.toggle("active");
+}
+
+// Fecha o menu lateral se o usuário clicar fora dele
+document.addEventListener("click", (e) => {
+  const sidebar = document.getElementById("sidebar");
+  const menuBtn = document.getElementById("menuToggle");
+  if (
+    sidebar.classList.contains("active") &&
+    !sidebar.contains(e.target) &&
+    !menuBtn.contains(e.target)
+  ) {
+    sidebar.classList.remove("active");
+  }
+});
+
+
+
+function showSection(id) {
+  // 🔹 Oculta todas as seções
+  document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
+
+  // 🔹 Mostra apenas a seção selecionada
+  const alvo = document.getElementById(id);
+  if (alvo) alvo.style.display = "block";
+
+  // 🔹 Fecha automaticamente o menu lateral em qualquer tamanho de tela
+  const sidebar = document.getElementById("sidebar");
+  if (sidebar && sidebar.classList.contains("active")) {
+    sidebar.classList.remove("active");
+  }
+
+  // 🔹 Reposiciona o scroll no topo
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  // 🔹 Atualiza dados se for painel financeiro
+  if (id === "financeiro" && typeof atualizarPainelFinanceiro === "function") {
+    atualizarPainelFinanceiro();
+  }
+
+  // 🔹 Atualiza dados se for o dashboard
+  if (id === "dashboard" && typeof atualizarDashboard === "function") {
+    atualizarDashboard();
+  }
+}
+
+// 🔹 Mantém a tela centralizada no login
+window.scrollTo(0, 0);
+
+
+function logout() {
+  // 🔹 Remove sessão salva
+  localStorage.removeItem("usuarioLogado");
+
+  // 🔹 Esconde o app e volta para tela de login
+  document.getElementById("painel").style.display = "none";
+document.getElementById("login").style.display = "flex";
+
+  // 🔹 Limpa os campos de login e mensagem
+  const usuarioEl = document.getElementById("usuarioLogin");
+  const senhaEl = document.getElementById("senhaLogin");
+  const msg = document.getElementById("loginMsg");
+
+  if (usuarioEl) usuarioEl.value = "";
+  if (senhaEl) senhaEl.value = "";
+  if (msg) {
+    msg.textContent = "";
+    msg.style.display = "none";
+  }
+
+  // 🔹 Opcional: foco no campo usuário
+  usuarioEl.focus();
+}
+
+// Executa quando o DOM estiver pronto
+document.addEventListener("DOMContentLoaded", () => {
+  verificarSessao();
+});
+
+// === FUNÇÃO DE LOGIN ===
+function fazerLogin() {
+  const nome = document.getElementById("usuarioLogin")?.value.trim();
+  const senha = document.getElementById("senhaLogin")?.value.trim();
+  let msg = document.getElementById("loginMsg");
+
+  if (!msg) {
+    msg = document.createElement("p");
+    msg.id = "loginMsg";
+    msg.style.cssText = "margin-top:10px; font-weight:bold; text-align:center;";
+    document.getElementById("loginView").appendChild(msg);
+  }
+
+  msg.style.display = "none";
+  msg.textContent = "";
+
+  if (!nome || !senha) {
+    msg.textContent = "⚠️ Preencha usuário e senha.";
+    msg.style.display = "block";
+    msg.style.color = "red";
+    return;
+  }
+
+  const usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+  const usuarioEncontrado = usuarios.find(u => u.nome?.toLowerCase() === nome.toLowerCase());
+
+  if (!usuarioEncontrado) {
+    msg.textContent = "❌ Usuário não encontrado!";
+    msg.style.display = "block";
+    msg.style.color = "red";
+    return;
+  }
+
+  if (usuarioEncontrado.senha !== senha) {
+    msg.textContent = "🔒 Senha incorreta! Tente novamente.";
+    msg.style.display = "block";
+    msg.style.color = "red";
+    return;
+  }
+
+  // ✅ Login bem-sucedido
+  msg.textContent = "✅ Login realizado com sucesso!";
+  msg.style.display = "block";
+  msg.style.color = "green";
+
+  const sessao = { ...usuarioEncontrado, logado: true, loginTime: Date.now() };
+  localStorage.setItem("usuarioLogado", JSON.stringify(sessao));
+
+  // 🔹 Exibe o sistema após um pequeno delay
+  setTimeout(() => mostrarSistema(sessao), 600);
+}
+// === PERMITIR LOGIN COM ENTER ===
+document.addEventListener("keydown", function (event) {
+  const loginView = document.getElementById("loginView");
+  const mainApp = document.getElementById("mainApp");
+
+  if (loginView && loginView.style.display !== "none" && event.key === "Enter") {
+    event.preventDefault();
+    const usuario = document.getElementById("usuarioLogin").value.trim();
+    const senha = document.getElementById("senhaLogin").value.trim();
+
+    if (usuario && senha) {
+      fazerLogin();
+    } else {
+      alert("Digite usuário e senha antes de continuar!");
+    }
+  }
+});
+
+// === MOSTRA SISTEMA ===
+function mostrarSistema(sessao) {
+  const loginView = document.getElementById("loginView");
+  const mainApp = document.getElementById("mainApp");
+  const userName = document.getElementById("userName");
+  const perfilBadge = document.getElementById("perfilBadge");
+  const sidebar = document.getElementById("sidebar");
+
+  if (loginView && mainApp) {
+    loginView.style.display = "none";
+    mainApp.style.display = "block";
+  }
+
+  const nomeUsuario = sessao?.nome || sessao?.email?.split("@")[0] || "Usuário";
+
+if (userName) userName.textContent = nomeUsuario;
+if (perfilBadge && sessao?.perfil)
+  perfilBadge.textContent = "Perfil: " + sessao.perfil.toUpperCase();
+
+const nomeBemVindo = document.getElementById("nomeUsuarioBemVindo");
+if (nomeBemVindo) nomeBemVindo.textContent = nomeUsuario;
+
+
+  // 🔹 Oculta todas as outras seções e mostra apenas a de boas-vindas
+  document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
+  const boasVindas = document.getElementById("boasVindas");
+  if (boasVindas) boasVindas.style.display = "block";
+
+  // 🔹 Garante que o menu lateral esteja fechado
+  if (sidebar && sidebar.classList.contains("active")) {
+    sidebar.classList.remove("active");
+  }
+
+  // 🔹 Atualiza variáveis e permissões
+  window.usuarioLogado = sessao;
+
+  if (typeof aplicarPermissoes === "function") aplicarPermissoes();
+  if (typeof bloquearAcoesSimples2 === "function") bloquearAcoesSimples2();
+}
+// === VERIFICAÇÃO DE SESSÃO (ao carregar) ===
+function verificarSessao() {
+  const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado") || "{}");
+
+  const loginView = document.getElementById("loginView");
+  const mainApp = document.getElementById("mainApp");
+
+  if (!loginView || !mainApp) {
+    console.warn("⚠️ Estrutura de interface ainda não carregada.");
+    return;
+  }
+
+  if (usuarioLogado.logado) {
+    mostrarSistema(usuarioLogado);
+  } else {
+    voltarParaLogin();
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+// === FUNÇÃO AUXILIAR: Espera o DOM estar pronto ===
+async function aguardarInterface() {
+  // aguarda até que #loginView e #mainApp existam no DOM
+  return new Promise((resolve) => {
+    const tentar = () => {
+      const loginView = document.getElementById("loginView");
+      const mainApp = document.getElementById("mainApp");
+      if (loginView && mainApp) resolve();
+      else setTimeout(tentar, 100);
+    };
+    tentar();
+  });
+}
+
+// === INICIALIZAÇÃO PRINCIPAL ===
+(async function iniciarSistema() {
+  // aguarda o DOM completo antes de continuar
+  await aguardarInterface();
+
+  console.log("✅ Estrutura de interface carregada com sucesso.");
+
+  // === FUNÇÃO DE LOGOUT ===
+  window.sairDoSistema = function () {
+    localStorage.removeItem("usuarioLogado");
+    alert("Sessão encerrada. Faça login novamente.");
+    voltarParaLogin();
+  };
+
+  // === VOLTAR PARA LOGIN ===
+  window.voltarParaLogin = function () {
+    const loginView = document.getElementById("loginView");
+    const mainApp = document.getElementById("mainApp");
+
+    if (loginView && mainApp) {
+      loginView.style.display = "block";
+      mainApp.style.display = "none";
+    }
+
+    localStorage.removeItem("usuarioLogado");
+  };
+
+  // === LOGIN ===
+  window.fazerLogin = async function () {
+    const usuario = document.getElementById("usuario").value.trim();
+    const senha = document.getElementById("senha").value.trim();
+
+    if (!usuario || !senha) {
+      alert("Preencha usuário e senha!");
+      return;
+    }
+
+    const email = usuario.includes("@") ? usuario : `${usuario}@oralunic.com`;
+
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, senha);
+      const user = cred.user;
+
+      localStorage.setItem(
+        "usuarioLogado",
+        JSON.stringify({ email: user.email, logado: true })
+      );
+
+      alert("✅ Login realizado com sucesso!");
+      mostrarSistema({ email: user.email });
+    } catch (error) {
+      console.error("Erro no login:", error);
+      alert("Erro no login: " + error.message);
+    }
+  };
+
+  // === VERIFICAR SESSÃO ===
+  function verificarSessao() {
+    const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado") || "{}");
+    const loginView = document.getElementById("loginView");
+    const mainApp = document.getElementById("mainApp");
+
+    if (!loginView || !mainApp) {
+      console.warn("⚠️ Estrutura de interface ainda não carregada.");
+      return;
+    }
+
+    if (usuarioLogado.logado) {
+      mostrarSistema(usuarioLogado);
+    } else {
+      voltarParaLogin();
+    }
+  }
+
+  // ✅ Chama a verificação final após DOM e Firebase prontos
+  verificarSessao();
+})();
+
+	
+
+
+// ============================
+// 🔹 TROCAR SEÇÃO
+// ============================
+window.showSection = function (id) {
+  document
+    .querySelectorAll(".section")
+    .forEach((sec) => sec.classList.remove("active"));
+  const alvo = document.getElementById(id);
+  if (alvo) alvo.classList.add("active");
+};
+
+
+
+/* =========================
+   🔹 Permissões
+========================= */
+function aplicarPermissoes() {
+  const perfil = window.usuarioLogado?.perfil;
+  const botoes = document.querySelectorAll("#sidebar button");
+  botoes.forEach((b) => (b.style.display = "block"));
+
+  if (perfil === "simples1") {
+    ocultarBotoes(["financeiro"]);
+  } else if (perfil === "simples2") {
+    ocultarBotoes([
+      "cadastro",
+      "entrada",
+      "saida",
+      "limites",
+      "financeiro",
+      "usuarios",
+    ]);
+  }
+}
+
+function ocultarBotoes(lista) {
+  lista.forEach((id) => {
+    const botao = document.querySelector(`#sidebar button[onclick*="${id}"]`);
+    if (botao) botao.style.display = "none";
+  });
+}
+
+/* =========================
+   🔹 Bloquear ações Simples 02
+========================= */
+function bloquearAcoesSimples2() {
+  const usuario = JSON.parse(localStorage.getItem("usuarioLogado"));
+  if (!usuario || usuario.perfil !== "simples2") return;
+  document.querySelectorAll("button").forEach((btn) => {
+    const t = btn.textContent.toLowerCase();
+    if (
+      t.includes("salvar") ||
+      t.includes("editar") ||
+      t.includes("excluir") ||
+      t.includes("registrar")
+    ) {
+      btn.disabled = true;
+      btn.style.opacity = "0.6";
+      btn.style.cursor = "not-allowed";
+    }
+  });
+} 
+
+
 
 /* =========================
    🔹 Atualizar Estoque
@@ -3021,6 +3029,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 
 </body>
 </html>
+
 
 
 
