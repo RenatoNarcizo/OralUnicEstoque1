@@ -1081,14 +1081,18 @@ function bloquearAcoesSimples2() {
   if (!usuario || usuario.perfil !== "simples2") return;
   document.querySelectorAll("button").forEach((btn) => {
     const t = btn.textContent.toLowerCase();
-    if (t.includes("salvar") || t.includes("editar") || t.includes("excluir") || t.includes("registrar")) {
+    if (
+      t.includes("salvar") ||
+      t.includes("editar") ||
+      t.includes("excluir") ||
+      t.includes("registrar")
+    ) {
       btn.disabled = true;
       btn.style.opacity = "0.6";
       btn.style.cursor = "not-allowed";
     }
   });
-}
-
+} 
 	/* =========================
    🔹 Cadastro de produtos
 ========================= */
@@ -3012,6 +3016,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 
 </body>
 </html>
+
 
 
 
