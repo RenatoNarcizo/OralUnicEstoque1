@@ -280,8 +280,7 @@
     alert("Sessão encerrada!");
   };
 </script>
-.logout=()=>signOut(auth);
-  </script>
+
  
   <!-- SEÇÃO: CADASTRO DE PRODUTOS -->
       <section id="cadastro" class="section">
@@ -702,7 +701,14 @@ async function aguardarInterface() {
       voltarParaLogin();
     }
   }
-
+// 🔹 GERENCIAR USUÁRIOS E PERFIS
+if (typeof salvarUsuario === "function") {
+  const _salvarUsuarioOriginal = salvarUsuario;
+  salvarUsuario = function() {
+    _salvarUsuarioOriginal();
+    setTimeout(() => limparCampos("usuarios"), 300);
+  };
+}
   // ✅ Chama a verificação final após DOM e Firebase prontos
   verificarSessao();
 })();
@@ -831,6 +837,86 @@ async function cadastrarProduto() {
   });
 }
 
+
+
+function filtrarProdutos() {
+  const termo = document.getElementById("filtroProduto").value.toLowerCase();
+  const tbody = document.querySelector("#tabelaProdutos tbody");
+  tbody.querySelectorAll("tr").forEach(tr => {
+    const texto = tr.textContent.toLowerCase();
+    tr.style.display = texto.includes(termo) ? "" : "none";
+  });
+}
+
+// 🔹 Entradas: busca por produto, fornecedor ou nota fiscal
+function filtrarEntradas() {
+  const termo = document.getElementById("filtroEntrada").value.toLowerCase();
+  const tbody = document.querySelector("#tabelaEntradas tbody");
+  tbody.querySelectorAll("tr").forEach(tr => {
+    const texto = tr.textContent.toLowerCase();
+    tr.style.display = texto.includes(termo) ? "" : "none";
+  });
+}
+/* 🔸 Aplica automaticamente ao sair do campo de texto */
+document.addEventListener("blur", (e) => {
+  const el = e.target;
+  if (el.tagName === "INPUT" && el.type === "text") {
+    // Ignora campos que não devem ser alterados
+    if (
+      el.id.toLowerCase().includes("cnpj") ||
+      el.id.toLowerCase().includes("email") ||
+      el.id.toLowerCase().includes("login")
+    ) return;
+
+    el.value = formatarTextoPadrao(el.value);
+  }
+}, true);
+
+/* 🔸 Garante padronização antes de salvar/cadastrar */
+function padronizarCamposAntesDeSalvar() {
+  document.querySelectorAll('input[type="text"]').forEach(el => {
+    if (
+      !el.id.toLowerCase().includes("cnpj") &&
+      !el.id.toLowerCase().includes("email") &&
+      !el.id.toLowerCase().includes("login")
+    ) {
+      el.value = formatarTextoPadrao(el.value);
+    }
+  });
+}
+// 🔹 Saídas: busca por produto, setor ou responsável
+function filtrarSaidas() {
+  const termo = document.getElementById("filtroSaida").value.toLowerCase();
+  const tbody = document.querySelector("#tabelaSaidas tbody");
+  tbody.querySelectorAll("tr").forEach(tr => {
+    const texto = tr.textContent.toLowerCase();
+    tr.style.display = texto.includes(termo) ? "" : "none";
+  });
+}
+
+// 🔹 Estoque: busca por produto ou categoria
+function filtrarEstoque() {
+  const termo = document.getElementById("filtroEstoque").value.toLowerCase();
+  const tbody = document.querySelector("#tabelaEstoque tbody");
+  tbody.querySelectorAll("tr").forEach(tr => {
+    const texto = tr.textContent.toLowerCase();
+    tr.style.display = texto.includes(termo) ? "" : "none";
+  });
+}
+
+function limparCampos(secaoId) {
+  const secao = document.getElementById(secaoId);
+  if (!secao) return;
+  secao.querySelectorAll("input, select").forEach(el => {
+    if (el.type === "file") {
+      el.value = "";
+    } else if (el.tagName === "SELECT") {
+      el.selectedIndex = 0;
+    } else {
+      el.value = "";
+    }
+  });
+}
 /* =========================
    🔹 Wrapper seguro — executa após definição da função
 ========================= */
@@ -1180,6 +1266,21 @@ document.addEventListener("paste", (e) => {
     el.value = aplicarMascaraCNPJ(texto);
   }
 });
+// 🔹 Wrapper que só limpa se a função tiver sucesso
+const _registrarEntradaOriginal = registrarEntrada;
+registrarEntrada = function() {
+  try {
+    const result = _registrarEntradaOriginal();
+    if (result === true) {
+      setTimeout(() => limparCampos("entrada"), 300);
+    } else {
+      const erroEl = document.querySelector("#entrada input[style*='red'], #entrada select[style*='red']");
+      if (erroEl) erroEl.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  } catch (err) {
+    console.error("Erro ao registrar entrada:", err);
+  }
+};
 
 /* =========================
    🔹 Busca produto pelo código de barras (Entrada ou Saída)
@@ -1433,8 +1534,140 @@ function atualizarSetorAutomatico() {
 document.addEventListener("DOMContentLoaded",()=>{
       atualizarTabelaProdutos();atualizarEntradas();atualizarSaidas();
     });	  
+	
+	
+	function atualizarDashboard() {
+  const listaProximosVencer = document.getElementById("listaProximosVencer");
+  const listaMaisCaros = document.getElementById("listaMaisCaros");
+  const listaMaisSaidas = document.getElementById("listaMaisSaidas");
+  const listaMenosSaidas = document.getElementById("listaMenosSaidas");
+  const listaEstoqueCritico = document.getElementById("listaEstoqueCritico");
+  const resumoGeral = document.getElementById("resumoGeral");
+
+  const produtosLocal = JSON.parse(localStorage.getItem("produtos")) || produtos || [];
+  const entradasLocal = JSON.parse(localStorage.getItem("entradas")) || entradas || [];
+  const saidasLocal = JSON.parse(localStorage.getItem("saidas")) || saidas || [];
+
+  if (!Array.isArray(produtosLocal) || produtosLocal.length === 0) {
+    resumoGeral.innerHTML = "<p>Sem dados de produtos no momento.</p>";
+    return;
+  }
+
+  // ---------- Produtos próximos do vencimento ----------
+  const proximos = entradasLocal
+    .filter(e => e.validade)
+    .sort((a, b) => new Date(a.validade) - new Date(b.validade))
+    .slice(0, 5);
+
+  listaProximosVencer.innerHTML =
+    proximos.length > 0
+      ? proximos
+          .map(e => `<li>${e.produto} - vence em ${new Date(e.validade).toLocaleDateString("pt-BR")}</li>`)
+          .join("")
+      : "<li>Nenhum produto com validade próxima.</li>";
+
+  // ---------- Produtos mais caros ----------
+  const mapaValores = {};
+  entradasLocal.forEach(e => {
+    if (!e.produto || !e.valor) return;
+    mapaValores[e.produto] = e.valor; // último valor registrado
+  });
+
+  const maisCaros = Object.entries(mapaValores)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  listaMaisCaros.innerHTML =
+    maisCaros.length > 0
+      ? maisCaros.map(([nome, valor]) => `<li>${nome} - R$ ${valor.toFixed(2)}</li>`).join("")
+      : "<li>Sem dados de valor.</li>";
+
+  // ---------- Produtos mais e menos utilizados ----------
+  const contadorSaidas = {};
+  saidasLocal.forEach(s => {
+    if (!s.produto || !s.qtd) return;
+    contadorSaidas[s.produto] = (contadorSaidas[s.produto] || 0) + Number(s.qtd);
+  });
+
+  const maisUsados = Object.entries(contadorSaidas)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+  listaMaisSaidas.innerHTML =
+    maisUsados.length > 0
+      ? maisUsados.map(([nome, qtd]) => `<li>${nome} - ${qtd} saídas</li>`).join("")
+      : "<li>Sem saídas registradas.</li>";
+
+  const menosUsados = Object.entries(contadorSaidas)
+    .sort((a, b) => a[1] - b[1])
+    .slice(0, 5);
+  listaMenosSaidas.innerHTML =
+    menosUsados.length > 0
+      ? menosUsados.map(([nome, qtd]) => `<li>${nome} - ${qtd} saídas</li>`).join("")
+      : "<li>Sem saídas registradas.</li>";
+
+  // ---------- Estoque crítico ----------
+  const criticos = produtosLocal.filter(p => p.minimo && p.quantidade <= p.minimo);
+  listaEstoqueCritico.innerHTML =
+    criticos.length > 0
+      ? criticos.map(p => `<li>${p.nome} - Estoque atual: ${p.quantidade}</li>`).join("")
+      : "<li>Nenhum produto crítico no momento.</li>";
+
+  // ---------- Resumo geral ----------
+  let totalProdutos = produtosLocal.length;
+  let qtdTotal = 0;
+  let valorTotalUltimaEntrada = 0;
+  let valorTotalCustoMedio = 0;
+
+  produtosLocal.forEach(p => {
+    const entradasDoProduto = entradasLocal.filter(e => e.produto === p.nome);
+    if (entradasDoProduto.length === 0) return;
+
+    // Último valor de entrada
+    const ultimaEntrada = entradasDoProduto.slice(-1)[0];
+    const valorUltimo = Number(ultimaEntrada.valor || 0);
+
+    // Custo médio ponderado
+    const totalQtdEntradas = entradasDoProduto.reduce((s, e) => s + Number(e.qtd || 0), 0);
+    const totalValorEntradas = entradasDoProduto.reduce(
+      (s, e) => s + (Number(e.qtd || 0) * Number(e.valor || 0)),
+      0
+    );
+    const custoMedio = totalQtdEntradas > 0 ? totalValorEntradas / totalQtdEntradas : 0;
+
+    const qtdAtual = Number(p.quantidade || 0);
+    qtdTotal += qtdAtual;
+    valorTotalUltimaEntrada += qtdAtual * valorUltimo;
+    valorTotalCustoMedio += qtdAtual * custoMedio;
+  });
+
+  // ---------- Valor contábil (entradas - saídas) ----------
+  const valorTotalEntradas = entradasLocal.reduce((soma, e) => soma + (e.valor || 0) * (e.qtd || 0), 0);
+  const valorTotalSaidas = saidasLocal.reduce((soma, s) => {
+    const entradaRelacionado = entradasLocal.find(
+      e => e.produto && s.produto && e.produto.toLowerCase() === s.produto.toLowerCase()
+    );
+    const valorUnitario = entradaRelacionado ? entradaRelacionado.valor || 0 : 0;
+    return soma + valorUnitario * (s.qtd || 0);
+  }, 0);
+
+  const valorTotalEstoqueContabil = valorTotalEntradas - valorTotalSaidas;
+  const valorTotalEstoqueAtual = (valorTotalUltimaEntrada + valorTotalCustoMedio) / 2;
+  const totalSaidas = saidasLocal.reduce((soma, s) => soma + Number(s.qtd || 0), 0);
+
+  // ---------- Renderização no Resumo Geral ----------
+  resumoGeral.innerHTML = `
+    <p><b>Total de produtos:</b> ${totalProdutos}</p>
+    <p><b>Quantidade total em estoque:</b> ${qtdTotal}</p>
+    <p><b>Total de saídas registradas:</b> ${totalSaidas}</p>
+    <hr>
+    <p><b>💰 Valor total (Último valor de entrada):</b> R$ ${valorTotalUltimaEntrada.toFixed(2)}</p>
+    <p><b>📊 Valor total (Custo médio ponderado):</b> R$ ${valorTotalCustoMedio.toFixed(2)}</p>
+    <p><b>📦 Valor total do Estoque Atual:</b> R$ ${valorTotalEstoqueAtual.toFixed(2)}</p>
+    <p><b>💼 Valor total do Estoque Atual (Contábil):</b> R$ ${valorTotalEstoqueContabil.toFixed(2)}</p>
+  `;
+}
   </script>
-   
+ 
 
 
       <!-- SEÇÃO: ESTOQUE ATUAL -->
@@ -1522,7 +1755,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   </thead>
   <tbody></tbody>
 </table>
-
+</section>
 
   </div>
 <!-- SEÇÃO: PAINEL FINANCEIRO -->
@@ -1698,6 +1931,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 </head>
  <body>
 <script>
+
 function atualizarEstoque(produto, delta) {
   const item = produtos.find((p) => p.nome === produto);
   if (item) {
@@ -1916,7 +2150,65 @@ function gerarListaCompra() {
   container.style.display = "block";
 }
 
+// 🔹 Após gerar lista de compra → exibe e permite nova ação
+const _gerarListaCompraOriginal = gerarListaCompra;
+gerarListaCompra = function() {
+  _gerarListaCompraOriginal();
+  // não limpa nada, apenas garante foco na tabela gerada
+  const container = document.getElementById("listaCompraContainer");
+  if (container) container.scrollIntoView({ behavior: "smooth" });
+};
 
+// 🔹 Após limpar lista → também limpa filtros e reseta tela
+const _limparListaCompraOriginal = limparListaCompra;
+limparListaCompra = function() {
+  _limparListaCompraOriginal();
+  setTimeout(() => limparCampos("limites"), 200);
+};
+
+// 🔹 Mostra mensagens visuais no canto da tela
+function mostrarMensagem(texto, tipo = "info") {
+  let box = document.getElementById("mensagemBox");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "mensagemBox";
+    document.body.appendChild(box);
+    Object.assign(box.style, {
+      position: "fixed",
+      top: "20px",
+      right: "20px",
+      zIndex: "9999",
+      padding: "10px 15px",
+      borderRadius: "6px",
+      fontFamily: "Segoe UI, sans-serif",
+      color: "#fff",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+      transition: "opacity 0.4s",
+    });
+  }
+
+  box.textContent = texto;
+  box.style.background =
+    tipo === "erro" ? "#dc3545" :
+    tipo === "sucesso" ? "#28a745" :
+    "#0d6efd";
+  box.style.opacity = "1";
+  setTimeout(() => (box.style.opacity = "0"), 3000);
+}
+
+// 🔹 Destaca o campo com erro
+function destacarErro(el, msg) {
+  el.style.border = "2px solid red";
+  el.focus();
+  mostrarMensagem(msg, "erro");
+}
+
+// 🔹 Remove marcações de erro
+function limparErros(secaoId) {
+  document.querySelectorAll(`#${secaoId} input, #${secaoId} select`).forEach(el => {
+    el.style.border = "1px solid #ccc";
+  });
+}
 
 // 🔹 Limpa lista gerada
 function limparListaCompra() {
@@ -2234,9 +2526,6 @@ function atualizarPainelFinanceiro() {
   document.getElementById("valorEstoque").textContent = `R$ ${valorEstoqueAtual.toFixed(2)}`;
   document.getElementById("valorSaidas").textContent = `R$ ${valorTotalSaidas.toFixed(2)}`;
 
-  // --------------------------------------------------------------------------------
-  // 💰 Cálculo de Último valor de entrada, CMP e Estoque Atual (três novos valores)
-  // --------------------------------------------------------------------------------
   let qtdTotal = 0;
   let valorTotalUltimaEntrada = 0;
   let valorTotalCustoMedio = 0;
@@ -2270,9 +2559,7 @@ function atualizarPainelFinanceiro() {
   document.getElementById("valorCustoMedio").textContent = `R$ ${valorTotalCustoMedio.toFixed(2)}`;
   document.getElementById("valorEstoqueAtualPainel").textContent = `R$ ${valorTotalEstoqueAtualPainel.toFixed(2)}`;
 
-  // --------------------------------------------------------------------------------
-  // 📦 Agrupar por fornecedor e nota fiscal (mantido igual ao seu original)
-  // --------------------------------------------------------------------------------
+ 
   const agrupadas = {};
 
   entradas.forEach(e => {
@@ -2327,7 +2614,6 @@ function atualizarPainelFinanceiro() {
 }
 
 
-	
 
 function showSection(id) {
   // 🔹 Oculta todas as seções
@@ -2360,14 +2646,6 @@ function showSection(id) {
 // 🔹 Mantém a tela centralizada no login
 window.scrollTo(0, 0);
 
-
-
-	
-
-
-// ============================
-// 🔹 TROCAR SEÇÃO
-// ============================
 window.showSection = function (id) {
   document
     .querySelectorAll(".section")
@@ -2378,9 +2656,7 @@ window.showSection = function (id) {
 
 
 
-/* =========================
-   🔹 Permissões
-========================= */
+
 function aplicarPermissoes() {
   const perfil = window.usuarioLogado?.perfil;
   const botoes = document.querySelectorAll("#sidebar button");
@@ -2407,9 +2683,7 @@ function ocultarBotoes(lista) {
   });
 }
 
-/* =========================
-   🔹 Bloquear ações Simples 02
-========================= */
+
 function bloquearAcoesSimples2() {
   const usuario = JSON.parse(localStorage.getItem("usuarioLogado"));
   if (!usuario || usuario.perfil !== "simples2") return;
@@ -2429,23 +2703,6 @@ function bloquearAcoesSimples2() {
 } 
 
 
-
-/* =========================
-   🔹 Atualizar Estoque
-========================= */
-
-
-/* =========================
-   🔹 Financeiro
-========================= */
-
-/* =========================
-   🔹 Relatórios (corrigido)
-========================= */
-
-/* =========================
-   🔹 Usuários
-========================= */
 let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
 
 function salvarUsuario() {
@@ -2636,169 +2893,29 @@ function formatarTextoPadrao(texto) {
     .join(" ");
 }
 
-/* 🔸 Aplica automaticamente ao sair do campo de texto */
-document.addEventListener("blur", (e) => {
-  const el = e.target;
-  if (el.tagName === "INPUT" && el.type === "text") {
-    // Ignora campos que não devem ser alterados
-    if (
-      el.id.toLowerCase().includes("cnpj") ||
-      el.id.toLowerCase().includes("email") ||
-      el.id.toLowerCase().includes("login")
-    ) return;
 
-    el.value = formatarTextoPadrao(el.value);
-  }
-}, true);
 
-/* 🔸 Garante padronização antes de salvar/cadastrar */
-function padronizarCamposAntesDeSalvar() {
-  document.querySelectorAll('input[type="text"]').forEach(el => {
-    if (
-      !el.id.toLowerCase().includes("cnpj") &&
-      !el.id.toLowerCase().includes("email") &&
-      !el.id.toLowerCase().includes("login")
-    ) {
-      el.value = formatarTextoPadrao(el.value);
-    }
+
+function atualizarSelectProdutos() {
+  const selectEntrada = document.getElementById("entradaProduto");
+  if (!selectEntrada) return; // evita erro se o campo não existir ainda
+
+  // limpa todas as opções
+  selectEntrada.innerHTML = "";
+
+  // garante que a lista esteja ordenada
+  const listaOrdenada = [...produtos].sort((a, b) =>
+    a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" })
+  );
+
+  // adiciona as opções
+  listaOrdenada.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.nome;
+    opt.textContent = p.nome;
+    selectEntrada.appendChild(opt);
   });
 }
-
-/* ========================= DASHBOARD ========================= */
-function atualizarDashboard() {
-  const listaProximosVencer = document.getElementById("listaProximosVencer");
-  const listaMaisCaros = document.getElementById("listaMaisCaros");
-  const listaMaisSaidas = document.getElementById("listaMaisSaidas");
-  const listaMenosSaidas = document.getElementById("listaMenosSaidas");
-  const listaEstoqueCritico = document.getElementById("listaEstoqueCritico");
-  const resumoGeral = document.getElementById("resumoGeral");
-
-  const produtosLocal = JSON.parse(localStorage.getItem("produtos")) || produtos || [];
-  const entradasLocal = JSON.parse(localStorage.getItem("entradas")) || entradas || [];
-  const saidasLocal = JSON.parse(localStorage.getItem("saidas")) || saidas || [];
-
-  if (!Array.isArray(produtosLocal) || produtosLocal.length === 0) {
-    resumoGeral.innerHTML = "<p>Sem dados de produtos no momento.</p>";
-    return;
-  }
-
-  // ---------- Produtos próximos do vencimento ----------
-  const proximos = entradasLocal
-    .filter(e => e.validade)
-    .sort((a, b) => new Date(a.validade) - new Date(b.validade))
-    .slice(0, 5);
-
-  listaProximosVencer.innerHTML =
-    proximos.length > 0
-      ? proximos
-          .map(e => `<li>${e.produto} - vence em ${new Date(e.validade).toLocaleDateString("pt-BR")}</li>`)
-          .join("")
-      : "<li>Nenhum produto com validade próxima.</li>";
-
-  // ---------- Produtos mais caros ----------
-  const mapaValores = {};
-  entradasLocal.forEach(e => {
-    if (!e.produto || !e.valor) return;
-    mapaValores[e.produto] = e.valor; // último valor registrado
-  });
-
-  const maisCaros = Object.entries(mapaValores)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
-
-  listaMaisCaros.innerHTML =
-    maisCaros.length > 0
-      ? maisCaros.map(([nome, valor]) => `<li>${nome} - R$ ${valor.toFixed(2)}</li>`).join("")
-      : "<li>Sem dados de valor.</li>";
-
-  // ---------- Produtos mais e menos utilizados ----------
-  const contadorSaidas = {};
-  saidasLocal.forEach(s => {
-    if (!s.produto || !s.qtd) return;
-    contadorSaidas[s.produto] = (contadorSaidas[s.produto] || 0) + Number(s.qtd);
-  });
-
-  const maisUsados = Object.entries(contadorSaidas)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
-  listaMaisSaidas.innerHTML =
-    maisUsados.length > 0
-      ? maisUsados.map(([nome, qtd]) => `<li>${nome} - ${qtd} saídas</li>`).join("")
-      : "<li>Sem saídas registradas.</li>";
-
-  const menosUsados = Object.entries(contadorSaidas)
-    .sort((a, b) => a[1] - b[1])
-    .slice(0, 5);
-  listaMenosSaidas.innerHTML =
-    menosUsados.length > 0
-      ? menosUsados.map(([nome, qtd]) => `<li>${nome} - ${qtd} saídas</li>`).join("")
-      : "<li>Sem saídas registradas.</li>";
-
-  // ---------- Estoque crítico ----------
-  const criticos = produtosLocal.filter(p => p.minimo && p.quantidade <= p.minimo);
-  listaEstoqueCritico.innerHTML =
-    criticos.length > 0
-      ? criticos.map(p => `<li>${p.nome} - Estoque atual: ${p.quantidade}</li>`).join("")
-      : "<li>Nenhum produto crítico no momento.</li>";
-
-  // ---------- Resumo geral ----------
-  let totalProdutos = produtosLocal.length;
-  let qtdTotal = 0;
-  let valorTotalUltimaEntrada = 0;
-  let valorTotalCustoMedio = 0;
-
-  produtosLocal.forEach(p => {
-    const entradasDoProduto = entradasLocal.filter(e => e.produto === p.nome);
-    if (entradasDoProduto.length === 0) return;
-
-    // Último valor de entrada
-    const ultimaEntrada = entradasDoProduto.slice(-1)[0];
-    const valorUltimo = Number(ultimaEntrada.valor || 0);
-
-    // Custo médio ponderado
-    const totalQtdEntradas = entradasDoProduto.reduce((s, e) => s + Number(e.qtd || 0), 0);
-    const totalValorEntradas = entradasDoProduto.reduce(
-      (s, e) => s + (Number(e.qtd || 0) * Number(e.valor || 0)),
-      0
-    );
-    const custoMedio = totalQtdEntradas > 0 ? totalValorEntradas / totalQtdEntradas : 0;
-
-    const qtdAtual = Number(p.quantidade || 0);
-    qtdTotal += qtdAtual;
-    valorTotalUltimaEntrada += qtdAtual * valorUltimo;
-    valorTotalCustoMedio += qtdAtual * custoMedio;
-  });
-
-  // ---------- Valor contábil (entradas - saídas) ----------
-  const valorTotalEntradas = entradasLocal.reduce((soma, e) => soma + (e.valor || 0) * (e.qtd || 0), 0);
-  const valorTotalSaidas = saidasLocal.reduce((soma, s) => {
-    const entradaRelacionado = entradasLocal.find(
-      e => e.produto && s.produto && e.produto.toLowerCase() === s.produto.toLowerCase()
-    );
-    const valorUnitario = entradaRelacionado ? entradaRelacionado.valor || 0 : 0;
-    return soma + valorUnitario * (s.qtd || 0);
-  }, 0);
-
-  const valorTotalEstoqueContabil = valorTotalEntradas - valorTotalSaidas;
-  const valorTotalEstoqueAtual = (valorTotalUltimaEntrada + valorTotalCustoMedio) / 2;
-  const totalSaidas = saidasLocal.reduce((soma, s) => soma + Number(s.qtd || 0), 0);
-
-  // ---------- Renderização no Resumo Geral ----------
-  resumoGeral.innerHTML = `
-    <p><b>Total de produtos:</b> ${totalProdutos}</p>
-    <p><b>Quantidade total em estoque:</b> ${qtdTotal}</p>
-    <p><b>Total de saídas registradas:</b> ${totalSaidas}</p>
-    <hr>
-    <p><b>💰 Valor total (Último valor de entrada):</b> R$ ${valorTotalUltimaEntrada.toFixed(2)}</p>
-    <p><b>📊 Valor total (Custo médio ponderado):</b> R$ ${valorTotalCustoMedio.toFixed(2)}</p>
-    <p><b>📦 Valor total do Estoque Atual:</b> R$ ${valorTotalEstoqueAtual.toFixed(2)}</p>
-    <p><b>💼 Valor total do Estoque Atual (Contábil):</b> R$ ${valorTotalEstoqueContabil.toFixed(2)}</p>
-  `;
-}
-
-/* =========================
-   🔹 Ordenação geral (produtos, fornecedores, usuários)
-========================= */
 function ordenarListasAlfabeticamente() {
   // 🔹 Produtos (cadastro, entrada, saída, estoque)
   if (typeof produtos !== "undefined" && Array.isArray(produtos)) {
@@ -2823,258 +2940,37 @@ function ordenarListasAlfabeticamente() {
     localStorage.setItem("usuarios", JSON.stringify(usuarios));
   }
 
-  // 🔹 Atualiza tabelas e selects se as funções existirem
+  
+ 
+  // 🔹 Atualiza selects de produto (Entrada e Saída)
+  if (typeof atualizarSelectProdutos === "function") {
+  atualizarSelectProdutos();
+} else {
+  setTimeout(() => {
+    if (typeof atualizarSelectProdutos === "function") atualizarSelectProdutos();
+  }, 500);
+
+}
+}
+
+</script>
+
+<!-- 🔹 Scripts externos -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
   if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
   if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
   if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
   if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
   if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
-  if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
   if (typeof atualizarDashboard === "function") atualizarDashboard();
- 
-  // 🔹 Atualiza selects de produto (Entrada e Saída)
-  atualizarSelectProdutos();
-}
-
-/* =========================
-   🔹 Atualiza o <select> de produtos em ordem alfabética
-========================= */
-function atualizarSelectProdutos() {
-  const selectEntrada = document.getElementById("entradaProduto");
-  if (!selectEntrada) return; // evita erro se o campo não existir ainda
-
-  // limpa todas as opções
-  selectEntrada.innerHTML = "";
-
-  // garante que a lista esteja ordenada
-  const listaOrdenada = [...produtos].sort((a, b) =>
-    a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" })
-  );
-
-  // adiciona as opções
-  listaOrdenada.forEach(p => {
-    const opt = document.createElement("option");
-    opt.value = p.nome;
-    opt.textContent = p.nome;
-    selectEntrada.appendChild(opt);
-  });
-}
-
-
-function filtrarProdutos() {
-  const termo = document.getElementById("filtroProduto").value.toLowerCase();
-  const tbody = document.querySelector("#tabelaProdutos tbody");
-  tbody.querySelectorAll("tr").forEach(tr => {
-    const texto = tr.textContent.toLowerCase();
-    tr.style.display = texto.includes(termo) ? "" : "none";
-  });
-}
-
-// 🔹 Entradas: busca por produto, fornecedor ou nota fiscal
-function filtrarEntradas() {
-  const termo = document.getElementById("filtroEntrada").value.toLowerCase();
-  const tbody = document.querySelector("#tabelaEntradas tbody");
-  tbody.querySelectorAll("tr").forEach(tr => {
-    const texto = tr.textContent.toLowerCase();
-    tr.style.display = texto.includes(termo) ? "" : "none";
-  });
-}
-
-// 🔹 Saídas: busca por produto, setor ou responsável
-function filtrarSaidas() {
-  const termo = document.getElementById("filtroSaida").value.toLowerCase();
-  const tbody = document.querySelector("#tabelaSaidas tbody");
-  tbody.querySelectorAll("tr").forEach(tr => {
-    const texto = tr.textContent.toLowerCase();
-    tr.style.display = texto.includes(termo) ? "" : "none";
-  });
-}
-
-// 🔹 Estoque: busca por produto ou categoria
-function filtrarEstoque() {
-  const termo = document.getElementById("filtroEstoque").value.toLowerCase();
-  const tbody = document.querySelector("#tabelaEstoque tbody");
-  tbody.querySelectorAll("tr").forEach(tr => {
-    const texto = tr.textContent.toLowerCase();
-    tr.style.display = texto.includes(termo) ? "" : "none";
-  });
-}
-
-function limparCampos(secaoId) {
-  const secao = document.getElementById(secaoId);
-  if (!secao) return;
-  secao.querySelectorAll("input, select").forEach(el => {
-    if (el.type === "file") {
-      el.value = "";
-    } else if (el.tagName === "SELECT") {
-      el.selectedIndex = 0;
-    } else {
-      el.value = "";
-    }
-  });
-}
-
-
-// 🔹 Wrapper que só limpa se a função tiver sucesso
-const _registrarEntradaOriginal = registrarEntrada;
-registrarEntrada = function() {
-  try {
-    const result = _registrarEntradaOriginal();
-    if (result === true) {
-      setTimeout(() => limparCampos("entrada"), 300);
-    } else {
-      const erroEl = document.querySelector("#entrada input[style*='red'], #entrada select[style*='red']");
-      if (erroEl) erroEl.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  } catch (err) {
-    console.error("Erro ao registrar entrada:", err);
-  }
-};
-
-
-// 🔹 GERENCIAR USUÁRIOS E PERFIS
-if (typeof salvarUsuario === "function") {
-  const _salvarUsuarioOriginal = salvarUsuario;
-  salvarUsuario = function() {
-    _salvarUsuarioOriginal();
-    setTimeout(() => limparCampos("usuarios"), 300);
-  };
-}
-
-
-
-// 🔹 Após gerar lista de compra → exibe e permite nova ação
-const _gerarListaCompraOriginal = gerarListaCompra;
-gerarListaCompra = function() {
-  _gerarListaCompraOriginal();
-  // não limpa nada, apenas garante foco na tabela gerada
-  const container = document.getElementById("listaCompraContainer");
-  if (container) container.scrollIntoView({ behavior: "smooth" });
-};
-
-// 🔹 Após limpar lista → também limpa filtros e reseta tela
-const _limparListaCompraOriginal = limparListaCompra;
-limparListaCompra = function() {
-  _limparListaCompraOriginal();
-  setTimeout(() => limparCampos("limites"), 200);
-};
-
-// 🔹 Mostra mensagens visuais no canto da tela
-function mostrarMensagem(texto, tipo = "info") {
-  let box = document.getElementById("mensagemBox");
-  if (!box) {
-    box = document.createElement("div");
-    box.id = "mensagemBox";
-    document.body.appendChild(box);
-    Object.assign(box.style, {
-      position: "fixed",
-      top: "20px",
-      right: "20px",
-      zIndex: "9999",
-      padding: "10px 15px",
-      borderRadius: "6px",
-      fontFamily: "Segoe UI, sans-serif",
-      color: "#fff",
-      boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-      transition: "opacity 0.4s",
-    });
-  }
-
-  box.textContent = texto;
-  box.style.background =
-    tipo === "erro" ? "#dc3545" :
-    tipo === "sucesso" ? "#28a745" :
-    "#0d6efd";
-  box.style.opacity = "1";
-  setTimeout(() => (box.style.opacity = "0"), 3000);
-}
-
-// 🔹 Destaca o campo com erro
-function destacarErro(el, msg) {
-  el.style.border = "2px solid red";
-  el.focus();
-  mostrarMensagem(msg, "erro");
-}
-
-// 🔹 Remove marcações de erro
-function limparErros(secaoId) {
-  document.querySelectorAll(`#${secaoId} input, #${secaoId} select`).forEach(el => {
-    el.style.border = "1px solid #ccc";
-  });
-}
-
-
-
-
-
+  console.log("✅ Sistema carregado e ordenado com sucesso!");
+});
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
-
 </body>
-</html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+</htmll>
