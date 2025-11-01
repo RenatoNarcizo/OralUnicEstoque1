@@ -1186,10 +1186,6 @@ document.addEventListener("DOMContentLoaded",()=>{
    
 
 
-    
-
-
-
       <!-- SEÇÃO: ESTOQUE ATUAL -->
       <section id="estoque" class="section" style="display:none;">
         <h2><i class="fa fa-warehouse"></i> Estoque Atual</h2>
@@ -1278,48 +1274,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 
   </div>
-
-
-  <!-- 🛒 Lista de compra -->
-<div id="listaCompraContainer" style="display:none; margin-top:20px;">
-  <h3><i class="fa fa-shopping-cart"></i> Lista de Compra Gerada</h3>
-
- <div class="table-wrap" style="max-height:400px; overflow-y:auto; overflow-x:auto; border:1px solid #ccc;">
-    <table id="tabelaListaCompra" class="tabela-padrao">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Produto</th>
-          <th>Código de Barras</th>
-          <th>Categoria</th>
-          <th>Qtd Atual</th>
-          <th>Mínimo</th>
-          <th>Recomendado Comprar</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-      <tfoot>
-        <tr>
-          <td colspan="6" style="text-align:right; font-weight:bold;">Total de Itens:</td>
-          <td id="totalItensCompra" style="font-weight:bold;">0</td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
-
-  <!-- 🔹 Ações de exportação -->
-  <div style="margin-top:10px;">
-    <button onclick="exportarListaExcel()">
-      <i class="fa fa-file-excel"></i> Exportar para Excel
-    </button>
-    <button onclick="gerarPedidoPDF()">
-      <i class="fa fa-file-pdf"></i> Gerar Pedido de Orçamento (PDF)
-    </button>
-  </div>
-</div>
-
-</section>
-
 <!-- SEÇÃO: PAINEL FINANCEIRO -->
 <section id="financeiro" class="section" style="display:none;">
   <h2><i class="fa fa-chart-line"></i> Painel Financeiro</h2>
@@ -1413,6 +1367,46 @@ document.addEventListener("DOMContentLoaded",()=>{
   </div>
 </section>
 
+  <!-- 🛒 Lista de compra -->
+<div id="listaCompraContainer" style="display:none; margin-top:20px;">
+  <h3><i class="fa fa-shopping-cart"></i> Lista de Compra Gerada</h3>
+
+ <div class="table-wrap" style="max-height:400px; overflow-y:auto; overflow-x:auto; border:1px solid #ccc;">
+    <table id="tabelaListaCompra" class="tabela-padrao">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Produto</th>
+          <th>Código de Barras</th>
+          <th>Categoria</th>
+          <th>Qtd Atual</th>
+          <th>Mínimo</th>
+          <th>Recomendado Comprar</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="6" style="text-align:right; font-weight:bold;">Total de Itens:</td>
+          <td id="totalItensCompra" style="font-weight:bold;">0</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- 🔹 Ações de exportação -->
+  <div style="margin-top:10px;">
+    <button onclick="exportarListaExcel()">
+      <i class="fa fa-file-excel"></i> Exportar para Excel
+    </button>
+    <button onclick="gerarPedidoPDF()">
+      <i class="fa fa-file-pdf"></i> Gerar Pedido de Orçamento (PDF)
+    </button>
+  </div>
+</div>
+
+</section>
+
 
       <!-- SEÇÃO: USUÁRIOS E PERFIS -->
       <section id="usuarios" class="section" style="display:none;">
@@ -1452,11 +1446,400 @@ document.addEventListener("DOMContentLoaded",()=>{
  </style>
 </head>
  <body>
+<script>
+function atualizarEstoque(produto, delta) {
+  const item = produtos.find((p) => p.nome === produto);
+  if (item) {
+    item.quantidade = (item.quantidade || 0) + delta;
+    if (item.quantidade < 0) item.quantidade = 0;
+    localStorage.setItem("produtos", JSON.stringify(produtos));
+    atualizarTabelaEstoque();
+	ordenarListasAlfabeticamente();
+  }
+}
 
+function atualizarTabelaEstoque() {
+  const tbody = document.querySelector("#tabelaEstoque tbody");
+  tbody.innerHTML = "";
+
+  if (!Array.isArray(produtos) || produtos.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#777;">Nenhum produto em estoque.</td></tr>`;
+    return;
+  }
+
+  produtos.forEach((p, i) => {
+    const status = p.quantidade > 0 ? "✅ OK" : "⚠️ Vazio";
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${p.nome || "-"}</td>
+      <td>${p.codigoBarras || "-"}</td>
+      <td>${p.categoria || "-"}</td>
+      <td>${p.quantidade || 0}</td>
+      <td>${p.lote || "-"}</td>
+      <td>${p.validade || "-"}</td>
+      <td>${status}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+
+
+// 🔹 Atualiza a tabela principal de produtos com limites
+function atualizarTabelaLimites() {
+  const produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+  const filtroTexto = (document.getElementById("filtroLimite")?.value || "").toLowerCase();
+  const filtroCategoria = (document.getElementById("filtroCategoria")?.value || "").toLowerCase();
+  const tbody = document.querySelector("#tabelaLimites tbody");
+  const resumo = document.getElementById("resumoEstoque");
+
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  let total = 0,
+      abaixo = 0,
+      dentro = 0,
+      acima = 0;
+
+  if (!produtos.length) {
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#777;">Nenhum produto cadastrado.</td></tr>`;
+    if (resumo)
+      resumo.innerHTML = `🧾 Total de Produtos: 0 | ⚠️ Abaixo do Mínimo: 0 | ✅ Dentro do Limite: 0 | 📦 Acima do Máximo: 0`;
+    return;
+  }
+
+  produtos.forEach((p, i) => {
+    const nome = (p.nome || "").toLowerCase();
+    const categoria = (p.categoria || "").toLowerCase();
+
+    const minimo = Number(p.minimo) || 0;
+    const maximo = Number(p.maximo) || 0;
+    const qtd = Number(p.quantidade) || 0;
+
+    // calcula status e recomendação ANTES do filtro de texto
+    let statusTexto = "";
+    let statusCor = "";
+    let recomendacao = "";
+
+    if (qtd < minimo) {
+      statusTexto = "⚠️ Abaixo do mínimo";
+      statusCor = "red";
+      recomendacao = `Comprar ${minimo - qtd} unidade(s)`;
+    } else if (maximo && qtd > maximo) {
+      statusTexto = "📦 Acima do máximo";
+      statusCor = "orange";
+      recomendacao = "Reduzir estoque";
+    } else {
+      statusTexto = "✅ Dentro do limite";
+      statusCor = "green";
+      recomendacao = "OK";
+    }
+
+    
+    // filtroCategoria (mantém comportamento anterior)
+    if (filtroCategoria && filtroCategoria !== "" && categoria !== filtroCategoria) return;
+
+    // filtroTexto: busca em vários campos (produto, codigoBarras, categoria, qtd, status, recomendação)
+    if (filtroTexto) {
+      const codigo = (p.codigoBarras || "").toLowerCase();
+      const qtdStr = String(qtd).toLowerCase();
+      const statusLower = statusTexto.toLowerCase();
+      const recLower = (recomendacao || "").toLowerCase();
+
+      const matches =
+        nome.includes(filtroTexto) ||
+        codigo.includes(filtroTexto) ||
+        categoria.includes(filtroTexto) ||
+        qtdStr.includes(filtroTexto) ||
+        statusLower.includes(filtroTexto) ||
+        recLower.includes(filtroTexto);
+
+      if (!matches) return; // não passa no filtro
+    }
+   
+
+    total++;
+
+    // contadores
+    if (qtd < minimo) abaixo++;
+    else if (maximo && qtd > maximo) acima++;
+    else dentro++;
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${p.nome || "-"}</td>
+      <td>${p.codigoBarras || "-"}</td>
+      <td>${p.categoria || "-"}</td>
+      <td>${qtd}</td>
+      <td><input type="number" id="min-${i}" value="${minimo}" style="width:80px" /></td>
+      <td><input type="number" id="max-${i}" value="${maximo}" style="width:80px" /></td>
+      <td style="color:${statusCor}; font-weight:bold;">${statusTexto}</td>
+      <td>${recomendacao}</td>
+      <td><button onclick="salvarLimites(${i})"><i class="fa fa-save"></i></button></td>
+    `;
+    tbody.appendChild(row);
+  });
+
+  // 🔹 Atualiza contador superior
+  if (resumo)
+    resumo.innerHTML = `
+      🧾 Total de Produtos: ${total} |
+      ⚠️ Abaixo do Mínimo: ${abaixo} |
+      ✅ Dentro do Limite: ${dentro} |
+      📦 Acima do Máximo: ${acima}
+    `;
+}
+
+// 🔹 Gera lista de compra (todos os produtos abaixo do mínimo)
+
+function gerarListaCompra() {
+  const container = document.getElementById("listaCompraContainer");
+  const tabela = document.getElementById("tabelaListaCompra");
+  const tbody = tabela ? tabela.querySelector("tbody") : null;
+  const totalSpan = document.getElementById("totalItensCompra");
+
+  if (!container || !tabela || !tbody || !totalSpan) {
+    console.error("⚠️ Elementos da lista de compra não encontrados no DOM.");
+    alert("Erro: tabela da lista de compra não encontrada. Verifique o HTML.");
+    return;
+  }
+
+  const produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+  if (!produtos.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#777;">Nenhum produto cadastrado.</td></tr>`;
+    totalSpan.textContent = "0";
+    container.style.display = "block";
+    return;
+  }
+
+  // 🔹 Filtro de categoria (se existir)
+  const filtroCategoria = (document.getElementById("filtroCategoria")?.value || "").toLowerCase();
+
+  // 🔹 Filtra produtos abaixo do mínimo
+  const produtosAbaixo = produtos.filter(p => {
+    const categoria = (p.categoria || "").toLowerCase();
+    const qtd = Number(p.quantidade) || 0;
+    const minimo = Number(p.minimo) || 0;
+    if (filtroCategoria && filtroCategoria !== "" && categoria !== filtroCategoria) return false;
+    return qtd < minimo;
+  });
+
+  tbody.innerHTML = "";
+
+  if (!produtosAbaixo.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:green;">✅ Nenhum produto abaixo do mínimo.</td></tr>`;
+    totalSpan.textContent = "0";
+    container.style.display = "block";
+    return;
+  }
+
+  // 🔹 Monta tabela com os valores corretos de “Recomendado Comprar”
+  let totalItens = 0;
+
+  produtosAbaixo.forEach((p, i) => {
+    const qtdAtual = Number(p.quantidade) || 0;
+    const minimo = Number(p.minimo) || 0;
+    const comprar = minimo > qtdAtual ? minimo - qtdAtual : 0;
+    const codigoBarras = p.codigoBarras || "-";
+
+    totalItens++;
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${p.nome}</td>
+      <td>${codigoBarras}</td>
+      <td>${p.categoria || "-"}</td>
+      <td>${qtdAtual}</td>
+      <td>${minimo}</td>
+      <td style="color:red; font-weight:bold;">${comprar}</td>
+    `;
+    tbody.appendChild(row);
+  });
+
+  // 🔹 Atualiza total e exibe tabela
+  totalSpan.textContent = totalItens;
+  container.style.display = "block";
+}
+
+
+
+// 🔹 Limpa lista gerada
+function limparListaCompra() {
+  const tbody = document.querySelector("#tabelaListaCompra tbody");
+  const totalSpan = document.getElementById("totalItensCompra");
+  const container = document.getElementById("listaCompraContainer");
+
+  // 🔹 Limpa a lista de compra
+  if (tbody) tbody.innerHTML = "";
+  if (totalSpan) totalSpan.textContent = "0";
+  if (container) container.style.display = "none";
+
+  // 🔹 Retorna a exibição da tabela principal com todos os produtos
+  atualizarTabelaLimites(); // 👈 volta a mostrar todos os produtos no estoque
+}
+
+function salvarLimites(i) {
+  const min = +document.getElementById(`min-${i}`).value;
+  const max = +document.getElementById(`max-${i}`).value;
+
+  if (isNaN(min) || isNaN(max)) {
+    alert("Por favor, insira valores válidos para mínimo e máximo!");
+    return;
+  }
+
+  produtos[i].minimo = min;
+  produtos[i].maximo = max;
+  localStorage.setItem("produtos", JSON.stringify(produtos));
+  alert("Limites atualizados com sucesso!");
+  atualizarTabelaLimites();
+  ordenarListasAlfabeticamente();
+}
  
+function exportarCSV(nome, dados) {
+  if (!dados.length) return alert("Nenhum dado encontrado!");
+  const header = Object.keys(dados[0]).join(";");
+  const rows = dados.map((obj) => Object.values(obj).join(";"));
+  const csv = [header, ...rows].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = nome + ".csv";
+  link.click();
+}
+
+function gerarRelatorioProdutos() {
+  exportarCSV("Produtos", produtos);
+}
+
+function gerarRelatorioEntradas() {
+  exportarCSV("Entradas", entradas);
+}
+
+function gerarRelatorioSaidas() {
+  exportarCSV("Saidas", saidas);
+}
+
+function gerarRelatorioEstoque() {
+  const dados = produtos.map((p) => ({
+    nome: p.nome,
+    categoria: p.categoria,
+    quantidade: p.quantidade || 0
+  }));
+  exportarCSV("Estoque", dados);
+}
+
+function exportarRelatorioFiltrado(lista) {
+  let csv = [
+    ["Produto", "Quantidade", "Valor (R$)", "Data", "Nota Fiscal", "Fornecedor", "CNPJ", "Lote", "Validade", "Setor"].join(";")
+  ];
+
+  lista.forEach(e => {
+    csv.push([
+      e.produto,
+      e.qtd,
+      e.valor,
+      e.data,
+      e.nota,
+      e.fornecedor,
+      e.cnpj,
+      e.lote,
+      e.validade,
+      e.setor
+    ].join(";"));
+  });
+
+  const csvContent = csv.join("\n");
+  const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=ISO-8859-1;" });
+
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "Relatorio_Entradas.csv";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
 
 
+function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
+  let alterado = false;
 
+  if (!Array.isArray(entradas)) entradas = [];
+  if (!Array.isArray(saidas)) saidas = [];
+  if (!Array.isArray(produtos)) produtos = [];
+
+  entradas.forEach(e => {
+    if (e.produto === nomeAntigo) {
+      e.produto = novoNome;
+      alterado = true;
+    }
+  });
+
+  saidas.forEach(s => {
+    if (s.produto === nomeAntigo) {
+      s.produto = novoNome;
+      alterado = true;
+    }
+  });
+
+  produtos.forEach(p => {
+    if (p.nome === nomeAntigo) {
+      p.nome = novoNome;
+      alterado = true;
+    }
+  });
+
+  if (alterado) {
+    localStorage.setItem("entradas", JSON.stringify(entradas));
+    localStorage.setItem("saidas", JSON.stringify(saidas));
+    localStorage.setItem("produtos", JSON.stringify(produtos));
+
+    if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
+    if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
+    if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
+    if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
+    if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
+  }
+}
+function gerarRelatorio() {
+  const inicio = document.getElementById("dataInicioRelatorio").value;
+  const fim = document.getElementById("dataFimRelatorio").value;
+
+  if (!inicio || !fim) {
+    alert("⚠️ Selecione uma data de início e fim para gerar o relatório!");
+    return;
+  }
+
+  const dataInicio = new Date(inicio);
+  const dataFim = new Date(fim);
+
+  if (dataInicio > dataFim) {
+    alert("❌ A data inicial não pode ser maior que a final!");
+    return;
+  }
+
+  // 🔹 Pega todas as entradas do localStorage
+  const entradas = JSON.parse(localStorage.getItem("entradas")) || [];
+
+  // 🔹 Filtra somente as que estão dentro do intervalo
+  const filtradas = entradas.filter(e => {
+    const data = new Date(e.data);
+    return data >= dataInicio && data <= dataFim;
+  });
+
+  if (filtradas.length === 0) {
+    alert("📭 Nenhum registro encontrado nesse período.");
+    return;
+  }
+
+  // 🔹 Exporta os resultados filtrados para Excel
+  exportarRelatorioFiltrado(filtradas);
+
+  alert(`📊 Relatório de Entradas gerado de ${inicio} até ${fim}`);
+}
 
 function toggleSidebar() {
   const sidebar = document.getElementById("sidebar");
@@ -1476,7 +1859,166 @@ document.addEventListener("click", (e) => {
   }
 });
 
+function definirPeriodoRapido(tipo) {
+  const hoje = new Date();
+  const inicioEl = document.getElementById("dataInicioRelatorio");
+  const fimEl = document.getElementById("dataFimRelatorio");
 
+  let inicio = new Date(hoje);
+  let fim = new Date(hoje);
+
+  switch (tipo) {
+    case "hoje":
+      // Fica o dia atual
+      break;
+    case "7dias":
+      inicio.setDate(hoje.getDate() - 7);
+      break;
+    case "30dias":
+      inicio.setDate(hoje.getDate() - 30);
+      break;
+    case "mes":
+      inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+      fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+      break;
+  }
+
+  inicioEl.value = inicio.toISOString().split("T")[0];
+  fimEl.value = fim.toISOString().split("T")[0];
+
+
+}
+
+function limparPeriodo() {
+  document.getElementById("dataInicioRelatorio").value = "";
+  document.getElementById("dataFimRelatorio").value = "";
+}
+
+
+
+function atualizarPainelFinanceiro() {
+  const entradas = JSON.parse(localStorage.getItem("entradas")) || [];
+  const saidas = JSON.parse(localStorage.getItem("saidas")) || [];
+  const produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+
+  let valorTotalEntradas = 0;
+  let valorTotalSaidas = 0;
+
+  // 🔹 Calcular total de entradas e saídas (financeiro geral)
+  entradas.forEach(e => {
+    valorTotalEntradas += (e.valor || 0) * (e.qtd || 0);
+  });
+
+  saidas.forEach(s => {
+    // ⚠️ Se o produto existe em entradas, usa o valor unitário dele
+    const entradaRelacionado = entradas.find(
+      e => e.produto && s.produto && e.produto.toLowerCase() === s.produto.toLowerCase()
+    );
+    const valorUnitario = entradaRelacionado ? (entradaRelacionado.valor || 0) : 0;
+    valorTotalSaidas += valorUnitario * (s.qtd || 0);
+  });
+
+  // 🔹 Valor total contábil do estoque (entradas - saídas)
+  const valorEstoqueAtual = valorTotalEntradas - valorTotalSaidas;
+
+  // Atualiza os dois indicadores principais (já existentes)
+  document.getElementById("valorEstoque").textContent = `R$ ${valorEstoqueAtual.toFixed(2)}`;
+  document.getElementById("valorSaidas").textContent = `R$ ${valorTotalSaidas.toFixed(2)}`;
+
+  // --------------------------------------------------------------------------------
+  // 💰 Cálculo de Último valor de entrada, CMP e Estoque Atual (três novos valores)
+  // --------------------------------------------------------------------------------
+  let qtdTotal = 0;
+  let valorTotalUltimaEntrada = 0;
+  let valorTotalCustoMedio = 0;
+
+  produtos.forEach(p => {
+    const entradasDoProduto = entradas.filter(e => e.produto === p.nome);
+    if (entradasDoProduto.length === 0) return;
+
+    // Último valor de entrada
+    const ultimaEntrada = entradasDoProduto.slice(-1)[0];
+    const valorUltimo = Number(ultimaEntrada.valor || 0);
+
+    // Custo médio ponderado
+    const totalQtdEntradas = entradasDoProduto.reduce((s, e) => s + Number(e.qtd || 0), 0);
+    const totalValorEntradas = entradasDoProduto.reduce(
+      (s, e) => s + (Number(e.qtd || 0) * Number(e.valor || 0)),
+      0
+    );
+    const custoMedio = totalQtdEntradas > 0 ? totalValorEntradas / totalQtdEntradas : 0;
+
+    const qtdAtual = Number(p.quantidade || 0);
+    qtdTotal += qtdAtual;
+    valorTotalUltimaEntrada += qtdAtual * valorUltimo;
+    valorTotalCustoMedio += qtdAtual * custoMedio;
+  });
+
+  const valorTotalEstoqueAtualPainel = (valorTotalUltimaEntrada + valorTotalCustoMedio) / 2;
+
+  // Atualiza os novos indicadores
+  document.getElementById("valorUltimaEntrada").textContent = `R$ ${valorTotalUltimaEntrada.toFixed(2)}`;
+  document.getElementById("valorCustoMedio").textContent = `R$ ${valorTotalCustoMedio.toFixed(2)}`;
+  document.getElementById("valorEstoqueAtualPainel").textContent = `R$ ${valorTotalEstoqueAtualPainel.toFixed(2)}`;
+
+  // --------------------------------------------------------------------------------
+  // 📦 Agrupar por fornecedor e nota fiscal (mantido igual ao seu original)
+  // --------------------------------------------------------------------------------
+  const agrupadas = {};
+
+  entradas.forEach(e => {
+    const fornecedor = e.fornecedor || "Fornecedor não informado";
+    const nota = e.nota || "Sem Nota Fiscal";
+    const chave = `${fornecedor}_${nota}`;
+
+    if (!agrupadas[chave]) {
+      agrupadas[chave] = {
+        fornecedor,
+        nota,
+        valorNota: 0,
+        valorSaida: 0
+      };
+    }
+
+    agrupadas[chave].valorNota += (e.valor || 0) * (e.qtd || 0);
+  });
+
+  saidas.forEach(s => {
+    const entrada = entradas.find(
+      e => e.produto && s.produto && e.produto.toLowerCase() === s.produto.toLowerCase()
+    );
+    if (!entrada) return;
+
+    const fornecedor = entrada.fornecedor || "Fornecedor não informado";
+    const nota = entrada.nota || "Sem Nota Fiscal";
+    const chave = `${fornecedor}_${nota}`;
+
+    const valorUnitario = entrada.valor || 0;
+    const valorSaida = valorUnitario * (s.qtd || 0);
+
+    if (agrupadas[chave]) {
+      agrupadas[chave].valorSaida += valorSaida;
+    }
+  });
+
+  // Renderizar tabela agrupada
+  const tbody = document.querySelector("#tabelaFinanceiro tbody");
+  tbody.innerHTML = "";
+  Object.values(agrupadas).forEach(a => {
+    const saldo = a.valorNota - a.valorSaida;
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${a.fornecedor}</td>
+      <td>${a.nota}</td>
+      <td>R$ ${a.valorNota.toFixed(2)}</td>
+      <td>R$ ${saldo.toFixed(2)}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+
+	
 
 function showSection(id) {
   // 🔹 Oculta todas as seções
@@ -1830,418 +2372,15 @@ function bloquearAcoesSimples2() {
 /* =========================
    🔹 Atualizar Estoque
 ========================= */
-function atualizarEstoque(produto, delta) {
-  const item = produtos.find((p) => p.nome === produto);
-  if (item) {
-    item.quantidade = (item.quantidade || 0) + delta;
-    if (item.quantidade < 0) item.quantidade = 0;
-    localStorage.setItem("produtos", JSON.stringify(produtos));
-    atualizarTabelaEstoque();
-	ordenarListasAlfabeticamente();
-  }
-}
-
-function atualizarTabelaEstoque() {
-  const tbody = document.querySelector("#tabelaEstoque tbody");
-  tbody.innerHTML = "";
-
-  if (!Array.isArray(produtos) || produtos.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#777;">Nenhum produto em estoque.</td></tr>`;
-    return;
-  }
-
-  produtos.forEach((p, i) => {
-    const status = p.quantidade > 0 ? "✅ OK" : "⚠️ Vazio";
-
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${p.nome || "-"}</td>
-      <td>${p.codigoBarras || "-"}</td>
-      <td>${p.categoria || "-"}</td>
-      <td>${p.quantidade || 0}</td>
-      <td>${p.lote || "-"}</td>
-      <td>${p.validade || "-"}</td>
-      <td>${status}</td>
-    `;
-    tbody.appendChild(row);
-  });
-}
-
-
-
-// 🔹 Atualiza a tabela principal de produtos com limites
-function atualizarTabelaLimites() {
-  const produtos = JSON.parse(localStorage.getItem("produtos")) || [];
-  const filtroTexto = (document.getElementById("filtroLimite")?.value || "").toLowerCase();
-  const filtroCategoria = (document.getElementById("filtroCategoria")?.value || "").toLowerCase();
-  const tbody = document.querySelector("#tabelaLimites tbody");
-  const resumo = document.getElementById("resumoEstoque");
-
-  if (!tbody) return;
-  tbody.innerHTML = "";
-
-  let total = 0,
-      abaixo = 0,
-      dentro = 0,
-      acima = 0;
-
-  if (!produtos.length) {
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#777;">Nenhum produto cadastrado.</td></tr>`;
-    if (resumo)
-      resumo.innerHTML = `🧾 Total de Produtos: 0 | ⚠️ Abaixo do Mínimo: 0 | ✅ Dentro do Limite: 0 | 📦 Acima do Máximo: 0`;
-    return;
-  }
-
-  produtos.forEach((p, i) => {
-    const nome = (p.nome || "").toLowerCase();
-    const categoria = (p.categoria || "").toLowerCase();
-
-    const minimo = Number(p.minimo) || 0;
-    const maximo = Number(p.maximo) || 0;
-    const qtd = Number(p.quantidade) || 0;
-
-    // calcula status e recomendação ANTES do filtro de texto
-    let statusTexto = "";
-    let statusCor = "";
-    let recomendacao = "";
-
-    if (qtd < minimo) {
-      statusTexto = "⚠️ Abaixo do mínimo";
-      statusCor = "red";
-      recomendacao = `Comprar ${minimo - qtd} unidade(s)`;
-    } else if (maximo && qtd > maximo) {
-      statusTexto = "📦 Acima do máximo";
-      statusCor = "orange";
-      recomendacao = "Reduzir estoque";
-    } else {
-      statusTexto = "✅ Dentro do limite";
-      statusCor = "green";
-      recomendacao = "OK";
-    }
-
-    
-    // filtroCategoria (mantém comportamento anterior)
-    if (filtroCategoria && filtroCategoria !== "" && categoria !== filtroCategoria) return;
-
-    // filtroTexto: busca em vários campos (produto, codigoBarras, categoria, qtd, status, recomendação)
-    if (filtroTexto) {
-      const codigo = (p.codigoBarras || "").toLowerCase();
-      const qtdStr = String(qtd).toLowerCase();
-      const statusLower = statusTexto.toLowerCase();
-      const recLower = (recomendacao || "").toLowerCase();
-
-      const matches =
-        nome.includes(filtroTexto) ||
-        codigo.includes(filtroTexto) ||
-        categoria.includes(filtroTexto) ||
-        qtdStr.includes(filtroTexto) ||
-        statusLower.includes(filtroTexto) ||
-        recLower.includes(filtroTexto);
-
-      if (!matches) return; // não passa no filtro
-    }
-   
-
-    total++;
-
-    // contadores
-    if (qtd < minimo) abaixo++;
-    else if (maximo && qtd > maximo) acima++;
-    else dentro++;
-
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${p.nome || "-"}</td>
-      <td>${p.codigoBarras || "-"}</td>
-      <td>${p.categoria || "-"}</td>
-      <td>${qtd}</td>
-      <td><input type="number" id="min-${i}" value="${minimo}" style="width:80px" /></td>
-      <td><input type="number" id="max-${i}" value="${maximo}" style="width:80px" /></td>
-      <td style="color:${statusCor}; font-weight:bold;">${statusTexto}</td>
-      <td>${recomendacao}</td>
-      <td><button onclick="salvarLimites(${i})"><i class="fa fa-save"></i></button></td>
-    `;
-    tbody.appendChild(row);
-  });
-
-  // 🔹 Atualiza contador superior
-  if (resumo)
-    resumo.innerHTML = `
-      🧾 Total de Produtos: ${total} |
-      ⚠️ Abaixo do Mínimo: ${abaixo} |
-      ✅ Dentro do Limite: ${dentro} |
-      📦 Acima do Máximo: ${acima}
-    `;
-}
-
-// 🔹 Gera lista de compra (todos os produtos abaixo do mínimo)
-
-function gerarListaCompra() {
-  const container = document.getElementById("listaCompraContainer");
-  const tabela = document.getElementById("tabelaListaCompra");
-  const tbody = tabela ? tabela.querySelector("tbody") : null;
-  const totalSpan = document.getElementById("totalItensCompra");
-
-  if (!container || !tabela || !tbody || !totalSpan) {
-    console.error("⚠️ Elementos da lista de compra não encontrados no DOM.");
-    alert("Erro: tabela da lista de compra não encontrada. Verifique o HTML.");
-    return;
-  }
-
-  const produtos = JSON.parse(localStorage.getItem("produtos")) || [];
-  if (!produtos.length) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#777;">Nenhum produto cadastrado.</td></tr>`;
-    totalSpan.textContent = "0";
-    container.style.display = "block";
-    return;
-  }
-
-  // 🔹 Filtro de categoria (se existir)
-  const filtroCategoria = (document.getElementById("filtroCategoria")?.value || "").toLowerCase();
-
-  // 🔹 Filtra produtos abaixo do mínimo
-  const produtosAbaixo = produtos.filter(p => {
-    const categoria = (p.categoria || "").toLowerCase();
-    const qtd = Number(p.quantidade) || 0;
-    const minimo = Number(p.minimo) || 0;
-    if (filtroCategoria && filtroCategoria !== "" && categoria !== filtroCategoria) return false;
-    return qtd < minimo;
-  });
-
-  tbody.innerHTML = "";
-
-  if (!produtosAbaixo.length) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:green;">✅ Nenhum produto abaixo do mínimo.</td></tr>`;
-    totalSpan.textContent = "0";
-    container.style.display = "block";
-    return;
-  }
-
-  // 🔹 Monta tabela com os valores corretos de “Recomendado Comprar”
-  let totalItens = 0;
-
-  produtosAbaixo.forEach((p, i) => {
-    const qtdAtual = Number(p.quantidade) || 0;
-    const minimo = Number(p.minimo) || 0;
-    const comprar = minimo > qtdAtual ? minimo - qtdAtual : 0;
-    const codigoBarras = p.codigoBarras || "-";
-
-    totalItens++;
-
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${p.nome}</td>
-      <td>${codigoBarras}</td>
-      <td>${p.categoria || "-"}</td>
-      <td>${qtdAtual}</td>
-      <td>${minimo}</td>
-      <td style="color:red; font-weight:bold;">${comprar}</td>
-    `;
-    tbody.appendChild(row);
-  });
-
-  // 🔹 Atualiza total e exibe tabela
-  totalSpan.textContent = totalItens;
-  container.style.display = "block";
-}
-
-
-
-// 🔹 Limpa lista gerada
-function limparListaCompra() {
-  const tbody = document.querySelector("#tabelaListaCompra tbody");
-  const totalSpan = document.getElementById("totalItensCompra");
-  const container = document.getElementById("listaCompraContainer");
-
-  // 🔹 Limpa a lista de compra
-  if (tbody) tbody.innerHTML = "";
-  if (totalSpan) totalSpan.textContent = "0";
-  if (container) container.style.display = "none";
-
-  // 🔹 Retorna a exibição da tabela principal com todos os produtos
-  atualizarTabelaLimites(); // 👈 volta a mostrar todos os produtos no estoque
-}
-
-function salvarLimites(i) {
-  const min = +document.getElementById(`min-${i}`).value;
-  const max = +document.getElementById(`max-${i}`).value;
-
-  if (isNaN(min) || isNaN(max)) {
-    alert("Por favor, insira valores válidos para mínimo e máximo!");
-    return;
-  }
-
-  produtos[i].minimo = min;
-  produtos[i].maximo = max;
-  localStorage.setItem("produtos", JSON.stringify(produtos));
-  alert("Limites atualizados com sucesso!");
-  atualizarTabelaLimites();
-  ordenarListasAlfabeticamente();
-}
 
 
 /* =========================
    🔹 Financeiro
 ========================= */
-function atualizarPainelFinanceiro() {
-  const entradas = JSON.parse(localStorage.getItem("entradas")) || [];
-  const saidas = JSON.parse(localStorage.getItem("saidas")) || [];
-  const produtos = JSON.parse(localStorage.getItem("produtos")) || [];
-
-  let valorTotalEntradas = 0;
-  let valorTotalSaidas = 0;
-
-  // 🔹 Calcular total de entradas e saídas (financeiro geral)
-  entradas.forEach(e => {
-    valorTotalEntradas += (e.valor || 0) * (e.qtd || 0);
-  });
-
-  saidas.forEach(s => {
-    // ⚠️ Se o produto existe em entradas, usa o valor unitário dele
-    const entradaRelacionado = entradas.find(
-      e => e.produto && s.produto && e.produto.toLowerCase() === s.produto.toLowerCase()
-    );
-    const valorUnitario = entradaRelacionado ? (entradaRelacionado.valor || 0) : 0;
-    valorTotalSaidas += valorUnitario * (s.qtd || 0);
-  });
-
-  // 🔹 Valor total contábil do estoque (entradas - saídas)
-  const valorEstoqueAtual = valorTotalEntradas - valorTotalSaidas;
-
-  // Atualiza os dois indicadores principais (já existentes)
-  document.getElementById("valorEstoque").textContent = `R$ ${valorEstoqueAtual.toFixed(2)}`;
-  document.getElementById("valorSaidas").textContent = `R$ ${valorTotalSaidas.toFixed(2)}`;
-
-  // --------------------------------------------------------------------------------
-  // 💰 Cálculo de Último valor de entrada, CMP e Estoque Atual (três novos valores)
-  // --------------------------------------------------------------------------------
-  let qtdTotal = 0;
-  let valorTotalUltimaEntrada = 0;
-  let valorTotalCustoMedio = 0;
-
-  produtos.forEach(p => {
-    const entradasDoProduto = entradas.filter(e => e.produto === p.nome);
-    if (entradasDoProduto.length === 0) return;
-
-    // Último valor de entrada
-    const ultimaEntrada = entradasDoProduto.slice(-1)[0];
-    const valorUltimo = Number(ultimaEntrada.valor || 0);
-
-    // Custo médio ponderado
-    const totalQtdEntradas = entradasDoProduto.reduce((s, e) => s + Number(e.qtd || 0), 0);
-    const totalValorEntradas = entradasDoProduto.reduce(
-      (s, e) => s + (Number(e.qtd || 0) * Number(e.valor || 0)),
-      0
-    );
-    const custoMedio = totalQtdEntradas > 0 ? totalValorEntradas / totalQtdEntradas : 0;
-
-    const qtdAtual = Number(p.quantidade || 0);
-    qtdTotal += qtdAtual;
-    valorTotalUltimaEntrada += qtdAtual * valorUltimo;
-    valorTotalCustoMedio += qtdAtual * custoMedio;
-  });
-
-  const valorTotalEstoqueAtualPainel = (valorTotalUltimaEntrada + valorTotalCustoMedio) / 2;
-
-  // Atualiza os novos indicadores
-  document.getElementById("valorUltimaEntrada").textContent = `R$ ${valorTotalUltimaEntrada.toFixed(2)}`;
-  document.getElementById("valorCustoMedio").textContent = `R$ ${valorTotalCustoMedio.toFixed(2)}`;
-  document.getElementById("valorEstoqueAtualPainel").textContent = `R$ ${valorTotalEstoqueAtualPainel.toFixed(2)}`;
-
-  // --------------------------------------------------------------------------------
-  // 📦 Agrupar por fornecedor e nota fiscal (mantido igual ao seu original)
-  // --------------------------------------------------------------------------------
-  const agrupadas = {};
-
-  entradas.forEach(e => {
-    const fornecedor = e.fornecedor || "Fornecedor não informado";
-    const nota = e.nota || "Sem Nota Fiscal";
-    const chave = `${fornecedor}_${nota}`;
-
-    if (!agrupadas[chave]) {
-      agrupadas[chave] = {
-        fornecedor,
-        nota,
-        valorNota: 0,
-        valorSaida: 0
-      };
-    }
-
-    agrupadas[chave].valorNota += (e.valor || 0) * (e.qtd || 0);
-  });
-
-  saidas.forEach(s => {
-    const entrada = entradas.find(
-      e => e.produto && s.produto && e.produto.toLowerCase() === s.produto.toLowerCase()
-    );
-    if (!entrada) return;
-
-    const fornecedor = entrada.fornecedor || "Fornecedor não informado";
-    const nota = entrada.nota || "Sem Nota Fiscal";
-    const chave = `${fornecedor}_${nota}`;
-
-    const valorUnitario = entrada.valor || 0;
-    const valorSaida = valorUnitario * (s.qtd || 0);
-
-    if (agrupadas[chave]) {
-      agrupadas[chave].valorSaida += valorSaida;
-    }
-  });
-
-  // Renderizar tabela agrupada
-  const tbody = document.querySelector("#tabelaFinanceiro tbody");
-  tbody.innerHTML = "";
-  Object.values(agrupadas).forEach(a => {
-    const saldo = a.valorNota - a.valorSaida;
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${a.fornecedor}</td>
-      <td>${a.nota}</td>
-      <td>R$ ${a.valorNota.toFixed(2)}</td>
-      <td>R$ ${saldo.toFixed(2)}</td>
-    `;
-    tbody.appendChild(row);
-  });
-}
 
 /* =========================
    🔹 Relatórios (corrigido)
 ========================= */
-function exportarCSV(nome, dados) {
-  if (!dados.length) return alert("Nenhum dado encontrado!");
-  const header = Object.keys(dados[0]).join(";");
-  const rows = dados.map((obj) => Object.values(obj).join(";"));
-  const csv = [header, ...rows].join("\n");
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = nome + ".csv";
-  link.click();
-}
-
-function gerarRelatorioProdutos() {
-  exportarCSV("Produtos", produtos);
-}
-
-function gerarRelatorioEntradas() {
-  exportarCSV("Entradas", entradas);
-}
-
-function gerarRelatorioSaidas() {
-  exportarCSV("Saidas", saidas);
-}
-
-function gerarRelatorioEstoque() {
-  const dados = produtos.map((p) => ({
-    nome: p.nome,
-    categoria: p.categoria,
-    quantidade: p.quantidade || 0
-  }));
-  exportarCSV("Estoque", dados);
-}
 
 /* =========================
    🔹 Usuários
@@ -2867,80 +3006,11 @@ function exportarListaExcel() {
 /* =========================
    🔹 Controle de período do relatório
 ========================= */
-function definirPeriodoRapido(tipo) {
-  const hoje = new Date();
-  const inicioEl = document.getElementById("dataInicioRelatorio");
-  const fimEl = document.getElementById("dataFimRelatorio");
-
-  let inicio = new Date(hoje);
-  let fim = new Date(hoje);
-
-  switch (tipo) {
-    case "hoje":
-      // Fica o dia atual
-      break;
-    case "7dias":
-      inicio.setDate(hoje.getDate() - 7);
-      break;
-    case "30dias":
-      inicio.setDate(hoje.getDate() - 30);
-      break;
-    case "mes":
-      inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-      fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-      break;
-  }
-
-  inicioEl.value = inicio.toISOString().split("T")[0];
-  fimEl.value = fim.toISOString().split("T")[0];
-
-
-}
-
-function limparPeriodo() {
-  document.getElementById("dataInicioRelatorio").value = "";
-  document.getElementById("dataFimRelatorio").value = "";
-}
 
 /* =========================
    🔹 Gerar relatório por data (sem exibir tabela, exporta direto)
 ========================= */
-function gerarRelatorio() {
-  const inicio = document.getElementById("dataInicioRelatorio").value;
-  const fim = document.getElementById("dataFimRelatorio").value;
 
-  if (!inicio || !fim) {
-    alert("⚠️ Selecione uma data de início e fim para gerar o relatório!");
-    return;
-  }
-
-  const dataInicio = new Date(inicio);
-  const dataFim = new Date(fim);
-
-  if (dataInicio > dataFim) {
-    alert("❌ A data inicial não pode ser maior que a final!");
-    return;
-  }
-
-  // 🔹 Pega todas as entradas do localStorage
-  const entradas = JSON.parse(localStorage.getItem("entradas")) || [];
-
-  // 🔹 Filtra somente as que estão dentro do intervalo
-  const filtradas = entradas.filter(e => {
-    const data = new Date(e.data);
-    return data >= dataInicio && data <= dataFim;
-  });
-
-  if (filtradas.length === 0) {
-    alert("📭 Nenhum registro encontrado nesse período.");
-    return;
-  }
-
-  // 🔹 Exporta os resultados filtrados para Excel
-  exportarRelatorioFiltrado(filtradas);
-
-  alert(`📊 Relatório de Entradas gerado de ${inicio} até ${fim}`);
-}
 
 
 <script>
@@ -2948,78 +3018,7 @@ function gerarRelatorio() {
 /* =========================
    📦 Exportar Relatório Filtrado para Excel
 ========================= */
-function exportarRelatorioFiltrado(lista) {
-  let csv = [
-    ["Produto", "Quantidade", "Valor (R$)", "Data", "Nota Fiscal", "Fornecedor", "CNPJ", "Lote", "Validade", "Setor"].join(";")
-  ];
 
-  lista.forEach(e => {
-    csv.push([
-      e.produto,
-      e.qtd,
-      e.valor,
-      e.data,
-      e.nota,
-      e.fornecedor,
-      e.cnpj,
-      e.lote,
-      e.validade,
-      e.setor
-    ].join(";"));
-  });
-
-  const csvContent = csv.join("\n");
-  const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=ISO-8859-1;" });
-
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "Relatorio_Entradas.csv";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-
-function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
-  let alterado = false;
-
-  if (!Array.isArray(entradas)) entradas = [];
-  if (!Array.isArray(saidas)) saidas = [];
-  if (!Array.isArray(produtos)) produtos = [];
-
-  entradas.forEach(e => {
-    if (e.produto === nomeAntigo) {
-      e.produto = novoNome;
-      alterado = true;
-    }
-  });
-
-  saidas.forEach(s => {
-    if (s.produto === nomeAntigo) {
-      s.produto = novoNome;
-      alterado = true;
-    }
-  });
-
-  produtos.forEach(p => {
-    if (p.nome === nomeAntigo) {
-      p.nome = novoNome;
-      alterado = true;
-    }
-  });
-
-  if (alterado) {
-    localStorage.setItem("entradas", JSON.stringify(entradas));
-    localStorage.setItem("saidas", JSON.stringify(saidas));
-    localStorage.setItem("produtos", JSON.stringify(produtos));
-
-    if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
-    if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-    if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-    if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-    if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
-  }
-}
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
@@ -3028,6 +3027,7 @@ function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
 
 </body>
 </html>
+
 
 
 
