@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Sistema de Controle de Estoque – Oral Unic Campo Grande</title>
 
-  <!-- Ícone -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
   
 	<style>
     :root {
@@ -100,28 +98,32 @@
       background: var(--azul-escuro);
       color: white;
       padding-top: 60px;
+      transition: transform 0.3s ease;
+      transform: translateX(-220px);
+    }
+    #sidebar.active {
+      transform: translateX(0);
     }
 
-    #sidebar button {
-      display: block;
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 100%;
-      border: none;
-      background: none;
-      color: white;
-      text-align: left;
-      padding: 14px 20px;
-      cursor: pointer;
+      z-index: 10;
+      box-sizing: border-box;
     }
-
-    #sidebar button:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-
     main {
-      margin-left: 240px;
-      padding: 20px;
+      margin-left: 0; /* Começa em 0 */
+      padding: 80px 20px 20px 20px; /* Padding no topo para evitar o header */
+      transition: margin-left 0.3s ease;
     }
 
+    /* Ajuste para quando o sidebar estiver ativo */
+    #sidebar.active ~ main {
+      margin-left: 240px;
+    }
+    
     .section {
       display: none;
     }
@@ -129,160 +131,178 @@
     .section.active {
       display: block;
     }
+
+    /* UTILS */
+    .input-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .input-row input, .input-row select, .input-row button {
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    .input-row .flex {
+      flex: 1;
+      min-width: 150px;
+    }
+    .input-row button {
+      background: var(--azul);
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .input-row button:hover {
+      background: var(--azul-escuro);
+    }
+
+    /* TABELA */
+    .table-wrap {
+      overflow-x: auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #eee;
+      text-align: left;
+    }
+    th {
+      background: var(--azul-escuro);
+      color: white;
+    }
+    td .thumb {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    td button {
+      background: var(--azul);
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+    td button.btnExcluir {
+        background: #dc3545;
+    }
+    td button.btnExcluir:hover {
+        background: #c82333;
+    }
+    /* Modal de Imagem */
+    #imagemAmpliada {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.9);
+      justify-content: center;
+      align-items: center;
+    }
+    #imagemAmpliada img {
+      margin: auto;
+      display: block;
+      width: 80%;
+      max-width: 700px;
+      max-height: 90vh;
+    }
   </style>
 </head>
 <body>
 
-  <!-- LOGIN -->
   <div id="login">
     <div class="login-card">
       <h2>Sistema de Controle de Estoque</h2>
-      <input type="text" id="usuario" placeholder="Usuário">
-      <input type="password" id="senha" placeholder="Senha">
-      <button id="btnLogin">Entrar</button>
+      <input type="text" id="usuario" placeholder="Usuário (E-mail)" onkeydown="if(event.key==='Enter') window.fazerLogin()">
+      <input type="password" id="senha" placeholder="Senha" onkeydown="if(event.key==='Enter') window.fazerLogin()">
+      <button id="btnLogin" onclick="window.fazerLogin()">Entrar</button>
     </div>
   </div>
 	
-  <!-- APLICATIVO PRINCIPAL (escondido até login) -->
   <div id="mainApp" style="display:none;">
-  <!-- IMAGEM AMPLIADA (modal) -->
-  <div id="imagemAmpliada" onclick="this.style.display='none'">
-    <img src="" alt="Imagem ampliada">
-  </div>
-<header>
-		   <!-- SEÇÃO: BOAS-VINDAS -->
-<section id="boasVindas" class="section active" style="text-align:center; padding:100px 20px;">
-  <h1 style="color:#003b88;">👋 Bem-vindo(a) <span id="nomeUsuarioBemVindo"></span>!</h1>
-  <h2 style="color:#0d6efd;">ao Sistema de Controle de Estoque – Oral Unic Campo Grande</h2>
-  <p style="margin-top:20px; color:#555;">Use o menu lateral para iniciar suas atividades.</p>
-</section>
+    
+    <div id="imagemAmpliada" onclick="this.style.display='none'" style="display:none;">
+      <img src="" alt="Imagem ampliada">
+    </div>
+
+    <header>
       <div style="display:flex;align-items:center;gap:12px;">
         <button id="menuToggle" onclick="toggleSidebar()"><i class="fa fa-bars"></i></button>
-        <h1><i class="fa fa-boxes-stacked"></i> Sistema de Controle de Estoque – Oral Unic Campo Grande</h1>
+        <h1><i class="fa fa-boxes-stacked"></i> SCE – Oral Unic Campo Grande</h1>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
         <div id="userName" style="font-weight:700">Visitante</div>
         <div id="perfilBadge" style="background:rgba(255,255,255,0.12);padding:6px 10px;border-radius:8px;font-size:13px;">PERFIL</div>
-        <button onclick="logout()" title="Sair"><i class="fa fa-sign-out-alt"></i></button>
+        <button onclick="window.logout()" title="Sair"><i class="fa fa-sign-out-alt"></i></button>
       </div>
     </header>
-  <aside id="sidebar" aria-hidden="true">
-	  <button onclick="showSection('dashboard')"><i class="fa fa-chart-pie"></i> Dashboard</button>
-      <button onclick="showSection('cadastro')"><i class="fa fa-box"></i> Cadastro de Produtos</button>
-      <button onclick="showSection('entrada')"><i class="fa fa-arrow-down"></i> Entrada de Materiais</button>
-      <button onclick="showSection('saida')"><i class="fa fa-arrow-up"></i> Saída de Materiais</button>
-      <button onclick="showSection('estoque')"><i class="fa fa-warehouse"></i> Estoque Atual</button>
-      <button onclick="showSection('limites')"><i class="fa fa-sliders-h"></i> Estoque Mín/Máx</button>
-      <button onclick="showSection('financeiro')"><i class="fa fa-coins"></i> Financeiro</button>
+    
+    <aside id="sidebar" aria-hidden="true">
+	    <button onclick="showSection('boasVindas')"><i class="fa fa-home"></i> Início</button>
+	    <button onclick="showSection('dashboard');atualizarDashboard()"><i class="fa fa-chart-pie"></i> Dashboard</button>
+      <button onclick="showSection('cadastro');atualizarTabelaProdutos()"><i class="fa fa-box"></i> Cadastro de Produtos</button>
+      <button onclick="showSection('entrada');atualizarTabelaEntradas()"><i class="fa fa-arrow-down"></i> Entrada de Materiais</button>
+      <button onclick="showSection('saida');atualizarTabelaSaidas()"><i class="fa fa-arrow-up"></i> Saída de Materiais</button>
+      <button onclick="showSection('estoque');atualizarTabelaEstoque()"><i class="fa fa-warehouse"></i> Estoque Atual</button>
+      <button onclick="showSection('limites');atualizarTabelaLimites()"><i class="fa fa-sliders-h"></i> Estoque Mín/Máx</button>
+      <button onclick="showSection('financeiro');atualizarPainelFinanceiro()"><i class="fa fa-coins"></i> Financeiro</button>
       <button onclick="showSection('relatorios')"><i class="fa fa-file-excel"></i> Relatórios</button>
-      <button onclick="showSection('usuarios')"><i class="fa fa-users"></i> Usuários e Perfis</button>
+      <button onclick="showSection('usuarios');atualizarTabelaUsuarios()"><i class="fa fa-users"></i> Usuários e Perfis</button>
     </aside>
+
 	 <main>  
-<div id="painel" style="display:none;">
-  <h2>Bem-vindo ao Sistema!</h2>
-  <button onclick="sair()">Sair</button>
-</div>
+      <section id="boasVindas" class="section active" style="text-align:center; padding:100px 20px;">
+        <h1 style="color:#003b88;">👋 Bem-vindo(a) <span id="nomeUsuarioBemVindo"></span>!</h1>
+        <h2 style="color:#0d6efd;">ao Sistema de Controle de Estoque – Oral Unic Campo Grande</h2>
+        <p style="margin-top:20px; color:#555;">Use o menu lateral para iniciar suas atividades.</p>
+      </section>
 
-<section id="dashboard" class="section">
-  <h2>📊 Dashboard do Sistema</h2>
-  <div class="dash-container">
+      <section id="dashboard" class="section">
+        <h2>📊 Dashboard do Sistema</h2>
+        <div class="input-row">
+            <input type="date" id="dashInicio" style="flex:1"/>
+            <input type="date" id="dashFim" style="flex:1"/>
+        </div>
+        <div class="dash-container input-row" style="gap:20px; justify-content:space-between; align-items:flex-start;">
+          
+          <div class="dash-card" style="flex:1; background:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+            <h3>📈 Resumo Geral</h3>
+            <div id="resumoGeral"></div>
+          </div>
+          
+          <div class="dash-card" style="flex:1; background:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+            <h3>⚠️ Estoque Crítico</h3>
+            <ul id="listaEstoqueCritico" style="list-style:none; padding:0;"></ul>
+          </div>
+          
+          <div class="dash-card" style="flex:1; background:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+            <h3>🕒 Próximos do Vencimento</h3>
+            <ul id="listaProximosVencer" style="list-style:none; padding:0;"></ul>
+          </div>
+          
+          <div class="dash-card" style="flex:1; background:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+            <h3>📦 Mais Utilizados (Saídas)</h3>
+            <ul id="listaMaisSaidas" style="list-style:none; padding:0;"></ul>
+          </div>
 
-    <div class="dash-card">
-      <h3>🕒 Produtos Próximos do Vencimento</h3>
-      <ul id="listaProximosVencer"></ul>
-    </div>
-
-    <div class="dash-card">
-      <h3>💰 Produtos Mais Caros</h3>
-      <ul id="listaMaisCaros"></ul>
-    </div>
-
-    <div class="dash-card">
-      <h3>📦 Produtos Mais Utilizados</h3>
-      <ul id="listaMaisSaidas"></ul>
-    </div>
-
-    <div class="dash-card">
-      <h3>💤 Produtos com Menos Saídas</h3>
-      <ul id="listaMenosSaidas"></ul>
-    </div>
-
-    <div class="dash-card">
-      <h3>⚠️ Estoque Crítico</h3>
-      <ul id="listaEstoqueCritico"></ul>
-    </div>
-
-    <div class="dash-card">
-      <h3>📈 Resumo Geral</h3>
-      <div id="resumoGeral"></div>
-    </section>
-    </main>
-  </div>
-
- <!-- Firebase login básico -->
- <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut }
-    from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-
-  // Configuração do Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
-    authDomain: "oralunicestoque.firebaseapp.com",
-    projectId: "oralunicestoque",
-    storageBucket: "oralunicestoque.firebasestorage.app",
-    messagingSenderId: "660233908877",
-    appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
-  };
-
-  // Inicialização
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-
-  // === LOGIN CORRIGIDO ===
-  window.fazerLogin = async function() {
-    const usuario = document.getElementById("usuario").value.trim();
-    const senha = document.getElementById("senha").value.trim();
-
-    if (!usuario || !senha) {
-      alert("Preencha usuário e senha!");
-      return;
-    }
-
-    // Usa o e-mail exatamente como digitado (não adiciona domínio automático)
-    const email = usuario.trim();
-
-    try {
-      await signInWithEmailAndPassword(auth, email, senha);
-    } catch (error) {
-      console.error(error.code, error.message);
-      alert(`Erro de login: ${error.code}`);
-    }
-  };
-
-  // === MONITORAR LOGIN ===
-  onAuthStateChanged(auth, (user) => {
-    const login = document.getElementById("login");
-    const appDiv = document.getElementById("mainApp");
-    if (user) {
-      login.style.display = "none";
-      appDiv.style.display = "block";
-      document.getElementById("userName").innerText = user.email;
-    } else {
-      login.style.display = "flex";
-      appDiv.style.display = "none";
-    }
-  });
-
-  // === LOGOUT ===
-  window.logout = async function() {
-    await signOut(auth);
-    alert("Sessão encerrada!");
-  };
-</script>
-
+        </div>
+      </section>
  
-  <!-- SEÇÃO: CADASTRO DE PRODUTOS -->
       <section id="cadastro" class="section">
         <h2><i class="fa fa-box"></i> Cadastro de Produtos</h2>
 
@@ -290,33 +310,33 @@
           <input id="produtoNome" type="text" placeholder="Nome do produto" class="flex" />
 
           <select id="produtoCategoria">
-  <option value="">Selecione a categoria</option>
-  <option>Material de Uso e Consumo</option>
-  <option>Copa e Cozinha</option>
-  <option>Escritório</option>
-  <option>Implante e Componentes</option>
-  <option>Insumo Dental</option>
-  <option>Insumo Laboratório</option>
-  <option>Medicamentos</option>
-  <option>Material de Limpeza</option>
-</select>
+            <option value="">Selecione a categoria</option>
+            <option>Material de Uso e Consumo</option>
+            <option>Copa e Cozinha</option>
+            <option>Escritório</option>
+            <option>Implante e Componentes</option>
+            <option>Insumo Dental</option>
+            <option>Insumo Laboratório</option>
+            <option>Medicamentos</option>
+            <option>Material de Limpeza</option>
+          </select>
           <select id="produtoEmbalagem">
-  <option value="">Selecione o tipo de embalagem</option>
-  <option>Ampola</option>
-  <option>Caixa</option>
-  <option>Fardo</option>
-  <option>Frasco</option>
-  <option>Garrafa</option>
-  <option>Gramas</option>
-  <option>Litro</option>
-  <option>Pacote</option>
-  <option>Peça</option>
-  <option>Quilogramas (KG)</option>
-  <option>Saco</option>
-  <option>Unidade</option>
-</select>
+            <option value="">Selecione o tipo de embalagem</option>
+            <option>Ampola</option>
+            <option>Caixa</option>
+            <option>Fardo</option>
+            <option>Frasco</option>
+            <option>Garrafa</option>
+            <option>Gramas</option>
+            <option>Litro</option>
+            <option>Pacote</option>
+            <option>Peça</option>
+            <option>Quilogramas (KG)</option>
+            <option>Saco</option>
+            <option>Unidade</option>
+          </select>
           <input id="produtoQtdEmbalagem" type="number" placeholder="Qtd por embalagem" style="width:140px" />
-		  <input id="produtoCodigoBarras" type="text" placeholder="📷Código de Barras (opcional)" style="width:220px" />
+		      <input id="produtoCodigoBarras" type="text" placeholder="📷Código de Barras (opcional)" style="width:220px" />
 
           <input id="produtoFoto" type="file" accept="image/*" />
           <button onclick="cadastrarProduto()"><i class="fa fa-save"></i> Cadastrar</button>
@@ -336,7 +356,7 @@
                 <th>Categoria</th>
                 <th>Embalagem</th>
                 <th>Qtd/Emb.</th>
-				 <th>Cód. Barras</th>
+				        <th>Cód. Barras</th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -345,2632 +365,1829 @@
         </div>
       </section>
 
-     <!-- SEÇÃO: ENTRADA DE MATERIAIS -->
-<!-- SEÇÃO: ENTRADA DE MATERIAIS -->
-<section id="entrada" class="section" style="display:none;">
+      <section id="entrada" class="section">
+        <h2><i class="fa fa-arrow-down"></i> Entrada de Materiais</h2>
+        <div class="input-row" style="margin-bottom:10px;gap:8px;">
+            <input id="entradaCodigoBarras" type="text" placeholder="📷 Ler código de barras" style="min-width:200px;" oninput="buscarProdutoPorCodigo('entrada')" />
+            <input id="entradaProduto" type="text" placeholder="Nome do produto" style="min-width:220px" oninput="atualizarSetorAutomatico('entrada')" list="listaProdutosEntrada"/>
+            <datalist id="listaProdutosEntrada"></datalist>
+            <input id="entradaQuantidade" type="number" placeholder="Quantidade" style="width:120px" />
+            <input id="entradaValor" type="number" placeholder="Valor Unitário (R$)" step="0.01" style="width:150px" />
+            <input id="entradaData" type="date" style="width:160px" />
+            <input id="entradaNota" type="text" placeholder="Nota Fiscal" />
+            <input id="entradaFornecedor" type="text" placeholder="Fornecedor" />
+            <input id="entradaCNPJ" type="text" placeholder="CNPJ" />
+            <input id="entradaLote" type="text" placeholder="Lote" />
+            <input id="entradaValidade" type="date" placeholder="Validade" />
 
-  <h2><i class="fa fa-arrow-down"></i> Entrada de Materiais</h2>
-   <div class="input-row" style="margin-bottom:10px;gap:8px;">
-<input id="entradaCodigoBarras" type="text" placeholder="📷 Ler código de barras" 
-       style="min-width:200px;" oninput="buscarProdutoPorCodigo('entrada')" />
-  <div class="input-row" style="margin-bottom:10px;gap:8px;">
-    <input id="entradaProduto" type="text" placeholder="Nome do produto" style="min-width:220px" />
-    <input id="entradaQuantidade" type="number" placeholder="Quantidade" style="width:120px" />
-    <input id="entradaValor" type="number" placeholder="Valor Unitário (R$)" step="0.01" style="width:150px" />
-    <input id="entradaData" type="date" style="width:160px" />
-    <input id="entradaNota" type="text" placeholder="Nota Fiscal" />
-    <input id="entradaFornecedor" type="text" placeholder="Fornecedor" />
-    <input id="entradaCNPJ" type="text" placeholder="CNPJ" />
-    <input id="entradaLote" type="text" placeholder="Lote" />
-    <input id="entradaValidade" type="date" placeholder="Validade" />
+            <select id="entradaSetor">
+              <option value="">Selecione o Setor Utilizado</option>
+              <option>Limpeza da Clínica</option>
+              <option>Laboratório</option>
+              <option>Escritório</option>
+              <option>Copa e Cozinha</option>
+              <option>Clínico Geral</option>
+              <option>Centro Cirúrgico</option>
+            </select>
 
-    <select id="entradaSetor">
-      <option value="">Selecione o Setor Utilizado</option>
-      <option>Limpeza da Clínica</option>
-      <option>Laboratório</option>
-      <option>Escritório</option>
-      <option>Copa e Cozinha</option>
-      <option>Clínico Geral</option>
-      <option>Centro Cirúrgico</option>
-    </select>
+            <button onclick="registrarEntrada()"><i class="fa fa-save"></i> Registrar Entrada</button>
+        </div>
 
-    <button onclick="registrarEntrada()"><i class="fa fa-save"></i> Registrar Entrada</button>
+        <div style="margin-bottom:10px;">
+          <input id="filtroEntrada" type="text" placeholder="🔍 Buscar por produto, fornecedor ou NF" style="width:98%" oninput="filtrarEntradas()" />
+        </div>
+
+        <div class="table-wrap">
+          <table id="tabelaEntradas">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Produto</th>
+                <th>Código de Barras</th>
+                <th>Qtd</th>
+                <th>Valor (R$)</th>
+                <th>Data</th>
+                <th>NF</th>
+                <th>Fornecedor</th>
+                <th>CNPJ</th>
+                <th>Lote</th>
+                <th>Validade</th>
+                <th>Setor</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="saida" class="section">
+        <h2><i class="fa fa-arrow-up"></i> Saída de Materiais</h2>
+
+        <div class="input-row" style="margin-bottom:10px;gap:8px;">
+          <input id="saidaCodigoBarras" type="text" placeholder="📷 Ler código de barras" oninput="buscarProdutoPorCodigo('saida')" />
+          <input id="saidaProduto" type="text" placeholder="Nome do produto" style="min-width:220px" oninput="atualizarSetorAutomatico('saida')" list="listaProdutosSaida" />
+          <datalist id="listaProdutosSaida"></datalist>
+          <input id="saidaQuantidade" type="number" placeholder="Quantidade" style="width:120px" />
+          <input id="saidaResponsavel" type="text" placeholder="Responsável" />
+          <input id="saidaObservacao" type="text" placeholder="Observação (opcional)" />
+          <select id="saidaSetor">
+            <option value="">Selecione o Setor</option>
+            <option>Limpeza da Clínica</option>
+            <option>Laboratório</option>
+            <option>Escritório</option>
+            <option>Copa e Cozinha</option>
+            <option>Clínico Geral</option>
+            <option>Centro Cirúrgico</option>
+          </select>
+          <input id="saidaData" type="date" style="width:160px" />
+          <button onclick="registrarSaida()"><i class="fa fa-save"></i> Registrar Saída</button>
+        </div>
+
+        <div style="margin-bottom:10px;">
+          <input id="filtroSaida" type="text" placeholder="🔍 Buscar por produto, setor ou responsável" style="width:98%" oninput="filtrarSaidas()" />
+        </div>
+
+        <div class="table-wrap">
+          <table id="tabelaSaidas">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Produto</th>
+                <th>Código de Barras</th>
+                <th>Qtd</th>
+                <th>Data</th>
+                <th>Setor</th>
+                <th>Responsável</th>
+                <th>Observação</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="estoque" class="section">
+        <h2><i class="fa fa-warehouse"></i> Estoque Atual</h2>
+        <div class="input-row">
+          <input id="filtroEstoque" type="text" placeholder="🔍 Buscar produto ou categoria" style="flex:1" oninput="filtrarEstoque()" />
+          <select id="filtroCategoriaEstoque" onchange="atualizarTabelaEstoque()">
+            <option value="">Todas as Categorias</option>
+            <option>Material de Uso e Consumo</option>
+            <option>Copa e Cozinha</option>
+            <option>Escritório</option>
+            <option>Implante e Componentes</option>
+            <option>Insumo Dental</option>
+            <option>Insumo Laboratório</option>
+            <option>Medicamentos</option>
+            <option>Material de Limpeza</option>
+          </select>
+          <button onclick="atualizarTabelaEstoque()"><i class="fa fa-sync-alt"></i> Atualizar</button>
+        </div>
+        
+        <div class="table-wrap">
+          <table id="tabelaEstoque">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Foto</th>
+                <th>Nome</th>
+                <th>Cód. Barras</th>
+                <th>Categoria</th>
+                <th>Embalagem</th>
+                <th>Qtd/Emb.</th>
+                <th>Estoque Atual</th>
+                <th>Valor Médio (R$)</th>
+                <th>Validade Mais Próxima</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="limites" class="section">
+        <h2><i class="fa fa-sliders-h"></i> Limites de Estoque (Mín/Máx)</h2>
+        <div class="input-row">
+            <input id="filtroTextoLimites" type="text" placeholder="🔍 Buscar produto ou categoria" style="flex:1" oninput="atualizarTabelaLimites()" />
+            <select id="filtroCategoriaLimites" onchange="atualizarTabelaLimites()">
+                <option value="">Todas as Categorias</option>
+                <option>Material de Uso e Consumo</option>
+                <option>Copa e Cozinha</option>
+                <option>Escritório</option>
+                <option>Implante e Componentes</option>
+                <option>Insumo Dental</option>
+                <option>Insumo Laboratório</option>
+                <option>Medicamentos</option>
+                <option>Material de Limpeza</option>
+            </select>
+            <button onclick="gerarListaCompra()"><i class="fa fa-shopping-cart"></i> Gerar Lista de Compra</button>
+            <button onclick="limparListaCompra()"><i class="fa fa-eraser"></i> Limpar Lista</button>
+        </div>
+
+        <div class="table-wrap">
+          <table id="tabelaLimites">
+              <thead>
+                  <tr>
+                      <th>#</th>
+                      <th>Produto</th>
+                      <th>Cód. Barras</th>
+                      <th>Qtd. Atual</th>
+                      <th style="width:100px;">Mínimo</th>
+                      <th style="width:100px;">Máximo</th>
+                      <th>Status</th>
+                      <th>Recomendação</th>
+                      <th>Ações</th>
+                  </tr>
+              </thead>
+              <tbody></tbody>
+              <tfoot>
+                  <tr>
+                      <td colspan="9" id="resumoLimites" style="text-align:right; font-weight:bold;"></td>
+                  </tr>
+              </tfoot>
+          </table>
+        </div>
+
+        <div id="listaCompraContainer" style="display:none; margin-top:20px;">
+          <h3><i class="fa fa-shopping-cart"></i> Lista de Compra Gerada</h3>
+          <div class="table-wrap" style="max-height:400px; overflow-y:auto; overflow-x:auto; border:1px solid #ccc;">
+            <table id="tabelaListaCompra" class="tabela-padrao">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Produto</th>
+                  <th>Código de Barras</th>
+                  <th>Categoria</th>
+                  <th>Qtd Atual</th>
+                  <th>Mínimo</th>
+                  <th>Recomendado Comprar</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="6" style="text-align:right; font-weight:bold;">Total de Itens:</td>
+                  <td id="totalItensCompra" style="font-weight:bold;">0</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <div style="margin-top:10px;">
+            <button onclick="exportarListaExcel()"> <i class="fa fa-file-excel"></i> Exportar para Excel </button>
+            <button onclick="gerarPedidoPDF()"> <i class="fa fa-file-pdf"></i> Gerar Pedido de Orçamento (PDF) </button>
+          </div>
+        </div>
+
+      </section>
+
+      <section id="financeiro" class="section">
+          <h2><i class="fa fa-coins"></i> Painel Financeiro</h2>
+          <div class="input-row" style="justify-content:space-between; gap:20px; margin-bottom: 20px;">
+              <div style="flex:1; background:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+                  <h3>Cálculo: Última Entrada</h3>
+                  <p id="valorUltimaEntrada" style="font-size:20px; color:var(--azul-escuro);">R$ 0,00</p>
+              </div>
+              <div style="flex:1; background:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+                  <h3>Cálculo: Custo Médio Ponderado</h3>
+                  <p id="valorCustoMedio" style="font-size:20px; color:var(--azul-escuro);">R$ 0,00</p>
+              </div>
+              <div style="flex:1; background:#0d6efd; color:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+                  <h3>Valor Total do Estoque (Média)</h3>
+                  <p id="valorEstoqueAtualPainel" style="font-size:24px; font-weight:bold;">R$ 0,00</p>
+              </div>
+          </div>
+
+          <div class="table-wrap">
+              <table id="tabelaFinanceiro">
+                  <thead>
+                      <tr>
+                          <th>#</th>
+                          <th>Fornecedor</th>
+                          <th>Nota Fiscal</th>
+                          <th>Valor da Nota (Entradas)</th>
+                          <th>Valor de Saída (Custo)</th>
+                          <th>Valor Residual (Estoque)</th>
+                      </tr>
+                  </thead>
+                  <tbody></tbody>
+              </table>
+          </div>
+      </section>
+
+      <section id="relatorios" class="section">
+        <h2><i class="fa fa-file-excel"></i> Relatórios e Exportação</h2>
+        <p>Selecione um período e o tipo de relatório para exportação.</p>
+
+        <div class="input-row">
+            <input type="date" id="dataInicioRelatorio" style="width:160px;" />
+            <input type="date" id="dataFimRelatorio" style="width:160px;" />
+            <button onclick="gerarRelatorio()"><i class="fa fa-file-excel"></i> Gerar Relatório de Entradas (Excel)</button>
+            <button onclick="gerarRelatorioSaida()"><i class="fa fa-file-excel"></i> Gerar Relatório de Saídas (Excel)</button>
+        </div>
+        
+        <div class="input-row">
+            <button onclick="definirPeriodoRapido('7dias')">Últimos 7 dias</button>
+            <button onclick="definirPeriodoRapido('30dias')">Últimos 30 dias</button>
+            <button onclick="definirPeriodoRapido('mes')">Mês Atual</button>
+            <button onclick="limparPeriodo()">Limpar</button>
+        </div>
+
+        <div style="background:#fff;padding:10px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+            <p>Os relatórios são gerados em formato Excel (.csv) e incluem todos os dados das tabelas correspondentes ao período selecionado.</p>
+        </div>
+
+      </section>
+
+      <section id="usuarios" class="section">
+          <h2><i class="fa fa-users"></i> Gerenciar Usuários e Perfis</h2>
+          <div style="display:flex;flex-wrap:wrap;gap:8px; margin-bottom: 15px;">
+              <input id="usuarioNome" type="text" placeholder="Nome Completo" />
+              <input id="usuarioCPF" type="text" placeholder="CPF (opcional)" />
+              <input id="usuarioEmail" type="email" placeholder="E-mail (Login)" />
+              <input id="usuarioSenha" type="password" placeholder="Senha" />
+              <select id="usuarioPerfil">
+                  <option value="administrador">Administrador</option>
+                  <option value="gerente">Gerente</option>
+                  <option value="simples1">Visualização (Financeiro Bloqueado)</option>
+                  <option value="simples2">Apenas Visualização (Tudo Bloqueado)</option>
+              </select>
+              <button onclick="salvarUsuario()"><i class="fa fa-user-plus"></i> Salvar Usuário</button>
+          </div>
+
+          <div class="table-wrap">
+              <table id="tabelaUsuarios">
+                  <thead>
+                      <tr>
+                          <th>#</th>
+                          <th>Nome</th>
+                          <th>E-mail (Login)</th>
+                          <th>Perfil</th>
+                          <th>Ações</th>
+                      </tr>
+                  </thead>
+                  <tbody></tbody>
+              </table>
+          </div>
+      </section>
+
+    </main>
   </div>
 
-  <div style="margin-bottom:10px;">
-    <input id="filtroEntrada" type="text" placeholder="🔍 Buscar por produto, fornecedor ou NF" style="width:98%" oninput="filtrarEntradas()" />
-  </div>
 
-  <div class="table-wrap">
-  <table id="tabelaEntradas">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Produto</th>
-        <th>Código de Barras</th>
-        <th>Qtd</th>
-        <th>Valor (R$)</th>
-        <th>Data</th>
-        <th>NF</th>
-        <th>Fornecedor</th>
-        <th>CNPJ</th>
-        <th>Lote</th>
-        <th>Validade</th>
-        <th>Setor</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+    
+    // Configuração do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
+      authDomain: "oralunicestoque.firebaseapp.com",
+      projectId: "oralunicestoque",
+      storageBucket: "oralunicestoque.firebasestorage.app",
+      messagingSenderId: "660233908877",
+      appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
+    };
 
-</section>
+    // Inicialização
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const database = getDatabase(app);
 
- <!-- SEÇÃO: SAÍDA DE MATERIAIS -->
-<section id="saida" class="section" style="display:none;">
-  <h2><i class="fa fa-arrow-up"></i> Saída de Materiais</h2>
+    window.database = database; // Torna o database acessível globalmente
+    window.auth = auth; // Torna o auth acessível globalmente
 
-  <div class="input-row" style="margin-bottom:10px;gap:8px;">
-  <input id="saidaCodigoBarras" type="text" placeholder="📷 Ler código de barras" oninput="atualizarSetorAutomatico()" />
+    // Função auxiliar para buscar perfil no Realtime Database
+    async function buscarPerfilUsuario(uid) {
+        try {
+            const userRef = ref(database, 'usuarios/' + uid);
+            const snapshot = await get(userRef);
+            if (snapshot.exists()) {
+                return snapshot.val().perfil || 'simples2'; // Retorna o perfil
+            }
+        } catch (error) {
+            console.error("Erro ao buscar perfil:", error);
+        }
+        return 'simples2'; // Perfil padrão em caso de erro
+    }
 
 
-    <input id="saidaProduto" type="text" placeholder="Nome do produto" style="min-width:220px" oninput="atualizarSetorAutomatico()" />
-    <input id="saidaQuantidade" type="number" placeholder="Quantidade" style="width:120px" />
-    <input id="saidaResponsavel" type="text" placeholder="Responsável" />
-    <input id="saidaObservacao" type="text" placeholder="Observação (opcional)" />
-    <select id="saidaSetor">
-      <option value="">Selecione o Setor</option>
-    </select>
-    <input id="saidaData" type="date" style="width:160px" />
-    <button onclick="registrarSaida()"><i class="fa fa-save"></i> Registrar Saída</button>
-  </div>
+    // === LOGIN CORRIGIDO (Firebase) ===
+    window.fazerLogin = async function() {
+      const usuarioEl = document.getElementById("usuario");
+      const senhaEl = document.getElementById("senha");
+      const usuario = usuarioEl.value.trim();
+      const senha = senhaEl.value.trim();
 
-  <div style="margin-bottom:10px;">
-    <input id="filtroSaida" type="text" placeholder="🔍 Buscar por produto, setor ou responsável" style="width:98%" oninput="filtrarSaidas()" />
-  </div>
+      if (!usuario || !senha) {
+        alert("Preencha usuário (e-mail) e senha!");
+        return;
+      }
+      
+      const email = usuario; // Assume que o usuário digitará o e-mail completo
+      
+      // Limpa campos após tentar login
+      usuarioEl.value = "";
+      senhaEl.value = "";
 
-  <div class="table-wrap">
-    <table id="tabelaSaidas">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Produto</th>
-		   <th>Código de Barras</th>
-          <th>Qtd</th>
-          <th>Data</th>
-          <th>Setor</th>
-          <th>Responsável</th>
-          <th>Observação</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</section>
-   <script>
-let entradas = JSON.parse(localStorage.getItem("entradas")) || [];
-let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
-let saidas = JSON.parse(localStorage.getItem("saidas")) || []; 
-  function showSection(id){
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, senha);
+        // O onAuthStateChanged vai ser disparado e cuidar da interface.
+        console.log("Login OK! UID:", cred.user.uid);
+      } catch (error) {
+        console.error(error.code, error.message);
+        alert(`Erro de login: ${error.code.replace('auth/', '').toUpperCase()}`);
+      }
+    };
+
+    // Função que manipula a interface após login/logout
+    window.mostrarSistema = async function(user) {
+        const login = document.getElementById("login");
+        const appDiv = document.getElementById("mainApp");
+        const userName = document.getElementById("userName");
+        const perfilBadge = document.getElementById("perfilBadge");
+        const nomeBemVindo = document.getElementById("nomeUsuarioBemVindo");
+        
+        // 1. Busca o perfil (esta função está na parte principal do JS)
+        if (typeof buscarUsuarioPorEmail === "function") {
+            const userData = buscarUsuarioPorEmail(user.email);
+            const perfil = userData?.perfil || 'simples2'; 
+            window.usuarioLogado = { email: user.email, perfil: perfil, logado: true };
+            perfilBadge.textContent = "Perfil: " + perfil.toUpperCase();
+            
+            if (typeof aplicarPermissoes === "function") aplicarPermissoes();
+
+        } else {
+            window.usuarioLogado = { email: user.email, perfil: 'simples2', logado: true };
+        }
+        
+        // 2. Atualiza a interface
+        const nomeUsuario = user.email?.split("@")[0] || "Usuário";
+        userName.innerText = nomeUsuario;
+        if (nomeBemVindo) nomeBemVindo.textContent = nomeUsuario;
+
+        login.style.display = "none";
+        appDiv.style.display = "block";
+        
+        // Exibe a seção inicial (Boas-vindas)
+        showSection('boasVindas');
+
+        // 3. Carrega e atualiza os dados
+        if (typeof carregarDadosDoFirebase === "function") await carregarDadosDoFirebase();
+        if (typeof ordenarListasAlfabeticamente === "function") ordenarListasAlfabeticamente();
+        if (typeof atualizarSelectProdutos === "function") atualizarSelectProdutos();
+        if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+    }
+
+    // === MONITORAR LOGIN ===
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        window.mostrarSistema(user);
+      } else {
+        const login = document.getElementById("login");
+        const appDiv = document.getElementById("mainApp");
+        login.style.display = "flex";
+        appDiv.style.display = "none";
+      }
+    });
+
+    // === LOGOUT ===
+    window.logout = async function() {
+      await signOut(auth);
+      // O onAuthStateChanged cuida do resto
+      alert("Sessão encerrada!");
+    };
+  </script>
+
+ 
+  <script>
+    // Variáveis Globais de Dados (acessíveis a todas as funções abaixo)
+    let entradas = JSON.parse(localStorage.getItem("entradas")) || [];
+    let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+    let saidas = JSON.parse(localStorage.getItem("saidas")) || [];
+    let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+    let estoqueMinMax = JSON.parse(localStorage.getItem("estoqueMinMax")) || {}; // Para limites
+
+    // Variável para armazenar o objeto de usuário logado (definida no bloco Firebase)
+    window.usuarioLogado = window.usuarioLogado || { perfil: 'simples2' };
+
+    // ==========================================================
+    // FUNÇÕES GERAIS E DE NAVEGAÇÃO
+    // ==========================================================
+    function showSection(id){
       document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
       document.getElementById(id).classList.add("active");
     }
 
-	   function logout() {
-  // 🔹 Remove sessão salva
-  localStorage.removeItem("usuarioLogado");
-
-  // 🔹 Esconde o app e volta para tela de login
-  document.getElementById("painel").style.display = "none";
-document.getElementById("login").style.display = "flex";
-
-  // 🔹 Limpa os campos de login e mensagem
-  const usuarioEl = document.getElementById("usuarioLogin");
-  const senhaEl = document.getElementById("senhaLogin");
-  const msg = document.getElementById("loginMsg");
-
-  if (usuarioEl) usuarioEl.value = "";
-  if (senhaEl) senhaEl.value = "";
-  if (msg) {
-    msg.textContent = "";
-    msg.style.display = "none";
-  }
-
-  // 🔹 Opcional: foco no campo usuário
-  usuarioEl.focus();
-}
-
-// Executa quando o DOM estiver pronto
-document.addEventListener("DOMContentLoaded", () => {
-  verificarSessao();
-});
-
-// === FUNÇÃO DE LOGIN ===
-function fazerLogin() {
-  const nome = document.getElementById("usuarioLogin")?.value.trim();
-  const senha = document.getElementById("senhaLogin")?.value.trim();
-  let msg = document.getElementById("loginMsg");
-
-  if (!msg) {
-    msg = document.createElement("p");
-    msg.id = "loginMsg";
-    msg.style.cssText = "margin-top:10px; font-weight:bold; text-align:center;";
-    document.getElementById("loginView").appendChild(msg);
-  }
-
-  msg.style.display = "none";
-  msg.textContent = "";
-
-  if (!nome || !senha) {
-    msg.textContent = "⚠️ Preencha usuário e senha.";
-    msg.style.display = "block";
-    msg.style.color = "red";
-    return;
-  }
-
-  const usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
-  const usuarioEncontrado = usuarios.find(u => u.nome?.toLowerCase() === nome.toLowerCase());
-
-  if (!usuarioEncontrado) {
-    msg.textContent = "❌ Usuário não encontrado!";
-    msg.style.display = "block";
-    msg.style.color = "red";
-    return;
-  }
-
-  if (usuarioEncontrado.senha !== senha) {
-    msg.textContent = "🔒 Senha incorreta! Tente novamente.";
-    msg.style.display = "block";
-    msg.style.color = "red";
-    return;
-  }
-
-  // ✅ Login bem-sucedido
-  msg.textContent = "✅ Login realizado com sucesso!";
-  msg.style.display = "block";
-  msg.style.color = "green";
-
-  const sessao = { ...usuarioEncontrado, logado: true, loginTime: Date.now() };
-  localStorage.setItem("usuarioLogado", JSON.stringify(sessao));
-
-  // 🔹 Exibe o sistema após um pequeno delay
-  setTimeout(() => mostrarSistema(sessao), 600);
-}
-// === PERMITIR LOGIN COM ENTER ===
-document.addEventListener("keydown", function (event) {
-  const loginView = document.getElementById("loginView");
-  const mainApp = document.getElementById("mainApp");
-
-  if (loginView && loginView.style.display !== "none" && event.key === "Enter") {
-    event.preventDefault();
-    const usuario = document.getElementById("usuarioLogin").value.trim();
-    const senha = document.getElementById("senhaLogin").value.trim();
-
-    if (usuario && senha) {
-      fazerLogin();
-    } else {
-      alert("Digite usuário e senha antes de continuar!");
+    function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        sidebar.classList.toggle("active");
     }
-  }
-});
-
-// === MOSTRA SISTEMA ===
-function mostrarSistema(sessao) {
-  const loginView = document.getElementById("loginView");
-  const mainApp = document.getElementById("mainApp");
-  const userName = document.getElementById("userName");
-  const perfilBadge = document.getElementById("perfilBadge");
-  const sidebar = document.getElementById("sidebar");
-
-  if (loginView && mainApp) {
-    loginView.style.display = "none";
-    mainApp.style.display = "block";
-  }
-
-  const nomeUsuario = sessao?.nome || sessao?.email?.split("@")[0] || "Usuário";
-
-if (userName) userName.textContent = nomeUsuario;
-if (perfilBadge && sessao?.perfil)
-  perfilBadge.textContent = "Perfil: " + sessao.perfil.toUpperCase();
-
-const nomeBemVindo = document.getElementById("nomeUsuarioBemVindo");
-if (nomeBemVindo) nomeBemVindo.textContent = nomeUsuario;
-
-
-  // 🔹 Oculta todas as outras seções e mostra apenas a de boas-vindas
-  document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
-  const boasVindas = document.getElementById("boasVindas");
-  if (boasVindas) boasVindas.style.display = "block";
-
-  // 🔹 Garante que o menu lateral esteja fechado
-  if (sidebar && sidebar.classList.contains("active")) {
-    sidebar.classList.remove("active");
-  }
-
-  // 🔹 Atualiza variáveis e permissões
-  window.usuarioLogado = sessao;
-
-  if (typeof aplicarPermissoes === "function") aplicarPermissoes();
-  if (typeof bloquearAcoesSimples2 === "function") bloquearAcoesSimples2();
-}
-// === VERIFICAÇÃO DE SESSÃO (ao carregar) ===
-function verificarSessao() {
-  const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado") || "{}");
-
-  const loginView = document.getElementById("loginView");
-  const mainApp = document.getElementById("mainApp");
-
-  if (!loginView || !mainApp) {
-    console.warn("⚠️ Estrutura de interface ainda não carregada.");
-    return;
-  }
-
-  if (usuarioLogado.logado) {
-    mostrarSistema(usuarioLogado);
-  } else {
-    voltarParaLogin();
-  }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-// === FUNÇÃO AUXILIAR: Espera o DOM estar pronto ===
-async function aguardarInterface() {
-  // aguarda até que #loginView e #mainApp existam no DOM
-  return new Promise((resolve) => {
-    const tentar = () => {
-      const loginView = document.getElementById("loginView");
-      const mainApp = document.getElementById("mainApp");
-      if (loginView && mainApp) resolve();
-      else setTimeout(tentar, 100);
-    };
-    tentar();
-  });
-}
-
-// === INICIALIZAÇÃO PRINCIPAL ===
-(async function iniciarSistema() {
-  // aguarda o DOM completo antes de continuar
-  await aguardarInterface();
-
-  console.log("✅ Estrutura de interface carregada com sucesso.");
-
-  // === FUNÇÃO DE LOGOUT ===
-  window.sairDoSistema = function () {
-    localStorage.removeItem("usuarioLogado");
-    alert("Sessão encerrada. Faça login novamente.");
-    voltarParaLogin();
-  };
-
-  // === VOLTAR PARA LOGIN ===
-  window.voltarParaLogin = function () {
-    const loginView = document.getElementById("loginView");
-    const mainApp = document.getElementById("mainApp");
-
-    if (loginView && mainApp) {
-      loginView.style.display = "block";
-      mainApp.style.display = "none";
-    }
-
-    localStorage.removeItem("usuarioLogado");
-  };
-
-  // === LOGIN ===
-  window.fazerLogin = async function () {
-    const usuario = document.getElementById("usuario").value.trim();
-    const senha = document.getElementById("senha").value.trim();
-
-    if (!usuario || !senha) {
-      alert("Preencha usuário e senha!");
-      return;
-    }
-
-    const email = usuario.includes("@") ? usuario : `${usuario}@oralunic.com`;
-
-    try {
-      const cred = await signInWithEmailAndPassword(auth, email, senha);
-      const user = cred.user;
-
-      localStorage.setItem(
-        "usuarioLogado",
-        JSON.stringify({ email: user.email, logado: true })
-      );
-
-      alert("✅ Login realizado com sucesso!");
-      mostrarSistema({ email: user.email });
-    } catch (error) {
-      console.error("Erro no login:", error);
-      alert("Erro no login: " + error.message);
-    }
-  };
-
-  // === VERIFICAR SESSÃO ===
-  function verificarSessao() {
-    const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado") || "{}");
-    const loginView = document.getElementById("loginView");
-    const mainApp = document.getElementById("mainApp");
-
-    if (!loginView || !mainApp) {
-      console.warn("⚠️ Estrutura de interface ainda não carregada.");
-      return;
-    }
-
-    if (usuarioLogado.logado) {
-      mostrarSistema(usuarioLogado);
-    } else {
-      voltarParaLogin();
-    }
-  }
-// 🔹 GERENCIAR USUÁRIOS E PERFIS
-if (typeof salvarUsuario === "function") {
-  const _salvarUsuarioOriginal = salvarUsuario;
-  salvarUsuario = function() {
-    _salvarUsuarioOriginal();
-    setTimeout(() => limparCampos("usuarios"), 300);
-  };
-}
-  // ✅ Chama a verificação final após DOM e Firebase prontos
-  verificarSessao();
-})();
-
-	   
-	   /* =========================
-   🔹 Cadastro de produtos
-========================= */
-async function cadastrarProduto() {
-  if (typeof padronizarCamposAntesDeSalvar === "function")
-    padronizarCamposAntesDeSalvar();
-
-  const nomeEl = document.getElementById("produtoNome");
-  const categoriaEl = document.getElementById("produtoCategoria");
-  const embalagemEl = document.getElementById("produtoEmbalagem");
-  const qtdEl = document.getElementById("produtoQtdEmbalagem");
-  const fotoInput = document.getElementById("produtoFoto");
-  const codigoBarrasEl = document.getElementById("produtoCodigoBarras");
-  const codigoBarras = codigoBarrasEl ? codigoBarrasEl.value.trim() : "";
-
-  // 🔹 Remove marcações anteriores
-  [nomeEl, categoriaEl, embalagemEl, qtdEl, fotoInput, codigoBarrasEl].forEach(
-    (el) => {
-      if (el) el.style.border = "1px solid #ccc";
-    }
-  );
-
-  // 🔹 Validações
-  if (!nomeEl?.value.trim()) {
-    alert("Informe o nome do produto!");
-    if (nomeEl) nomeEl.style.border = "2px solid red";
-    nomeEl?.focus();
-    return false;
-  }
-  if (!categoriaEl?.value.trim()) {
-    alert("Selecione a categoria do produto!");
-    categoriaEl.style.border = "2px solid red";
-    categoriaEl.focus();
-    return false;
-  }
-  if (!embalagemEl?.value.trim()) {
-    alert("Selecione o tipo de embalagem!");
-    embalagemEl.style.border = "2px solid red";
-    embalagemEl.focus();
-    return false;
-  }
-  if (!qtdEl?.value || Number(qtdEl.value) <= 0) {
-    alert("Informe a quantidade por embalagem!");
-    qtdEl.style.border = "2px solid red";
-    qtdEl.focus();
-    return false;
-  }
-  if (!fotoInput?.files || !fotoInput.files[0]) {
-    alert("É obrigatório inserir uma foto do produto!");
-    fotoInput.style.border = "2px solid red";
-    fotoInput.focus();
-    return false;
-  }
-
-  // 🔹 Verifica duplicidades
-  const nome = nomeEl.value.trim();
-  const nomeNormalizado = nome.toLowerCase();
-  const produtoDuplicado = produtos.some(
-    (p) => p.nome && p.nome.trim().toLowerCase() === nomeNormalizado
-  );
-
-  if (produtoDuplicado) {
-    alert(`Já existe um produto cadastrado com o nome "${nome}".`);
-    nomeEl.style.border = "2px solid red";
-    nomeEl.focus();
-    return false;
-  }
-
-  if (codigoBarras) {
-    const existeCodigo = produtos.some((p) => p.codigoBarras === codigoBarras);
-    if (existeCodigo) {
-      alert("Já existe um produto cadastrado com este código de barras!");
-      codigoBarrasEl.style.border = "2px solid red";
-      codigoBarrasEl.focus();
-      return false;
-    }
-  }
-
-  const categoria = categoriaEl.value.trim();
-  const embalagem = embalagemEl.value.trim();
-  const qtdEmbalagem = qtdEl.value;
-
-  // ✅ Leitura de imagem e salvamento
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const foto = e.target.result;
-
-      produtos.push({
-        nome,
-        categoria,
-        embalagem,
-        qtdEmbalagem,
-        foto,
-        quantidade: 0,
-        codigoBarras: codigoBarras || "",
-      });
-
-      // 🔹 Agora o await funciona dentro do async onload
-      if (typeof salvarProdutosNoFirebase === "function") {
-        await salvarProdutosNoFirebase(produtos);
-      }
-
-      atualizarTabelaProdutos();
-      if (typeof ordenarListasAlfabeticamente === "function")
-        ordenarListasAlfabeticamente();
-
-      alert("Produto cadastrado com sucesso!");
-
-      // ✅ Limpa os campos após salvar
-      [nomeEl, categoriaEl, embalagemEl, qtdEl, fotoInput, codigoBarrasEl].forEach(
-        (el) => {
-          if (el) el.value = "";
-        }
-      );
-
-      resolve(true);
-    };
-
-    reader.readAsDataURL(fotoInput.files[0]);
-  });
-}
-
-
-
-function filtrarProdutos() {
-  const termo = document.getElementById("filtroProduto").value.toLowerCase();
-  const tbody = document.querySelector("#tabelaProdutos tbody");
-  tbody.querySelectorAll("tr").forEach(tr => {
-    const texto = tr.textContent.toLowerCase();
-    tr.style.display = texto.includes(termo) ? "" : "none";
-  });
-}
-
-// 🔹 Entradas: busca por produto, fornecedor ou nota fiscal
-function filtrarEntradas() {
-  const termo = document.getElementById("filtroEntrada").value.toLowerCase();
-  const tbody = document.querySelector("#tabelaEntradas tbody");
-  tbody.querySelectorAll("tr").forEach(tr => {
-    const texto = tr.textContent.toLowerCase();
-    tr.style.display = texto.includes(termo) ? "" : "none";
-  });
-}
-/* 🔸 Aplica automaticamente ao sair do campo de texto */
-document.addEventListener("blur", (e) => {
-  const el = e.target;
-  if (el.tagName === "INPUT" && el.type === "text") {
-    // Ignora campos que não devem ser alterados
-    if (
-      el.id.toLowerCase().includes("cnpj") ||
-      el.id.toLowerCase().includes("email") ||
-      el.id.toLowerCase().includes("login")
-    ) return;
-
-    el.value = formatarTextoPadrao(el.value);
-  }
-}, true);
-
-/* 🔸 Garante padronização antes de salvar/cadastrar */
-function padronizarCamposAntesDeSalvar() {
-  document.querySelectorAll('input[type="text"]').forEach(el => {
-    if (
-      !el.id.toLowerCase().includes("cnpj") &&
-      !el.id.toLowerCase().includes("email") &&
-      !el.id.toLowerCase().includes("login")
-    ) {
-      el.value = formatarTextoPadrao(el.value);
-    }
-  });
-}
-// 🔹 Saídas: busca por produto, setor ou responsável
-function filtrarSaidas() {
-  const termo = document.getElementById("filtroSaida").value.toLowerCase();
-  const tbody = document.querySelector("#tabelaSaidas tbody");
-  tbody.querySelectorAll("tr").forEach(tr => {
-    const texto = tr.textContent.toLowerCase();
-    tr.style.display = texto.includes(termo) ? "" : "none";
-  });
-}
-
-// 🔹 Estoque: busca por produto ou categoria
-function filtrarEstoque() {
-  const termo = document.getElementById("filtroEstoque").value.toLowerCase();
-  const tbody = document.querySelector("#tabelaEstoque tbody");
-  tbody.querySelectorAll("tr").forEach(tr => {
-    const texto = tr.textContent.toLowerCase();
-    tr.style.display = texto.includes(termo) ? "" : "none";
-  });
-}
-
-function limparCampos(secaoId) {
-  const secao = document.getElementById(secaoId);
-  if (!secao) return;
-  secao.querySelectorAll("input, select").forEach(el => {
-    if (el.type === "file") {
-      el.value = "";
-    } else if (el.tagName === "SELECT") {
-      el.selectedIndex = 0;
-    } else {
-      el.value = "";
-    }
-  });
-}
-/* =========================
-   🔹 Wrapper seguro — executa após definição da função
-========================= */
-const _cadastrarProdutoOriginal = cadastrarProduto;
-
-cadastrarProduto = async function () {
-  try {
-    const result = await _cadastrarProdutoOriginal();
-    if (result === true) {
-      setTimeout(() => limparCampos("cadastro"), 350);
-    } else {
-      const erroEl = document.querySelector(
-        "#cadastro input[style*='2px solid red'], #cadastro select[style*='2px solid red']"
-      );
-      if (erroEl)
-        erroEl.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  } catch (err) {
-    console.error("Erro ao cadastrar produto (wrapper):", err);
-  }
-};
-
-
-/* =========================
-   🔹 Atualizar tabela
-========================= */
-function atualizarTabelaProdutos() {
-  const tbody = document.querySelector("#tabelaProdutos tbody");
-  if (!tbody) return;
-  tbody.innerHTML = "";
-
-  produtos.forEach((p, i) => {
-    const row = document.createElement("tr");
-
-    row.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${
-        p.foto && p.foto.startsWith("data:")
-          ? `<img src="${p.foto}" class="thumb">`
-          : "-"
-      }</td>
-      <td>${p.nome}</td>
-      <td>${p.categoria}</td>
-      <td>${p.embalagem}</td>
-      <td>${p.qtdEmbalagem}</td>
-      <td style="font-size:12px; color:#555;">${p.codigoBarras || "-"}</td>
-      <td>
-        <button onclick="editarProduto(${i})"><i class="fa fa-edit"></i></button>
-        <button onclick="excluirProduto(${i})"><i class="fa fa-trash"></i></button>
-      </td>
-    `;
-    tbody.appendChild(row);
-  });
-}
-
-/* =========================
-   🔹 Excluir produto
-========================= */
-function excluirProduto(i) {
-  if (!confirm("Excluir este produto?")) return;
-  produtos.splice(i, 1);
-  localStorage.setItem("produtos", JSON.stringify(produtos));
-  atualizarTabelaProdutos();
-  if (typeof preencherProdutosSelect === "function")
-    preencherProdutosSelect();
-}
-
-/* =========================
-   🔹 Ampliar imagem
-========================= */
-function ampliarImagem(src) {
-  const modal = document.getElementById("imagemAmpliada");
-  if (!modal) return;
-  modal.style.display = "flex";
-  modal.querySelector("img").src = src;
-}
-
-/* =========================
-   🔹 Editar produto
-========================= */
-function editarProduto(i) {
-  const p = produtos[i];
-  if (!p) return;
-
-  document.getElementById("produtoNome").value = p.nome;
-  document.getElementById("produtoCategoria").value = p.categoria;
-  document.getElementById("produtoEmbalagem").value = p.embalagem;
-  document.getElementById("produtoQtdEmbalagem").value = p.qtdEmbalagem;
-
-  produtos.splice(i, 1);
-  localStorage.setItem("produtos", JSON.stringify(produtos));
-  atualizarTabelaProdutos();
-
-  // ⚠️ Se você usa sincronização de nomes, reative a linha abaixo:
-  // sincronizarNomeProdutoAntigo(novoNome, nomeAntigo);
-
-  alert("Edite os campos e clique em 'Cadastrar' para salvar as alterações.");
-}
-
-
-/* =========================
-   🔹 Registrar Entrada (versão final)
-========================= */
-async function registrarEntrada() {
-  // 🔹 Carrega arrays globais
-  entradas = JSON.parse(localStorage.getItem("entradas")) || [];
-  produtos = await carregarProdutosDoFirebase();
-
-  // 🔹 Referências dos campos
-  const produtoEl = document.getElementById("entradaProduto");
-  const qtdEl = document.getElementById("entradaQuantidade");
-  const valorEl = document.getElementById("entradaValor");
-  const dataEl = document.getElementById("entradaData");
-  const notaEl = document.getElementById("entradaNota");
-  const fornecedorEl = document.getElementById("entradaFornecedor");
-  const cnpjEl = document.getElementById("entradaCNPJ");
-  const loteEl = document.getElementById("entradaLote");
-  const validadeEl = document.getElementById("entradaValidade");
-  const setorEl = document.getElementById("entradaSetor");
-
-  const campos = [produtoEl, qtdEl, valorEl, dataEl, notaEl, fornecedorEl, cnpjEl, loteEl, validadeEl, setorEl];
-  campos.forEach(el => (el.style.border = "1px solid #ccc"));
-
-  // 🔹 Validação simples
-  if (!produtoEl.value.trim()) return alert("Informe o nome do produto!");
-  if (!qtdEl.value || Number(qtdEl.value) <= 0) return alert("Informe a quantidade!");
-  if (!valorEl.value || Number(valorEl.value) <= 0) return alert("Informe o valor unitário!");
-  if (!dataEl.value) return alert("Selecione a data!");
-  if (!notaEl.value.trim()) return alert("Informe a nota fiscal!");
-  if (!fornecedorEl.value.trim()) return alert("Informe o fornecedor!");
-
-  // 🔹 CNPJ (deve ter 14 dígitos)
-  const cnpj = cnpjEl.value.trim();
-  const apenasNums = cnpj.replace(/\D/g, "");
-  if (apenasNums.length !== 14) {
-    alert("CNPJ deve conter 14 números. Exemplo: 12.345.678/0001-90");
-    cnpjEl.style.border = "2px solid red";
-    return false;
-  }
-
-  if (!loteEl.value.trim()) return alert("Informe o número do lote!");
-  if (!validadeEl.value) return alert("Selecione a validade!");
-  if (!setorEl.value.trim()) return alert("Selecione o setor!");
-
-  // 🔹 Monta o objeto da nova entrada
-  const novaEntrada = {
-    produto: produtoEl.value.trim(),
-    qtd: Number(qtdEl.value),
-    valor: Number(valorEl.value),
-    data: dataEl.value,
-    nota: notaEl.value.trim(),
-    fornecedor: fornecedorEl.value.trim(),
-    cnpj: cnpj,
-    lote: loteEl.value.trim(),
-    validade: validadeEl.value,
-    setor: setorEl.value.trim(),
-  };
-
-  // 🔹 Salva no localStorage
-  entradas.push(novaEntrada);
-  localStorage.setItem("entradas", JSON.stringify(entradas));
-
-  // 🔹 Atualiza produto relacionado
-  const produtoRef = produtos.find(p => p.nome.trim().toLowerCase() === novaEntrada.produto.trim().toLowerCase());
-  if (produtoRef) {
-    produtoRef.lote = novaEntrada.lote;
-    produtoRef.validade = novaEntrada.validade;
-    localStorage.setItem("produtos", JSON.stringify(produtos));
-  }
-
-  // 🔹 Atualiza as tabelas
-  atualizarEstoque(novaEntrada.produto, novaEntrada.qtd);
-  atualizarTabelaEntradas();
-  atualizarTabelaEstoque();
-  if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-
-  alert("Entrada registrada com sucesso!");
-
-  // 🔹 Limpa todos os campos para novo lançamento
-  campos.forEach(el => {
-    if (el.tagName === "SELECT") el.selectedIndex = 0;
-    else el.value = "";
-  });
-
-  // 🔹 Posiciona o cursor no campo de produto
-  produtoEl.focus();
-
-  return true;
-}
-
-function buscarCodigoBarrasDoProduto(nomeProduto) {
-  if (!Array.isArray(produtos)) return "-";
-  const prod = produtos.find(p => p.nome === nomeProduto);
-  return prod ? prod.codigoBarras : "-";
-}
-
-function atualizarTabelaEntradas() {
-  const tbody = document.querySelector("#tabelaEntradas tbody");
-  if (!tbody) return;
-  tbody.innerHTML = "";
-
-  // 🔹 Pega todas as entradas do localStorage
-  const entradas = JSON.parse(localStorage.getItem("entradas")) || [];
-
-  // 🔹 Caso não haja registros
-  if (!entradas || entradas.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; color:#777;">Nenhuma entrada registrada.</td></tr>`;
-    return;
-  }
-
-  // 🔹 Ordena alfabeticamente pelo nome do produto
-  const entradasOrdenadas = [...entradas].sort((a, b) =>
-    (a.produto || "").localeCompare(b.produto || "", "pt-BR", { sensitivity: "base" })
-  );
-
-  // 🔹 Recria as linhas da tabela
-  entradasOrdenadas.forEach((e, i) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${e.produto || "-"}</td>
-      <td>${buscarCodigoBarrasDoProduto(e.produto) || "-"}</td>
-      <td>${e.qtd || 0}</td>
-      <td>${(e.valor !== undefined && e.valor !== null) ? Number(e.valor).toFixed(2) : "0.00"}</td>
-      <td>${e.data || "-"}</td>
-      <td>${e.nota || "-"}</td>
-      <td>${e.fornecedor || "-"}</td>
-      <td>${e.cnpj || "-"}</td>
-      <td>${e.lote || "-"}</td>
-      <td>${e.validade || "-"}</td>
-      <td>${e.setor || "-"}</td>
-      <td>
-        <button class="btnEditar" onclick="editarEntradaPorNota(${JSON.stringify(e.nota)})">
-          <i class="fa fa-edit"></i>
-        </button>
-        <button class="btnExcluir" onclick="excluirEntradaPorNota(${JSON.stringify(e.nota)})">
-          <i class="fa fa-trash"></i>
-        </button>
-      </td>
-    `;
-    tbody.appendChild(row);
-  });
-}
-
-function editarEntrada(i) {
-  const e = entradas[i];
-  if (!e) return;
-
-  document.getElementById("entradaProduto").value = e.produto;
-  document.getElementById("entradaQuantidade").value = e.qtd;
-  document.getElementById("entradaValor").value = e.valor;
-  document.getElementById("entradaData").value = e.data;
-  document.getElementById("entradaNota").value = e.nota;
-  document.getElementById("entradaFornecedor").value = e.fornecedor;
-  document.getElementById("entradaCNPJ").value = e.cnpj;
-  document.getElementById("entradaLote").value = e.lote;
-  document.getElementById("entradaValidade").value = e.validade;
-  document.getElementById("entradaSetor").value = e.setor;
-
-  // guarda o índice e a quantidade anterior
-  localStorage.setItem("indiceEntradaEditando", i);
-  localStorage.setItem("entradaQtdAnterior", e.qtd);
-
-  alert("Edite os campos e clique em 'Registrar Entrada' para salvar as alterações.");
-}
-
-
-function excluirEntrada(i) {
-  if (!confirm("Excluir esta entrada?")) return;
-  entradas.splice(i, 1);
-  localStorage.setItem("entradas", JSON.stringify(entradas));
-  atualizarTabelaEntradas();
-}
-// Retorna true se o CNPJ for válido (verificação dos dígitos verificadores)
-function validarCNPJ(cnpj) {
-  if (!cnpj) return false;
-  const apenasNums = cnpj.replace(/\D/g, "");
-  if (apenasNums.length !== 14) return false;
-
-  // Elimina CNPJs repetidos como "00000000000000", "11111111111111", ...
-  if (/^(\d)\1+$/.test(apenasNums)) return false;
-
-  const validarDigito = (base, fatores) => {
-    let soma = 0;
-    for (let i = 0; i < base.length; i++) {
-      soma += parseInt(base.charAt(i), 10) * fatores[i];
-    }
-    const resto = soma % 11;
-    return resto < 2 ? 0 : 11 - resto;
-  };
-
-  const nums = apenasNums.split("").map(n => parseInt(n, 10));
-  // fatores para o primeiro digito verificador
-  const fatores1 = [5,4,3,2,9,8,7,6,5,4,3,2];
-  const dv1 = validarDigito(nums.slice(0,12).join(""), fatores1);
-  if (dv1 !== nums[12]) return false;
-
-  // fatores para o segundo digito verificador
-  const fatores2 = [6,5,4,3,2,9,8,7,6,5,4,3,2];
-  const dv2 = validarDigito(nums.slice(0,13).join(""), fatores2);
-  if (dv2 !== nums[13]) return false;
-
-  return true;
-}
-
-// Formata em xx.xxx.xxx/xxxx-xx conforme digita/cola
-function aplicarMascaraCNPJ(valor) {
-  let v = valor.replace(/\D/g, "").substring(0,14);
-  if (v.length > 12) {
-    return v.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, "$1.$2.$3/$4-$5");
-  } else if (v.length > 8) {
-    return v.replace(/^(\d{2})(\d{3})(\d{3})(\d{0,4})/, "$1.$2.$3/$4");
-  } else if (v.length > 5) {
-    return v.replace(/^(\d{2})(\d{3})(\d{0,3})/, "$1.$2.$3");
-  } else if (v.length > 2) {
-    return v.replace(/^(\d{2})(\d{0,3})/, "$1.$2");
-  }
-  return v;
-}
-
-// Aplica máscara em inputs que tenham "cnpj" no id ou name
-document.addEventListener("input", (e) => {
-  const el = e.target;
-  if (!(el.tagName === "INPUT" && el.type === "text")) return;
-
-  if (/cnpj/i.test((el.id || "") + (el.name || ""))) {
-    const pos = el.selectionStart;
-    const antes = el.value;
-    const form = aplicarMascaraCNPJ(antes);
-    el.value = form;
-
-    // tenta restaurar cursor de forma razoável
-    // calcula diferença de comprimento e ajusta cursor para a direita
-    const diff = form.length - antes.length;
-    const novoPos = Math.max(0, pos + diff);
-    try { el.setSelectionRange(novoPos, novoPos); } catch (err) {}
-  }
-});
-
-// Ao colar, força formatação correta (para casos em que cola com pontos/traços)
-document.addEventListener("paste", (e) => {
-  const el = e.target;
-  if (!(el.tagName === "INPUT" && el.type === "text")) return;
-  if (/cnpj/i.test((el.id || "") + (el.name || ""))) {
-    e.preventDefault();
-    const texto = (e.clipboardData || window.clipboardData).getData('text') || '';
-    el.value = aplicarMascaraCNPJ(texto);
-  }
-});
-// 🔹 Wrapper que só limpa se a função tiver sucesso
-const _registrarEntradaOriginal = registrarEntrada;
-registrarEntrada = function() {
-  try {
-    const result = _registrarEntradaOriginal();
-    if (result === true) {
-      setTimeout(() => limparCampos("entrada"), 300);
-    } else {
-      const erroEl = document.querySelector("#entrada input[style*='red'], #entrada select[style*='red']");
-      if (erroEl) erroEl.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  } catch (err) {
-    console.error("Erro ao registrar entrada:", err);
-  }
-};
-
-/* =========================
-   🔹 Busca produto pelo código de barras (Entrada ou Saída)
-========================= */
-function buscarProdutoPorCodigo(contexto) {
-  const campoCodigo = document.getElementById(`${contexto}CodigoBarras`);
-  if (!campoCodigo) return;
-
-  const codigo = campoCodigo.value.trim();
-  if (!codigo) return;
-
-  const produto = produtos.find(p => p.codigoBarras === codigo);
-  if (!produto) {
-    campoCodigo.style.border = "2px solid red";
-    campoCodigo.title = "Código de barras não encontrado.";
-    return;
-  }
-
-  campoCodigo.style.border = "1px solid #ccc";
-  campoCodigo.title = "";
-
-  // Preenche o campo do nome automaticamente
-  const campoProduto = document.getElementById(`${contexto}Produto`);
-  if (campoProduto) campoProduto.value = produto.nome;
-}
-
-/* =========================
-   🔹 Saídas
-========================= */
-
-
-// Função principal: valida e grava a saída (retorna true em sucesso, false em erro)
-function registrarSaida() {
-  if (typeof padronizarCamposAntesDeSalvar === "function") padronizarCamposAntesDeSalvar();
-
-  const produtoEl = document.getElementById("saidaProduto");
-  const qtdEl = document.getElementById("saidaQuantidade");
-  const responsavelEl = document.getElementById("saidaResponsavel");
-  const observacaoEl = document.getElementById("saidaObservacao");
-  const setorEl = document.getElementById("saidaSetor");
-  const dataEl = document.getElementById("saidaData");
-
-  // Protege caso algum elemento falte no DOM (evita TypeError)
-  const camposParaReset = [produtoEl, qtdEl, responsavelEl, setorEl, dataEl];
-  camposParaReset.forEach(el => { if (el) el.style.border = "1px solid #ccc"; });
-
-  // Validações — mantêm os valores preenchidos em caso de erro
-  if (!produtoEl || !produtoEl.value.trim()) {
-    alert("Informe o nome do produto!");
-    if (produtoEl) { produtoEl.style.border = "2px solid red"; produtoEl.focus(); }
-    return false;
-  }
-
-  if (!qtdEl || !qtdEl.value || Number(qtdEl.value) <= 0) {
-    alert("Informe a quantidade da saída (maior que zero)!");
-    if (qtdEl) { qtdEl.style.border = "2px solid red"; qtdEl.focus(); }
-    return false;
-  }
-
-  if (!setorEl || !setorEl.value.trim()) {
-    alert("Selecione o setor!");
-    if (setorEl) { setorEl.style.border = "2px solid red"; setorEl.focus(); }
-    return false;
-  }
-
-  if (!dataEl || !dataEl.value) {
-    alert("Selecione a data da saída!");
-    if (dataEl) { dataEl.style.border = "2px solid red"; dataEl.focus(); }
-    return false;
-  }
-
-  if (!responsavelEl || !responsavelEl.value.trim()) {
-    alert("Informe o responsável pela saída!");
-    if (responsavelEl) { responsavelEl.style.border = "2px solid red"; responsavelEl.focus(); }
-    return false;
-  }
-
-  // Coleta os valores (observação opcional)
-  const produto = produtoEl.value.trim();
-  const qtd = Number(qtdEl.value);
-  const setor = setorEl.value.trim();
-  const data = dataEl.value;
-  const responsavel = responsavelEl.value.trim();
-  const observacao = observacaoEl ? observacaoEl.value.trim() : "";
-
-  // Verifica existência do produto no cadastro
-  const produtoEstoque = produtos.find(p => (p.nome || "").trim().toLowerCase() === produto.toLowerCase());
-  if (!produtoEstoque) {
-    alert(`Produto "${produto}" não encontrado no cadastro.`);
-    if (produtoEl) { produtoEl.style.border = "2px solid red"; produtoEl.focus(); }
-    return false;
-  }
-
-  // Verifica estoque suficiente
-  const estoqueAtual = Number(produtoEstoque.quantidade || 0);
-  if (estoqueAtual < qtd) {
-    alert(`Estoque insuficiente: há ${estoqueAtual} unidade(s) disponíveis.`);
-    if (qtdEl) { qtdEl.style.border = "2px solid red"; qtdEl.focus(); }
-    return false;
-  }
-
-  // Tudo ok -> registra a saída
-  saidas.push({ produto, qtd, data, setor, responsavel, observacao });
-  localStorage.setItem("saidas", JSON.stringify(saidas));
-
-  // Atualiza estoque (subtrai) e tabelas
-  atualizarEstoque(produto, -qtd);
-  if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-  if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-
-  alert("Saída registrada com sucesso!");
-  return true;
-}
-
-/* =========================
-   🔹 Wrapper — limpa campos após registrar saída com sucesso
-========================= */
-const _registrarSaidaOriginal = registrarSaida;
-
-registrarSaida = function() {
-  try {
-    const result = _registrarSaidaOriginal();
-    if (result === true) {
-      // limpa os campos da seção "saida" após sucesso
-      setTimeout(() => limparCampos("saida"), 300);
-    } else {
-      // mantém os dados e navega até o campo com erro (se houver)
-      const erroEl = document.querySelector("#saida input[style*='red'], #saida select[style*='red']");
-      if (erroEl)
-        erroEl.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  } catch (err) {
-    console.error("Erro ao registrar saída:", err);
-  }
-};
-
-
-
-function atualizarTabelaSaidas() {
-  const tbody = document.querySelector("#tabelaSaidas tbody");
-  tbody.innerHTML = "";
-  saidas.forEach((s, i) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-  <td>${i + 1}</td>
-  <td>${s.produto || "-"}</td>
-  <td>${buscarCodigoBarrasDoProduto(s.produto) || "-"}</td>
-  <td>${s.qtd || 0}</td>
-  <td>${s.data || "-"}</td>
-  <td>${s.setor || "-"}</td>
-  <td>${s.responsavel || "-"}</td>
-  <td>${s.observacao || "-"}</td>
-  <td>
-    <button onclick="editarSaida(${i})"><i class="fa fa-edit"></i></button>
-    <button onclick="excluirSaida(${i})"><i class="fa fa-trash"></i></button>
-  </td>
-`;
-
-    tbody.appendChild(row);
-  });
-}
-function atualizarSetoresPorProduto() {
-  const produtoNome = document.getElementById("saidaProduto").value.trim();
-  const setorSelect = document.getElementById("saidaSetor");
-
-  // Deixa apenas a opção padrão ao carregar / quando o campo estiver vazio
-  setorSelect.innerHTML = `<option value="">Selecione o Setor</option>`;
-
-  // Se o usuário não digitou nada, manter somente a opção padrão (vazio)
-  if (!produtoNome) return;
-
-  // Se o usuário começou a digitar, preenche com a lista COMPLETA de setores
-  const setoresCompletos = [
-    "Limpeza da Clínica",
-    "Laboratório",
-    "Escritório",
-    "Copa e Cozinha",
-    "Clínico Geral",
-    "Centro Cirúrgico"
-  ];
-
-  setorSelect.innerHTML = setoresCompletos
-    .map(s => `<option value="${s}">${s}</option>`)
-    .join("");
-}
-
-function editarSaida(i) {
-  const s = saidas[i];
-  document.getElementById("saidaProduto").value = s.produto;
-  document.getElementById("saidaQuantidade").value = s.qtd;
-  document.getElementById("saidaResponsavel").value = s.responsavel;
-  document.getElementById("saidaObservacao").value = s.observacao;
-  document.getElementById("saidaSetor").value = s.setor;
-  document.getElementById("saidaData").value = s.data;
-
-  saidas.splice(i, 1);
-  localStorage.setItem("saidas", JSON.stringify(saidas));
-  atualizarTabelaSaidas();
-  ordenarListasAlfabeticamente();
-
-  atualizarSetoresPorProduto(); // 🔹 garante que o select de setores seja recarregado
-
-  alert("Edite os campos e clique em 'Registrar Saída' para salvar as alterações.");
-}
-
-
-function excluirSaida(i) {
-  if (!confirm("Excluir esta saída?")) return;
-  saidas.splice(i, 1);
-  localStorage.setItem("saidas", JSON.stringify(saidas));
-  atualizarTabelaSaidas();
-  ordenarListasAlfabeticamente(); 
-}
-
-/* =========================
-   🔹 Atualiza setor automaticamente ao digitar ou ler código de barras
-========================= */
-function atualizarSetorAutomatico() {
-  const produtoInput = document.getElementById("saidaProduto");
-  const codigoInput = document.getElementById("saidaCodigoBarras");
-  const setorSelect = document.getElementById("saidaSetor");
-
-  if (!produtoInput || !setorSelect) return;
-
-  const nomeProduto = produtoInput.value.trim();
-  const codigo = codigoInput ? codigoInput.value.trim() : "";
-
-  let entradaEncontrada = null;
-
-  // 🔹 Primeiro tenta achar pela leitura do código de barras
-  if (codigo && Array.isArray(produtos)) {
-    const produto = produtos.find(p => p.codigoBarras === codigo);
-    if (produto) {
-      produtoInput.value = produto.nome;
-      entradaEncontrada = (entradas || []).slice().reverse().find(e => e.produto === produto.nome);
-    }
-  }
-
-  // 🔹 Se não achou pelo código, busca pelo nome
-  if (!entradaEncontrada && nomeProduto) {
-    entradaEncontrada = (entradas || []).slice().reverse().find(e => e.produto === nomeProduto);
-  }
-
-  // 🔹 Atualiza o campo de setor
-  if (entradaEncontrada) {
-    setorSelect.innerHTML = `<option value="${entradaEncontrada.setor}">${entradaEncontrada.setor}</option>`;
-  } else {
-    setorSelect.innerHTML = `<option value="">Setor não encontrado</option>`;
-  }
-}
-document.addEventListener("DOMContentLoaded",()=>{
-      atualizarTabelaProdutos();atualizarEntradas();atualizarSaidas();
-    });	  
-	
-	
-	function atualizarDashboard() {
-  const listaProximosVencer = document.getElementById("listaProximosVencer");
-  const listaMaisCaros = document.getElementById("listaMaisCaros");
-  const listaMaisSaidas = document.getElementById("listaMaisSaidas");
-  const listaMenosSaidas = document.getElementById("listaMenosSaidas");
-  const listaEstoqueCritico = document.getElementById("listaEstoqueCritico");
-  const resumoGeral = document.getElementById("resumoGeral");
-
-  const produtosLocal = JSON.parse(localStorage.getItem("produtos")) || produtos || [];
-  const entradasLocal = JSON.parse(localStorage.getItem("entradas")) || entradas || [];
-  const saidasLocal = JSON.parse(localStorage.getItem("saidas")) || saidas || [];
-
-  if (!Array.isArray(produtosLocal) || produtosLocal.length === 0) {
-    resumoGeral.innerHTML = "<p>Sem dados de produtos no momento.</p>";
-    return;
-  }
-
-  // ---------- Produtos próximos do vencimento ----------
-  const proximos = entradasLocal
-    .filter(e => e.validade)
-    .sort((a, b) => new Date(a.validade) - new Date(b.validade))
-    .slice(0, 5);
-
-  listaProximosVencer.innerHTML =
-    proximos.length > 0
-      ? proximos
-          .map(e => `<li>${e.produto} - vence em ${new Date(e.validade).toLocaleDateString("pt-BR")}</li>`)
-          .join("")
-      : "<li>Nenhum produto com validade próxima.</li>";
-
-  // ---------- Produtos mais caros ----------
-  const mapaValores = {};
-  entradasLocal.forEach(e => {
-    if (!e.produto || !e.valor) return;
-    mapaValores[e.produto] = e.valor; // último valor registrado
-  });
-
-  const maisCaros = Object.entries(mapaValores)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
-
-  listaMaisCaros.innerHTML =
-    maisCaros.length > 0
-      ? maisCaros.map(([nome, valor]) => `<li>${nome} - R$ ${valor.toFixed(2)}</li>`).join("")
-      : "<li>Sem dados de valor.</li>";
-
-  // ---------- Produtos mais e menos utilizados ----------
-  const contadorSaidas = {};
-  saidasLocal.forEach(s => {
-    if (!s.produto || !s.qtd) return;
-    contadorSaidas[s.produto] = (contadorSaidas[s.produto] || 0) + Number(s.qtd);
-  });
-
-  const maisUsados = Object.entries(contadorSaidas)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
-  listaMaisSaidas.innerHTML =
-    maisUsados.length > 0
-      ? maisUsados.map(([nome, qtd]) => `<li>${nome} - ${qtd} saídas</li>`).join("")
-      : "<li>Sem saídas registradas.</li>";
-
-  const menosUsados = Object.entries(contadorSaidas)
-    .sort((a, b) => a[1] - b[1])
-    .slice(0, 5);
-  listaMenosSaidas.innerHTML =
-    menosUsados.length > 0
-      ? menosUsados.map(([nome, qtd]) => `<li>${nome} - ${qtd} saídas</li>`).join("")
-      : "<li>Sem saídas registradas.</li>";
-
-  // ---------- Estoque crítico ----------
-  const criticos = produtosLocal.filter(p => p.minimo && p.quantidade <= p.minimo);
-  listaEstoqueCritico.innerHTML =
-    criticos.length > 0
-      ? criticos.map(p => `<li>${p.nome} - Estoque atual: ${p.quantidade}</li>`).join("")
-      : "<li>Nenhum produto crítico no momento.</li>";
-
-  // ---------- Resumo geral ----------
-  let totalProdutos = produtosLocal.length;
-  let qtdTotal = 0;
-  let valorTotalUltimaEntrada = 0;
-  let valorTotalCustoMedio = 0;
-
-  produtosLocal.forEach(p => {
-    const entradasDoProduto = entradasLocal.filter(e => e.produto === p.nome);
-    if (entradasDoProduto.length === 0) return;
-
-    // Último valor de entrada
-    const ultimaEntrada = entradasDoProduto.slice(-1)[0];
-    const valorUltimo = Number(ultimaEntrada.valor || 0);
-
-    // Custo médio ponderado
-    const totalQtdEntradas = entradasDoProduto.reduce((s, e) => s + Number(e.qtd || 0), 0);
-    const totalValorEntradas = entradasDoProduto.reduce(
-      (s, e) => s + (Number(e.qtd || 0) * Number(e.valor || 0)),
-      0
-    );
-    const custoMedio = totalQtdEntradas > 0 ? totalValorEntradas / totalQtdEntradas : 0;
-
-    const qtdAtual = Number(p.quantidade || 0);
-    qtdTotal += qtdAtual;
-    valorTotalUltimaEntrada += qtdAtual * valorUltimo;
-    valorTotalCustoMedio += qtdAtual * custoMedio;
-  });
-
-  // ---------- Valor contábil (entradas - saídas) ----------
-  const valorTotalEntradas = entradasLocal.reduce((soma, e) => soma + (e.valor || 0) * (e.qtd || 0), 0);
-  const valorTotalSaidas = saidasLocal.reduce((soma, s) => {
-    const entradaRelacionado = entradasLocal.find(
-      e => e.produto && s.produto && e.produto.toLowerCase() === s.produto.toLowerCase()
-    );
-    const valorUnitario = entradaRelacionado ? entradaRelacionado.valor || 0 : 0;
-    return soma + valorUnitario * (s.qtd || 0);
-  }, 0);
-
-  const valorTotalEstoqueContabil = valorTotalEntradas - valorTotalSaidas;
-  const valorTotalEstoqueAtual = (valorTotalUltimaEntrada + valorTotalCustoMedio) / 2;
-  const totalSaidas = saidasLocal.reduce((soma, s) => soma + Number(s.qtd || 0), 0);
-
-  // ---------- Renderização no Resumo Geral ----------
-  resumoGeral.innerHTML = `
-    <p><b>Total de produtos:</b> ${totalProdutos}</p>
-    <p><b>Quantidade total em estoque:</b> ${qtdTotal}</p>
-    <p><b>Total de saídas registradas:</b> ${totalSaidas}</p>
-    <hr>
-    <p><b>💰 Valor total (Último valor de entrada):</b> R$ ${valorTotalUltimaEntrada.toFixed(2)}</p>
-    <p><b>📊 Valor total (Custo médio ponderado):</b> R$ ${valorTotalCustoMedio.toFixed(2)}</p>
-    <p><b>📦 Valor total do Estoque Atual:</b> R$ ${valorTotalEstoqueAtual.toFixed(2)}</p>
-    <p><b>💼 Valor total do Estoque Atual (Contábil):</b> R$ ${valorTotalEstoqueContabil.toFixed(2)}</p>
-  `;
-}
-  </script>
- 
-
-
-      <!-- SEÇÃO: ESTOQUE ATUAL -->
-      <section id="estoque" class="section" style="display:none;">
-        <h2><i class="fa fa-warehouse"></i> Estoque Atual</h2>
-
-        <div style="margin-bottom:10px;">
-          <input id="filtroEstoque" type="text" placeholder="🔍 Buscar no estoque (produto, categoria)" style="width:98%" oninput="filtrarEstoque()" />
-        </div>
-
-        <div class="table-wrap">
-        <table id="tabelaEstoque">
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>Produto</th>
-      <th>Código de Barras</th>
-      <th>Categoria</th>
-      <th>Quantidade</th>
-      <th>Lote</th>
-      <th>Validade</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
-        </div>
-      </section>
-
-<!-- FIM DO BLOCO 2/5 -->
-<!-- 📦 SEÇÃO: ESTOQUE MÍNIMO E MÁXIMO -->
-<section id="limites" class="section" style="display:none;">
-  <h2><i class="fa fa-boxes"></i> Estoque Mínimo e Máximo</h2>
-
-  <!-- 🔹 Resumo de contagem -->
-  <div id="resumoEstoque" style="margin-bottom:10px; font-weight:bold; color:#333;">
-    🧾 Total de Produtos: 0 |
-    ⚠️ Abaixo do Mínimo: 0 |
-    ✅ Dentro do Limite: 0 |
-    📦 Acima do Máximo: 0
-  </div>
-
-  <!-- 🔍 Filtros -->
-  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
-    <input
-      id="filtroLimite"
-      type="text"
-      placeholder="🔍 Buscar por produto"
-      style="flex:1; min-width:220px"
-      oninput="atualizarTabelaLimites()"
-    />
-
-    <select id="filtroCategoria" onchange="atualizarTabelaLimites()" style="min-width:220px;">
-      <option value="">Todas as Categorias</option>
-      <option>Material de Uso e Consumo</option>
-      <option>Copa e Cozinha</option>
-      <option>Escritório</option>
-      <option>Implante e Componentes</option>
-      <option>Insumo Dental</option>
-      <option>Insumo Laboratório</option>
-      <option>Medicamentos</option>
-      <option>Material de Limpeza</option>
-    </select>
-
-    <button onclick="gerarListaCompra()"><i class="fa fa-list"></i> Gerar Lista de Compra</button>
-    <button onclick="limparListaCompra()"><i class="fa fa-trash"></i> Limpar Lista</button>
-  </div>
-
-  <!-- 📋 Tabela principal -->
-  <div class="table-wrap">
-  <table id="tabelaLimites">
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>Produto</th>
-      <th>Código de Barras</th>
-      <th>Categoria</th>
-      <th>Qtd Atual</th>
-      <th>Mínimo</th>
-      <th>Máximo</th>
-      <th>Status</th>
-      <th>Recomendação</th>
-      <th>Ações</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
-</section>
-
-  </div>
-<!-- SEÇÃO: PAINEL FINANCEIRO -->
-<section id="financeiro" class="section" style="display:none;">
-  <h2><i class="fa fa-chart-line"></i> Painel Financeiro</h2>
-
-  <!-- 🔸 Indicadores financeiros detalhados -->
-  <div style="display:flex; flex-wrap:wrap; gap:15px; margin-bottom:20px;">
-
-    <!-- Último valor de entrada -->
-    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-      <h3>💰 Último Valor de Entrada</h3>
-      <p id="valorUltimaEntrada" style="font-size:1.4em; font-weight:bold; color:#007bff;">R$ 0,00</p>
-    </div>
-
-    <!-- Custo médio ponderado -->
-    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-      <h3>📊 Custo Médio Ponderado</h3>
-      <p id="valorCustoMedio" style="font-size:1.4em; font-weight:bold; color:#6f42c1;">R$ 0,00</p>
-    </div>
-
-    <!-- Valor total do estoque atual -->
-    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-      <h3>📦 Valor Total do Estoque Atual</h3>
-      <p id="valorEstoqueAtualPainel" style="font-size:1.4em; font-weight:bold; color:#28a745;">R$ 0,00</p>
-    </div>
-  </div>
-
-  <!-- 🔸 Indicadores principais existentes -->
-  <div style="display:flex; flex-wrap:wrap; gap:15px; margin-bottom:20px;">
-    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-      <h3>💰 Valor Total do Estoque Atual (Contábil)</h3>
-      <p id="valorEstoque" style="font-size:1.4em; font-weight:bold; color:#28a745;">R$ 0,00</p>
-    </div>
-
-    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-      <h3>💸 Valor Total das Saídas (Estimado)</h3>
-      <p id="valorSaidas" style="font-size:1.4em; font-weight:bold; color:#dc3545;">R$ 0,00</p>
-    </div>
-  </div>
-
-  <!-- 🔸 Entradas agrupadas -->
-  <h3 style="margin-top:25px;"><i class="fa fa-file-invoice"></i> Entradas Agrupadas por Nota Fiscal</h3>
-  <div class="table-wrap">
-    <table id="tabelaFinanceiro">
-      <thead>
-        <tr>
-          <th>Fornecedor</th>
-          <th>Nota Fiscal</th>
-          <th>Valor Total da Nota (R$)</th>
-          <th>Saldo da Nota (R$)</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</section>
-
-    <!-- SEÇÃO: RELATÓRIOS -->
-<section id="relatorios" class="section" style="display:none;">
-  <h2><i class="fa fa-chart-line"></i> Relatórios</h2>
-
-  <!-- 🔹 Botões principais -->
-  <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
-    <button onclick="gerarRelatorioProdutos()"><i class="fa fa-file-excel"></i> Produtos</button>
-    <button onclick="gerarRelatorioEntradas()"><i class="fa fa-file-excel"></i> Entradas</button>
-    <button onclick="gerarRelatorioSaidas()"><i class="fa fa-file-excel"></i> Saídas</button>
-    <button onclick="gerarRelatorioEstoque()"><i class="fa fa-file-excel"></i> Estoque</button>
-  </div>
-
-  <!-- 🔹 Filtro de período -->
-  <div id="filtroPeriodo" style="margin: 15px 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
-    <label><b>Data Início:</b></label>
-    <input type="date" id="dataInicioRelatorio" style="padding: 4px 6px;">
-
-    <label><b>Data Fim:</b></label>
-    <input type="date" id="dataFimRelatorio" style="padding: 4px 6px;">
-
-    <button onclick="gerarRelatorio()" style="background:#2b6cb0;color:#fff;padding:4px 8px;border:none;border-radius:4px;">
-      <i class="fa fa-filter"></i> Filtrar
-    </button>
-
-    <button onclick="definirPeriodoRapido('hoje')">Hoje</button>
-    <button onclick="definirPeriodoRapido('7dias')">Últimos 7 dias</button>
-    <button onclick="definirPeriodoRapido('30dias')">Últimos 30 dias</button>
-    <button onclick="definirPeriodoRapido('mes')">Mês Atual</button>
-    <button onclick="limparPeriodo()">Limpar</button>
-  </div>
-
-  <!-- 🔹 Informativo -->
-  <div style="background:#fff;padding:10px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
-    <p>Os relatórios são gerados em formato Excel (.csv) e incluem todos os dados das tabelas correspondentes.</p>
-  </div>
-</section>
-
-  <!-- 🛒 Lista de compra -->
-<div id="listaCompraContainer" style="display:none; margin-top:20px;">
-  <h3><i class="fa fa-shopping-cart"></i> Lista de Compra Gerada</h3>
-
- <div class="table-wrap" style="max-height:400px; overflow-y:auto; overflow-x:auto; border:1px solid #ccc;">
-    <table id="tabelaListaCompra" class="tabela-padrao">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Produto</th>
-          <th>Código de Barras</th>
-          <th>Categoria</th>
-          <th>Qtd Atual</th>
-          <th>Mínimo</th>
-          <th>Recomendado Comprar</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-      <tfoot>
-        <tr>
-          <td colspan="6" style="text-align:right; font-weight:bold;">Total de Itens:</td>
-          <td id="totalItensCompra" style="font-weight:bold;">0</td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
-
-  <!-- 🔹 Ações de exportação -->
-  <div style="margin-top:10px;">
-    <button onclick="exportarListaExcel()">
-      <i class="fa fa-file-excel"></i> Exportar para Excel
-    </button>
-    <button onclick="gerarPedidoPDF()">
-      <i class="fa fa-file-pdf"></i> Gerar Pedido de Orçamento (PDF)
-    </button>
-  </div>
-</div>
-
-</section>
-
-
-      <!-- SEÇÃO: USUÁRIOS E PERFIS -->
-      <section id="usuarios" class="section" style="display:none;">
-        <h2><i class="fa fa-users"></i> Gerenciar Usuários e Perfis</h2>
-
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
-          <input id="usuarioNome" type="text" placeholder="Nome" />
-          <input id="usuarioCPF" type="text" placeholder="CPF" />
-          <input id="usuarioEmail" type="email" placeholder="E-mail" />
-          <input id="usuarioSenha" type="password" placeholder="Senha" />
-          <select id="usuarioPerfil">
-            <option value="admin">Administrador</option>
-            <option value="simples1">Simples 01</option>
-            <option value="simples2">Simples 02</option>
-          </select>
-          <button onclick="salvarUsuario()"><i class="fa fa-save"></i> Salvar</button>
-        </div>
-
-        <div class="table-wrap">
-          <table id="tabelaUsuarios">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Nome</th>
-                <th>CPF</th>
-                <th>Email</th>
-                <th>Perfil</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </section>
-
-
- </style>
-</head>
- <body>
-<script>
-
-function atualizarEstoque(produto, delta) {
-  const item = produtos.find((p) => p.nome === produto);
-  if (item) {
-    item.quantidade = (item.quantidade || 0) + delta;
-    if (item.quantidade < 0) item.quantidade = 0;
-    localStorage.setItem("produtos", JSON.stringify(produtos));
-    atualizarTabelaEstoque();
-	ordenarListasAlfabeticamente();
-  }
-}
-
-function atualizarTabelaEstoque() {
-  const tbody = document.querySelector("#tabelaEstoque tbody");
-  tbody.innerHTML = "";
-
-  if (!Array.isArray(produtos) || produtos.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#777;">Nenhum produto em estoque.</td></tr>`;
-    return;
-  }
-
-  produtos.forEach((p, i) => {
-    const status = p.quantidade > 0 ? "✅ OK" : "⚠️ Vazio";
-
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${p.nome || "-"}</td>
-      <td>${p.codigoBarras || "-"}</td>
-      <td>${p.categoria || "-"}</td>
-      <td>${p.quantidade || 0}</td>
-      <td>${p.lote || "-"}</td>
-      <td>${p.validade || "-"}</td>
-      <td>${status}</td>
-    `;
-    tbody.appendChild(row);
-  });
-}
-
-
-
-// 🔹 Atualiza a tabela principal de produtos com limites
-function atualizarTabelaLimites() {
-  const produtos = JSON.parse(localStorage.getItem("produtos")) || [];
-  const filtroTexto = (document.getElementById("filtroLimite")?.value || "").toLowerCase();
-  const filtroCategoria = (document.getElementById("filtroCategoria")?.value || "").toLowerCase();
-  const tbody = document.querySelector("#tabelaLimites tbody");
-  const resumo = document.getElementById("resumoEstoque");
-
-  if (!tbody) return;
-  tbody.innerHTML = "";
-
-  let total = 0,
-      abaixo = 0,
-      dentro = 0,
-      acima = 0;
-
-  if (!produtos.length) {
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#777;">Nenhum produto cadastrado.</td></tr>`;
-    if (resumo)
-      resumo.innerHTML = `🧾 Total de Produtos: 0 | ⚠️ Abaixo do Mínimo: 0 | ✅ Dentro do Limite: 0 | 📦 Acima do Máximo: 0`;
-    return;
-  }
-
-  produtos.forEach((p, i) => {
-    const nome = (p.nome || "").toLowerCase();
-    const categoria = (p.categoria || "").toLowerCase();
-
-    const minimo = Number(p.minimo) || 0;
-    const maximo = Number(p.maximo) || 0;
-    const qtd = Number(p.quantidade) || 0;
-
-    // calcula status e recomendação ANTES do filtro de texto
-    let statusTexto = "";
-    let statusCor = "";
-    let recomendacao = "";
-
-    if (qtd < minimo) {
-      statusTexto = "⚠️ Abaixo do mínimo";
-      statusCor = "red";
-      recomendacao = `Comprar ${minimo - qtd} unidade(s)`;
-    } else if (maximo && qtd > maximo) {
-      statusTexto = "📦 Acima do máximo";
-      statusCor = "orange";
-      recomendacao = "Reduzir estoque";
-    } else {
-      statusTexto = "✅ Dentro do limite";
-      statusCor = "green";
-      recomendacao = "OK";
-    }
-
     
-    // filtroCategoria (mantém comportamento anterior)
-    if (filtroCategoria && filtroCategoria !== "" && categoria !== filtroCategoria) return;
-
-    // filtroTexto: busca em vários campos (produto, codigoBarras, categoria, qtd, status, recomendação)
-    if (filtroTexto) {
-      const codigo = (p.codigoBarras || "").toLowerCase();
-      const qtdStr = String(qtd).toLowerCase();
-      const statusLower = statusTexto.toLowerCase();
-      const recLower = (recomendacao || "").toLowerCase();
-
-      const matches =
-        nome.includes(filtroTexto) ||
-        codigo.includes(filtroTexto) ||
-        categoria.includes(filtroTexto) ||
-        qtdStr.includes(filtroTexto) ||
-        statusLower.includes(filtroTexto) ||
-        recLower.includes(filtroTexto);
-
-      if (!matches) return; // não passa no filtro
-    }
-   
-
-    total++;
-
-    // contadores
-    if (qtd < minimo) abaixo++;
-    else if (maximo && qtd > maximo) acima++;
-    else dentro++;
-
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${p.nome || "-"}</td>
-      <td>${p.codigoBarras || "-"}</td>
-      <td>${p.categoria || "-"}</td>
-      <td>${qtd}</td>
-      <td><input type="number" id="min-${i}" value="${minimo}" style="width:80px" /></td>
-      <td><input type="number" id="max-${i}" value="${maximo}" style="width:80px" /></td>
-      <td style="color:${statusCor}; font-weight:bold;">${statusTexto}</td>
-      <td>${recomendacao}</td>
-      <td><button onclick="salvarLimites(${i})"><i class="fa fa-save"></i></button></td>
-    `;
-    tbody.appendChild(row);
-  });
-
-  // 🔹 Atualiza contador superior
-  if (resumo)
-    resumo.innerHTML = `
-      🧾 Total de Produtos: ${total} |
-      ⚠️ Abaixo do Mínimo: ${abaixo} |
-      ✅ Dentro do Limite: ${dentro} |
-      📦 Acima do Máximo: ${acima}
-    `;
-}
-
-// 🔹 Gera lista de compra (todos os produtos abaixo do mínimo)
-
-function gerarListaCompra() {
-  const container = document.getElementById("listaCompraContainer");
-  const tabela = document.getElementById("tabelaListaCompra");
-  const tbody = tabela ? tabela.querySelector("tbody") : null;
-  const totalSpan = document.getElementById("totalItensCompra");
-
-  if (!container || !tabela || !tbody || !totalSpan) {
-    console.error("⚠️ Elementos da lista de compra não encontrados no DOM.");
-    alert("Erro: tabela da lista de compra não encontrada. Verifique o HTML.");
-    return;
-  }
-
-  const produtos = JSON.parse(localStorage.getItem("produtos")) || [];
-  if (!produtos.length) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#777;">Nenhum produto cadastrado.</td></tr>`;
-    totalSpan.textContent = "0";
-    container.style.display = "block";
-    return;
-  }
-
-  // 🔹 Filtro de categoria (se existir)
-  const filtroCategoria = (document.getElementById("filtroCategoria")?.value || "").toLowerCase();
-
-  // 🔹 Filtra produtos abaixo do mínimo
-  const produtosAbaixo = produtos.filter(p => {
-    const categoria = (p.categoria || "").toLowerCase();
-    const qtd = Number(p.quantidade) || 0;
-    const minimo = Number(p.minimo) || 0;
-    if (filtroCategoria && filtroCategoria !== "" && categoria !== filtroCategoria) return false;
-    return qtd < minimo;
-  });
-
-  tbody.innerHTML = "";
-
-  if (!produtosAbaixo.length) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:green;">✅ Nenhum produto abaixo do mínimo.</td></tr>`;
-    totalSpan.textContent = "0";
-    container.style.display = "block";
-    return;
-  }
-
-  // 🔹 Monta tabela com os valores corretos de “Recomendado Comprar”
-  let totalItens = 0;
-
-  produtosAbaixo.forEach((p, i) => {
-    const qtdAtual = Number(p.quantidade) || 0;
-    const minimo = Number(p.minimo) || 0;
-    const comprar = minimo > qtdAtual ? minimo - qtdAtual : 0;
-    const codigoBarras = p.codigoBarras || "-";
-
-    totalItens++;
-
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${p.nome}</td>
-      <td>${codigoBarras}</td>
-      <td>${p.categoria || "-"}</td>
-      <td>${qtdAtual}</td>
-      <td>${minimo}</td>
-      <td style="color:red; font-weight:bold;">${comprar}</td>
-    `;
-    tbody.appendChild(row);
-  });
-
-  // 🔹 Atualiza total e exibe tabela
-  totalSpan.textContent = totalItens;
-  container.style.display = "block";
-}
-
-// 🔹 Após gerar lista de compra → exibe e permite nova ação
-const _gerarListaCompraOriginal = gerarListaCompra;
-gerarListaCompra = function() {
-  _gerarListaCompraOriginal();
-  // não limpa nada, apenas garante foco na tabela gerada
-  const container = document.getElementById("listaCompraContainer");
-  if (container) container.scrollIntoView({ behavior: "smooth" });
-};
-
-// 🔹 Após limpar lista → também limpa filtros e reseta tela
-const _limparListaCompraOriginal = limparListaCompra;
-limparListaCompra = function() {
-  _limparListaCompraOriginal();
-  setTimeout(() => limparCampos("limites"), 200);
-};
-
-// 🔹 Mostra mensagens visuais no canto da tela
-function mostrarMensagem(texto, tipo = "info") {
-  let box = document.getElementById("mensagemBox");
-  if (!box) {
-    box = document.createElement("div");
-    box.id = "mensagemBox";
-    document.body.appendChild(box);
-    Object.assign(box.style, {
-      position: "fixed",
-      top: "20px",
-      right: "20px",
-      zIndex: "9999",
-      padding: "10px 15px",
-      borderRadius: "6px",
-      fontFamily: "Segoe UI, sans-serif",
-      color: "#fff",
-      boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-      transition: "opacity 0.4s",
+    document.addEventListener("DOMContentLoaded", () => {
+        // Inicializa as tabelas ao carregar, se as funções existirem.
+        if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+        if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
+        if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
+        if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
+        if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
+        if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
+        if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
+        if (typeof atualizarSelectProdutos === "function") atualizarSelectProdutos();
     });
-  }
 
-  box.textContent = texto;
-  box.style.background =
-    tipo === "erro" ? "#dc3545" :
-    tipo === "sucesso" ? "#28a745" :
-    "#0d6efd";
-  box.style.opacity = "1";
-  setTimeout(() => (box.style.opacity = "0"), 3000);
-}
-
-// 🔹 Destaca o campo com erro
-function destacarErro(el, msg) {
-  el.style.border = "2px solid red";
-  el.focus();
-  mostrarMensagem(msg, "erro");
-}
-
-// 🔹 Remove marcações de erro
-function limparErros(secaoId) {
-  document.querySelectorAll(`#${secaoId} input, #${secaoId} select`).forEach(el => {
-    el.style.border = "1px solid #ccc";
-  });
-}
-
-// 🔹 Limpa lista gerada
-function limparListaCompra() {
-  const tbody = document.querySelector("#tabelaListaCompra tbody");
-  const totalSpan = document.getElementById("totalItensCompra");
-  const container = document.getElementById("listaCompraContainer");
-
-  // 🔹 Limpa a lista de compra
-  if (tbody) tbody.innerHTML = "";
-  if (totalSpan) totalSpan.textContent = "0";
-  if (container) container.style.display = "none";
-
-  // 🔹 Retorna a exibição da tabela principal com todos os produtos
-  atualizarTabelaLimites(); // 👈 volta a mostrar todos os produtos no estoque
-}
-
-function salvarLimites(i) {
-  const min = +document.getElementById(`min-${i}`).value;
-  const max = +document.getElementById(`max-${i}`).value;
-
-  if (isNaN(min) || isNaN(max)) {
-    alert("Por favor, insira valores válidos para mínimo e máximo!");
-    return;
-  }
-
-  produtos[i].minimo = min;
-  produtos[i].maximo = max;
-  localStorage.setItem("produtos", JSON.stringify(produtos));
-  alert("Limites atualizados com sucesso!");
-  atualizarTabelaLimites();
-  ordenarListasAlfabeticamente();
-}
- 
-function exportarCSV(nome, dados) {
-  if (!dados.length) return alert("Nenhum dado encontrado!");
-  const header = Object.keys(dados[0]).join(";");
-  const rows = dados.map((obj) => Object.values(obj).join(";"));
-  const csv = [header, ...rows].join("\n");
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = nome + ".csv";
-  link.click();
-}
-
-function gerarRelatorioProdutos() {
-  exportarCSV("Produtos", produtos);
-}
-
-function gerarRelatorioEntradas() {
-  exportarCSV("Entradas", entradas);
-}
-
-function gerarRelatorioSaidas() {
-  exportarCSV("Saidas", saidas);
-}
-
-function gerarRelatorioEstoque() {
-  const dados = produtos.map((p) => ({
-    nome: p.nome,
-    categoria: p.categoria,
-    quantidade: p.quantidade || 0
-  }));
-  exportarCSV("Estoque", dados);
-}
-
-function exportarRelatorioFiltrado(lista) {
-  let csv = [
-    ["Produto", "Quantidade", "Valor (R$)", "Data", "Nota Fiscal", "Fornecedor", "CNPJ", "Lote", "Validade", "Setor"].join(";")
-  ];
-
-  lista.forEach(e => {
-    csv.push([
-      e.produto,
-      e.qtd,
-      e.valor,
-      e.data,
-      e.nota,
-      e.fornecedor,
-      e.cnpj,
-      e.lote,
-      e.validade,
-      e.setor
-    ].join(";"));
-  });
-
-  const csvContent = csv.join("\n");
-  const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=ISO-8859-1;" });
-
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "Relatorio_Entradas.csv";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-
-function sincronizarNomeProdutoAntigo(novoNome, nomeAntigo) {
-  let alterado = false;
-
-  if (!Array.isArray(entradas)) entradas = [];
-  if (!Array.isArray(saidas)) saidas = [];
-  if (!Array.isArray(produtos)) produtos = [];
-
-  entradas.forEach(e => {
-    if (e.produto === nomeAntigo) {
-      e.produto = novoNome;
-      alterado = true;
-    }
-  });
-
-  saidas.forEach(s => {
-    if (s.produto === nomeAntigo) {
-      s.produto = novoNome;
-      alterado = true;
-    }
-  });
-
-  produtos.forEach(p => {
-    if (p.nome === nomeAntigo) {
-      p.nome = novoNome;
-      alterado = true;
-    }
-  });
-
-  if (alterado) {
-    localStorage.setItem("entradas", JSON.stringify(entradas));
-    localStorage.setItem("saidas", JSON.stringify(saidas));
-    localStorage.setItem("produtos", JSON.stringify(produtos));
-
-    if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
-    if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-    if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-    if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-    if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
-  }
-}
-function gerarRelatorio() {
-  const inicio = document.getElementById("dataInicioRelatorio").value;
-  const fim = document.getElementById("dataFimRelatorio").value;
-
-  if (!inicio || !fim) {
-    alert("⚠️ Selecione uma data de início e fim para gerar o relatório!");
-    return;
-  }
-
-  const dataInicio = new Date(inicio);
-  const dataFim = new Date(fim);
-
-  if (dataInicio > dataFim) {
-    alert("❌ A data inicial não pode ser maior que a final!");
-    return;
-  }
-
-  // 🔹 Pega todas as entradas do localStorage
-  const entradas = JSON.parse(localStorage.getItem("entradas")) || [];
-
-  // 🔹 Filtra somente as que estão dentro do intervalo
-  const filtradas = entradas.filter(e => {
-    const data = new Date(e.data);
-    return data >= dataInicio && data <= dataFim;
-  });
-
-  if (filtradas.length === 0) {
-    alert("📭 Nenhum registro encontrado nesse período.");
-    return;
-  }
-
-  // 🔹 Exporta os resultados filtrados para Excel
-  exportarRelatorioFiltrado(filtradas);
-
-  alert(`📊 Relatório de Entradas gerado de ${inicio} até ${fim}`);
-}
-
-function toggleSidebar() {
-  const sidebar = document.getElementById("sidebar");
-  if (sidebar) sidebar.classList.toggle("active");
-}
-
-// Fecha o menu lateral se o usuário clicar fora dele
-document.addEventListener("click", (e) => {
-  const sidebar = document.getElementById("sidebar");
-  const menuBtn = document.getElementById("menuToggle");
-  if (
-    sidebar.classList.contains("active") &&
-    !sidebar.contains(e.target) &&
-    !menuBtn.contains(e.target)
-  ) {
-    sidebar.classList.remove("active");
-  }
-});
-
-function definirPeriodoRapido(tipo) {
-  const hoje = new Date();
-  const inicioEl = document.getElementById("dataInicioRelatorio");
-  const fimEl = document.getElementById("dataFimRelatorio");
-
-  let inicio = new Date(hoje);
-  let fim = new Date(hoje);
-
-  switch (tipo) {
-    case "hoje":
-      // Fica o dia atual
-      break;
-    case "7dias":
-      inicio.setDate(hoje.getDate() - 7);
-      break;
-    case "30dias":
-      inicio.setDate(hoje.getDate() - 30);
-      break;
-    case "mes":
-      inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-      fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-      break;
-  }
-
-  inicioEl.value = inicio.toISOString().split("T")[0];
-  fimEl.value = fim.toISOString().split("T")[0];
-
-
-}
-
-function limparPeriodo() {
-  document.getElementById("dataInicioRelatorio").value = "";
-  document.getElementById("dataFimRelatorio").value = "";
-}
-
-function exportarListaExcel() {
-  const container = document.getElementById("listaCompraContainer");
-  const tabela = document.getElementById("tabelaListaCompra");
-  const tbody = tabela ? tabela.querySelector("tbody") : null;
-
-  if (!tabela || !tbody) {
-    alert("⚠️ Nenhuma lista de compra gerada para exportar!");
-    return;
-  }
-
-  const estavaOculto = container && container.style.display === "none";
-  if (estavaOculto) container.style.display = "block";
-
-  const linhas = [...tbody.querySelectorAll("tr")].filter(tr => tr.textContent.trim() !== "");
-
-  if (linhas.length === 0) {
-    alert("⚠️ Nenhum item encontrado na lista de compra.");
-    if (estavaOculto) container.style.display = "none";
-    return;
-  }
-
-  // 🔹 Cabeçalho idêntico à tabela
-  const cabecalho = [
-    "#",
-    "Produto",
-    "Código de Barras",
-    "Categoria",
-    "Qtd Atual",
-    "Mínimo",
-    "Recomendado Comprar"
-  ];
-  let csv = [cabecalho.join(";")];
-
-  // 🔹 Linhas de dados
-  linhas.forEach(tr => {
-    const cols = tr.querySelectorAll("td");
-    const linha = [];
-    cols.forEach(td => linha.push(td.innerText.trim().replace(/\s+/g, " ")));
-    csv.push(linha.join(";"));
-  });
-
-  // 🔹 Cria o conteúdo CSV
-  const csvContent = csv.join("\n");
-
-  // Cria um Blob em ISO-8859-1 para abrir corretamente no Excel PT-BR
-  const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=ISO-8859-1;" });
-
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "Lista_de_Compra_Gerada.csv";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-
-  if (estavaOculto) container.style.display = "none";
-
-  alert("✅ Lista de Compra Gerada exportada com sucesso!");
-}
-
-
-function atualizarPainelFinanceiro() {
-  const entradas = JSON.parse(localStorage.getItem("entradas")) || [];
-  const saidas = JSON.parse(localStorage.getItem("saidas")) || [];
-  const produtos = JSON.parse(localStorage.getItem("produtos")) || [];
-
-  let valorTotalEntradas = 0;
-  let valorTotalSaidas = 0;
-
-  // 🔹 Calcular total de entradas e saídas (financeiro geral)
-  entradas.forEach(e => {
-    valorTotalEntradas += (e.valor || 0) * (e.qtd || 0);
-  });
-
-  saidas.forEach(s => {
-    // ⚠️ Se o produto existe em entradas, usa o valor unitário dele
-    const entradaRelacionado = entradas.find(
-      e => e.produto && s.produto && e.produto.toLowerCase() === s.produto.toLowerCase()
-    );
-    const valorUnitario = entradaRelacionado ? (entradaRelacionado.valor || 0) : 0;
-    valorTotalSaidas += valorUnitario * (s.qtd || 0);
-  });
-
-  // 🔹 Valor total contábil do estoque (entradas - saídas)
-  const valorEstoqueAtual = valorTotalEntradas - valorTotalSaidas;
-
-  // Atualiza os dois indicadores principais (já existentes)
-  document.getElementById("valorEstoque").textContent = `R$ ${valorEstoqueAtual.toFixed(2)}`;
-  document.getElementById("valorSaidas").textContent = `R$ ${valorTotalSaidas.toFixed(2)}`;
-
-  let qtdTotal = 0;
-  let valorTotalUltimaEntrada = 0;
-  let valorTotalCustoMedio = 0;
-
-  produtos.forEach(p => {
-    const entradasDoProduto = entradas.filter(e => e.produto === p.nome);
-    if (entradasDoProduto.length === 0) return;
-
-    // Último valor de entrada
-    const ultimaEntrada = entradasDoProduto.slice(-1)[0];
-    const valorUltimo = Number(ultimaEntrada.valor || 0);
-
-    // Custo médio ponderado
-    const totalQtdEntradas = entradasDoProduto.reduce((s, e) => s + Number(e.qtd || 0), 0);
-    const totalValorEntradas = entradasDoProduto.reduce(
-      (s, e) => s + (Number(e.qtd || 0) * Number(e.valor || 0)),
-      0
-    );
-    const custoMedio = totalQtdEntradas > 0 ? totalValorEntradas / totalQtdEntradas : 0;
-
-    const qtdAtual = Number(p.quantidade || 0);
-    qtdTotal += qtdAtual;
-    valorTotalUltimaEntrada += qtdAtual * valorUltimo;
-    valorTotalCustoMedio += qtdAtual * custoMedio;
-  });
-
-  const valorTotalEstoqueAtualPainel = (valorTotalUltimaEntrada + valorTotalCustoMedio) / 2;
-
-  // Atualiza os novos indicadores
-  document.getElementById("valorUltimaEntrada").textContent = `R$ ${valorTotalUltimaEntrada.toFixed(2)}`;
-  document.getElementById("valorCustoMedio").textContent = `R$ ${valorTotalCustoMedio.toFixed(2)}`;
-  document.getElementById("valorEstoqueAtualPainel").textContent = `R$ ${valorTotalEstoqueAtualPainel.toFixed(2)}`;
-
- 
-  const agrupadas = {};
-
-  entradas.forEach(e => {
-    const fornecedor = e.fornecedor || "Fornecedor não informado";
-    const nota = e.nota || "Sem Nota Fiscal";
-    const chave = `${fornecedor}_${nota}`;
-
-    if (!agrupadas[chave]) {
-      agrupadas[chave] = {
-        fornecedor,
-        nota,
-        valorNota: 0,
-        valorSaida: 0
-      };
+    function mostrarImagemAmpliada(src) {
+        const modal = document.getElementById("imagemAmpliada");
+        const img = modal.querySelector("img");
+        img.src = src;
+        modal.style.display = "flex";
     }
 
-    agrupadas[chave].valorNota += (e.valor || 0) * (e.qtd || 0);
-  });
-
-  saidas.forEach(s => {
-    const entrada = entradas.find(
-      e => e.produto && s.produto && e.produto.toLowerCase() === s.produto.toLowerCase()
-    );
-    if (!entrada) return;
-
-    const fornecedor = entrada.fornecedor || "Fornecedor não informado";
-    const nota = entrada.nota || "Sem Nota Fiscal";
-    const chave = `${fornecedor}_${nota}`;
-
-    const valorUnitario = entrada.valor || 0;
-    const valorSaida = valorUnitario * (s.qtd || 0);
-
-    if (agrupadas[chave]) {
-      agrupadas[chave].valorSaida += valorSaida;
+    function formatarTextoPadrao(texto) {
+        if (!texto) return "";
+        let padronizado = texto.trim().toLowerCase();
+        // Capitaliza a primeira letra de cada palavra (exceto preposições curtas, se necessário)
+        return padronizado.split(" ").map(word => {
+            if (word.length > 0) {
+                return word.charAt(0).toUpperCase() + word.slice(1);
+            }
+            return "";
+        }).join(" ");
     }
-  });
 
-  // Renderizar tabela agrupada
-  const tbody = document.querySelector("#tabelaFinanceiro tbody");
-  tbody.innerHTML = "";
-  Object.values(agrupadas).forEach(a => {
-    const saldo = a.valorNota - a.valorSaida;
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${a.fornecedor}</td>
-      <td>${a.nota}</td>
-      <td>R$ ${a.valorNota.toFixed(2)}</td>
-      <td>R$ ${saldo.toFixed(2)}</td>
-    `;
-    tbody.appendChild(row);
-  });
-}
-
-
-
-function showSection(id) {
-  // 🔹 Oculta todas as seções
-  document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
-
-  // 🔹 Mostra apenas a seção selecionada
-  const alvo = document.getElementById(id);
-  if (alvo) alvo.style.display = "block";
-
-  // 🔹 Fecha automaticamente o menu lateral em qualquer tamanho de tela
-  const sidebar = document.getElementById("sidebar");
-  if (sidebar && sidebar.classList.contains("active")) {
-    sidebar.classList.remove("active");
-  }
-
-  // 🔹 Reposiciona o scroll no topo
-  window.scrollTo({ top: 0, behavior: "smooth" });
-
-  // 🔹 Atualiza dados se for painel financeiro
-  if (id === "financeiro" && typeof atualizarPainelFinanceiro === "function") {
-    atualizarPainelFinanceiro();
-  }
-
-  // 🔹 Atualiza dados se for o dashboard
-  if (id === "dashboard" && typeof atualizarDashboard === "function") {
-    atualizarDashboard();
-  }
-}
-
-// 🔹 Mantém a tela centralizada no login
-window.scrollTo(0, 0);
-
-window.showSection = function (id) {
-  document
-    .querySelectorAll(".section")
-    .forEach((sec) => sec.classList.remove("active"));
-  const alvo = document.getElementById(id);
-  if (alvo) alvo.classList.add("active");
-};
-
-
-
-
-function aplicarPermissoes() {
-  const perfil = window.usuarioLogado?.perfil;
-  const botoes = document.querySelectorAll("#sidebar button");
-  botoes.forEach((b) => (b.style.display = "block"));
-
-  if (perfil === "simples1") {
-    ocultarBotoes(["financeiro"]);
-  } else if (perfil === "simples2") {
-    ocultarBotoes([
-      "cadastro",
-      "entrada",
-      "saida",
-      "limites",
-      "financeiro",
-      "usuarios",
-    ]);
-  }
-}
-
-function ocultarBotoes(lista) {
-  lista.forEach((id) => {
-    const botao = document.querySelector(`#sidebar button[onclick*="${id}"]`);
-    if (botao) botao.style.display = "none";
-  });
-}
-
-
-function bloquearAcoesSimples2() {
-  const usuario = JSON.parse(localStorage.getItem("usuarioLogado"));
-  if (!usuario || usuario.perfil !== "simples2") return;
-  document.querySelectorAll("button").forEach((btn) => {
-    const t = btn.textContent.toLowerCase();
-    if (
-      t.includes("salvar") ||
-      t.includes("editar") ||
-      t.includes("excluir") ||
-      t.includes("registrar")
-    ) {
-      btn.disabled = true;
-      btn.style.opacity = "0.6";
-      btn.style.cursor = "not-allowed";
+    /* 🔸 Aplica automaticamente ao sair do campo de texto */
+    document.addEventListener("blur", (e) => {
+        const el = e.target;
+        if (el.tagName === "INPUT" && el.type === "text") {
+            // Ignora campos que não devem ser alterados
+            if (el.id.toLowerCase().includes("cnpj") || el.id.toLowerCase().includes("email") || el.id.toLowerCase().includes("login") || el.id.toLowerCase().includes("cpf")) return;
+            el.value = formatarTextoPadrao(el.value);
+        }
+    }, true);
+    
+    function limparCampos(secaoId) {
+      const secao = document.getElementById(secaoId);
+      if (!secao) return;
+      secao.querySelectorAll("input, select").forEach(el => {
+        if (el.type === "file") {
+          el.value = "";
+        } else if (el.tagName === "SELECT") {
+          el.selectedIndex = 0;
+        } else {
+          el.value = "";
+        }
+      });
     }
-  });
-} 
 
+    function destacarErro(el, msg) {
+        el.style.border = "2px solid red";
+        el.focus();
+        alert(`⚠️ ${msg}`);
+    }
 
-let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+    function buscarProdutoPorCodigo(secao) {
+        const codigoBarras = document.getElementById(`${secao}CodigoBarras`).value.trim();
+        const produtoInput = document.getElementById(`${secao}Produto`);
+        
+        if (!codigoBarras) {
+            produtoInput.value = "";
+            return;
+        }
 
-function salvarUsuario() {
-  const nome = document.getElementById("usuarioNome").value.trim();
-  const cpf = document.getElementById("usuarioCPF").value.trim();
-  const email = document.getElementById("usuarioEmail").value.trim();
-  const senha = document.getElementById("usuarioSenha").value.trim();
-  const perfil = document.getElementById("usuarioPerfil").value;
-  if (!nome || !senha) return alert("Preencha os campos obrigatórios!");
+        const produto = produtos.find(p => p.codigoBarras === codigoBarras);
 
-  usuarios.push({ nome, cpf, email, senha, perfil });
-  localStorage.setItem("usuarios", JSON.stringify(usuarios));
-  atualizarTabelaUsuarios();
-  ordenarListasAlfabeticamente();
-}
+        if (produto) {
+            produtoInput.value = produto.nome;
+            produtoInput.readOnly = true;
+            document.getElementById(`${secao}CodigoBarras`).style.border = "1px solid green";
+        } else {
+            produtoInput.value = "";
+            produtoInput.readOnly = false;
+            document.getElementById(`${secao}CodigoBarras`).style.border = "1px solid red";
+            // alert("Produto não encontrado pelo código de barras.");
+        }
+    }
 
-function atualizarTabelaUsuarios() {
-  const tbody = document.querySelector("#tabelaUsuarios tbody");
-  tbody.innerHTML = "";
-  usuarios.forEach((u, i) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${u.nome}</td>
-      <td>${u.cpf || "-"}</td>
-      <td>${u.email || "-"}</td>
-      <td>${u.perfil}</td>
-      <td><button onclick="excluirUsuario(${i})"><i class="fa fa-trash"></i></button></td>`;
-    tbody.appendChild(row);
-  });
-}
+    function buscarCodigoBarrasDoProduto(nome) {
+        const produto = produtos.find(p => (p.nome || "").toLowerCase() === nome.toLowerCase());
+        return produto ? produto.codigoBarras : "";
+    }
 
-function excluirUsuario(i) {
-  if (!confirm("Excluir este usuário?")) return;
-  usuarios.splice(i, 1);
-  localStorage.setItem("usuarios", JSON.stringify(usuarios));
-  atualizarTabelaUsuarios();
-}
-
-/* =========================
-   🔹 Inicialização
-========================= */
-window.addEventListener("load", () => {
-  produtos = JSON.parse(localStorage.getItem("produtos")) || [];
-  entradas = JSON.parse(localStorage.getItem("entradas")) || [];
-  saidas = JSON.parse(localStorage.getItem("saidas")) || [];
-  usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
-
-  atualizarTabelaProdutos();
-  atualizarTabelaEntradas();
-  atualizarTabelaSaidas();
-  atualizarTabelaEstoque();
-  atualizarTabelaUsuarios();
-  atualizarPainelFinanceiro();
-
-  const sess = JSON.parse(localStorage.getItem("usuarioLogado"));
-  if (sess) {
-    window.usuarioLogado = sess;
-    document.getElementById("login").style.display = "none";
-document.getElementById("painel").style.display = "block";
-    document.getElementById("userName").textContent = sess.nome;
-    document.getElementById("perfilBadge").textContent = "Perfil: " + sess.perfil.toUpperCase();
-    aplicarPermissoes();
-  }
-});
-function gerarPedidoPDF() {
-  const { jsPDF } = window.jspdf;
-  const tabela = document.getElementById("tabelaListaCompra");
-  if (!tabela) return alert("Lista de compra não encontrada!");
-
-  // 🔹 Obtém nome do solicitante do perfil
-  const usuario = JSON.parse(localStorage.getItem("usuario")) || {};
-  const nomeSolicitante = usuario.nome || "Não informado";
-
-  // 🔹 Cria documento
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  const larguraPagina = doc.internal.pageSize.getWidth();
-  const dataAtual = new Date().toLocaleDateString();
-
-  // ---------- CABEÇALHO ----------
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.text("ORAL UNIC CAMPO GRANDE", larguraPagina / 2, 20, { align: "center" });
-
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "normal");
-  doc.text("Pedido de Orçamento", larguraPagina / 2, 28, { align: "center" });
-
-  doc.setFontSize(10);
-  doc.text(`Data: ${dataAtual}`, 14, 38);
-  doc.text(`Solicitante: ${nomeSolicitante}`, 14, 44);
-
-  // ---------- LINHA SEPARADORA ----------
-  doc.setDrawColor(150);
-  doc.line(14, 48, larguraPagina - 14, 48);
-
-  // ---------- CABEÇALHO DA TABELA ----------
-  let y = 55;
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.text("#", 14, y);
-  doc.text("Produto", 25, y);
-  doc.text("Categoria", 105, y);
-  doc.text("Recomendado Comprar", 170, y, { align: "right" });
-
-  // ---------- CONTEÚDO DA TABELA ----------
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  y += 7;
-
-  const linhas = tabela.querySelectorAll("tbody tr");
-
-  linhas.forEach((tr) => {
-    const cols = tr.querySelectorAll("td");
-    if (cols.length >= 6) {
-      const index = cols[0].innerText.trim();
-      const produto = cols[1].innerText.trim();
-      const categoria = cols[2].innerText.trim();
-      const comprar = cols[5].innerText.trim();
-
-      // quebra de página se necessário
-      if (y > 270) {
-        doc.addPage();
-        y = 20;
+    // ==========================================================
+    // FIREBASE - SALVAMENTO DE DADOS (Funções MOCK)
+    // ==========================================================
+    // NOTE: Estas funções simulam o salvamento no Firebase e usam localStorage como fallback.
+    
+    async function salvarDados(nomeColecao, dados) {
+      if (window.database) {
+          try {
+              // Simula o salvamento no Firebase (substituir pela lógica real)
+              // const dbRef = ref(window.database, nomeColecao);
+              // await set(dbRef, dados);
+              // console.log(`Dados de ${nomeColecao} salvos no Firebase (Simulado).`);
+              
+              // Fallback LocalStorage (para testes offline)
+              localStorage.setItem(nomeColecao, JSON.stringify(dados));
+          } catch (error) {
+              console.error(`Erro ao salvar ${nomeColecao} no Firebase:`, error);
+              // Fallback LocalStorage (para testes offline)
+              localStorage.setItem(nomeColecao, JSON.stringify(dados));
+          }
+      } else {
+          // Apenas LocalStorage
+          localStorage.setItem(nomeColecao, JSON.stringify(dados));
       }
-
-      // texto alinhado nas margens seguras
-      doc.text(index, 14, y);
-      doc.text(produto, 25, y, { maxWidth: 75 }); // produto ocupa até 75mm
-      doc.text(categoria, 105, y, { maxWidth: 55 });
-      doc.text(comprar, 170, y, { align: "right" });
-
-      y += 7;
     }
-  });
+    
+    async function carregarDadosDoFirebase() {
+        // Simula o carregamento do Firebase ou usa localStorage
+        if (window.database) {
+            try {
+                // const produtosRef = ref(window.database, 'produtos');
+                // const snapshot = await get(produtosRef);
+                // if (snapshot.exists()) {
+                //     produtos = snapshot.val() || [];
+                // }
+                // ... carregar entradas, saidas, etc.
 
-  // ---------- RODAPÉ ----------
-  doc.setFont("helvetica", "italic");
-  doc.setFontSize(9);
-  doc.text(
-    "Gerado automaticamente pelo sistema de controle de estoque Oral Unic Campo Grande.",
-    larguraPagina / 2,
-    285,
-    { align: "center" }
-  );
+                // Apenas LocalStorage (para manter o estado atual do seu código)
+                produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+                entradas = JSON.parse(localStorage.getItem("entradas")) || [];
+                saidas = JSON.parse(localStorage.getItem("saidas")) || [];
+                usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+                estoqueMinMax = JSON.parse(localStorage.getItem("estoqueMinMax")) || {};
 
-  // ---------- SALVAR ----------
-  const data = new Date().toLocaleDateString().replace(/\//g, "-");
-  doc.save(`Pedido_de_Orcamento_${data}.pdf`);
-}
-
-
-/* =========================
-   🔹 Modal de imagem
-========================= */
-document.body.insertAdjacentHTML("beforeend", `
-  <div id="imagemAmpliada" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
-  background:rgba(0,0,0,0.8);align-items:center;justify-content:center;z-index:9999;">
-    <img src="" style="max-width:90%;max-height:90%;border:4px solid white;border-radius:8px;">
-  </div>
-`);
-document.getElementById("imagemAmpliada").addEventListener("click", () => {
-  document.getElementById("imagemAmpliada").style.display = "none";
-});
-// Sempre que a página carregar ou for aberta
-document.addEventListener("DOMContentLoaded", () => {
-  // 🔹 1. Garante que as listas sejam ordenadas logo ao abrir
-  if (typeof ordenarListasAlfabeticamente === "function") {
-    ordenarListasAlfabeticamente();
-    console.log("Listas carregadas e ordenadas com sucesso!");
-  }
-
-  // 🔹 2. Atualiza a tabela de limites (sua função original)
-  if (document.getElementById("tabelaLimites") && typeof atualizarTabelaLimites === "function") {
-    atualizarTabelaLimites();
-  }
-});
-
-/* =========================
-   🔹 Padronização de texto: Primeira letra maiúscula, resto minúsculo
-========================= */
-function formatarTextoPadrao(texto) {
-  return texto
-    .toLowerCase()
-    .split(" ")
-    .filter(p => p.trim() !== "")
-    .map(p => p.charAt(0).toUpperCase() + p.slice(1))
-    .join(" ");
-}
+            } catch (error) {
+                console.error("Erro ao carregar dados do Firebase:", error);
+            }
+        } else {
+            // Apenas LocalStorage
+            produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+            entradas = JSON.parse(localStorage.getItem("entradas")) || [];
+            saidas = JSON.parse(localStorage.getItem("saidas")) || [];
+            usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+            estoqueMinMax = JSON.parse(localStorage.getItem("estoqueMinMax")) || {};
+        }
+    }
 
 
+    // ==========================================================
+    // PERMISSÕES
+    // ==========================================================
+    function aplicarPermissoes() {
+        const perfil = window.usuarioLogado?.perfil || 'simples2';
+        const botoes = document.querySelectorAll("#sidebar button");
+        botoes.forEach((b) => (b.style.display = "block")); // Mostra todos por padrão
+
+        // Oculta seções no menu
+        if (perfil === "simples1") {
+            ocultarBotoes(["financeiro", "usuarios"]);
+        } else if (perfil === "simples2") {
+            ocultarBotoes([ "cadastro", "entrada", "saida", "limites", "financeiro", "usuarios", ]);
+        }
+        
+        // Bloqueia botões de ação (Salvar, Editar, Excluir, Registrar)
+        const isSimples2 = perfil === "simples2";
+        document.querySelectorAll("button").forEach((btn) => {
+            const t = btn.textContent.toLowerCase();
+            const isAction = t.includes("salvar") || t.includes("editar") || t.includes("excluir") || t.includes("registrar") || t.includes("cadastrar");
+            
+            if (isSimples2 && isAction) {
+                btn.disabled = true;
+                btn.style.opacity = "0.6";
+                btn.style.cursor = "not-allowed";
+            } else if (!isSimples2 && isAction) {
+                btn.disabled = false;
+                btn.style.opacity = "1";
+                btn.style.cursor = "pointer";
+            }
+        });
+    }
+
+    function ocultarBotoes(lista) {
+        lista.forEach((id) => {
+            // Busca o botão no sidebar pelo atributo onclick que contém o ID
+            const botao = document.querySelector(`#sidebar button[onclick*="showSection('${id}')"]`);
+            if (botao) botao.style.display = "none";
+        });
+    }
+
+    // ==========================================================
+    // CADASTRO DE PRODUTOS
+    // ==========================================================
+    async function cadastrarProduto() {
+        limparErros("cadastro");
+        const nomeEl = document.getElementById("produtoNome");
+        const categoriaEl = document.getElementById("produtoCategoria");
+        const embalagemEl = document.getElementById("produtoEmbalagem");
+        const qtdEl = document.getElementById("produtoQtdEmbalagem");
+        const fotoInput = document.getElementById("produtoFoto");
+        const codigoBarrasEl = document.getElementById("produtoCodigoBarras");
+        
+        const codigoBarras = codigoBarrasEl ? codigoBarrasEl.value.trim() : "";
+        const nome = nomeEl.value.trim();
+
+        // Validações
+        if (!nome) return destacarErro(nomeEl, "Informe o nome do produto!");
+        if (!categoriaEl?.value.trim()) return destacarErro(categoriaEl, "Selecione a categoria do produto!");
+        if (!embalagemEl?.value.trim()) return destacarErro(embalagemEl, "Selecione o tipo de embalagem!");
+        if (!qtdEl?.value || Number(qtdEl.value) <= 0) return destacarErro(qtdEl, "Informe a quantidade por embalagem!");
+        if (!fotoInput?.files || !fotoInput.files[0]) return destacarErro(fotoInput, "É obrigatório inserir uma foto do produto!");
+
+        // Verifica duplicidades
+        const nomeNormalizado = nome.toLowerCase();
+        const produtoDuplicado = produtos.some((p) => (p.nome || "").trim().toLowerCase() === nomeNormalizado);
+        if (produtoDuplicado) return destacarErro(nomeEl, `Já existe um produto cadastrado com o nome "${nome}".`);
+        
+        if (codigoBarras) {
+            const existeCodigo = produtos.some((p) => p.codigoBarras === codigoBarras);
+            if (existeCodigo) return destacarErro(codigoBarrasEl, "Já existe um produto cadastrado com este código de barras!");
+        }
+
+        const categoria = categoriaEl.value.trim();
+        const embalagem = embalagemEl.value.trim();
+        const qtdEmbalagem = qtdEl.value;
+
+        // Leitura de imagem e salvamento
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const foto = e.target.result;
+
+                produtos.push({
+                    nome,
+                    categoria,
+                    embalagem,
+                    qtdEmbalagem,
+                    foto,
+                    quantidade: 0,
+                    codigoBarras: codigoBarras || "",
+                    minimo: 0,
+                    maximo: 0
+                });
+
+                await salvarDados("produtos", produtos);
+                
+                atualizarTabelaProdutos();
+                ordenarListasAlfabeticamente();
+                atualizarSelectProdutos();
+
+                alert("Produto cadastrado com sucesso!");
+
+                // Limpa os campos após salvar
+                limparCampos("cadastro");
+
+                resolve(true);
+            };
+
+            reader.readAsDataURL(fotoInput.files[0]);
+        });
+    }
+
+    function atualizarTabelaProdutos() {
+        const tbody = document.querySelector("#tabelaProdutos tbody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+        
+        const filtroTexto = document.getElementById("filtroProduto")?.value.toLowerCase() || "";
+        
+        produtos.forEach((p, i) => {
+            const textoBusca = `${p.nome} ${p.categoria} ${p.codigoBarras}`.toLowerCase();
+            if (filtroTexto && !textoBusca.includes(filtroTexto)) return;
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${i + 1}</td>
+                <td>${ p.foto && p.foto.startsWith("data:") ? `<img src="${p.foto}" class="thumb" onclick="mostrarImagemAmpliada('${p.foto}')">` : "-" }</td>
+                <td>${p.nome}</td>
+                <td>${p.categoria}</td>
+                <td>${p.embalagem}</td>
+                <td>${p.qtdEmbalagem}</td>
+                <td style="font-size:12px; color:#555;">${p.codigoBarras || "-"}</td>
+                <td>
+                    <button onclick="editarProduto(${i})"><i class="fa fa-edit"></i></button>
+                    <button class="btnExcluir" onclick="excluirProduto(${i})"><i class="fa fa-trash"></i></button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function editarProduto(i) {
+        // Implementação da função editar produto (completa-se com modal de edição, etc.)
+        alert(`Abrir formulário de edição para: ${produtos[i].nome}`);
+    }
+
+    function excluirProduto(i) {
+        if (!confirm(`Tem certeza que deseja excluir o produto "${produtos[i].nome}" e todos os seus registros de entrada/saída?`)) return;
+
+        const nomeProdutoExcluido = produtos[i].nome;
+
+        // Remove das listas de transação
+        entradas = entradas.filter(e => e.produto !== nomeProdutoExcluido);
+        saidas = saidas.filter(s => s.produto !== nomeProdutoExcluido);
+        
+        // Remove da lista de produtos
+        produtos.splice(i, 1);
+
+        salvarDados("produtos", produtos);
+        salvarDados("entradas", entradas);
+        salvarDados("saidas", saidas);
+
+        atualizarTabelaProdutos();
+        atualizarTabelaEntradas();
+        atualizarTabelaSaidas();
+        atualizarTabelaEstoque();
+        atualizarTabelaLimites();
+        atualizarSelectProdutos();
+
+        alert("Produto e registros de transação excluídos com sucesso!");
+    }
+
+    function filtrarProdutos() {
+        atualizarTabelaProdutos();
+    }
+    
+    function limparErros(secaoId) {
+        document.querySelectorAll(`#${secaoId} input, #${secaoId} select`).forEach(el => {
+            el.style.border = "1px solid #ccc";
+        });
+    }
+
+    // ==========================================================
+    // ENTRADA DE MATERIAIS
+    // ==========================================================
+
+    function registrarEntrada() {
+        limparErros("entrada");
+        
+        const produtoEl = document.getElementById("entradaProduto");
+        const qtdEl = document.getElementById("entradaQuantidade");
+        const valorEl = document.getElementById("entradaValor");
+        const dataEl = document.getElementById("entradaData");
+        const notaEl = document.getElementById("entradaNota");
+        const fornecedorEl = document.getElementById("entradaFornecedor");
+        const cnpjEl = document.getElementById("entradaCNPJ");
+        const loteEl = document.getElementById("entradaLote");
+        const validadeEl = document.getElementById("entradaValidade");
+        const setorEl = document.getElementById("entradaSetor");
+        const codigoBarrasEl = document.getElementById("entradaCodigoBarras");
+
+        // Validação
+        if (!produtoEl.value.trim()) return destacarErro(produtoEl, "Informe o nome do produto!");
+        if (!qtdEl.value || Number(qtdEl.value) <= 0) return destacarErro(qtdEl, "Informe a quantidade!");
+        if (!valorEl.value || Number(valorEl.value) <= 0) return destacarErro(valorEl, "Informe o valor unitário!");
+        if (!dataEl.value) return destacarErro(dataEl, "Selecione a data!");
+        if (!notaEl.value.trim()) return destacarErro(notaEl, "Informe a nota fiscal!");
+        if (!fornecedorEl.value.trim()) return destacarErro(fornecedorEl, "Informe o fornecedor!");
+        if (!loteEl.value.trim()) return destacarErro(loteEl, "Informe o número do lote!");
+        if (!validadeEl.value) return destacarErro(validadeEl, "Selecione a validade!");
+        if (!setorEl.value.trim()) return destacarErro(setorEl, "Selecione o setor!");
+        
+        // Verifica se o produto está cadastrado
+        const produtoEstoque = produtos.find(p => (p.nome || "").trim().toLowerCase() === produtoEl.value.trim().toLowerCase());
+        if (!produtoEstoque) {
+            alert(`Produto "${produtoEl.value.trim()}" não encontrado no cadastro. Cadastre-o primeiro.`);
+            produtoEl.focus();
+            return false;
+        }
+
+        // Monta o objeto da nova entrada
+        const novaEntrada = { 
+            produto: produtoEstoque.nome, // Usa o nome padronizado
+            codigoBarras: codigoBarrasEl.value.trim(),
+            qtd: Number(qtdEl.value), 
+            valor: Number(valorEl.value), 
+            data: dataEl.value, 
+            nota: notaEl.value.trim(), 
+            fornecedor: fornecedorEl.value.trim(), 
+            cnpj: cnpjEl.value.trim(), 
+            lote: loteEl.value.trim(), 
+            validade: validadeEl.value, 
+            setor: setorEl.value 
+        };
+
+        // Adiciona à lista de entradas
+        entradas.push(novaEntrada);
+        salvarDados("entradas", entradas);
+
+        // Atualiza a quantidade em estoque do produto
+        produtoEstoque.quantidade = (Number(produtoEstoque.quantidade) || 0) + novaEntrada.qtd;
+        salvarDados("produtos", produtos);
+
+        atualizarTabelaEntradas();
+        atualizarTabelaEstoque();
+        atualizarTabelaLimites();
+        atualizarPainelFinanceiro();
+        alert("Entrada registrada com sucesso!");
+
+        limparCampos("entrada");
+        
+        // Permite reescrever o campo produto após limpar
+        produtoEl.readOnly = false;
+        codigoBarrasEl.value = "";
+        
+        return true;
+    }
+
+    function atualizarTabelaEntradas() {
+        const tbody = document.querySelector("#tabelaEntradas tbody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+        
+        const filtroTexto = document.getElementById("filtroEntrada")?.value.toLowerCase() || "";
+        
+        // Ordena por data (mais recente primeiro)
+        const entradasOrdenadas = [...entradas].sort((a, b) => new Date(b.data) - new Date(a.data));
+        
+        entradasOrdenadas.forEach((e, i) => {
+            const textoBusca = `${e.produto} ${e.fornecedor} ${e.nota} ${e.setor}`.toLowerCase();
+            if (filtroTexto && !textoBusca.includes(filtroTexto)) return;
+            
+            const codigoBarras = buscarCodigoBarrasDoProduto(e.produto);
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${i + 1}</td>
+                <td>${e.produto || "-"}</td>
+                <td style="font-size:12px; color:#555;">${codigoBarras || "-"}</td>
+                <td>${e.qtd || 0}</td>
+                <td>${(e.valor !== undefined && e.valor !== null) ? Number(e.valor).toFixed(2) : "0.00"}</td>
+                <td>${e.data || "-"}</td>
+                <td>${e.nota || "-"}</td>
+                <td>${e.fornecedor || "-"}</td>
+                <td>${e.cnpj || "-"}</td>
+                <td>${e.lote || "-"}</td>
+                <td>${e.validade || "-"}</td>
+                <td>${e.setor || "-"}</td>
+                <td>
+                    <button onclick="editarEntrada('${e.nota}')"><i class="fa fa-edit"></i></button>
+                    <button class="btnExcluir" onclick="excluirEntrada('${e.nota}')"><i class="fa fa-trash"></i></button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+    
+    function filtrarEntradas() {
+        atualizarTabelaEntradas();
+    }
+
+    function editarEntrada(nota) {
+        alert("Função de edição de entrada desativada. Exclua e registre novamente para manter a consistência do estoque.");
+    }
+    
+    function excluirEntrada(nota) {
+        if (!confirm(`Excluir a entrada com Nota Fiscal ${nota}? A quantidade será removida do estoque.`)) return;
+
+        const entrada = entradas.find(e => e.nota === nota);
+        if (!entrada) return alert("Entrada não encontrada!");
+
+        // 1. Reverte o estoque
+        const produtoEstoque = produtos.find(p => p.nome === entrada.produto);
+        if (produtoEstoque) {
+            produtoEstoque.quantidade = Math.max(0, (Number(produtoEstoque.quantidade) || 0) - entrada.qtd);
+            salvarDados("produtos", produtos);
+        }
+
+        // 2. Remove a entrada
+        entradas = entradas.filter(e => e.nota !== nota);
+        salvarDados("entradas", entradas);
+
+        atualizarTabelaEntradas();
+        atualizarTabelaEstoque();
+        atualizarTabelaLimites();
+        atualizarPainelFinanceiro();
+        alert("Entrada excluída com sucesso! Estoque atualizado.");
+    }
+
+    // ==========================================================
+    // SAÍDA DE MATERIAIS
+    // ==========================================================
+
+    function registrarSaida() {
+        limparErros("saida");
+        
+        const produtoEl = document.getElementById("saidaProduto");
+        const qtdEl = document.getElementById("saidaQuantidade");
+        const responsavelEl = document.getElementById("saidaResponsavel");
+        const observacaoEl = document.getElementById("saidaObservacao");
+        const setorEl = document.getElementById("saidaSetor");
+        const dataEl = document.getElementById("saidaData");
+        const codigoBarrasEl = document.getElementById("saidaCodigoBarras");
+        
+        // Validação
+        if (!produtoEl.value.trim()) return destacarErro(produtoEl, "Informe o nome do produto!");
+        if (!qtdEl.value || Number(qtdEl.value) <= 0) return destacarErro(qtdEl, "Informe a quantidade da saída (maior que zero)!");
+        if (!setorEl.value.trim()) return destacarErro(setorEl, "Selecione o setor!");
+        if (!dataEl.value) return destacarErro(dataEl, "Selecione a data da saída!");
+        if (!responsavelEl.value.trim()) return destacarErro(responsavelEl, "Informe o responsável pela saída!");
+        
+        const produto = produtoEl.value.trim();
+        const qtd = Number(qtdEl.value);
+        
+        // Verifica existência e estoque
+        const produtoEstoque = produtos.find(p => (p.nome || "").trim().toLowerCase() === produto.toLowerCase());
+        
+        if (!produtoEstoque) {
+            alert(`Produto "${produto}" não encontrado no cadastro.`);
+            return false;
+        }
+
+        const qtdAtual = Number(produtoEstoque.quantidade) || 0;
+        if (qtd > qtdAtual) {
+            alert(`Estoque insuficiente. Quantidade atual: ${qtdAtual} | Saída solicitada: ${qtd}`);
+            return false;
+        }
+
+        // Monta o objeto da nova saída
+        const novaSaida = { 
+            produto: produtoEstoque.nome, // Usa o nome padronizado
+            codigoBarras: codigoBarrasEl.value.trim(),
+            qtd: qtd, 
+            data: dataEl.value, 
+            setor: setorEl.value,
+            responsavel: responsavelEl.value.trim(), 
+            observacao: observacaoEl.value.trim()
+        };
+
+        // Adiciona à lista de saídas
+        saidas.push(novaSaida);
+        salvarDados("saidas", saidas);
+
+        // Atualiza a quantidade em estoque do produto
+        produtoEstoque.quantidade = qtdAtual - novaSaida.qtd;
+        salvarDados("produtos", produtos);
+
+        atualizarTabelaSaidas();
+        atualizarTabelaEstoque();
+        atualizarTabelaLimites();
+        atualizarPainelFinanceiro();
+        alert("Saída registrada com sucesso!");
+
+        limparCampos("saida");
+        produtoEl.readOnly = false;
+        codigoBarrasEl.value = "";
+        
+        return true;
+    }
+
+    function atualizarTabelaSaidas() {
+        const tbody = document.querySelector("#tabelaSaidas tbody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+        
+        const filtroTexto = document.getElementById("filtroSaida")?.value.toLowerCase() || "";
+        
+        // Ordena por data (mais recente primeiro)
+        const saidasOrdenadas = [...saidas].sort((a, b) => new Date(b.data) - new Date(a.data));
+        
+        saidasOrdenadas.forEach((s, i) => {
+            const textoBusca = `${s.produto} ${s.setor} ${s.responsavel}`.toLowerCase();
+            if (filtroTexto && !textoBusca.includes(filtroTexto)) return;
+
+            const codigoBarras = buscarCodigoBarrasDoProduto(s.produto);
+            
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${i + 1}</td>
+                <td>${s.produto || "-"}</td>
+                <td style="font-size:12px; color:#555;">${codigoBarras || "-"}</td>
+                <td>${s.qtd || 0}</td>
+                <td>${s.data || "-"}</td>
+                <td>${s.setor || "-"}</td>
+                <td>${s.responsavel || "-"}</td>
+                <td>${s.observacao || "-"}</td>
+                <td>
+                    <button onclick="editarSaida(${i})"><i class="fa fa-edit"></i></button>
+                    <button class="btnExcluir" onclick="excluirSaida(${i})"><i class="fa fa-trash"></i></button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function editarSaida(i) {
+        alert("Função de edição de saída desativada. Exclua e registre novamente para manter a consistência do estoque.");
+    }
+    
+    function excluirSaida(i) {
+        if (!confirm(`Excluir a saída de ${saidas[i].qtd} de ${saidas[i].produto}? A quantidade será adicionada de volta ao estoque.`)) return;
+
+        const saida = saidas[i];
+        if (!saida) return;
+
+        // 1. Reverte o estoque
+        const produtoEstoque = produtos.find(p => p.nome === saida.produto);
+        if (produtoEstoque) {
+            produtoEstoque.quantidade = (Number(produtoEstoque.quantidade) || 0) + saida.qtd;
+            salvarDados("produtos", produtos);
+        }
+
+        // 2. Remove a saída
+        saidas.splice(i, 1);
+        salvarDados("saidas", saidas);
+
+        atualizarTabelaSaidas();
+        atualizarTabelaEstoque();
+        atualizarTabelaLimites();
+        atualizarPainelFinanceiro();
+        alert("Saída excluída com sucesso! Estoque atualizado.");
+    }
+    
+    function filtrarSaidas() {
+        atualizarTabelaSaidas();
+    }
+    
+    function atualizarSelectProdutos() {
+        // Ordena a lista de produtos
+        produtos.sort((a, b) => (a.nome || "").localeCompare(b.nome || "", 'pt-BR', { sensitivity: 'base' }));
+        
+        const datalistEntrada = document.getElementById("listaProdutosEntrada");
+        const datalistSaida = document.getElementById("listaProdutosSaida");
+        
+        if (datalistEntrada) datalistEntrada.innerHTML = "";
+        if (datalistSaida) datalistSaida.innerHTML = "";
+
+        produtos.forEach(p => {
+            const option = `<option value="${p.nome}"></option>`;
+            if (datalistEntrada) datalistEntrada.insertAdjacentHTML('beforeend', option);
+            if (datalistSaida) datalistSaida.insertAdjacentHTML('beforeend', option);
+        });
+    }
+
+    // ==========================================================
+    // ESTOQUE ATUAL
+    // ==========================================================
+    function atualizarTabelaEstoque() {
+        const tbody = document.querySelector("#tabelaEstoque tbody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+        
+        const filtroTexto = document.getElementById("filtroEstoque")?.value.toLowerCase() || "";
+        const filtroCategoria = document.getElementById("filtroCategoriaEstoque")?.value.toLowerCase() || "";
+        
+        const produtosFiltrados = produtos.filter(p => {
+            const nome = (p.nome || "").toLowerCase();
+            const categoria = (p.categoria || "").toLowerCase();
+            const codBarras = (p.codigoBarras || "").toLowerCase();
+            
+            const textoBusca = `${nome} ${categoria} ${codBarras}`;
+            const passaFiltroTexto = !filtroTexto || textoBusca.includes(filtroTexto);
+            const passaFiltroCategoria = !filtroCategoria || categoria === filtroCategoria;
+            
+            return passaFiltroTexto && passaFiltroCategoria;
+        });
+        
+        produtosFiltrados.forEach((p, i) => {
+            const qtd = Number(p.quantidade) || 0;
+            const entradasProduto = entradas.filter(e => e.produto === p.nome);
+            
+            // 1. Custo Médio
+            const totalQtdEntradas = entradasProduto.reduce((s, e) => s + Number(e.qtd || 0), 0);
+            const totalValorEntradas = entradasProduto.reduce((s, e) => s + (Number(e.qtd || 0) * Number(e.valor || 0)), 0);
+            const custoMedio = totalQtdEntradas > 0 ? totalValorEntradas / totalQtdEntradas : 0;
+            
+            // 2. Validade Mais Próxima
+            let validadeMaisProxima = "N/A";
+            const validades = entradasProduto.map(e => new Date(e.validade)).filter(d => !isNaN(d));
+            if (validades.length > 0) {
+                const maisProxima = new Date(Math.min(...validades));
+                validadeMaisProxima = maisProxima.toISOString().split('T')[0];
+            }
+            
+            // Determina a cor da validade
+            let validadeCor = "";
+            if (validadeMaisProxima !== "N/A") {
+                const diasParaVencer = Math.ceil((new Date(validadeMaisProxima) - new Date()) / (1000 * 60 * 60 * 24));
+                if (diasParaVencer <= 30) validadeCor = "red";
+                else if (diasParaVencer <= 90) validadeCor = "orange";
+            }
+            
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${i + 1}</td>
+                <td>${ p.foto && p.foto.startsWith("data:") ? `<img src="${p.foto}" class="thumb" onclick="mostrarImagemAmpliada('${p.foto}')">` : "-" }</td>
+                <td>${p.nome}</td>
+                <td style="font-size:12px; color:#555;">${p.codigoBarras || "-"}</td>
+                <td>${p.categoria}</td>
+                <td>${p.embalagem}</td>
+                <td>${p.qtdEmbalagem}</td>
+                <td style="font-weight:bold; color:${qtd <= 0 ? 'red' : 'green'};">${qtd}</td>
+                <td>R$ ${custoMedio.toFixed(2)}</td>
+                <td style="color:${validadeCor}; font-weight:bold;">${validadeMaisProxima}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function filtrarEstoque() {
+        atualizarTabelaEstoque();
+    }
+
+    // ==========================================================
+    // ESTOQUE MÍNIMO/MÁXIMO
+    // ==========================================================
+
+    function atualizarTabelaLimites() {
+        const tbody = document.querySelector("#tabelaLimites tbody");
+        const resumo = document.getElementById("resumoLimites");
+        if (!tbody || !resumo) return;
+        
+        tbody.innerHTML = "";
+        let total = 0, abaixo = 0, dentro = 0, acima = 0;
+        
+        const filtroTexto = document.getElementById("filtroTextoLimites")?.value.toLowerCase() || "";
+        const filtroCategoria = document.getElementById("filtroCategoriaLimites")?.value.toLowerCase() || "";
+        
+        const produtosFiltrados = produtos.filter(p => {
+            const nome = (p.nome || "").toLowerCase();
+            const categoria = (p.categoria || "").toLowerCase();
+            const codBarras = (p.codigoBarras || "").toLowerCase();
+            
+            const textoBusca = `${nome} ${categoria} ${codBarras}`;
+            const passaFiltroTexto = !filtroTexto || textoBusca.includes(filtroTexto);
+            const passaFiltroCategoria = !filtroCategoria || (p.categoria || "").toLowerCase() === filtroCategoria;
+            
+            return passaFiltroTexto && passaFiltroCategoria;
+        });
+
+        if (!produtosFiltrados.length) {
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#777;">Nenhum produto encontrado.</td></tr>`;
+            resumo.innerHTML = `🧾 Total de Produtos: 0 | ⚠️ Abaixo do Mínimo: 0 | ✅ Dentro do Limite: 0 | 📦 Acima do Máximo: 0`;
+            return;
+        }
+
+        produtosFiltrados.forEach((p, i) => {
+            const minimo = Number(p.minimo) || 0;
+            const maximo = Number(p.maximo) || 0;
+            const qtd = Number(p.quantidade) || 0;
+            
+            total++;
+            let statusTexto = "✅ Dentro do limite";
+            let statusCor = "green";
+            let recomendacao = "OK";
+            
+            if (qtd < minimo) {
+                statusTexto = "⚠️ Abaixo do mínimo";
+                statusCor = "red";
+                recomendacao = `Comprar ${minimo - qtd} unidade(s)`;
+                abaixo++;
+            } else if (maximo && qtd > maximo) {
+                statusTexto = "📦 Acima do máximo";
+                statusCor = "orange";
+                recomendacao = "Reduzir estoque"; 
+                acima++;
+            } else {
+                dentro++;
+            }
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${i + 1}</td>
+                <td>${p.nome}</td>
+                <td style="font-size:12px; color:#555;">${p.codigoBarras || "-"}</td>
+                <td style="font-weight:bold;">${qtd}</td>
+                <td><input type="number" id="min-${i}" value="${minimo}" style="width:80px; text-align:center;"></td>
+                <td><input type="number" id="max-${i}" value="${maximo}" style="width:80px; text-align:center;"></td>
+                <td style="color:${statusCor}; font-weight:bold;">${statusTexto}</td>
+                <td style="font-style:italic;">${recomendacao}</td>
+                <td>
+                    <button onclick="salvarLimites(${i}, '${p.nome}')"><i class="fa fa-save"></i> Salvar</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        resumo.innerHTML = `🧾 Total de Produtos: ${total} | <span style="color:red">⚠️ Abaixo do Mínimo: ${abaixo}</span> | <span style="color:green">✅ Dentro do Limite: ${dentro}</span> | <span style="color:orange">📦 Acima do Máximo: ${acima}</span>`;
+    }
+
+    function salvarLimites(i, nomeProduto) {
+        const min = +document.getElementById(`min-${i}`).value;
+        const max = +document.getElementById(`max-${i}`).value;
+        
+        if (isNaN(min) || isNaN(max) || min < 0 || max < 0) {
+            alert("Por favor, insira valores válidos (números positivos) para os limites.");
+            return;
+        }
+        
+        if (min > max && max !== 0) {
+            alert("O valor mínimo não pode ser maior que o valor máximo.");
+            return;
+        }
+        
+        const produtoIndex = produtos.findIndex(p => p.nome === nomeProduto);
+        if (produtoIndex === -1) return;
+
+        produtos[produtoIndex].minimo = min;
+        produtos[produtoIndex].maximo = max;
+        
+        salvarDados("produtos", produtos);
+        atualizarTabelaLimites();
+        atualizarDashboard();
+        alert("Limites salvos com sucesso!");
+    }
+    
+    function gerarListaCompra() {
+        const container = document.getElementById("listaCompraContainer");
+        const tabela = document.getElementById("tabelaListaCompra");
+        const tbody = tabela ? tabela.querySelector("tbody") : null;
+        const totalSpan = document.getElementById("totalItensCompra");
+        
+        if (!container || !tabela || !tbody || !totalSpan) {
+            console.error("⚠️ Elementos da lista de compra não encontrados no DOM.");
+            return;
+        }
+        
+        // Limpa lista anterior
+        tbody.innerHTML = "";
+        totalSpan.textContent = "0";
+
+        // Filtro de categoria (se existir)
+        const filtroCategoria = (document.getElementById("filtroCategoriaLimites")?.value || "").toLowerCase();
+        
+        // Filtra produtos abaixo do mínimo
+        const produtosAbaixo = produtos.filter(p => {
+            const categoria = (p.categoria || "").toLowerCase();
+            const qtd = Number(p.quantidade) || 0;
+            const minimo = Number(p.minimo) || 0;
+            
+            if (filtroCategoria && filtroCategoria !== "" && categoria !== filtroCategoria) return false;
+            
+            return qtd < minimo && minimo > 0;
+        });
+
+        if (!produtosAbaixo.length) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:green;">✅ Nenhum produto abaixo do mínimo que requeira compra.</td></tr>`;
+            container.style.display = "block";
+            return;
+        }
+
+        // Monta tabela com os valores corretos de “Recomendado Comprar”
+        let totalItens = 0;
+        produtosAbaixo.forEach((p, i) => {
+            const qtdAtual = Number(p.quantidade) || 0;
+            const minimo = Number(p.minimo) || 0;
+            const recomendado = minimo - qtdAtual;
+            
+            totalItens += recomendado;
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${i + 1}</td>
+                <td>${p.nome}</td>
+                <td style="font-size:12px; color:#555;">${p.codigoBarras || "-"}</td>
+                <td>${p.categoria}</td>
+                <td>${qtdAtual}</td>
+                <td>${minimo}</td>
+                <td style="font-weight:bold; color:red;">${recomendado}</td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        totalSpan.textContent = totalItens;
+        container.style.display = "block";
+    }
+
+    function limparListaCompra() {
+        const tbody = document.querySelector("#tabelaListaCompra tbody");
+        const totalSpan = document.getElementById("totalItensCompra");
+        const container = document.getElementById("listaCompraContainer");
+        
+        if (tbody) tbody.innerHTML = "";
+        if (totalSpan) totalSpan.textContent = "0";
+        if (container) container.style.display = "none";
+        
+        atualizarTabelaLimites();
+    }
+    
+    // Funções de exportação (Exportar para Excel e Gerar Pedido PDF - dependem de libs externas)
+    // As bibliotecas JS PDF e XLSX já estão importadas no final do HTML
+
+    function exportarListaExcel() {
+        const tabela = document.getElementById("tabelaListaCompra");
+        if (!tabela || !tabela.querySelector('tbody tr')) {
+            return alert("⚠️ Nenhuma lista de compra gerada para exportar!");
+        }
+
+        const wb = XLSX.utils.table_to_book(tabela, { sheet: "Lista de Compra" });
+        XLSX.writeFile(wb, "Lista_de_Compra_OralUnic.xlsx");
+    }
+
+    async function gerarPedidoPDF() {
+        // Assume que a lib jspdf.umd.min.js já foi carregada
+        if (typeof window.jspdf === 'undefined') {
+            return alert("⚠️ Biblioteca jsPDF não carregada. Não é possível gerar o PDF.");
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const nomeSolicitante = window.usuarioLogado?.email?.split('@')[0] || "Usuário";
+        const dataAtual = new Date().toLocaleDateString('pt-BR');
+        const larguraPagina = doc.internal.pageSize.getWidth();
+
+        // Título e Informações
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text("ORAL UNIC CAMPO GRANDE", larguraPagina / 2, 20, { align: "center" });
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        doc.text("Pedido de Orçamento / Lista de Compra", larguraPagina / 2, 28, { align: "center" });
+        doc.setFontSize(10);
+        doc.text(`Data: ${dataAtual}`, 14, 38);
+        doc.text(`Solicitante: ${nomeSolicitante}`, 14, 44);
+        
+        // Tabela
+        const tabela = document.getElementById("tabelaListaCompra");
+        const linhas = [...tabela.querySelectorAll("tbody tr")].filter(tr => tr.textContent.trim() !== '0');
+        
+        if (linhas.length === 0) {
+            return alert("⚠️ Nenhum item na lista de compra para gerar o PDF.");
+        }
+        
+        const dadosTabela = [
+            ['#', 'Produto', 'Categoria', 'Qtd. Atual', 'Mínimo', 'Recomendado Comprar']
+        ];
+        
+        linhas.forEach(tr => {
+            const cols = tr.querySelectorAll("td");
+            // Pega as colunas na ordem correta (pulando Cód. Barras)
+            dadosTabela.push([
+                cols[0].innerText, // #
+                cols[1].innerText, // Produto
+                cols[3].innerText, // Categoria
+                cols[4].innerText, // Qtd Atual
+                cols[5].innerText, // Mínimo
+                cols[6].innerText, // Recomendado Comprar
+            ]);
+        });
+        
+        doc.autoTable({
+            startY: 50,
+            head: [dadosTabela[0]],
+            body: dadosTabela.slice(1),
+            styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
+            headStyles: { fillColor: [0, 59, 136] }, // Azul Escuro
+            margin: { left: 14, right: 14 },
+            didDrawPage: function(data) {
+                // Footer
+                let str = "Página " + doc.internal.getNumberOfPages();
+                doc.setFontSize(8);
+                doc.text(str, data.settings.margin.left, doc.internal.pageSize.height - 10);
+            }
+        });
+
+        doc.save(`Pedido_Orcamento_${dataAtual}.pdf`);
+    }
+
+    // ==========================================================
+    // FINANCEIRO
+    // ==========================================================
+    function atualizarPainelFinanceiro() {
+        let qtdTotal = 0;
+        let valorTotalUltimaEntrada = 0;
+        let valorTotalCustoMedio = 0;
+
+        produtos.forEach(p => {
+            const entradasDoProduto = entradas.filter(e => e.produto === p.nome);
+            
+            if (entradasDoProduto.length === 0) return;
+
+            // 1. Custo Última Entrada
+            const ultimaEntrada = entradasDoProduto[entradasDoProduto.length - 1];
+            const valorUltimo = Number(ultimaEntrada.valor || 0);
+
+            // 2. Custo Médio Ponderado
+            const totalQtdEntradas = entradasDoProduto.reduce((s, e) => s + Number(e.qtd || 0), 0);
+            const totalValorEntradas = entradasDoProduto.reduce((s, e) => s + (Number(e.qtd || 0) * Number(e.valor || 0)), 0);
+            const custoMedio = totalQtdEntradas > 0 ? totalValorEntradas / totalQtdEntradas : 0;
+            
+            const qtdAtual = Number(p.quantidade || 0);
+            
+            qtdTotal += qtdAtual;
+            valorTotalUltimaEntrada += qtdAtual * valorUltimo;
+            valorTotalCustoMedio += qtdAtual * custoMedio;
+        });
+
+        // Atualiza os novos indicadores
+        document.getElementById("valorUltimaEntrada").textContent = `R$ ${valorTotalUltimaEntrada.toFixed(2)}`;
+        document.getElementById("valorCustoMedio").textContent = `R$ ${valorTotalCustoMedio.toFixed(2)}`;
+        
+        // Média simples entre os dois
+        const valorTotalEstoqueAtualPainel = (valorTotalUltimaEntrada + valorTotalCustoMedio) / 2; 
+        document.getElementById("valorEstoqueAtualPainel").textContent = `R$ ${valorTotalEstoqueAtualPainel.toFixed(2)}`;
+        
+        // Tabela Financeira (Agrupado por Fornecedor/Nota)
+        const agrupadas = {};
+        
+        // Agrupa entradas e calcula valor de nota
+        entradas.forEach(e => {
+            const fornecedor = e.fornecedor || "Fornecedor não informado";
+            const nota = e.nota || "Sem Nota Fiscal";
+            const chave = `${fornecedor}_${nota}`;
+            if (!agrupadas[chave]) {
+                agrupadas[chave] = { fornecedor, nota, valorNota: 0, valorSaida: 0 };
+            }
+            agrupadas[chave].valorNota += (e.valor || 0) * (e.qtd || 0);
+        });
+        
+        // Calcula valor de saída (custo)
+        saidas.forEach(s => {
+            // Busca a entrada mais relevante ou a primeira entrada do produto para estimar o custo
+            const entrada = entradas.find(e => e.produto === s.produto); 
+            if (!entrada) return;
+            
+            const fornecedor = entrada.fornecedor || "Fornecedor não informado";
+            const nota = entrada.nota || "Sem Nota Fiscal";
+            const chave = `${fornecedor}_${nota}`;
+            
+            // Assume que o custo da saída é o valor da entrada (simplificado)
+            const valorSaida = s.qtd * (entrada.valor || 0);
+            
+            if (agrupadas[chave]) {
+                agrupadas[chave].valorSaida += valorSaida;
+            }
+        });
+        
+        const tabelaFinanceiro = document.getElementById("tabelaFinanceiro").querySelector("tbody");
+        tabelaFinanceiro.innerHTML = "";
+        let i = 1;
+        
+        for (const chave in agrupadas) {
+            const g = agrupadas[chave];
+            const valorResidual = g.valorNota - g.valorSaida; // Simplificação
+            
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${i++}</td>
+                <td>${g.fornecedor}</td>
+                <td>${g.nota}</td>
+                <td style="color:green; font-weight:bold;">R$ ${g.valorNota.toFixed(2)}</td>
+                <td style="color:red; font-weight:bold;">R$ ${g.valorSaida.toFixed(2)}</td>
+                <td style="font-weight:bold;">R$ ${valorResidual.toFixed(2)}</td>
+            `;
+            tabelaFinanceiro.appendChild(row);
+        }
+    }
 
 
-function atualizarSelectProdutos() {
-  const selectEntrada = document.getElementById("entradaProduto");
-  if (!selectEntrada) return; // evita erro se o campo não existir ainda
+    // ==========================================================
+    // RELATÓRIOS
+    // ==========================================================
+    
+    function definirPeriodoRapido(periodo) {
+        const hoje = new Date();
+        let inicio = new Date(hoje);
+        const fim = hoje.toISOString().split('T')[0];
+        
+        switch (periodo) {
+            case '7dias':
+                inicio.setDate(hoje.getDate() - 7);
+                break;
+            case '30dias':
+                inicio.setDate(hoje.getDate() - 30);
+                break;
+            case 'mes':
+                inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+                break;
+        }
 
-  // limpa todas as opções
-  selectEntrada.innerHTML = "";
+        document.getElementById("dataInicioRelatorio").value = inicio.toISOString().split('T')[0];
+        document.getElementById("dataFimRelatorio").value = fim;
+    }
 
-  // garante que a lista esteja ordenada
-  const listaOrdenada = [...produtos].sort((a, b) =>
-    a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" })
-  );
+    function limparPeriodo() {
+        document.getElementById("dataInicioRelatorio").value = "";
+        document.getElementById("dataFimRelatorio").value = "";
+    }
+    
+    // Gera CSV de Entradas
+    function gerarRelatorio() {
+        const inicio = document.getElementById("dataInicioRelatorio").value;
+        const fim = document.getElementById("dataFimRelatorio").value;
 
-  // adiciona as opções
-  listaOrdenada.forEach(p => {
-    const opt = document.createElement("option");
-    opt.value = p.nome;
-    opt.textContent = p.nome;
-    selectEntrada.appendChild(opt);
-  });
-}
-function ordenarListasAlfabeticamente() {
-  // 🔹 Produtos (cadastro, entrada, saída, estoque)
-  if (typeof produtos !== "undefined" && Array.isArray(produtos)) {
-    produtos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
-    localStorage.setItem("produtos", JSON.stringify(produtos));
+        if (!inicio || !fim) return alert("⚠️ Selecione uma data de início e fim para gerar o relatório!");
+        
+        const dataInicio = new Date(inicio);
+        const dataFim = new Date(fim);
+        if (dataInicio > dataFim) return alert("❌ A data inicial não pode ser maior que a final!");
+        
+        const dados = entradas.filter(e => {
+            const data = new Date(e.data);
+            return data >= dataInicio && data <= dataFim;
+        });
 
-  }
+        if (dados.length === 0) return alert("Nenhuma entrada encontrada para o período selecionado.");
 
-  // 🔹 Entradas (Painel Financeiro – fornecedor)
-  if (typeof entradas !== "undefined" && Array.isArray(entradas)) {
-    entradas.sort((a, b) =>
-      (a.fornecedor || "").localeCompare(b.fornecedor || "", 'pt-BR', { sensitivity: 'base' })
-    );
-    localStorage.setItem("entradas", JSON.stringify(entradas));
-  }
+        const cabecalho = ["Produto", "Qtd", "Valor Unitário (R$)", "Data", "Nota Fiscal", "Fornecedor", "CNPJ", "Lote", "Validade", "Setor"];
+        let csv = [cabecalho.join(";")];
+        
+        dados.forEach(e => {
+            const linha = [
+                e.produto,
+                e.qtd,
+                e.valor.toFixed(2),
+                e.data,
+                e.nota,
+                e.fornecedor,
+                e.cnpj,
+                e.lote,
+                e.validade,
+                e.setor
+            ];
+            csv.push(linha.join(";"));
+        });
 
-  // 🔹 Usuários e Perfis (Gerenciar Usuários)
-  if (typeof usuarios !== "undefined" && Array.isArray(usuarios)) {
-    usuarios.sort((a, b) =>
-      (a.nome || "").localeCompare(b.nome || "", 'pt-BR', { sensitivity: 'base' })
-    );
-    localStorage.setItem("usuarios", JSON.stringify(usuarios));
-  }
+        exportarCSV(csv.join("\n"), `Relatorio_Entradas_${inicio}_a_${fim}.csv`);
+    }
 
-  
- 
-  // 🔹 Atualiza selects de produto (Entrada e Saída)
-  if (typeof atualizarSelectProdutos === "function") {
-  atualizarSelectProdutos();
-} else {
-  setTimeout(() => {
-    if (typeof atualizarSelectProdutos === "function") atualizarSelectProdutos();
-  }, 500);
+    // Gera CSV de Saídas
+    function gerarRelatorioSaida() {
+        const inicio = document.getElementById("dataInicioRelatorio").value;
+        const fim = document.getElementById("dataFimRelatorio").value;
 
-}
-}
+        if (!inicio || !fim) return alert("⚠️ Selecione uma data de início e fim para gerar o relatório!");
+        
+        const dataInicio = new Date(inicio);
+        const dataFim = new Date(fim);
+        if (dataInicio > dataFim) return alert("❌ A data inicial não pode ser maior que a final!");
+        
+        const dados = saidas.filter(s => {
+            const data = new Date(s.data);
+            return data >= dataInicio && data <= dataFim;
+        });
+
+        if (dados.length === 0) return alert("Nenhuma saída encontrada para o período selecionado.");
+
+        const cabecalho = ["Produto", "Qtd", "Data", "Setor", "Responsável", "Observação"];
+        let csv = [cabecalho.join(";")];
+        
+        dados.forEach(s => {
+            const linha = [
+                s.produto,
+                s.qtd,
+                s.data,
+                s.setor,
+                s.responsavel,
+                s.observacao
+            ];
+            csv.push(linha.join(";"));
+        });
+
+        exportarCSV(csv.join("\n"), `Relatorio_Saidas_${inicio}_a_${fim}.csv`);
+    }
+
+    // Função de exportação de CSV
+    function exportarCSV(csvContent, filename) {
+        const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=ISO-8859-1;" });
+        const link = document.createElement("a"); 
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    
+    // ==========================================================
+    // DASHBOARD
+    // ==========================================================
+    function atualizarDashboard() {
+        const listaProximosVencer = document.getElementById("listaProximosVencer");
+        const listaMaisSaidas = document.getElementById("listaMaisSaidas");
+        const listaEstoqueCritico = document.getElementById("listaEstoqueCritico");
+        const resumoGeral = document.getElementById("resumoGeral");
+        
+        listaProximosVencer.innerHTML = "";
+        listaMaisSaidas.innerHTML = "";
+        listaEstoqueCritico.innerHTML = "";
+        resumoGeral.innerHTML = "";
+        
+        // 1. Estoque Crítico
+        const criticos = produtos.filter(p => {
+            const qtd = Number(p.quantidade) || 0;
+            const minimo = Number(p.minimo) || 0;
+            return qtd < minimo && minimo > 0;
+        }).slice(0, 5); // Apenas os 5 primeiros
+        
+        if (criticos.length > 0) {
+            criticos.forEach(p => {
+                listaEstoqueCritico.innerHTML += `<li>${p.nome}: <span style="color:red; font-weight:bold;">${p.quantidade} (Mín: ${p.minimo})</span></li>`;
+            });
+        } else {
+            listaEstoqueCritico.innerHTML = `<li>✅ Nenhum produto em estoque crítico.</li>`;
+        }
+        
+        // 2. Próximos do Vencimento
+        let validadesProximas = [];
+        entradas.forEach(e => {
+            const diasParaVencer = Math.ceil((new Date(e.validade) - new Date()) / (1000 * 60 * 60 * 24));
+            if (diasParaVencer > 0 && diasParaVencer <= 90) { // Próximos 90 dias
+                validadesProximas.push({ nome: e.produto, validade: e.validade, dias: diasParaVencer });
+            }
+        });
+        
+        validadesProximas.sort((a, b) => a.dias - b.dias); // Mais próximos primeiro
+        validadesProximas = validadesProximas.slice(0, 5);
+        
+        if (validadesProximas.length > 0) {
+            validadesProximas.forEach(v => {
+                const cor = v.dias <= 30 ? 'red' : 'orange';
+                listaProximosVencer.innerHTML += `<li>${v.nome}: <span style="color:${cor}; font-weight:bold;">Vence em ${v.validade} (${v.dias} dias)</span></li>`;
+            });
+        } else {
+            listaProximosVencer.innerHTML = `<li>✅ Nenhum produto perto de vencer.</li>`;
+        }
+
+        // 3. Produtos Mais Utilizados (Top 5 Saídas)
+        const saidasPorProduto = saidas.reduce((acc, s) => {
+            acc[s.produto] = (acc[s.produto] || 0) + s.qtd;
+            return acc;
+        }, {});
+        
+        const topSaidas = Object.entries(saidasPorProduto)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 5);
+            
+        if (topSaidas.length > 0) {
+            topSaidas.forEach(([nome, qtd]) => {
+                listaMaisSaidas.innerHTML += `<li>${nome}: <span style="font-weight:bold;">${qtd} saídas</span></li>`;
+            });
+        } else {
+            listaMaisSaidas.innerHTML = `<li>Nenhuma saída registrada.</li>`;
+        }
+        
+        // 4. Resumo Geral
+        const totalProdutosCadastrados = produtos.length;
+        const totalEmEstoque = produtos.reduce((s, p) => s + (Number(p.quantidade) || 0), 0);
+        const valorTotal = (Number(document.getElementById("valorEstoqueAtualPainel")?.textContent.replace('R$ ', '').replace(',', '.') || 0)).toFixed(2);
+        
+        resumoGeral.innerHTML = `
+            <p><strong>Total de Produtos Cadastrados:</strong> ${totalProdutosCadastrados}</p>
+            <p><strong>Total de Itens em Estoque:</strong> ${totalEmEstoque}</p>
+            <p><strong>Valor Total do Estoque:</strong> R$ ${valorTotal}</p>
+        `;
+    }
+
+    // ==========================================================
+    // USUÁRIOS E PERFIS
+    // ==========================================================
+    function salvarUsuario() {
+        limparErros("usuarios");
+        const nomeEl = document.getElementById("usuarioNome");
+        const cpfEl = document.getElementById("usuarioCPF");
+        const emailEl = document.getElementById("usuarioEmail");
+        const senhaEl = document.getElementById("usuarioSenha");
+        const perfilEl = document.getElementById("usuarioPerfil");
+
+        const nome = nomeEl.value.trim();
+        const email = emailEl.value.trim().toLowerCase();
+        const senha = senhaEl.value.trim();
+        
+        if (!nome) return destacarErro(nomeEl, "Informe o nome do usuário!");
+        if (!email) return destacarErro(emailEl, "Informe o e-mail (login) do usuário!");
+        if (!senha) return destacarErro(senhaEl, "Informe a senha do usuário!");
+        
+        // Verifica duplicidade de email
+        const duplicado = usuarios.some(u => u.email === email);
+        if (duplicado) return destacarErro(emailEl, `Já existe um usuário cadastrado com o e-mail: ${email}`);
+
+        usuarios.push({ 
+            nome: nome, 
+            cpf: cpfEl.value.trim(), 
+            email: email, 
+            senha: senha, 
+            perfil: perfilEl.value 
+        });
+        
+        salvarDados("usuarios", usuarios);
+        
+        limparCampos("usuarios");
+        atualizarTabelaUsuarios();
+        alert("Usuário salvo com sucesso!");
+    }
+
+    function atualizarTabelaUsuarios() {
+        const tbody = document.querySelector("#tabelaUsuarios tbody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+        
+        usuarios.forEach((u, i) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${i + 1}</td>
+                <td>${u.nome}</td>
+                <td>${u.email}</td>
+                <td>${u.perfil.charAt(0).toUpperCase() + u.perfil.slice(1)}</td>
+                <td>
+                    <button onclick="editarUsuario(${i})"><i class="fa fa-edit"></i></button>
+                    <button class="btnExcluir" onclick="excluirUsuario(${i})"><i class="fa fa-trash"></i></button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function editarUsuario(i) {
+        alert("Função de edição de usuário desativada. Exclua e registre novamente.");
+    }
+
+    function excluirUsuario(i) {
+        if (!confirm(`Excluir o usuário "${usuarios[i].nome}"?`)) return;
+        
+        usuarios.splice(i, 1);
+        salvarDados("usuarios", usuarios);
+        atualizarTabelaUsuarios();
+        alert("Usuário excluído com sucesso!");
+    }
+    
+    function buscarUsuarioPorEmail(email) {
+        return usuarios.find(u => u.email.toLowerCase() === email.toLowerCase());
+    }
+
+    // ==========================================================
+    // ORDENAÇÃO
+    // ==========================================================
+    function ordenarListasAlfabeticamente() {
+        // Produtos
+        if (Array.isArray(produtos)) {
+            produtos.sort((a, b) => (a.nome || "").localeCompare(b.nome || "", 'pt-BR', { sensitivity: 'base' }));
+            // Já salvo dentro das funções CRUD
+        }
+        
+        // Usuários
+        if (Array.isArray(usuarios)) {
+            usuarios.sort((a, b) => (a.nome || "").localeCompare(b.nome || "", 'pt-BR', { sensitivity: 'base' }));
+            // Já salvo dentro das funções CRUD
+        }
+
+        // Entradas e Saídas (Geralmente ordenadas por data nas tabelas)
+    }
+
+    // ==========================================================
+    // SINCRONIZAÇÃO E INICIALIZAÇÃO
+    // ==========================================================
+    document.addEventListener("DOMContentLoaded", () => {
+        // Inicializa o estado das tabelas e selects
+        ordenarListasAlfabeticamente();
+        atualizarSelectProdutos();
+        atualizarTabelaProdutos();
+        atualizarTabelaEntradas();
+        atualizarTabelaSaidas();
+        atualizarTabelaEstoque();
+        atualizarTabelaLimites();
+        atualizarTabelaUsuarios();
+        atualizarPainelFinanceiro();
+        // A função aplicarPermissoes é chamada após o login pelo onAuthStateChanged
+    });
 
 </script>
 
-<!-- 🔹 Scripts externos -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.14/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-  if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
-  if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-  if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-  if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
-  if (typeof atualizarDashboard === "function") atualizarDashboard();
-  console.log("✅ Sistema carregado e ordenado com sucesso!");
-});
-</script>
-
 </body>
-</htmll>
+</html>
