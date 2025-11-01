@@ -457,7 +457,258 @@ let saidas = JSON.parse(localStorage.getItem("saidas")) || [];
       document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
       document.getElementById(id).classList.add("active");
     }
-	/* =========================
+
+	   function logout() {
+  // 🔹 Remove sessão salva
+  localStorage.removeItem("usuarioLogado");
+
+  // 🔹 Esconde o app e volta para tela de login
+  document.getElementById("painel").style.display = "none";
+document.getElementById("login").style.display = "flex";
+
+  // 🔹 Limpa os campos de login e mensagem
+  const usuarioEl = document.getElementById("usuarioLogin");
+  const senhaEl = document.getElementById("senhaLogin");
+  const msg = document.getElementById("loginMsg");
+
+  if (usuarioEl) usuarioEl.value = "";
+  if (senhaEl) senhaEl.value = "";
+  if (msg) {
+    msg.textContent = "";
+    msg.style.display = "none";
+  }
+
+  // 🔹 Opcional: foco no campo usuário
+  usuarioEl.focus();
+}
+
+// Executa quando o DOM estiver pronto
+document.addEventListener("DOMContentLoaded", () => {
+  verificarSessao();
+});
+
+// === FUNÇÃO DE LOGIN ===
+function fazerLogin() {
+  const nome = document.getElementById("usuarioLogin")?.value.trim();
+  const senha = document.getElementById("senhaLogin")?.value.trim();
+  let msg = document.getElementById("loginMsg");
+
+  if (!msg) {
+    msg = document.createElement("p");
+    msg.id = "loginMsg";
+    msg.style.cssText = "margin-top:10px; font-weight:bold; text-align:center;";
+    document.getElementById("loginView").appendChild(msg);
+  }
+
+  msg.style.display = "none";
+  msg.textContent = "";
+
+  if (!nome || !senha) {
+    msg.textContent = "⚠️ Preencha usuário e senha.";
+    msg.style.display = "block";
+    msg.style.color = "red";
+    return;
+  }
+
+  const usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+  const usuarioEncontrado = usuarios.find(u => u.nome?.toLowerCase() === nome.toLowerCase());
+
+  if (!usuarioEncontrado) {
+    msg.textContent = "❌ Usuário não encontrado!";
+    msg.style.display = "block";
+    msg.style.color = "red";
+    return;
+  }
+
+  if (usuarioEncontrado.senha !== senha) {
+    msg.textContent = "🔒 Senha incorreta! Tente novamente.";
+    msg.style.display = "block";
+    msg.style.color = "red";
+    return;
+  }
+
+  // ✅ Login bem-sucedido
+  msg.textContent = "✅ Login realizado com sucesso!";
+  msg.style.display = "block";
+  msg.style.color = "green";
+
+  const sessao = { ...usuarioEncontrado, logado: true, loginTime: Date.now() };
+  localStorage.setItem("usuarioLogado", JSON.stringify(sessao));
+
+  // 🔹 Exibe o sistema após um pequeno delay
+  setTimeout(() => mostrarSistema(sessao), 600);
+}
+// === PERMITIR LOGIN COM ENTER ===
+document.addEventListener("keydown", function (event) {
+  const loginView = document.getElementById("loginView");
+  const mainApp = document.getElementById("mainApp");
+
+  if (loginView && loginView.style.display !== "none" && event.key === "Enter") {
+    event.preventDefault();
+    const usuario = document.getElementById("usuarioLogin").value.trim();
+    const senha = document.getElementById("senhaLogin").value.trim();
+
+    if (usuario && senha) {
+      fazerLogin();
+    } else {
+      alert("Digite usuário e senha antes de continuar!");
+    }
+  }
+});
+
+// === MOSTRA SISTEMA ===
+function mostrarSistema(sessao) {
+  const loginView = document.getElementById("loginView");
+  const mainApp = document.getElementById("mainApp");
+  const userName = document.getElementById("userName");
+  const perfilBadge = document.getElementById("perfilBadge");
+  const sidebar = document.getElementById("sidebar");
+
+  if (loginView && mainApp) {
+    loginView.style.display = "none";
+    mainApp.style.display = "block";
+  }
+
+  const nomeUsuario = sessao?.nome || sessao?.email?.split("@")[0] || "Usuário";
+
+if (userName) userName.textContent = nomeUsuario;
+if (perfilBadge && sessao?.perfil)
+  perfilBadge.textContent = "Perfil: " + sessao.perfil.toUpperCase();
+
+const nomeBemVindo = document.getElementById("nomeUsuarioBemVindo");
+if (nomeBemVindo) nomeBemVindo.textContent = nomeUsuario;
+
+
+  // 🔹 Oculta todas as outras seções e mostra apenas a de boas-vindas
+  document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
+  const boasVindas = document.getElementById("boasVindas");
+  if (boasVindas) boasVindas.style.display = "block";
+
+  // 🔹 Garante que o menu lateral esteja fechado
+  if (sidebar && sidebar.classList.contains("active")) {
+    sidebar.classList.remove("active");
+  }
+
+  // 🔹 Atualiza variáveis e permissões
+  window.usuarioLogado = sessao;
+
+  if (typeof aplicarPermissoes === "function") aplicarPermissoes();
+  if (typeof bloquearAcoesSimples2 === "function") bloquearAcoesSimples2();
+}
+// === VERIFICAÇÃO DE SESSÃO (ao carregar) ===
+function verificarSessao() {
+  const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado") || "{}");
+
+  const loginView = document.getElementById("loginView");
+  const mainApp = document.getElementById("mainApp");
+
+  if (!loginView || !mainApp) {
+    console.warn("⚠️ Estrutura de interface ainda não carregada.");
+    return;
+  }
+
+  if (usuarioLogado.logado) {
+    mostrarSistema(usuarioLogado);
+  } else {
+    voltarParaLogin();
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+// === FUNÇÃO AUXILIAR: Espera o DOM estar pronto ===
+async function aguardarInterface() {
+  // aguarda até que #loginView e #mainApp existam no DOM
+  return new Promise((resolve) => {
+    const tentar = () => {
+      const loginView = document.getElementById("loginView");
+      const mainApp = document.getElementById("mainApp");
+      if (loginView && mainApp) resolve();
+      else setTimeout(tentar, 100);
+    };
+    tentar();
+  });
+}
+
+// === INICIALIZAÇÃO PRINCIPAL ===
+(async function iniciarSistema() {
+  // aguarda o DOM completo antes de continuar
+  await aguardarInterface();
+
+  console.log("✅ Estrutura de interface carregada com sucesso.");
+
+  // === FUNÇÃO DE LOGOUT ===
+  window.sairDoSistema = function () {
+    localStorage.removeItem("usuarioLogado");
+    alert("Sessão encerrada. Faça login novamente.");
+    voltarParaLogin();
+  };
+
+  // === VOLTAR PARA LOGIN ===
+  window.voltarParaLogin = function () {
+    const loginView = document.getElementById("loginView");
+    const mainApp = document.getElementById("mainApp");
+
+    if (loginView && mainApp) {
+      loginView.style.display = "block";
+      mainApp.style.display = "none";
+    }
+
+    localStorage.removeItem("usuarioLogado");
+  };
+
+  // === LOGIN ===
+  window.fazerLogin = async function () {
+    const usuario = document.getElementById("usuario").value.trim();
+    const senha = document.getElementById("senha").value.trim();
+
+    if (!usuario || !senha) {
+      alert("Preencha usuário e senha!");
+      return;
+    }
+
+    const email = usuario.includes("@") ? usuario : `${usuario}@oralunic.com`;
+
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, senha);
+      const user = cred.user;
+
+      localStorage.setItem(
+        "usuarioLogado",
+        JSON.stringify({ email: user.email, logado: true })
+      );
+
+      alert("✅ Login realizado com sucesso!");
+      mostrarSistema({ email: user.email });
+    } catch (error) {
+      console.error("Erro no login:", error);
+      alert("Erro no login: " + error.message);
+    }
+  };
+
+  // === VERIFICAR SESSÃO ===
+  function verificarSessao() {
+    const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado") || "{}");
+    const loginView = document.getElementById("loginView");
+    const mainApp = document.getElementById("mainApp");
+
+    if (!loginView || !mainApp) {
+      console.warn("⚠️ Estrutura de interface ainda não carregada.");
+      return;
+    }
+
+    if (usuarioLogado.logado) {
+      mostrarSistema(usuarioLogado);
+    } else {
+      voltarParaLogin();
+    }
+  }
+
+  // ✅ Chama a verificação final após DOM e Firebase prontos
+  verificarSessao();
+})();
+
+	   
+	   /* =========================
    🔹 Cadastro de produtos
 ========================= */
 async function cadastrarProduto() {
@@ -1894,6 +2145,64 @@ function limparPeriodo() {
   document.getElementById("dataFimRelatorio").value = "";
 }
 
+function exportarListaExcel() {
+  const container = document.getElementById("listaCompraContainer");
+  const tabela = document.getElementById("tabelaListaCompra");
+  const tbody = tabela ? tabela.querySelector("tbody") : null;
+
+  if (!tabela || !tbody) {
+    alert("⚠️ Nenhuma lista de compra gerada para exportar!");
+    return;
+  }
+
+  const estavaOculto = container && container.style.display === "none";
+  if (estavaOculto) container.style.display = "block";
+
+  const linhas = [...tbody.querySelectorAll("tr")].filter(tr => tr.textContent.trim() !== "");
+
+  if (linhas.length === 0) {
+    alert("⚠️ Nenhum item encontrado na lista de compra.");
+    if (estavaOculto) container.style.display = "none";
+    return;
+  }
+
+  // 🔹 Cabeçalho idêntico à tabela
+  const cabecalho = [
+    "#",
+    "Produto",
+    "Código de Barras",
+    "Categoria",
+    "Qtd Atual",
+    "Mínimo",
+    "Recomendado Comprar"
+  ];
+  let csv = [cabecalho.join(";")];
+
+  // 🔹 Linhas de dados
+  linhas.forEach(tr => {
+    const cols = tr.querySelectorAll("td");
+    const linha = [];
+    cols.forEach(td => linha.push(td.innerText.trim().replace(/\s+/g, " ")));
+    csv.push(linha.join(";"));
+  });
+
+  // 🔹 Cria o conteúdo CSV
+  const csvContent = csv.join("\n");
+
+  // Cria um Blob em ISO-8859-1 para abrir corretamente no Excel PT-BR
+  const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=ISO-8859-1;" });
+
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "Lista_de_Compra_Gerada.csv";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  if (estavaOculto) container.style.display = "none";
+
+  alert("✅ Lista de Compra Gerada exportada com sucesso!");
+}
 
 
 function atualizarPainelFinanceiro() {
@@ -2052,254 +2361,6 @@ function showSection(id) {
 window.scrollTo(0, 0);
 
 
-function logout() {
-  // 🔹 Remove sessão salva
-  localStorage.removeItem("usuarioLogado");
-
-  // 🔹 Esconde o app e volta para tela de login
-  document.getElementById("painel").style.display = "none";
-document.getElementById("login").style.display = "flex";
-
-  // 🔹 Limpa os campos de login e mensagem
-  const usuarioEl = document.getElementById("usuarioLogin");
-  const senhaEl = document.getElementById("senhaLogin");
-  const msg = document.getElementById("loginMsg");
-
-  if (usuarioEl) usuarioEl.value = "";
-  if (senhaEl) senhaEl.value = "";
-  if (msg) {
-    msg.textContent = "";
-    msg.style.display = "none";
-  }
-
-  // 🔹 Opcional: foco no campo usuário
-  usuarioEl.focus();
-}
-
-// Executa quando o DOM estiver pronto
-document.addEventListener("DOMContentLoaded", () => {
-  verificarSessao();
-});
-
-// === FUNÇÃO DE LOGIN ===
-function fazerLogin() {
-  const nome = document.getElementById("usuarioLogin")?.value.trim();
-  const senha = document.getElementById("senhaLogin")?.value.trim();
-  let msg = document.getElementById("loginMsg");
-
-  if (!msg) {
-    msg = document.createElement("p");
-    msg.id = "loginMsg";
-    msg.style.cssText = "margin-top:10px; font-weight:bold; text-align:center;";
-    document.getElementById("loginView").appendChild(msg);
-  }
-
-  msg.style.display = "none";
-  msg.textContent = "";
-
-  if (!nome || !senha) {
-    msg.textContent = "⚠️ Preencha usuário e senha.";
-    msg.style.display = "block";
-    msg.style.color = "red";
-    return;
-  }
-
-  const usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
-  const usuarioEncontrado = usuarios.find(u => u.nome?.toLowerCase() === nome.toLowerCase());
-
-  if (!usuarioEncontrado) {
-    msg.textContent = "❌ Usuário não encontrado!";
-    msg.style.display = "block";
-    msg.style.color = "red";
-    return;
-  }
-
-  if (usuarioEncontrado.senha !== senha) {
-    msg.textContent = "🔒 Senha incorreta! Tente novamente.";
-    msg.style.display = "block";
-    msg.style.color = "red";
-    return;
-  }
-
-  // ✅ Login bem-sucedido
-  msg.textContent = "✅ Login realizado com sucesso!";
-  msg.style.display = "block";
-  msg.style.color = "green";
-
-  const sessao = { ...usuarioEncontrado, logado: true, loginTime: Date.now() };
-  localStorage.setItem("usuarioLogado", JSON.stringify(sessao));
-
-  // 🔹 Exibe o sistema após um pequeno delay
-  setTimeout(() => mostrarSistema(sessao), 600);
-}
-// === PERMITIR LOGIN COM ENTER ===
-document.addEventListener("keydown", function (event) {
-  const loginView = document.getElementById("loginView");
-  const mainApp = document.getElementById("mainApp");
-
-  if (loginView && loginView.style.display !== "none" && event.key === "Enter") {
-    event.preventDefault();
-    const usuario = document.getElementById("usuarioLogin").value.trim();
-    const senha = document.getElementById("senhaLogin").value.trim();
-
-    if (usuario && senha) {
-      fazerLogin();
-    } else {
-      alert("Digite usuário e senha antes de continuar!");
-    }
-  }
-});
-
-// === MOSTRA SISTEMA ===
-function mostrarSistema(sessao) {
-  const loginView = document.getElementById("loginView");
-  const mainApp = document.getElementById("mainApp");
-  const userName = document.getElementById("userName");
-  const perfilBadge = document.getElementById("perfilBadge");
-  const sidebar = document.getElementById("sidebar");
-
-  if (loginView && mainApp) {
-    loginView.style.display = "none";
-    mainApp.style.display = "block";
-  }
-
-  const nomeUsuario = sessao?.nome || sessao?.email?.split("@")[0] || "Usuário";
-
-if (userName) userName.textContent = nomeUsuario;
-if (perfilBadge && sessao?.perfil)
-  perfilBadge.textContent = "Perfil: " + sessao.perfil.toUpperCase();
-
-const nomeBemVindo = document.getElementById("nomeUsuarioBemVindo");
-if (nomeBemVindo) nomeBemVindo.textContent = nomeUsuario;
-
-
-  // 🔹 Oculta todas as outras seções e mostra apenas a de boas-vindas
-  document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
-  const boasVindas = document.getElementById("boasVindas");
-  if (boasVindas) boasVindas.style.display = "block";
-
-  // 🔹 Garante que o menu lateral esteja fechado
-  if (sidebar && sidebar.classList.contains("active")) {
-    sidebar.classList.remove("active");
-  }
-
-  // 🔹 Atualiza variáveis e permissões
-  window.usuarioLogado = sessao;
-
-  if (typeof aplicarPermissoes === "function") aplicarPermissoes();
-  if (typeof bloquearAcoesSimples2 === "function") bloquearAcoesSimples2();
-}
-// === VERIFICAÇÃO DE SESSÃO (ao carregar) ===
-function verificarSessao() {
-  const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado") || "{}");
-
-  const loginView = document.getElementById("loginView");
-  const mainApp = document.getElementById("mainApp");
-
-  if (!loginView || !mainApp) {
-    console.warn("⚠️ Estrutura de interface ainda não carregada.");
-    return;
-  }
-
-  if (usuarioLogado.logado) {
-    mostrarSistema(usuarioLogado);
-  } else {
-    voltarParaLogin();
-  }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-// === FUNÇÃO AUXILIAR: Espera o DOM estar pronto ===
-async function aguardarInterface() {
-  // aguarda até que #loginView e #mainApp existam no DOM
-  return new Promise((resolve) => {
-    const tentar = () => {
-      const loginView = document.getElementById("loginView");
-      const mainApp = document.getElementById("mainApp");
-      if (loginView && mainApp) resolve();
-      else setTimeout(tentar, 100);
-    };
-    tentar();
-  });
-}
-
-// === INICIALIZAÇÃO PRINCIPAL ===
-(async function iniciarSistema() {
-  // aguarda o DOM completo antes de continuar
-  await aguardarInterface();
-
-  console.log("✅ Estrutura de interface carregada com sucesso.");
-
-  // === FUNÇÃO DE LOGOUT ===
-  window.sairDoSistema = function () {
-    localStorage.removeItem("usuarioLogado");
-    alert("Sessão encerrada. Faça login novamente.");
-    voltarParaLogin();
-  };
-
-  // === VOLTAR PARA LOGIN ===
-  window.voltarParaLogin = function () {
-    const loginView = document.getElementById("loginView");
-    const mainApp = document.getElementById("mainApp");
-
-    if (loginView && mainApp) {
-      loginView.style.display = "block";
-      mainApp.style.display = "none";
-    }
-
-    localStorage.removeItem("usuarioLogado");
-  };
-
-  // === LOGIN ===
-  window.fazerLogin = async function () {
-    const usuario = document.getElementById("usuario").value.trim();
-    const senha = document.getElementById("senha").value.trim();
-
-    if (!usuario || !senha) {
-      alert("Preencha usuário e senha!");
-      return;
-    }
-
-    const email = usuario.includes("@") ? usuario : `${usuario}@oralunic.com`;
-
-    try {
-      const cred = await signInWithEmailAndPassword(auth, email, senha);
-      const user = cred.user;
-
-      localStorage.setItem(
-        "usuarioLogado",
-        JSON.stringify({ email: user.email, logado: true })
-      );
-
-      alert("✅ Login realizado com sucesso!");
-      mostrarSistema({ email: user.email });
-    } catch (error) {
-      console.error("Erro no login:", error);
-      alert("Erro no login: " + error.message);
-    }
-  };
-
-  // === VERIFICAR SESSÃO ===
-  function verificarSessao() {
-    const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado") || "{}");
-    const loginView = document.getElementById("loginView");
-    const mainApp = document.getElementById("mainApp");
-
-    if (!loginView || !mainApp) {
-      console.warn("⚠️ Estrutura de interface ainda não carregada.");
-      return;
-    }
-
-    if (usuarioLogado.logado) {
-      mostrarSistema(usuarioLogado);
-    } else {
-      voltarParaLogin();
-    }
-  }
-
-  // ✅ Chama a verificação final após DOM e Firebase prontos
-  verificarSessao();
-})();
 
 	
 
@@ -2943,81 +3004,8 @@ function limparErros(secaoId) {
 }
 
 
-function exportarListaExcel() {
-  const container = document.getElementById("listaCompraContainer");
-  const tabela = document.getElementById("tabelaListaCompra");
-  const tbody = tabela ? tabela.querySelector("tbody") : null;
-
-  if (!tabela || !tbody) {
-    alert("⚠️ Nenhuma lista de compra gerada para exportar!");
-    return;
-  }
-
-  const estavaOculto = container && container.style.display === "none";
-  if (estavaOculto) container.style.display = "block";
-
-  const linhas = [...tbody.querySelectorAll("tr")].filter(tr => tr.textContent.trim() !== "");
-
-  if (linhas.length === 0) {
-    alert("⚠️ Nenhum item encontrado na lista de compra.");
-    if (estavaOculto) container.style.display = "none";
-    return;
-  }
-
-  // 🔹 Cabeçalho idêntico à tabela
-  const cabecalho = [
-    "#",
-    "Produto",
-    "Código de Barras",
-    "Categoria",
-    "Qtd Atual",
-    "Mínimo",
-    "Recomendado Comprar"
-  ];
-  let csv = [cabecalho.join(";")];
-
-  // 🔹 Linhas de dados
-  linhas.forEach(tr => {
-    const cols = tr.querySelectorAll("td");
-    const linha = [];
-    cols.forEach(td => linha.push(td.innerText.trim().replace(/\s+/g, " ")));
-    csv.push(linha.join(";"));
-  });
-
-  // 🔹 Cria o conteúdo CSV
-  const csvContent = csv.join("\n");
-
-  // Cria um Blob em ISO-8859-1 para abrir corretamente no Excel PT-BR
-  const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=ISO-8859-1;" });
-
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "Lista_de_Compra_Gerada.csv";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-
-  if (estavaOculto) container.style.display = "none";
-
-  alert("✅ Lista de Compra Gerada exportada com sucesso!");
-}
 
 
-/* =========================
-   🔹 Controle de período do relatório
-========================= */
-
-/* =========================
-   🔹 Gerar relatório por data (sem exibir tabela, exporta direto)
-========================= */
-
-
-
-<script>
-
-/* =========================
-   📦 Exportar Relatório Filtrado para Excel
-========================= */
 
 </script>
 
@@ -3027,6 +3015,7 @@ function exportarListaExcel() {
 
 </body>
 </html>
+
 
 
 
