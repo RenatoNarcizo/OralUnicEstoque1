@@ -127,21 +127,24 @@
     }
 
    /* ========================= MENU LATERAL ========================= */
-    #sidebar {
-      position: fixed;
-      top: 0;
-      left: -260px; /* escondido */
-      width: 250px;
-      height: 100%;
-      background: var(--azul-escuro);
-      color: var(--branco);
-      overflow-y: auto;
-      transition: left 0.3s ease;
-      z-index: 800;
-      padding-top: 60px;
-      border-right: none;
-      box-shadow: none;
-    }
+   /* Dentro da sua tag <style> */
+
+#sidebar {
+    /* ... outras propriedades existentes ... */
+    position: fixed;
+    top: 50px; /* Ou a altura do seu header */
+    left: -220px;
+    width: 220px;
+    height: calc(100% - 50px); /* Ou o que for necessário */
+    background: var(--azul-escuro);
+    z-index: 1000;
+    padding: 10px 0;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+
+    /* 👈 ADICIONE ESTA LINHA: Transição suave de 0.3 segundos */
+    transition: left 0.3s ease; 
+    
+}
 
     /* Quando ativo (aberto) */
     #sidebar.active {
@@ -1162,21 +1165,21 @@ window.toggleSidebar = function() {
     }
 }
 
+// A função showSection DEVE chamar toggleSidebar para fechar o menu
 function showSection(id) {
-  document.querySelectorAll(".section").forEach(s => {
-    s.classList.remove("active");
-  });
-  const newSection = document.getElementById(id);
-  if (newSection) {
-    newSection.classList.add("active");
-    // Garante que o menu lateral feche no mobile
-    if (window.innerWidth < 900) {
-      document.getElementById("sidebar").classList.remove("active");
-      document.querySelector("main").style.marginLeft = "20px";
+    document.querySelectorAll('section').forEach(section => {
+        section.style.display = 'none';
+    });
+    const sectionToShow = document.getElementById(id);
+    if (sectionToShow) {
+        sectionToShow.style.display = 'block';
     }
-    // Rola para o topo da seção
-    newSection.scrollTo(0, 0);
-  }
+    
+    // 👈 NOVO: Fecha o menu lateral após selecionar uma opção
+    // Ele só fechará se estiver aberto (left: 0px)
+    if (document.getElementById("sidebar").style.left === '0px') {
+        toggleSidebar(); 
+    }
   // Atualiza o dashboard sempre que a seção for aberta
   if (id === "dashboard") atualizarDashboard();
   if (id === "estoque") atualizarTabelaEstoque();
@@ -2601,7 +2604,23 @@ document.addEventListener("DOMContentLoaded", () => {
     // Garante que o menu de setor é preenchido na seção de Saída
     atualizarSetorAutomatico(); 
 });
+document.addEventListener('click', (event) => {
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.getElementById('menuToggle');
+    
+    // Se a sidebar estiver visível (left: 0px)
+    if (sidebar && sidebar.style.left === '0px') {
+        
+        // Verifica se o clique foi fora da sidebar E fora do botão de abrir/fechar
+        const isClickInsideSidebar = sidebar.contains(event.target);
+        const isClickOnToggle = menuToggle.contains(event.target);
 
+        // Se o clique não foi dentro da sidebar e não foi no botão de toggle, fecha
+        if (!isClickInsideSidebar && !isClickOnToggle) {
+            toggleSidebar();
+        }
+    }
+});
 
 </script>
 
@@ -2609,6 +2628,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
 
