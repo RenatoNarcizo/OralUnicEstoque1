@@ -2846,114 +2846,197 @@ function gerarPedidoPDF() {
     doc.save(`Pedido_Orcamento_${new Date().toISOString().split('T')[0]}.pdf`);
     mostrarMensagem("Pedido de Orçamento exportado para PDF.", "sucesso");
 }
+// =================================================================================
+// === FUNÇÕES DE GERENCIAMENTO DE USUÁRIOS E PERFIS (Corrigido) ===
+// =================================================================================
 
-// --- USUÁRIOS E PERFIS ---
+/**
+ * 🔹 Função principal para salvar ou atualizar um Perfil de Usuário.
+ */
+window.salvarUsuarioLocal = async function() {
+    // 💡 OBS: Você precisa ter as funções 'limparErros', 'destacarErro', 'mostrarMensagem', 'limparCampos' definidas.
 
-async function salvarUsuarioLocal() { // 👈 Tornada assíncrona
-    padronizarCamposAntesDeSalvar();
-    limparErros("usuarios");
-    
+    // 1. Coleta e validação dos campos do PERFIL
     const nomeEl = document.getElementById("usuarioNome");
     const emailEl = document.getElementById("usuarioEmail");
+    const senhaEl = document.getElementById("usuarioSenha");
     const perfilEl = document.getElementById("usuarioPerfil");
-    const senhaEl = document.getElementById("usuarioSenha"); // 👈 Novo
-
-    // 1. Validações
-    if (!nomeEl.value.trim()) return destacarErro(nomeEl, "Informe o nome!");
-    if (!emailEl.value.trim().includes("@")) return destacarErro(emailEl, "Informe um e-mail válido!");
-    if (!perfilEl.value.trim()) return destacarErro(perfilEl, "Selecione o perfil!");
     
+    // Limpa erros anteriores e garante que o campo e-mail está habilitado (para o caso de não ser uma edição)
+    if (typeof limparErros === 'function') limparErros("usuarios");
+    emailEl.disabled = false;
+    
+    // Validações básicas (usando alert como fallback se a função destacarErro não existir)
+    if (!nomeEl.value.trim()) return typeof destacarErro === 'function' ? destacarErro(nomeEl, "Informe o nome!") : alert("Informe o nome!");
+    if (!emailEl.value.trim().includes("@")) return typeof destacarErro === 'function' ? destacarErro(emailEl, "Informe um e-mail válido!") : alert("Informe um e-mail válido!");
+    if (!perfilEl.value.trim()) return typeof destacarErro === 'function' ? destacarErro(perfilEl, "Selecione o perfil!") : alert("Selecione o perfil!");
+
+    // Padroniza os valores
     const email = emailEl.value.trim().toLowerCase();
-    const nome = nomeEl.value.trim();
+    const nome = nomeEl.value.trim(); 
     const perfil = perfilEl.value.trim();
-    const senha = senhaEl.value.trim(); // 👈 Novo
-
-    const index = usuarios.findIndex(u => u.email.toLowerCase() === email);
+    const senha = senhaEl.value.trim();
     
+    // Tenta encontrar o perfil do usuário pelo email na lista global
+    const index = window.usuarios.findIndex(u => u.email.toLowerCase() === email);
     let isNovoUsuario = index === -1;
 
-    if (isNovoUsuario) {
-        // 2. Tenta criar o usuário no FIREBASE AUTH se for um novo usuário
-        if (!senha || senha.length < 6) return destacarErro(senhaEl, "A senha é obrigatória (mín. 6 caracteres) para um novo usuário.");
-        
-        const usuarioCriado = await criarUsuarioNoFirebase(email, senha);
-        
-        if (usuarioCriado === false) {
-             // O erro já foi exibido pela função criarUsuarioNoFirebase
-             return; 
-        }
-        
-        // 3. Salva o Perfil no Firestore/Local
-        usuarios.push({ nome, email, perfil });
-        mostrarMensagem(`✅ Usuário "${nome}" criado no Firebase Auth e perfil salvo!`, "sucesso");
+    try {
+        if (isNovoUsuario) {
+            // ==========================================================
+            // AÇÃO 1: CRIAÇÃO DE NOVO USUÁRIO (Firebase Auth + Perfil)
+            // ==========================================================
+            
+            // Requisito de senha para o Firebase Auth
+            if (!senha || senha.length < 6) {
+                return typeof destacarErro === 'function' ? destacarErro(senhaEl, "A senha é obrigatória (mín. 6 caracteres) para um novo usuário.") : alert("A senha é obrigatória (mín. 6 caracteres) para um novo usuário.");
+            }
+            
+            // 🚨 1. Cria o usuário no Firebase Auth (função do script type="module")
+            const firebaseUser = await window.criarUsuarioNoFirebase(email, senha);
 
-    } else {
-        // Se for edição de perfil (não de senha)
-        usuarios[index].nome = nome;
-        usuarios[index].perfil = perfil;
-        
-        // Se houver senha preenchida, é uma troca de senha (opcional, precisa de mais tratamento)
-        if (senha) {
-            // Nota: Trocar a senha de outro usuário é um processo mais complexo no Firebase e
-            // exige a função "Admin SDK". Para simplificar, o admin deve resetar a senha
-            // diretamente no painel do Firebase ou fazer o usuário editar a própria senha.
-            // Aqui, vamos apenas atualizar o perfil local e ignorar a senha.
-            mostrarMensagem("⚠️ Senha não alterada. Use o painel do Firebase para alterar senhas de outros usuários.", "info");
+            if (!firebaseUser) {
+                // A função 'criarUsuarioNoFirebase' já exibiu o erro do Firebase (ex: email já existe)
+                return; 
+            }
+            
+            // 🚨 2. Salva o PERFIL no Local/Firestore (com o UID do Firebase)
+            const novoUsuarioPerfil = {
+                uid: firebaseUser.uid, // 👈 CORREÇÃO PRINCIPAL: CAPTURA DO UID
+                email: email,
+                nome: nome,
+                perfil: perfil,
+                criadoEm: new Date().toISOString()
+            };
+            
+            window.usuarios.push(novoUsuarioPerfil);
+            if (typeof mostrarMensagem === 'function') mostrarMensagem(`✅ Usuário "${nome}" criado no Firebase Auth e perfil salvo!`, "sucesso");
+
         } else {
-            mostrarMensagem(`✅ Perfil de ${nome} atualizado.`, "sucesso");
+            // ==========================================================
+            // AÇÃO 2: EDIÇÃO DE PERFIL (Apenas metadados)
+            // ==========================================================
+            
+            window.usuarios[index].nome = nome;
+            window.usuarios[index].perfil = perfil;
+            
+            if (senha) {
+                 // Avisa que a alteração de senha deve ser feita no painel do Firebase ou pelo próprio usuário.
+                 if (typeof mostrarMensagem === 'function') mostrarMensagem("⚠️ Senha não alterada. Use o painel do Firebase para alterar senhas de outros usuários.", "info");
+            } else {
+                 if (typeof mostrarMensagem === 'function') mostrarMensagem(`✏️ Perfil de "${nome}" atualizado!`, "sucesso");
+            }
+            
+            // Reabilita o campo email após a edição
+            emailEl.disabled = false;
         }
-} 
-	
-	// Limpa o campo de senha após a operação
-    document.getElementById("usuarioSenha").value = ""; 
-} // 👈 ESTA CHAVE FECHA A FUNÇÃO 'salvarUsuarioLocal'
+        
+        // 3. Persiste os dados atualizados no LocalStorage e no Firestore
+        if (typeof salvarTodosLocal === 'function') salvarTodosLocal();
+        await window.salvarUsuariosNoFirebase(window.usuarios); // 👈 CORREÇÃO: PERSISTÊNCIA NO FIREBASE
+        
+        // 4. Atualiza a interface da tabela
+        if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
+        
+        // 5. Limpa os campos após o sucesso
+        if (typeof limparCampos === 'function') {
+             limparCampos("usuarioNome", "usuarioEmail", "usuarioSenha", "usuarioPerfil"); 
+        } else {
+            nomeEl.value = ''; emailEl.value = ''; senhaEl.value = ''; perfilEl.value = '';
+        }
+        
+    } catch (e) {
+        console.error("Erro ao salvar usuário:", e);
+        if (typeof mostrarMensagem === 'function') mostrarMensagem("❌ Erro ao salvar o usuário. Verifique o console.", "erro");
+    }
+};
 
-function atualizarTabelaUsuarios() {
-    const tbody = document.querySelector("#tabelaUsuarios tbody");
-    const filtro = document.getElementById("filtroUsuarios").value.toLowerCase();
-    tbody.innerHTML = "";
+/**
+ * 🔹 Função utilitária para preencher os campos para EDIÇÃO (Substitui 'preencherParaEdicao')
+ */
+window.editarUsuarioLocal = function(i) { // Chamada a partir da tabela, usando o índice 'i'
+    const usuario = window.usuarios[i];
+    if (!usuario) return;
+
+    // Preenche os campos para edição
+    document.getElementById("usuarioNome").value = usuario.nome || '';
+    document.getElementById("usuarioEmail").value = usuario.email || '';
+    document.getElementById("usuarioPerfil").value = usuario.perfil || '';
+    document.getElementById("usuarioSenha").value = ''; // Limpa a senha na edição
+
+    // Bloqueia o e-mail (chave de identificação)
+    document.getElementById("usuarioEmail").disabled = true;
+
+    // Foca no nome
+    document.getElementById("usuarioNome").focus();
     
-    usuarios.forEach((u, i) => {
+    if (typeof mostrarMensagem === 'function') mostrarMensagem(`Editando perfil de ${usuario.nome}. Clique em Salvar/Atualizar Perfil para finalizar.`, "info");
+}
+
+/**
+ * 🔹 Função para EXCLUIR APENAS O PERFIL LOCAL (Melhorado)
+ */
+window.excluirUsuarioLocal = function(i) {
+    const usuario = window.usuarios[i];
+    if (!confirm(`Excluir o perfil local de "${usuario.nome}" (${usuario.email})? Note que isso NÃO exclui o usuário do Firebase Authentication.`)) return; 
+    
+    window.usuarios.splice(i, 1);
+    
+    // Salvamento corrigido
+    if (typeof salvarTodosLocal === 'function') salvarTodosLocal();
+    window.salvarUsuariosNoFirebase(window.usuarios);
+    
+    window.atualizarTabelaUsuarios();
+    
+    if (typeof mostrarMensagem === 'function') mostrarMensagem(`Perfil local de ${usuario.nome} excluído.`, "sucesso");
+}
+
+/**
+ * 🔹 Função para ATUALIZAR A TABELA de Usuários na interface (Corrigido para mostrar o UID)
+ */
+window.atualizarTabelaUsuarios = function() {
+    const tbody = document.querySelector("#tabelaUsuarios tbody");
+    if (!tbody) return; 
+
+    const filtroEl = document.getElementById("filtroUsuarios");
+    const filtro = filtroEl ? filtroEl.value.toLowerCase() : "";
+    tbody.innerHTML = "";
+
+    window.usuarios.forEach((u, i) => {
         const nome = (u.nome || "").toLowerCase();
         const email = (u.email || "").toLowerCase();
         
         if (filtro && !nome.includes(filtro) && !email.includes(filtro)) return;
-        
+
         const row = document.createElement("tr");
+        // O botão de editar chama agora a função corrigida com o índice
         row.innerHTML = `
             <td>${i + 1}</td>
-            <td>${u.nome}</td>
-            <td>${u.email}</td>
-            <td>${u.perfil}</td>
+            <td style="font-weight: bold;">${u.nome || "-"}</td>
+            <td>${u.email || "-"}</td>
+            <td><span style="background:#0d6efd; color:white; padding:4px 8px; border-radius:5px; font-size:12px;">${u.perfil || "-"}</span></td>
+            <td>${u.uid ? u.uid.substring(0, 8) + '...' : 'N/A'}</td>
+            <td>${u.criadoEm ? new Date(u.criadoEm).toLocaleDateString('pt-BR') : 'Desconhecido'}</td>
             <td>
-                <button onclick="preencherParaEdicao('${u.email}', '${u.nome}', '${u.perfil}')" title="Editar"><i class="fa fa-edit"></i></button>
+                <button onclick="editarUsuarioLocal(${i})" title="Editar Perfil"><i class="fa fa-edit"></i></button>
                 <button onclick="excluirUsuarioLocal(${i})" title="Excluir Perfil Local"><i class="fa fa-trash"></i></button>
             </td>
         `;
         tbody.appendChild(row);
     });
+};
+
+/**
+ * 🔹 Função auxiliar de filtro (apenas chama a atualização da tabela)
+ */
+window.filtrarUsuarios = function() {
+    window.atualizarTabelaUsuarios();
 }
 
-function preencherParaEdicao(email, nome, perfil) {
-    document.getElementById("usuarioNome").value = nome;
-    document.getElementById("usuarioEmail").value = email;
-    document.getElementById("usuarioPerfil").value = perfil;
-    document.getElementById("usuarioEmail").focus();
-}
+// =================================================================================
+// === FIM DAS FUNÇÕES DE GERENCIAMENTO DE USUÁRIOS ===
+// =================================================================================
 
-function excluirUsuarioLocal(i) {
-    const usuario = usuarios[i];
-    if (!confirm(`Excluir o perfil local de "${usuario.nome}" (${usuario.email})? Note que isso NÃO exclui o usuário do Firebase Authentication.`)) return;
-    
-    usuarios.splice(i, 1);
-    salvarUsuariosNoFirebase(usuarios); 
-    atualizarTabelaUsuarios();
-    mostrarMensagem(`Perfil local de ${usuario.nome} excluído.`, "sucesso");
-}
-
-function filtrarUsuarios() {
-    atualizarTabelaUsuarios();
-}
 
 // --- UTILITÁRIOS GLOBAIS ---
 
@@ -3011,3 +3094,4 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
