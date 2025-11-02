@@ -546,25 +546,45 @@
         <div style="margin-bottom:10px;">
           <input id="filtroProduto" type="text" placeholder="🔍 Filtrar por nome ou categoria" style="width:98%" oninput="filtrarProdutos()" />
         </div>
-
-        <div class="table-wrap">
-          <table id="tabelaProdutos">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Foto</th>
-                <th>Nome</th>
-                <th>Categoria</th>
-                <th>Embalagem</th>
-                <th>Qtd/Emb.</th>
-				        <th>Cód. Barras</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </section>
+ <div style="margin-bottom:10px;">
+    <input
+      id="filtroEstoque"
+      type="text"
+      placeholder="🔍 Filtrar por produto ou categoria"
+      style="width:98%; padding:6px;"
+      oninput="filtrarEstoque()"
+    />
+  </div>
+       <div class="table-wrap">
+  <table id="tabelaProdutos">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Produto</th>
+        <th>Cód. Barras</th>
+        <th>Categoria</th>
+        <th>Quantidade</th>
+        <th>Lote</th>
+        <th>Último Valor (R$)</th>
+        <th>Validade</th>
+        <th>Status</th> </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+       <div
+    id="resumoEstoque"
+    style="
+      margin-top:10px;
+      padding:10px;
+      background:#fff;
+      border-radius:6px;
+      box-shadow:0 1px 3px rgba(0,0,0,0.1);
+      font-weight:bold;
+      color:#333;
+    "
+  ></div>
+</section>
 
      <section id="entrada" class="section">
       <h2><i class="fa fa-arrow-down"></i> Entrada de Materiais</h2>
@@ -629,8 +649,8 @@
      <section id="saida" class="section" style="display:none;">
   <h2><i class="fa fa-arrow-up"></i> Saída de Materiais</h2>
 
-  <div class="input-row" style="margin-bottom:10px;gap:8px;">
-  <input id="saidaCodigoBarras" type="text" placeholder="📷 Ler código de barras" oninput="atualizarSetorAutomatico()" />
+ <div class="input-row" style="margin-bottom:10px;gap:8px;">
+        <input id="saidaCodigoBarras" type="text" placeholder="📷 Ler código de barras" oninput="atualizarSetorAutomatico()" />
 
            
     <input id="saidaProduto" type="text" placeholder="Nome do produto" style="min-width:220px" oninput="atualizarSetorAutomatico()" />
@@ -667,80 +687,96 @@
     </table>
   </div>
 </section>
-    <section id="estoque" class="section">
-      <h2><i class="fa fa-warehouse"></i> Estoque Atual</h2>
-      
-      <div style="margin-bottom:10px;">
-        <input id="filtroEstoque" type="text" placeholder="🔍 Filtrar por produto ou categoria" style="width:98%" oninput="filtrarEstoque()" />
-      </div>
+  
+  <section id="estoque" class="section">
+  <h2><i class="fa fa-warehouse"></i> Estoque Atual</h2>
 
-      <div class="table-wrap">
-        <table id="tabelaEstoque">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Foto</th>
-              <th>Nome</th>
-              <th>Categoria</th>
-              <th>Cód. Barras</th>
-              <th>Qtd. Atual</th>
-              <th>Último Valor (R$)</th>
-              <th>Validade</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      
-      <div id="resumoEstoque" style="margin-top:10px; padding:10px; background:#fff; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-        </div>
-    </section>
+  <div style="margin-bottom:10px;">
+    <input id="filtroEstoque" type="text" placeholder="🔍 Filtrar por produto ou categoria" style="width:98%" oninput="filtrarEstoque()" />
+  </div>
+
+  <div class="table-wrap">
+    <table id="tabelaEstoque">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Produto</th>
+          <th>Código de Barras</th>
+          <th>Categoria</th>
+          <th>Quantidade</th>
+          <th>Lote</th>
+          <th>Último Valor (R$)</th>
+          <th>Validade</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div id="resumoEstoque" style="margin-top:10px; padding:10px; background:#fff; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.1);"></div>
+</section>
+
     
-    <section id="limites" class="section">
-      <h2><i class="fa fa-sliders-h"></i> Estoque Mínimo/Máximo</h2>
-      
-      <div style="margin-bottom:10px;">
-        <input id="filtroLimites" type="text" placeholder="🔍 Filtrar por produto" style="width:calc(100% - 300px); margin-right:10px;" oninput="filtrarLimites()" />
-        <button onclick="abrirPopupLimites()">Definir Limites em Massa</button>
-        </div>
+    <section id="limites" class="section" style="display:none;">
+  <h2><i class="fa fa-boxes"></i> Estoque Mínimo e Máximo</h2>
 
-      <div class="input-row">
-        <select id="filtroCategoria" onchange="gerarListaCompra()">
-          <option value="">Filtrar por Categoria (Lista de Compra)</option>
-          <option>Material de Uso e Consumo</option>
-          <option>Copa e Cozinha</option>
-          <option>Escritório</option>
-          <option>Implante e Componentes</option>
-          <option>Insumo Dental</option>
-          <option>Insumo Laboratório</option>
-          <option>Medicamentos</option>
-          <option>Material de Limpeza</option>
-        </select>
-        <button onclick="gerarListaCompra()"><i class="fa fa-list"></i> Gerar Lista de Compra</button>
-        <button onclick="limparListaCompra()"><i class="fa fa-trash"></i> Limpar Lista</button>
-      </div>
-      
+  <!-- 🔹 Resumo de contagem -->
+  <div id="resumoEstoque" style="margin-bottom:10px; font-weight:bold; color:#333;">
+    🧾 Total de Produtos: 0 |
+    ⚠️ Abaixo do Mínimo: 0 |
+    ✅ Dentro do Limite: 0 |
+    📦 Acima do Máximo: 0
+  </div>
 
-      <div class="table-wrap">
-        <table id="tabelaLimites">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Produto</th>
-              <th>Cód. Barras</th>
-              <th>Categoria</th>
-              <th>Qtd Atual</th>
-              <th>Mínimo</th>
-              <th>Máximo</th>
-              <th>Status</th>
-              <th>Recomendação</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
+  <!-- 🔍 Filtros -->
+  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+    <input
+      id="filtroLimite"
+      type="text"
+      placeholder="🔍 Buscar por produto"
+      style="flex:1; min-width:220px"
+      oninput="atualizarTabelaLimites()"
+    />
+
+    <select id="filtroCategoria" onchange="atualizarTabelaLimites()" style="min-width:220px;">
+      <option value="">Todas as Categorias</option>
+      <option>Material de Uso e Consumo</option>
+      <option>Copa e Cozinha</option>
+      <option>Escritório</option>
+      <option>Implante e Componentes</option>
+      <option>Insumo Dental</option>
+      <option>Insumo Laboratório</option>
+      <option>Medicamentos</option>
+      <option>Material de Limpeza</option>
+    </select>
+
+    <button onclick="gerarListaCompra()"><i class="fa fa-list"></i> Gerar Lista de Compra</button>
+    <button onclick="limparListaCompra()"><i class="fa fa-trash"></i> Limpar Lista</button>
+  </div>
+
+  <!-- 📋 Tabela principal -->
+  <div class="table-wrap">
+  <table id="tabelaLimites">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Produto</th>
+      <th>Código de Barras</th>
+      <th>Categoria</th>
+      <th>Qtd Atual</th>
+      <th>Mínimo</th>
+      <th>Máximo</th>
+      <th>Status</th>
+      <th>Recomendação</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+
+  </div>
       
       <div id="listaCompraContainer" style="display:none; margin-top:20px;">
         <h3><i class="fa fa-shopping-cart"></i> Lista de Compra Gerada</h3>
@@ -1120,13 +1156,14 @@ if (typeof usuarios === "undefined") window.usuarios = [];
 function toggleSidebar() {
   const sidebar = document.getElementById("sidebar");
   const main = document.querySelector("main");
-  const isActive = sidebar.classList.toggle("active");
-  
-  // Ajusta a margem da área principal para dar espaço à sidebar no desktop
-  if (window.innerWidth >= 900) {
-      main.style.marginLeft = isActive ? "270px" : "20px";
-  }
+
+  if (!sidebar || !main) return;
+
+  const isOpen = sidebar.style.left === "0px";
+  sidebar.style.left = isOpen ? "-220px" : "0px";
+  main.style.marginLeft = isOpen ? "20px" : "240px";
 }
+
 // ... (após a definição de showSection, logout, etc.)
 
 // === FUNÇÃO PARA ABRIR/FECHAR MENU LATERAL COM CORREÇÃO ARIA ===
@@ -1259,24 +1296,28 @@ function buscarCodigoBarrasDoProduto(nome) {
 /**
  * 🔹 Atualiza o campo 'quantidade' no estoque global
  */
-function atualizarEstoque(nomeProduto, quantidadeDelta) {
-  const produtoRef = produtos.find(p => p.nome.trim().toLowerCase() === nomeProduto.trim().toLowerCase());
-  
+function atualizarEstoque(nomeProduto, quantidadeDelta, ultimoValor = null, lote = "", validade = "") {
+  const produtoRef = produtos.find(
+    p => p.nome.trim().toLowerCase() === nomeProduto.trim().toLowerCase()
+  );
+
   if (produtoRef) {
-    // Garante que quantidade é numérica e trata o caso de ser undefined/null
-    let qtdAtual = Number(produtoRef.quantidade || 0); 
+    let qtdAtual = Number(produtoRef.quantidade || 0);
     qtdAtual += quantidadeDelta;
-    
-    // Evita estoque negativo (se for saída)
     produtoRef.quantidade = Math.max(0, qtdAtual);
-    
-    // Salva e atualiza
-    salvarProdutosNoFirebase(produtos); 
+
+    // 🔹 Atualiza campos adicionais com dados da última entrada
+    if (ultimoValor !== null && !isNaN(ultimoValor)) produtoRef.ultimoValor = Number(ultimoValor);
+    if (lote) produtoRef.lote = lote;
+    if (validade) produtoRef.validade = validade;
+
+    salvarProdutosNoFirebase(produtos);
     atualizarTabelaEstoque();
     atualizarDashboard();
     atualizarPainelFinanceiro();
   }
 }
+
 
 // --- PADRONIZAÇÃO DE DADOS ---
 
@@ -1572,7 +1613,14 @@ function registrarEntrada() {
   salvarEntradasNoFirebase(entradas); 
 
   // 🔹 Atualiza produto relacionado no estoque global
-  atualizarEstoque(novaEntrada.produto, novaEntrada.qtd);
+  atualizarEstoque(
+  novaEntrada.produto,
+  novaEntrada.qtd,
+  novaEntrada.valor,
+  novaEntrada.lote,
+  novaEntrada.validade
+);
+
   
   // 🔹 Limpa e atualiza
   atualizarTabelaEntradas();
@@ -1769,6 +1817,30 @@ function atualizarTabelaSaidas() {
     tbody.appendChild(row);
   });
 }
+function atualizarSetoresPorProduto() {
+  const produtoNome = document.getElementById("saidaProduto").value.trim();
+  const setorSelect = document.getElementById("saidaSetor");
+
+  // Deixa apenas a opção padrão ao carregar / quando o campo estiver vazio
+  setorSelect.innerHTML = `<option value="">Selecione o Setor</option>`;
+
+  // Se o usuário não digitou nada, manter somente a opção padrão (vazio)
+  if (!produtoNome) return;
+
+  // Se o usuário começou a digitar, preenche com a lista COMPLETA de setores
+  const setoresCompletos = [
+    "Limpeza da Clínica",
+    "Laboratório",
+    "Escritório",
+    "Copa e Cozinha",
+    "Clínico Geral",
+    "Centro Cirúrgico"
+  ];
+
+  setorSelect.innerHTML = setoresCompletos
+    .map(s => `<option value="${s}">${s}</option>`)
+    .join("");
+}
 // --- FUNÇÃO PRINCIPAL DE CONTROLE DO SETOR ---
 function controlarSelecaoSetor() {
     const inputProduto = document.getElementById('inputProdutoSaida');
@@ -1866,138 +1938,204 @@ function filtrarSaidas() {
 
 // --- ESTOQUE ATUAL ---
 
+// ====================== 📊 FUNÇÕES DO ESTOQUE ATUAL ======================
+
+// Atualiza a tabela principal do estoque
 function atualizarTabelaEstoque() {
-  const tbody = document.querySelector("#tabelaEstoque tbody");
-  const filtro = document.getElementById("filtroEstoque").value.toLowerCase();
+  const tabela = document.querySelector("#tabelaEstoque tbody");
   const resumoDiv = document.getElementById("resumoEstoque");
-  tbody.innerHTML = "";
-  let totalItens = 0;
-  let totalQuantidade = 0;
+  if (!tabela || !resumoDiv) return;
+
+  const filtro = (document.getElementById("filtroEstoque")?.value || "").toLowerCase();
+  tabela.innerHTML = "";
+
+  if (!Array.isArray(produtos) || produtos.length === 0) {
+    tabela.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#888;">Nenhum produto encontrado no estoque.</td></tr>`;
+    resumoDiv.innerHTML = "🧾 Total de Produtos: 0 | ⚠️ Abaixo do Mínimo: 0 | ✅ Dentro do Limite: 0 | 📦 Acima do Máximo: 0";
+    return;
+  }
+
+  let totalProdutos = 0;
+  let abaixoMinimo = 0;
+  let dentroLimite = 0;
+  let acimaMaximo = 0;
+  let totalQtd = 0;
   let valorTotal = 0;
 
   produtos.forEach((p, i) => {
     const nome = (p.nome || "").toLowerCase();
     const categoria = (p.categoria || "").toLowerCase();
-    const qtd = Number(p.quantidade) || 0;
-    
-    if (filtro && !nome.includes(filtro) && !categoria.includes(filtro)) return;
-    
-    // 🔹 Busca a última entrada para obter o valor e validade
-    const entradasDoProduto = entradas.filter(e => e.produto === p.nome);
-    const ultimaEntrada = entradasDoProduto.length > 0 ? entradasDoProduto.slice(-1)[0] : {};
-    const valorUnitario = ultimaEntrada.valor || 0;
-    const validade = ultimaEntrada.validade || "-";
-    
-    // 🔹 Cálculos de resumo
-    totalItens++;
-    totalQuantidade += qtd;
-    valorTotal += qtd * valorUnitario;
 
-    const row = document.createElement("tr");
-    row.innerHTML = `
+    if (filtro && !nome.includes(filtro) && !categoria.includes(filtro)) return;
+
+    totalProdutos++;
+    const qtd = Number(p.quantidade || 0);
+    const minimo = Number(p.minimo || 0);
+    const maximo = Number(p.maximo || 0);
+    const valor = Number(p.ultimoValor || 0);
+
+    totalQtd += qtd;
+    valorTotal += valor * qtd;
+
+    // Define o status visual
+    let status = "✅ Normal";
+    if (qtd === 0) {
+      status = "❌ Sem Estoque";
+      abaixoMinimo++;
+    } else if (minimo && qtd < minimo) {
+      status = "⚠️ Abaixo do Mínimo";
+      abaixoMinimo++;
+    } else if (maximo && qtd > maximo) {
+      status = "📦 Acima do Máximo";
+      acimaMaximo++;
+    } else {
+      dentroLimite++;
+    }
+
+    const linha = document.createElement("tr");
+    linha.innerHTML = `
       <td>${i + 1}</td>
-      <td>${p.foto ? `<img src="${p.foto}" class="thumb" onclick="ampliarImagem('${p.foto}')">` : "-"}</td>
-      <td>${p.nome}</td>
-      <td>${p.categoria}</td>
-      <td style="font-size:12px; color:#555;">${p.codigoBarras || "-"}</td>
-      <td style="font-weight:bold;">${qtd}</td>
-      <td>R$ ${(valorUnitario || 0).toFixed(2)}</td>
-      <td style="color:${validade && new Date(validade) < new Date() ? 'red' : 'inherit'}; font-weight:${validade && new Date(validade) < new Date() ? 'bold' : 'normal'};">
-        ${validade}
-      </td>
-      <td>
-        <button onclick="editarProduto(${i})"><i class="fa fa-edit"></i></button>
-      </td>
+      <td>${p.nome || "-"}</td>
+      <td>${p.codigoBarras || "-"}</td>
+      <td>${p.categoria || "-"}</td>
+      <td>${qtd}</td>
+      <td>${p.lote || "-"}</td>
+      <td>${valor ? valor.toFixed(2) : "-"}</td>
+      <td>${p.validade || "-"}</td>
+      <td>${status}</td>
     `;
-    tbody.appendChild(row);
+    tabela.appendChild(linha);
   });
-  
-  // 🔹 Atualiza o resumo
+
+  // Atualiza resumo inferior
   resumoDiv.innerHTML = `
-    <strong>Total de Produtos Cadastrados:</strong> ${produtos.length} | 
-    <strong>Total de Itens em Estoque:</strong> ${totalQuantidade} | 
-    <strong>Valor Total do Estoque (Último Custo):</strong> <span style="color:#003b88; font-weight:bold;">R$ ${valorTotal.toFixed(2)}</span>
+    🧾 Total de Produtos: ${totalProdutos} |
+    ⚠️ Abaixo do Mínimo: ${abaixoMinimo} |
+    ✅ Dentro do Limite: ${dentroLimite} |
+    📦 Acima do Máximo: ${acimaMaximo} |
+    💰 Valor Total do Estoque: <span style="color:#003b88">R$ ${valorTotal.toFixed(2)}</span>
   `;
 }
 
+// Função chamada ao digitar no filtro
 function filtrarEstoque() {
-    atualizarTabelaEstoque();
+  atualizarTabelaEstoque();
 }
+
+
 
 // --- LIMITES E LISTA DE COMPRA ---
-
 function atualizarTabelaLimites() {
-  const tbody = document.querySelector("#tabelaLimites tbody");
-  const filtro = document.getElementById("filtroLimites").value.toLowerCase();
-  tbody.innerHTML = "";
-  
+  const tabela = document.querySelector("#tabelaLimites tbody");
+  const resumoDiv = document.getElementById("resumoEstoque");
+  if (!tabela || !resumoDiv) return;
+
+  const filtro = (document.getElementById("filtroLimite")?.value || "").toLowerCase();
+  const filtroCategoria = document.getElementById("filtroCategoria")?.value || "";
+
+  tabela.innerHTML = "";
+
+  if (!Array.isArray(produtos) || produtos.length === 0) {
+    tabela.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#888;">Nenhum produto cadastrado.</td></tr>`;
+    resumoDiv.innerHTML = `🧾 Total de Produtos: 0 | ⚠️ Abaixo do Mínimo: 0 | ✅ Dentro do Limite: 0 | 📦 Acima do Máximo: 0`;
+    return;
+  }
+
+  // Contadores para resumo
+  let total = 0, abaixo = 0, dentro = 0, acima = 0;
+
   produtos.forEach((p, i) => {
     const nome = (p.nome || "").toLowerCase();
-    
-    if (filtro && !nome.includes(filtro)) return;
+    const categoria = (p.categoria || "").toLowerCase();
 
-    const minimo = Number(p.minimo) || 0;
-    const maximo = Number(p.maximo) || 0;
-    const qtd = Number(p.quantidade) || 0;
-    
-    // calcula status e recomendação
-    let statusTexto = "";
-    let statusCor = "";
-    let recomendacao = "";
+    // Filtros
+    if (filtro && !nome.includes(filtro)) return;
+    if (filtroCategoria && p.categoria !== filtroCategoria) return;
+
+    total++;
+    const qtd = Number(p.quantidade || 0);
+    const minimo = Number(p.minimo || 0);
+    const maximo = Number(p.maximo || 0);
+    let status = "✅ Dentro do Limite";
+    let recomendacao = "-";
 
     if (qtd < minimo) {
-      statusTexto = "⚠️ Abaixo do mínimo";
-      statusCor = "red";
-      recomendacao = `Comprar ${minimo - qtd} unidade(s)`;
-    } else if (maximo && qtd > maximo) {
-      statusTexto = "📦 Acima do máximo";
-      statusCor = "orange";
-      recomendacao = "Reduzir estoque";
+      status = "⚠️ Abaixo do Mínimo";
+      recomendacao = `Comprar ${minimo - qtd}`;
+      abaixo++;
+    } else if (maximo > 0 && qtd > maximo) {
+      status = "📦 Acima do Máximo";
+      recomendacao = `Excedente de ${qtd - maximo}`;
+      acima++;
     } else {
-      statusTexto = "✅ Dentro do limite";
-      statusCor = "green";
-      recomendacao = "-";
+      dentro++;
     }
 
-    const row = document.createElement("tr");
-    row.innerHTML = `
+    const linha = document.createElement("tr");
+    linha.innerHTML = `
       <td>${i + 1}</td>
-      <td>${p.nome}</td>
-      <td style="font-size:12px; color:#555;">${p.codigoBarras || "-"}</td>
-      <td>${p.categoria}</td>
+      <td>${p.nome || "-"}</td>
+      <td>${p.codigoBarras || "-"}</td>
+      <td>${p.categoria || "-"}</td>
       <td>${qtd}</td>
-      <td><input type="number" value="${minimo}" onchange="salvarLimite('${p.nome}', this.value, 'minimo')" style="width:70px;"></td>
-      <td><input type="number" value="${maximo}" onchange="salvarLimite('${p.nome}', this.value, 'maximo')" style="width:70px;"></td>
-      <td style="color:${statusCor}; font-weight:bold;">${statusTexto}</td>
+      <td><input type="number" id="min_${i}" value="${minimo}" style="width:80px"></td>
+      <td><input type="number" id="max_${i}" value="${maximo}" style="width:80px"></td>
+      <td>${status}</td>
       <td>${recomendacao}</td>
       <td>
-        <button onclick="removerLimites('${p.nome}')" title="Remover Limites"><i class="fa fa-times"></i></button>
+        <button onclick="salvarLimites(${i})"><i class="fa fa-save"></i></button>
       </td>
     `;
-    tbody.appendChild(row);
+    tabela.appendChild(linha);
   });
+
+  // Atualiza o resumo
+  resumoDiv.innerHTML = `
+    🧾 Total de Produtos: ${total} |
+    ⚠️ Abaixo do Mínimo: ${abaixo} |
+    ✅ Dentro do Limite: ${dentro} |
+    📦 Acima do Máximo: ${acima}
+  `;
 }
+function salvarLimites(i) {
+  const minEl = document.getElementById(`min_${i}`);
+  const maxEl = document.getElementById(`max_${i}`);
+
+  if (!produtos[i]) return;
+
+  produtos[i].minimo = Number(minEl.value) || 0;
+  produtos[i].maximo = Number(maxEl.value) || 0;
+
+  salvarProdutosNoFirebase(produtos);
+  mostrarMensagem(`Limites do produto "${produtos[i].nome}" atualizados com sucesso!`, "sucesso");
+  atualizarTabelaLimites();
+}
+
 
 function salvarLimite(nome, valor, tipo) {
-    const produtoRef = produtos.find(p => p.nome === nome);
-    if (produtoRef) {
-        produtoRef[tipo] = Number(valor);
-        salvarProdutosNoFirebase(produtos);
-        atualizarTabelaLimites(); // Recarrega para atualizar o status/recomendação
-        mostrarMensagem(`Limite ${tipo} de ${nome} salvo.`, "sucesso");
-    }
+  const produtoRef = produtos.find(p => p.nome === nome);
+  if (!produtoRef) return;
+
+  produtoRef[tipo] = Number(valor) || 0;
+  salvarProdutosNoFirebase(produtos);
+  mostrarMensagem(`Limite ${tipo} de ${nome} salvo.`, "sucesso");
+  atualizarTabelaLimites();
 }
 
+
 function removerLimites(nome) {
-    const produtoRef = produtos.find(p => p.nome === nome);
-    if (produtoRef && confirm(`Remover limites de estoque (mínimo e máximo) para "${nome}"?`)) {
-        produtoRef.minimo = 0;
-        produtoRef.maximo = 0;
-        salvarProdutosNoFirebase(produtos);
-        atualizarTabelaLimites();
-        mostrarMensagem(`Limites de ${nome} removidos.`, "sucesso");
-    }
+  const produtoRef = produtos.find(p => p.nome === nome);
+  if (!produtoRef) return;
+
+  if (confirm(`Remover limites (mínimo e máximo) do produto "${nome}"?`)) {
+    produtoRef.minimo = 0;
+    produtoRef.maximo = 0;
+    salvarProdutosNoFirebase(produtos);
+    atualizarTabelaLimites();
+    mostrarMensagem(`Limites de "${nome}" removidos com sucesso.`, "sucesso");
+  }
 }
+
 
 function filtrarLimites() {
     atualizarTabelaLimites();
@@ -2080,18 +2218,17 @@ function removerItemListaCompra(btn) {
 }
 
 function limparListaCompra() {
-    const container = document.getElementById("listaCompraContainer");
-    const tbody = document.querySelector("#tabelaListaCompra tbody");
-    const totalSpan = document.getElementById("totalItensCompra");
-    
-    if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#777;">Nenhum item abaixo do estoque mínimo.</td></tr>`;
-    if (totalSpan) totalSpan.textContent = "0";
-    if (container) container.style.display = "none";
-    
-    // Limpa também o filtro de categoria
-    limparCampos("limites");
-    mostrarMensagem("Lista de Compra limpa.", "info");
+  const tabelaLista = document.querySelector("#tabelaListaCompra tbody");
+  const totalEl = document.getElementById("totalItensCompra");
+  const listaContainer = document.getElementById("listaCompraContainer");
+
+  if (tabelaLista) tabelaLista.innerHTML = "";
+  if (totalEl) totalEl.textContent = "0";
+  if (listaContainer) listaContainer.style.display = "none";
+
+  mostrarMensagem("Lista de compra limpa (os limites foram mantidos).", "info");
 }
+
 
 
 // --- PAINEL FINANCEIRO ---
