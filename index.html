@@ -2222,33 +2222,33 @@ function formatarMoeda(valor) {
 }
 
 /**
- * Função auxiliar para montar o bloco de Resumo Geral com o design exato da imagem.
+ * Função auxiliar para montar o bloco de Resumo Geral com o design EXATO da imagem.
  */
 function atualizarBlocoResumo(totalProdutos, qtdTotalEstoque, totalSaidas, valorUltimaEntrada, valorEstoqueContabil, criticosCount) {
     const resumoEl = document.getElementById("resumoGeralNovo");
-    // GARANTIA: Se o ID não for encontrado, a função para aqui.
+    // ID "resumoGeralNovo" deve estar no seu HTML
     if (!resumoEl) return; 
 
     resumoEl.innerHTML = `
         <div class="resumo-metric">
-            <span class="resumo-label"><i class="fas fa-boxes resumo-icon icon-produtos"></i> Total de produtos:</span>
+            <span class="resumo-label"><i class="fas fa-boxes resumo-icon icon-produtos"></i> Total de Produtos Cadastrados:</span>
             <span class="resumo-value">${totalProdutos}</span>
         </div>
         <div class="resumo-metric">
-            <span class="resumo-label"><i class="fas fa-box-open resumo-icon icon-estoque"></i> Quantidade total em estoque:</span>
+            <span class="resumo-label"><i class="fas fa-box-open resumo-icon icon-estoque"></i> Quantidade Total em Estoque (Unid):</span>
             <span class="resumo-value">${qtdTotalEstoque.toFixed(0)}</span>
         </div>
         <div class="resumo-metric">
-            <span class="resumo-label"><i class="fas fa-sign-out-alt resumo-icon icon-saidas"></i> Total de saídas registradas:</span>
+            <span class="resumo-label"><i class="fas fa-sign-out-alt resumo-icon icon-saidas"></i> Total de Saídas Registradas:</span>
             <span class="resumo-value">${totalSaidas}</span>
         </div>
         <hr style="margin: 10px 0; border-color: #ddd;">
         <div class="resumo-metric">
-            <span class="resumo-label"><i class="fas fa-coins resumo-icon icon-valor"></i> Valor total (Último valor de entrada):</span>
+            <span class="resumo-label"><i class="fas fa-coins resumo-icon icon-valor"></i> Valor Total (Último Custo):</span>
             <span class="resumo-value">${formatarMoeda(valorUltimaEntrada)}</span>
         </div>
         <div class="resumo-metric">
-            <span class="resumo-label"><i class="fas fa-chart-line resumo-icon icon-contabil"></i> Valor total do Estoque Atual (Contábil/CMP):</span>
+            <span class="resumo-label"><i class="fas fa-chart-line resumo-icon icon-contabil"></i> Valor Total do Estoque (C.M.P):</span>
             <span class="resumo-value">${formatarMoeda(valorEstoqueContabil)}</span>
         </div>
         <hr style="margin: 10px 0; border-color: #ddd;">
@@ -2281,7 +2281,8 @@ function atualizarDashboard() {
     // Calcula a soma total de saídas por nome do produto
     const contagemSaidas = saidasLocal.reduce((acc, s) => {
         const nome = s.produto;
-        const qtdSaida = Number(s.quantidade) || 0;
+        // Garante que a quantidade é um número
+        const qtdSaida = Number(s.quantidade) || 0; 
         acc[nome] = (acc[nome] || 0) + qtdSaida;
         return acc;
     }, {});
@@ -2289,7 +2290,7 @@ function atualizarDashboard() {
     // 2. PREPARAÇÃO DE DADOS DETALHADOS POR PRODUTO
     const estoqueDetalhado = produtosLocal.map(p => {
         const qtdAtual = Number(p.quantidade) || 0;
-        const valorUnitario = buscarValorUnitario(p.nome);
+        const valorUnitario = buscarValorValorUnitario(p.nome);
         const qtdSaidas = contagemSaidas[p.nome] || 0;
 
         // CÁLCULO CUSTO MÉDIO PONDERADO (CMP)
@@ -2302,7 +2303,8 @@ function atualizarDashboard() {
         let validadeMaisProxima = null;
         entradasLocal.filter(e => e.produto === p.nome && e.validade)
                      .forEach(e => {
-            const dataValidade = new Date(e.validade + 'T00:00:00'); // Garante que a hora seja 00:00:00
+            // Adiciona 'T00:00:00' para evitar problemas de fuso horário na comparação de datas
+            const dataValidade = new Date(e.validade + 'T00:00:00'); 
             if (!validadeMaisProxima || dataValidade < validadeMaisProxima) {
                 validadeMaisProxima = dataValidade;
             }
@@ -2323,10 +2325,7 @@ function atualizarDashboard() {
             qtdSaidas: qtdSaidas,
             validade: validadeMaisProxima,
             diasVencer: diasVencer,
-            // Critico: estoque atual menor que o mínimo E o mínimo é maior que zero
             isCritico: qtdAtual < (Number(p.minimo) || 0) && (Number(p.minimo) || 0) > 0,
-            // Vencido: Vencimento existe, quantidade em estoque > 0 E diasVencer é negativo ou zero
-            isVencido: validadeMaisProxima && qtdAtual > 0 && diasVencer <= 0
         };
     });
 
@@ -2336,7 +2335,8 @@ function atualizarDashboard() {
 
     // a. 🕒 Produtos Próximos do Vencimento (TOP 5 MAIS PRÓXIMOS, SEM DATA LIMITE)
     const proximosVencer = estoqueDetalhado
-        .filter(p => p.validade && p.qtdAtual > 0 && p.diasVencer > -30) // Exclui itens muito vencidos (> 30 dias)
+        // Filtra para mostrar APENAS itens que têm validade E estão em estoque E não venceram há mais de 30 dias (para não poluir a lista)
+        .filter(p => p.validade && p.qtdAtual > 0 && p.diasVencer > -30) 
         .sort((a, b) => a.diasVencer - b.diasVencer) // Ordena do menor dia (mais próximo) para o maior
         .slice(0, 5);
     
@@ -2364,9 +2364,8 @@ function atualizarDashboard() {
     }
 
     // c. 📦 Produtos Mais Utilizados (Saídas) (Top 5)
-    // Se esta lista estava vazia, é porque 'saidasLocal' não tem dados ou a coluna 'quantidade' não é um número.
     const maisSaidas = estoqueDetalhado
-        .filter(p => p.qtdSaidas > 0) // APENAS produtos que tiveram alguma saída
+        .filter(p => p.qtdSaidas > 0) // APENAS produtos que tiveram alguma saída (resolvendo o problema de estar vazio)
         .sort((a, b) => b.qtdSaidas - a.qtdSaidas)
         .slice(0, 5);
     
@@ -2379,7 +2378,7 @@ function atualizarDashboard() {
 
     // d. 💤 Produtos com Menos Saídas (Top 5)
     const menosSaidas = estoqueDetalhado
-        .filter(p => p.qtdAtual > 0) // Apenas itens que ESTÃO em estoque
+        .filter(p => p.qtdAtual > 0) 
         .sort((a, b) => a.qtdSaidas - b.qtdSaidas)
         .slice(0, 5);
     
@@ -2408,8 +2407,7 @@ function atualizarDashboard() {
     
     const totalProdutos = produtosLocal.length;
     const qtdTotalEmEstoque = estoqueDetalhado.reduce((sum, p) => sum + p.qtdAtual, 0);
-    // Para o resumo geral, é mais informativo contar o número de registros de saída.
-    const totalSaidasRegistradas = saidasLocal.length; 
+    const totalSaidasRegistradas = saidasLocal.length; // Número de registros de saída
     const criticosCount = estoqueDetalhado.filter(p => p.isCritico).length;
     
     // Valor total (Último valor de entrada) = Estoque Atual * Último Custo
@@ -2418,10 +2416,12 @@ function atualizarDashboard() {
     // Valor total do Estoque Atual (Contábil/CMP) = Estoque Atual * CMP
     const valorEstoqueContabil = estoqueDetalhado.reduce((sum, p) => sum + (p.qtdAtual * p.cmp), 0);
     
-    // 5. EXIBIÇÃO DO RESUMO GERAL
+    // 5. EXIBIÇÃO DO RESUMO GERAL (Chama a função auxiliar com o design corrigido)
     atualizarBlocoResumo(totalProdutos, qtdTotalEmEstoque, totalSaidasRegistradas, valorUltimaEntrada, valorEstoqueContabil, criticosCount);
 }
 
+// Chame esta função no evento DOMContentLoaded ou no seu fluxo de atualização:
+// document.addEventListener("DOMContentLoaded", atualizarDashboard);
 // --- RELATÓRIOS ---
 
 function definirPeriodoRapido(tipo) {
@@ -2794,6 +2794,7 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
 
