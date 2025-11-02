@@ -932,146 +932,154 @@
     </main>
   </div>
 
-
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-  import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 
-  // Configuração do Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw", // ⚠️ MANTENHA ESTA CHAVE PRIVADA
-    authDomain: "oralunicestoque.firebaseapp.com",
-    projectId: "oralunicestoque",
-    storageBucket: "oralunicestoque.firebasestorage.app",
-    messagingSenderId: "660233908877",
-    appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
-  };
-  
-  // Inicialização
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+  // Configuração do Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw", // ⚠️ MANTENHA ESTA CHAVE PRIVADA
+    authDomain: "oralunicestoque.firebaseapp.com",
+    projectId: "oralunicestoque",
+    storageBucket: "oralunicestoque.firebasestorage.app",
+    messagingSenderId: "660233908877",
+    appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
+  };
+  
+  // Inicialização
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-  // Variáveis globais para dados
-  window.produtos = JSON.parse(localStorage.getItem("produtos")) || [];
-  window.entradas = JSON.parse(localStorage.getItem("entradas")) || [];
-  window.saidas = JSON.parse(localStorage.getItem("saidas")) || [];
-  window.usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
-  
-  // === FUNÇÕES DE PERSISTÊNCIA (Firestore/Local) ===
-  
-  // 🔹 Salva dados globais no localStorage (fallback)
-  function salvarTodosLocal() {
-      localStorage.setItem("produtos", JSON.stringify(window.produtos));
-      localStorage.setItem("entradas", JSON.stringify(window.entradas));
-      localStorage.setItem("saidas", JSON.stringify(window.saidas));
-      localStorage.setItem("usuarios", JSON.stringify(window.usuarios));
-  }
-  
-  // 🔹 Salva/Busca no Firestore (Mais robusto para multiusuário)
-  async function salvarDadosNoFirestore(nomeColecao, dados) {
-      if (!auth.currentUser) return;
-      try {
-          // Usa o UID do usuário para criar uma subcoleção única para os dados
-          const docRef = doc(db, "estoqueData", auth.currentUser.uid);
-          await setDoc(docRef, { [nomeColecao]: dados }, { merge: true });
-          // console.log("Dados salvos no Firestore:", nomeColecao);
-      } catch (e) {
-          console.error("Erro ao salvar no Firestore: ", e);
-      }
-  }
+  // Variáveis globais para dados
+  window.produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+  window.entradas = JSON.parse(localStorage.getItem("entradas")) || [];
+  window.saidas = JSON.parse(localStorage.getItem("saidas")) || [];
+  window.usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+  
+  // === FUNÇÕES DE PERSISTÊNCIA (Firestore/Local) ===
+  
+  // 🔹 Salva dados globais no localStorage (fallback)
+  function salvarTodosLocal() {
+      localStorage.setItem("produtos", JSON.stringify(window.produtos));
+      localStorage.setItem("entradas", JSON.stringify(window.entradas));
+      localStorage.setItem("saidas", JSON.stringify(window.saidas));
+      localStorage.setItem("usuarios", JSON.stringify(window.usuarios));
+  }
+  
+  // 🔹 Salva/Busca no Firestore (Mais robusto para multiusuário)
+  async function salvarDadosNoFirestore(nomeColecao, dados) {
+      if (!auth.currentUser) return;
+      try {
+          // Usa o UID do usuário para criar uma subcoleção única para os dados
+          const docRef = doc(db, "estoqueData", auth.currentUser.uid);
+          await setDoc(docRef, { [nomeColecao]: dados }, { merge: true });
+          // console.log("Dados salvos no Firestore:", nomeColecao);
+      } catch (e) {
+          console.error("Erro ao salvar no Firestore: ", e);
+      }
+  }
 
-  async function carregarDadosDoFirestore() {
-      if (!auth.currentUser) return;
-      try {
-          const docRef = doc(db, "estoqueData", auth.currentUser.uid);
-          const docSnap = await getDoc(docRef);
+  async function carregarDadosDoFirestore() {
+      if (!auth.currentUser) return;
+      try {
+          const docRef = doc(db, "estoqueData", auth.currentUser.uid);
+          const docSnap = await getDoc(docRef);
 
-          if (docSnap.exists()) {
-              const data = docSnap.data();
-              // Atualiza as variáveis globais e o localStorage com os dados do Firestore
-              window.produtos = data.produtos || [];
-              window.entradas = data.entradas || [];
-              window.saidas = data.saidas || [];
-              window.usuarios = data.usuarios || [];
-              salvarTodosLocal();
-              // console.log("Dados carregados do Firestore.");
-          } else {
-              // console.log("Nenhum dado encontrado no Firestore para este usuário, usando localStorage.");
-              // Se não houver dados no Firestore, salva o que está no localStorage para começar
-              salvarDadosNoFirestore("produtos", window.produtos);
-              salvarDadosNoFirestore("entradas", window.entradas);
-              salvarDadosNoFirestore("saidas", window.saidas);
-              salvarDadosNoFirestore("usuarios", window.usuarios);
-          }
-          
-          // Re-renderiza todas as tabelas e dashboard após carregar os dados
-          if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-          if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
-          if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-          if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-          if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-          if (typeof atualizarDashboard === "function") atualizarDashboard();
-          if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
-          if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
-          if (typeof atualizarSelectProdutos === "function") atualizarSelectProdutos();
-          if (typeof ordenarListasAlfabeticamente === "function") ordenarListasAlfabeticamente();
-          
-      } catch (e) {
-          console.error("Erro ao carregar do Firestore: ", e);
-      }
-  }
-  
-  // 🔹 Wrappers para usar o Firestore
-  window.salvarProdutosNoFirebase = (dados) => salvarDadosNoFirestore("produtos", dados);
-  window.salvarEntradasNoFirebase = (dados) => salvarDadosNoFirestore("entradas", dados);
-  window.salvarSaidasNoFirebase = (dados) => salvarDadosNoFirestore("saidas", dados);
-  window.salvarUsuariosNoFirebase = (dados) => salvarDadosNoFirestore("usuarios", dados);
+          if (docSnap.exists()) {
+              const data = docSnap.data();
+              // Atualiza as variáveis globais e o localStorage com os dados do Firestore
+              window.produtos = data.produtos || [];
+              window.entradas = data.entradas || [];
+              window.saidas = data.saidas || [];
+              window.usuarios = data.usuarios || [];
+              salvarTodosLocal();
+              // console.log("Dados carregados do Firestore.");
+          } else {
+              // console.log("Nenhum dado encontrado no Firestore para este usuário, usando localStorage.");
+              // Se não houver dados no Firestore, salva o que está no localStorage para começar
+              salvarDadosNoFirestore("produtos", window.produtos);
+              salvarDadosNoFirestore("entradas", window.entradas);
+              salvarDadosNoFirestore("saidas", window.saidas);
+              salvarDadosNoFirestore("usuarios", window.usuarios);
+          }
+          
+          // Re-renderiza todas as tabelas e dashboard após carregar os dados
+          if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+          if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
+          if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
+          if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
+          if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
+          if (typeof atualizarDashboard === "function") atualizarDashboard();
+          if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
+          if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
+          if (typeof atualizarSelectProdutos === "function") atualizarSelectProdutos();
+          if (typeof ordenarListasAlfabeticamente === "function") ordenarListasAlfabeticamente();
+          
+      } catch (e) {
+          console.error("Erro ao carregar do Firestore: ", e);
+      }
+  }
+  
+  // 🔹 Wrappers para usar o Firestore
+  window.salvarProdutosNoFirebase = (dados) => salvarDadosNoFirestore("produtos", dados);
+  window.salvarEntradasNoFirebase = (dados) => salvarDadosNoFirestore("entradas", dados);
+  window.salvarSaidasNoFirebase = (dados) => salvarDadosNoFirestore("saidas", dados);
+  window.salvarUsuariosNoFirebase = (dados) => salvarDadosNoFirestore("usuarios", dados);
+
 // === CRIAÇÃO DE USUÁRIO (FIREBASE AUTH) ===
 
-  window.criarUsuarioNoFirebase = async function(email, senha) {
-    if (!auth.currentUser) {
-        mostrarMensagem("Apenas usuários logados podem criar novas contas.", "erro");
-        return false;
-    }
-    
-    // Para criar um novo usuário com senha, é necessário usar a função de criação
-    // Lembre-se que o usuário logado (Admin) precisa ter permissão no Firebase para isso (geralmente ele tem)
-    try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
-        // Não é necessário fazer login com esta nova conta, apenas a criação
-        return userCredential.user;
-   
-  // === LOGIN E SESSÃO ===
-  
-  function mostrarSistema(user) {
-    const loginView = document.getElementById("loginView");
-    const mainApp = document.getElementById("mainApp");
-    const userNameEl = document.getElementById("userName");
-    const perfilBadgeEl = document.getElementById("perfilBadge");
-    const nomeBemVindoEl = document.getElementById("nomeUsuarioBemVindo");
+  window.criarUsuarioNoFirebase = async function(email, senha) {
+    if (!auth.currentUser) {
+        mostrarMensagem("Apenas usuários logados podem criar novas contas.", "erro");
+        return false;
+    }
+    
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+        return userCredential.user;
+    } catch (error) { // ⬅️ Bloco 'catch' reintroduzido corretamente
+        let msg = "Erro ao criar usuário: " + error.code;
+        if (error.code === 'auth/weak-password') {
+            msg = "A senha deve ter pelo menos 6 caracteres.";
+        } else if (error.code === 'auth/email-already-in-use') {
+            msg = "O e-mail já está em uso por outra conta.";
+        } else if (error.code === 'auth/invalid-email') {
+            msg = "E-mail inválido.";
+        }
+        mostrarMensagem(msg, "erro");
+        console.error("Erro ao criar usuário:", error.code, error.message);
+        return false;
+    }
+  } // ⬅️ Função fechada corretamente
 
-    if (loginView && mainApp) {
-        loginView.style.display = "none";
-        mainApp.style.display = "block";
-    }
-
-    // Tenta encontrar o perfil do usuário logado
-    const usuarioLogado = window.usuarios.find(u => u.email.toLowerCase() === user.email.toLowerCase());
-    const nome = usuarioLogado ? usuarioLogado.nome : user.email.split('@')[0];
-    const perfil = usuarioLogado ? usuarioLogado.perfil : "DESCONHECIDO";
-
-    if (userNameEl) userNameEl.textContent = nome;
-    if (perfilBadgeEl) perfilBadgeEl.textContent = "Perfil: " + perfil.toUpperCase();
-    if (nomeBemVindoEl) nomeBemVindoEl.textContent = nome;
-  }
-  
 // === LOGIN E SESSÃO ===
-// ... (código da função mostrarSistema)
+  
+  function mostrarSistema(user) {
+    const loginView = document.getElementById("loginView");
+    const mainApp = document.getElementById("mainApp");
+    const userNameEl = document.getElementById("userName");
+    const perfilBadgeEl = document.getElementById("perfilBadge");
+    const nomeBemVindoEl = document.getElementById("nomeUsuarioBemVindo");
 
-window.fazerLogin = async function() {
+    if (loginView && mainApp) {
+        loginView.style.display = "none";
+        mainApp.style.display = "block";
+    }
+
+    // Tenta encontrar o perfil do usuário logado
+    const usuarioLogado = window.usuarios.find(u => u.email.toLowerCase() === user.email.toLowerCase());
+    const nome = usuarioLogado ? usuarioLogado.nome : user.email.split('@')[0];
+    const perfil = usuarioLogado ? usuarioLogado.perfil : "DESCONHECIDO";
+
+    if (userNameEl) userNameEl.textContent = nome;
+    if (perfilBadgeEl) perfilBadgeEl.textContent = "Perfil: " + perfil.toUpperCase();
+    if (nomeBemVindoEl) nomeBemVindoEl.textContent = nome;
+  }
+  
+  window.fazerLogin = async function() {
     const usuario = document.getElementById("usuarioLogin").value.trim(); 
     const senha = document.getElementById("senhaLogin").value.trim();
 
@@ -1105,45 +1113,46 @@ window.fazerLogin = async function() {
         alert(mensagemErro);
       }
     }
-};
+  };
 
-  // === MONITORAR LOGIN ===
-  onAuthStateChanged(auth, (user) => {
-    const login = document.getElementById("loginView");
-    const appDiv = document.getElementById("mainApp");
-    if (user) {
-        // Logado
-        login.style.display = "none";
-        appDiv.style.display = "block";
-        carregarDadosDoFirestore().then(() => {
-             mostrarSistema(user); // Garante que a interface é atualizada após carregar os dados
-        });
-        
-    } else {
-        // Deslogado
-        login.style.display = "flex";
-        appDiv.style.display = "none";
-        
-        // Limpa campos e dados (opcional, mas recomendado)
-        if (typeof limparCampos === "function") {
-            limparCampos("loginView");
-        }
-        document.getElementById("userName").innerText = "Visitante";
-        document.getElementById("perfilBadge").innerText = "PERFIL";
-    }
-  });
+  // === MONITORAR LOGIN ===
+  onAuthStateChanged(auth, (user) => {
+    const login = document.getElementById("loginView");
+    const appDiv = document.getElementById("mainApp");
+    if (user) {
+        // Logado
+        login.style.display = "none";
+        appDiv.style.display = "block";
+        carregarDadosDoFirestore().then(() => {
+             mostrarSistema(user); // Garante que a interface é atualizada após carregar os dados
+        });
+        
+    } else {
+        // Deslogado
+        login.style.display = "flex";
+        appDiv.style.display = "none";
+        
+        // Limpa campos e dados (opcional, mas recomendado)
+        if (typeof limparCampos === "function") {
+            limparCampos("loginView");
+        }
+        document.getElementById("userName").innerText = "Visitante";
+        document.getElementById("perfilBadge").innerText = "PERFIL";
+    }
+  });
 
-  // === LOGOUT ===
-  window.logout = async function() {
-    await signOut(auth);
-    mostrarMensagem("Sessão encerrada!", "info");
-  };
-  
-  // Expor Firestore para uso em outras funções, se necessário
-  window.db = db;
-  window.auth = auth;
-  
- </script>
+  // === LOGOUT ===
+  window.logout = async function() {
+    await signOut(auth);
+    mostrarMensagem("Sessão encerrada!", "info");
+  };
+  
+  // Expor Firestore para uso em outras funções, se necessário
+  window.db = db;
+  window.auth = auth;
+  
+ </script>
+
 
 <script>
 // --- VARIÁVEIS GLOBAIS ---
@@ -3002,6 +3011,3 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
-
-
-
