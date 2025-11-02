@@ -2508,7 +2508,11 @@ async function salvarUsuarioLocal() { // 👈 Tornada assíncrona
         } else {
             mostrarMensagem(`✅ Perfil de ${nome} atualizado.`, "sucesso");
         }
-    
+} 
+	
+	// Limpa o campo de senha após a operação
+    document.getElementById("usuarioSenha").value = ""; 
+} // 👈 ESTA CHAVE FECHA A FUNÇÃO 'salvarUsuarioLocal'
 
 function atualizarTabelaUsuarios() {
     const tbody = document.querySelector("#tabelaUsuarios tbody");
@@ -2597,6 +2601,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
 
