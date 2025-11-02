@@ -962,67 +962,104 @@
   // === FUNÇÕES DE PERSISTÊNCIA (Firestore/Local) ===
   
   // 🔹 Salva dados globais no localStorage (fallback)
-  function salvarTodosLocal() {
-      localStorage.setItem("produtos", JSON.stringify(window.produtos));
-      localStorage.setItem("entradas", JSON.stringify(window.entradas));
-      localStorage.setItem("saidas", JSON.stringify(window.saidas));
-      localStorage.setItem("usuarios", JSON.stringify(window.usuarios));
-  }
-  
-  // 🔹 Salva/Busca no Firestore (Mais robusto para multiusuário)
-  async function salvarDadosNoFirestore(nomeColecao, dados) {
-      if (!auth.currentUser) return;
-      try {
-          // Usa o UID do usuário para criar uma subcoleção única para os dados
-          const docRef = doc(db, "estoqueData", auth.currentUser.uid);
-          await setDoc(docRef, { [nomeColecao]: dados }, { merge: true });
-          // console.log("Dados salvos no Firestore:", nomeColecao);
-      } catch (e) {
-          console.error("Erro ao salvar no Firestore: ", e);
-      }
-  }
+ // === FUNÇÕES DE PERSISTÊNCIA (Firestore/Local) ===
 
-  async function carregarDadosDoFirestore() {
-      if (!auth.currentUser) return;
-      try {
-          const docRef = doc(db, "estoqueData", auth.currentUser.uid);
-          const docSnap = await getDoc(docRef);
+// 🔹 Salva dados globais no localStorage (mantida)
+function salvarTodosLocal() {
+    localStorage.setItem("produtos", JSON.stringify(window.produtos));
+    localStorage.setItem("entradas", JSON.stringify(window.entradas));
+    localStorage.setItem("saidas", JSON.stringify(window.saidas));
+    localStorage.setItem("usuarios", JSON.stringify(window.usuarios)); // Salva a lista de usuários CENTRALIZADA
+}
 
-          if (docSnap.exists()) {
-              const data = docSnap.data();
-              // Atualiza as variáveis globais e o localStorage com os dados do Firestore
-              window.produtos = data.produtos || [];
-              window.entradas = data.entradas || [];
-              window.saidas = data.saidas || [];
-              window.usuarios = data.usuarios || [];
-              salvarTodosLocal();
-              // console.log("Dados carregados do Firestore.");
-          } else {
-              // console.log("Nenhum dado encontrado no Firestore para este usuário, usando localStorage.");
-              // Se não houver dados no Firestore, salva o que está no localStorage para começar
-              salvarDadosNoFirestore("produtos", window.produtos);
-              salvarDadosNoFirestore("entradas", window.entradas);
-              salvarDadosNoFirestore("saidas", window.saidas);
-              salvarDadosNoFirestore("usuarios", window.usuarios);
-          }
-          
-          // Re-renderiza todas as tabelas e dashboard após carregar os dados
-          if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-          if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
-          if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-          if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-          if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-          if (typeof atualizarDashboard === "function") atualizarDashboard();
-          if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
-             // 🚨 CORREÇÃO: Chamando a função de USUÁRIOS se ela estiver definida
-          if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
-          if (typeof atualizarSelectProdutos === "function") atualizarSelectProdutos();
-          if (typeof ordenarListasAlfabeticamente === "function") ordenarListasAlfabeticamente();
-          
-      } catch (e) {
-          console.error("Erro ao carregar do Firestore: ", e);
-      }
-  }
+// 🔹 Salva/Busca no Firestore (Corrigida a lógica de usuários)
+async function salvarDadosNoFirestore(nomeColecao, dados) {
+    if (!auth.currentUser) return;
+    try {
+        if (nomeColecao === "usuarios") {
+            // 🚨 CORREÇÃO 1: SALVA USUÁRIOS EM UM NÓ CENTRALIZADO (estoqueGlobal)
+            const docRefGlobal = doc(db, "estoqueGlobal", "usuarios");
+            await setDoc(docRefGlobal, { usuarios: dados });
+        } else {
+            // Salva dados de ESTOQUE no nó isolado do usuário
+            const docRefUser = doc(db, "estoqueData", auth.currentUser.uid);
+            await setDoc(docRefUser, { [nomeColecao]: dados }, { merge: true });
+        }
+    } catch (e) {
+        console.error("Erro ao salvar no Firestore: ", e);
+    }
+}
+
+async function carregarDadosDoFirestore() {
+    if (!auth.currentUser) return;
+    try {
+        // 1. CARREGA DADOS DE ESTOQUE (ISOLADO por usuário)
+        const docRefUser = doc(db, "estoqueData", auth.currentUser.uid);
+        const docSnapUser = await getDoc(docRefUser);
+
+        if (docSnapUser.exists()) {
+            const data = docSnapUser.data();
+            window.produtos = data.produtos || [];
+            window.entradas = data.entradas || [];
+            window.saidas = data.saidas || [];
+        } else {
+            // Se não houver dados de estoque, inicializa com vazio (e será salvo abaixo)
+            window.produtos = [];
+            window.entradas = [];
+            window.saidas = [];
+        }
+
+        // 2. CARREGA DADOS DE USUÁRIOS (CENTRALIZADO, para TODOS verem os perfis)
+        const docRefGlobal = doc(db, "estoqueGlobal", "usuarios");
+        const docSnapGlobal = await getDoc(docRefGlobal);
+
+        if (docSnapGlobal.exists() && docSnapGlobal.data().usuarios) {
+            window.usuarios = docSnapGlobal.data().usuarios;
+        } else {
+            // Se o nó global não existe (primeira vez), usa o local e inicializa o nó global
+            await salvarDadosNoFirestore("usuarios", window.usuarios); 
+        }
+
+        // 3. Verifica se o perfil do usuário logado existe na lista centralizada
+        const emailLogado = auth.currentUser.email.toLowerCase();
+        const perfilExiste = window.usuarios.find(u => u.email.toLowerCase() === emailLogado);
+        
+        if (!perfilExiste) {
+            // 🚨 CRUCIAL: Se o usuário logou, mas não tem perfil (ou foi apagado), recria um básico e salva.
+            const novoPerfil = { 
+                uid: auth.currentUser.uid,
+                email: emailLogado,
+                nome: emailLogado.split('@')[0],
+                perfil: 'USUARIO',
+                criadoEm: new Date().toISOString()
+            };
+            window.usuarios.push(novoPerfil);
+            await salvarDadosNoFirestore("usuarios", window.usuarios); // Salva a lista atualizada
+        }
+
+        // 4. Salva no local e atualiza a interface
+        salvarTodosLocal();
+        
+        // ... (resto do código para atualizar as tabelas, mantido)
+        if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+        if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
+        if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
+        if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
+        if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
+        if (typeof atualizarDashboard === "function") atualizarDashboard();
+        if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
+        if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
+        if (typeof atualizarSelectProdutos === "function") atualizarSelectProdutos();
+        if (typeof ordenarListasAlfabeticamente === "function") ordenarListasAlfabeticamente();
+        
+    } catch (e) {
+        console.error("Erro ao carregar do Firestore: ", e);
+    }
+}
+// ...
+// 🔹 Wrappers para usar o Firestore (apenas garanta que salvarUsuarios continua usando a wrapper)
+window.salvarUsuariosNoFirebase = (dados) => salvarDadosNoFirestore("usuarios", dados);
+// ...
   
   // 🔹 Wrappers para usar o Firestore
   window.salvarProdutosNoFirebase = (dados) => salvarDadosNoFirestore("produtos", dados);
