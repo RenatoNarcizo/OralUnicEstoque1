@@ -2411,33 +2411,7 @@ if (resumoGeral) {
           color: var(--azul-escuro);
           font-size: 1.1em;
         }
-      </style>
-      <div class="resumo-item">
-        <span class="resumo-label">Total de Produtos Cadastrados:</span>
-        <span class="resumo-value">${totalProdutos}</span>
-      </div>
-      <div class="resumo-item">
-        <span class="resumo-label">Total de Itens em Estoque (Unid):</span>
-        <span class="resumo-value">${qtdTotal}</span>
-      </div>
-      <div class="resumo-item">
-        <span class="resumo-label">Produtos em Estoque Crítico:</span>
-        <span class="resumo-value" style="color: ${totalCriticos > 0 ? 'red' : 'green'};">${totalCriticos}</span>
-      </div>
-      <div class="resumo-item">
-        <span class="resumo-label">Próximos do Vencimento (90d):</span>
-        <span class="resumo-value" style="color: ${totalVencimento > 0 ? 'orange' : 'green'};">${totalVencimento}</span>
-      </div>
-       <div class="resumo-item">
-        <span class="resumo-label">Valor Estimado do Estoque:</span>
-        <span class="resumo-value valor-estoque">R$ ${valorTotalEstoque.toFixed(2).replace('.', ',')}</span>
-      </div>
-       <div class="resumo-item">
-        <span class="resumo-label">Total de Saídas Registradas:</span>
-        <span class="resumo-value">${totalSaidas}</span>
-      </div>
-    `;
-  }
+     
 
 
 // --- RELATÓRIOS ---
@@ -2812,6 +2786,7 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
 
