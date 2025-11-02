@@ -1043,30 +1043,7 @@
         const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
         // Não é necessário fazer login com esta nova conta, apenas a criação
         return userCredential.user;
-   // NOVO CÓDIGO DENTRO DE window.fazerLogin = async function() { ... }
-
-      // ...
-      await signInWithEmailAndPassword(auth, email, senha);
-      // O onAuthStateChanged cuidará da transição da tela
-      // alert("✅ Login realizado com sucesso!");
-    } catch (error) {
-      console.error(error.code, error.message);
-      
-      let mensagemErro = "Erro desconhecido ao tentar logar.";
-      
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
-        // ✅ MELHORIA: Mensagem clara para o erro 400 que você está vendo
-        mensagemErro = "E-mail ou senha inválidos. Verifique suas credenciais.";
-      } else if (error.code === 'auth/invalid-email') {
-        mensagemErro = "O formato do e-mail é inválido.";
-      } else {
-        // Para outros erros do Firebase, como API key inválida, etc.
-        mensagemErro = `Erro: ${error.message}`;
-      }
-
-      mostrarMensagem(mensagemErro, "erro");
-    }
-  };
+   
   // === LOGIN E SESSÃO ===
   
   function mostrarSistema(user) {
@@ -3007,4 +2984,5 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
