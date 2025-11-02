@@ -1137,18 +1137,26 @@ function toggleSidebar() {
 }
 // ... (após a definição de showSection, logout, etc.)
 
-// === FUNÇÃO PARA ABRIR/FECHAR MENU LATERAL ===
+// === FUNÇÃO PARA ABRIR/FECHAR MENU LATERAL COM CORREÇÃO ARIA ===
 window.toggleSidebar = function() {
     const sidebar = document.getElementById("sidebar");
     const mainContent = document.querySelector("main");
     
     // Se o estilo 'left' for vazio (padrão) ou '0px', esconde
     if (sidebar.style.left === '0px' || sidebar.style.left === '') {
-        sidebar.style.left = '-220px'; // Esconde a sidebar (largura 220px)
-        mainContent.style.marginLeft = '20px'; // Reduz a margem do conteúdo principal
+        // Esconder
+        sidebar.style.left = '-220px'; 
+        mainContent.style.marginLeft = '20px'; 
+        
+        // CORREÇÃO ARIA: Esconde a sidebar de leitores de tela
+        sidebar.setAttribute('aria-hidden', 'true'); 
     } else {
-        sidebar.style.left = '0px'; // Mostra a sidebar
-        mainContent.style.marginLeft = '240px'; // Restaura a margem (de acordo com o CSS inicial)
+        // Mostrar
+        sidebar.style.left = '0px'; 
+        mainContent.style.marginLeft = '240px'; 
+        
+        // CORREÇÃO ARIA: Torna a sidebar acessível a leitores de tela
+        sidebar.setAttribute('aria-hidden', 'false'); 
     }
 }
 /**
@@ -2601,6 +2609,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
 
