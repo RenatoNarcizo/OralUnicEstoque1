@@ -2187,171 +2187,206 @@ function formatarMoeda(valor) {
     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-// ----------------------------------------------------
-// Função Principal para o Dashboard
-// ----------------------------------------------------
+
 /**
  * Função completa para calcular e popular o Dashboard,
  * resolvendo a falta de informações nos Top 5 e no Resumo Geral (R$).
  */
-/**
- * Função completa para calcular e popular o Dashboard,
- * corrigindo a lógica dos Top 5 e preparando o Resumo Geral.
- */
 function atualizarDashboard() {
-    // Carrega dados de forma segura
-    const produtosLocal = JSON.parse(localStorage.getItem("produtos")) || [];
-    const entradasLocal = JSON.parse(localStorage.getItem("entradas")) || [];
-    const saidasLocal = JSON.parse(localStorage.getItem("saidas")) || [];
+  const listaProximosVencer = document.getElementById("listaProximosVencer");
+  const listaMaisSaidas = document.getElementById("listaMaisSaidas");
+  const listaEstoqueCritico = document.getElementById("listaEstoqueCritico");
+  const resumoGeral = document.getElementById("resumoGeral");
+  const listaMaisCaros = document.getElementById("listaMaisCaros"); // Item bônus, estava no HTML
 
-    // Busca o valor da última entrada registrada para um produto
-    function buscarValorUnitario(nomeProduto) {
-        const ultimaEntrada = entradasLocal
-            .filter(e => e.produto === nomeProduto)
-            .sort((a, b) => new Date(b.data) - new Date(a.data))[0];
-        return Number(ultimaEntrada?.valor) || 0;
+  // Limpa listas existentes para evitar duplicação
+  [listaProximosVencer, listaMaisSaidas, listaEstoqueCritico, listaMaisCaros, resumoGeral].forEach(el => el ? el.innerHTML = '' : null);
+
+  // Carrega dados
+  const produtosLocal = JSON.parse(localStorage.getItem("produtos")) || produtos || [];
+  const entradasLocal = JSON.parse(localStorage.getItem("entradas")) || entradas || [];
+  const saidasLocal = JSON.parse(localStorage.getItem("saidas")) || saidas || [];
+
+  if (!Array.isArray(produtosLocal) || produtosLocal.length === 0) {
+    if (resumoGeral) resumoGeral.innerHTML = '<p>Nenhum produto cadastrado.</p>';
+    return;
+  }
+
+  // --- Funções Auxiliares ---
+  // Busca o valor da última entrada registrada para um produto
+  function buscarValorUnitario(nomeProduto) {
+    const ultimaEntrada = entradasLocal
+      .filter(e => e.produto === nomeProduto)
+      .sort((a, b) => new Date(b.data) - new Date(a.data))[0];
+    return Number(ultimaEntrada?.valor) || 0;
+  }
+  // --------------------------
+
+
+  // ============== 1. Estoque Crítico (Top 5) ==============
+  const criticos = produtosLocal.filter(p => {
+    const qtd = Number(p.quantidade) || 0;
+    const minimo = Number(p.minimo) || 0;
+    return qtd < minimo && minimo > 0; // Considera crítico apenas se há mínimo definido
+  }).sort((a, b) => (Number(b.minimo) - Number(b.quantidade)) - (Number(a.minimo) - Number(a.quantidade))) // Ordena pelo maior déficit
+    .slice(0, 5);
+
+  if (listaEstoqueCritico) {
+    if (criticos.length === 0) {
+      listaEstoqueCritico.innerHTML = '<li>✅ Nenhum produto em estoque crítico.</li>';
+    } else {
+      criticos.forEach(p => {
+        const deficit = (Number(p.minimo) || 0) - (Number(p.quantidade) || 0);
+        listaEstoqueCritico.innerHTML += `<li>${p.nome} (${p.quantidade} ${p.embalagem} - Faltam ${deficit})</li>`;
+      });
     }
-
-    // Função para calcular a quantidade total de saídas por produto
-    const contagemSaidas = saidasLocal.reduce((acc, s) => {
-        const nome = s.produto;
-        const qtdSaida = Number(s.quantidade) || 0;
-        acc[nome] = (acc[nome] || 0) + qtdSaida;
-        return acc;
-    }, {});
-    
-    // --- 1. PREPARAÇÃO DE DADOS: ESTOQUE DETALHADO ---
-    const estoqueDetalhado = produtosLocal.map(p => {
-        const qtdAtual = Number(p.quantidade) || 0;
-        const valorUnitario = buscarValorUnitario(p.nome);
-        const qtdSaidas = contagemSaidas[p.nome] || 0;
-
-        // Calcula a validade mais próxima (para o produto que está em estoque)
-        let validadeMaisProxima = null;
-        entradasLocal.filter(e => e.produto === p.nome && e.validade)
-                     .forEach(e => {
-            const dataValidade = new Date(e.validade);
-            if (!validadeMaisProxima || dataValidade < validadeMaisProxima) {
-                validadeMaisProxima = dataValidade;
-            }
-        });
-
-        const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0);
-        const diasVencer = validadeMaisProxima ? Math.ceil((validadeMaisProxima.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24)) : Infinity;
-
-        return {
-            nome: p.nome,
-            qtdAtual: qtdAtual,
-            embalagem: p.embalagem || 'un',
-            minimo: Number(p.minimo) || 0,
-            ultimoCusto: valorUnitario,
-            qtdSaidas: qtdSaidas,
-            validade: validadeMaisProxima,
-            diasVencer: diasVencer,
-            isCritico: qtdAtual < (Number(p.minimo) || 0) && (Number(p.minimo) || 0) > 0,
-        };
-    });
+  }
 
 
-    // --- 2. POPULANDO AS LISTAS (TOP 5) ---
+  // ============== 2. Produtos Próximos do Vencimento (Top 5) ==============
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
 
-    // Auxiliar para criar itens da lista
-    const criarLi = (item) => `<li>${item}</li>`;
+  const proximosVencer = entradasLocal.filter(e => {
+    if (!e.validade || !e.produto) return false;
 
-    // a. ⚠️ Estoque Crítico (Top 5)
-    const criticos = estoqueDetalhado
-        .filter(p => p.isCritico && p.qtdAtual > 0) 
-        .sort((a, b) => (a.qtdAtual - a.minimo) - (b.qtdAtual - b.minimo)) // Ordena pelo maior déficit (mais negativo primeiro)
-        .slice(0, 5);
-    
-    const listaCriticos = document.getElementById("listaEstoqueCritico");
-    if (listaCriticos) {
-        listaCriticos.innerHTML = criticos.length > 0 
-            ? criticos.map(p => criarLi(`${p.nome} (${p.qtdAtual} ${p.embalagem} - Min: ${p.minimo})`)).join('') 
-            : criarLi('Tudo OK!');
+    // Garante que o produto ainda exista no cadastro principal antes de verificar validade
+    const produtoEstoque = produtosLocal.find(p => p.nome === e.produto);
+    if (!produtoEstoque || (Number(produtoEstoque.quantidade) || 0) <= 0) return false;
+
+    const validade = new Date(e.validade);
+    const difTempo = validade.getTime() - hoje.getTime();
+    const difDias = Math.ceil(difTempo / (1000 * 3600 * 24));
+
+    // Filtra itens com validade nos próximos 90 dias
+    return difDias > 0 && difDias <= 90;
+  }).sort((a, b) => new Date(a.validade) - new Date(b.validade))
+    .slice(0, 5);
+
+  if (listaProximosVencer) {
+    if (proximosVencer.length === 0) {
+      listaProximosVencer.innerHTML = '<li>✅ Nenhuma validade próxima (próximos 90 dias).</li>';
+    } else {
+      proximosVencer.forEach(e => {
+        const validade = new Date(e.validade);
+        const difDias = Math.ceil((validade.getTime() - hoje.getTime()) / (1000 * 3600 * 24));
+        const dataFormatada = validade.toLocaleDateString('pt-BR');
+        listaProximosVencer.innerHTML += `<li>${e.produto} (${e.qtd} Qtd) - Vence em: ${dataFormatada} (${difDias} dias)</li>`;
+      });
     }
+  }
 
+  // ============== 3. Produtos Mais Utilizados (Saídas) (Top 5) ==============
+  const contagemSaidas = saidasLocal.reduce((acc, s) => {
+    const nome = s.produto;
+    acc[nome] = (acc[nome] || 0) + Number(s.qtd || 0);
+    return acc;
+  }, {});
 
-    // b. 🕒 Produtos Próximos do Vencimento (Top 5) - CORRIGIDO
-    // Filtra: tem validade, tem estoque, e vence em 180 dias ou menos
-    const proximosVencer = estoqueDetalhado
-        .filter(p => p.validade && p.qtdAtual > 0 && p.diasVencer <= 180 && p.diasVencer >= 0) 
-        .sort((a, b) => a.diasVencer - b.diasVencer)
-        .slice(0, 5);
-    
-    const listaVencer = document.getElementById("listaProximosVencer");
-    if (listaVencer) {
-        listaVencer.innerHTML = proximosVencer.length > 0 
-            ? proximosVencer.map(p => criarLi(`${p.nome} (${p.qtdAtual} ${p.embalagem}) - Vence em: ${p.diasVencer} dias`)).join('') 
-            : criarLi('Nenhum produto próximo.');
+  const maisUtilizados = Object.entries(contagemSaidas)
+    .sort(([, qtdA], [, qtdB]) => qtdB - qtdA)
+    .slice(0, 5);
+
+  if (listaMaisSaidas) {
+    if (maisUtilizados.length === 0) {
+      listaMaisSaidas.innerHTML = '<li>⚠️ Nenhuma saída registrada.</li>';
+    } else {
+      maisUtilizados.forEach(([nome, qtd]) => {
+        listaMaisSaidas.innerHTML += `<li>${nome} (${qtd} Saída${qtd > 1 ? 's' : ''})</li>`;
+      });
     }
+  }
+  
+  // ============== 5. Produtos Mais Caros (Top 5) (BÔNUS) ==============
+  const maisCaros = produtosLocal.map(p => {
+      const valor = buscarValorUnitario(p.nome);
+      return { nome: p.nome, valor };
+  }).sort((a, b) => b.valor - a.valor)
+    .filter(p => p.valor > 0) // Remove os produtos sem valor de entrada
+    .slice(0, 5);
 
-    // c. 📦 Produtos Mais Utilizados (Saídas) (Top 5)
-    const maisSaidas = estoqueDetalhado
-        .filter(p => p.qtdSaidas > 0)
-        .sort((a, b) => b.qtdSaidas - a.qtdSaidas)
-        .slice(0, 5);
-    
-    const listaMaisSaidasEl = document.getElementById("listaMaisSaidas");
-    if (listaMaisSaidasEl) {
-        listaMaisSaidasEl.innerHTML = maisSaidas.length > 0 
-            ? maisSaidas.map(p => criarLi(`${p.nome} (${p.qtdSaidas} saídas)`)).join('') 
-            : criarLi('Nenhuma saída recente.');
+  if (listaMaisCaros) {
+    if (maisCaros.length === 0) {
+      listaMaisCaros.innerHTML = '<li>⚠️ Nenhuma entrada de valor registrada.</li>';
+    } else {
+      maisCaros.forEach(p => {
+        listaMaisCaros.innerHTML += `<li>${p.nome} (R$ ${p.valor.toFixed(2).replace('.', ',')})</li>`;
+      });
     }
+  }
 
-    // d. 💤 Produtos com Menos Saídas (Top 5) - CORRIGIDO (Inclui 0 saídas)
-    const menosSaidas = estoqueDetalhado
-        .sort((a, b) => a.qtdSaidas - b.qtdSaidas)
-        .slice(0, 5);
-    
-    const listaMenosSaidasEl = document.getElementById("listaMenosSaidas");
-    if (listaMenosSaidasEl) {
-        listaMenosSaidasEl.innerHTML = menosSaidas.length > 0 
-            ? menosSaidas.map(p => criarLi(`${p.nome} (${p.qtdSaidas} saídas)`)).join('') 
-            : criarLi('Nenhum produto encontrado.');
-    }
-        
-    // e. 💰 Produtos Mais Caros (Último Custo) (Top 5)
-    const maisCaros = estoqueDetalhado
-        .filter(p => p.ultimoCusto > 0)
-        .sort((a, b) => b.ultimoCusto - a.ultimoCusto)
-        .slice(0, 5);
-    
-    const listaMaisCarosEl = document.getElementById("listaMaisCaros");
-    if (listaMaisCarosEl) {
-        listaMaisCarosEl.innerHTML = maisCaros.length > 0 
-            ? maisCaros.map(p => criarLi(`${p.nome} (${formatarMoeda(p.ultimoCusto)})`)).join('') 
-            : criarLi('Nenhum custo registrado.');
-    }
 
-    // --- 3. CÁLCULOS PARA O RESUMO GERAL ---
-    
-    const totalProdutos = produtosLocal.length;
-    const qtdTotalEmEstoque = estoqueDetalhado.reduce((sum, p) => sum + p.qtdAtual, 0);
-    const totalSaidasRegistradas = saidasLocal.reduce((sum, s) => sum + (Number(s.quantidade) || 0), 0);
-    const criticosCount = estoqueDetalhado.filter(p => p.isCritico).length;
-    
-    // Valor total (Último valor de entrada) = Soma de (Qtd Atual * Último Custo)
-    const valorTotalEstoque = estoqueDetalhado.reduce((sum, p) => sum + (p.qtdAtual * p.ultimoCusto), 0);
+  // ============== 4. Resumo Geral (Com valores R$) ==============
 
-    // CMP e Contábil (Simplificação para esta versão)
-    const entradasComCusto = entradasLocal.filter(e => Number(e.valor) > 0 && Number(e.quantidade) > 0);
-    const custoTotalGeral = entradasComCusto.reduce((sum, e) => sum + (Number(e.valor) * Number(e.quantidade)), 0);
-    const qtdTotalEntradaGeral = entradasComCusto.reduce((sum, e) => sum + Number(e.quantidade), 0);
-    
-    const CMP = qtdTotalEntradaGeral > 0 ? custoTotalGeral / qtdTotalEntradaGeral : 0;
-    const valorEstoqueContabil = qtdTotalEmEstoque * CMP;
+  let qtdTotal = produtosLocal.reduce((soma, p) => soma + (Number(p.quantidade) || 0), 0);
+  let valorTotalEstoque = 0; // Estimativa simples: Custo da Última Entrada
 
-    // --- 4. EXIBIÇÃO DO RESUMO GERAL ---
-    
-    // Passa os valores para a função de atualização do Resumo (Passo B)
-    atualizarBlocoResumo(totalProdutos, qtdTotalEmEstoque, totalSaidasRegistradas, valorTotalEstoque, valorEstoqueContabil, criticosCount);
-}
+  produtosLocal.forEach(p => {
+    const qtdAtual = Number(p.quantidade) || 0;
+    const valorUnitario = buscarValorUnitario(p.nome);
+    valorTotalEstoque += qtdAtual * valorUnitario;
+  });
+
+  const totalProdutos = produtosLocal.length;
+  const totalCriticos = criticos.length;
+  const totalVencimento = proximosVencer.length;
+  const totalSaidas = saidasLocal.length;
+
 
   if (resumoGeral) {
     // Adiciona CSS básico no JS para formatar o resumo de forma mais clara
     resumoGeral.innerHTML = `
+      <style>
+        .resumo-item {
+          display: flex;
+          justify-content: space-between;
+          padding: 6px 0;
+          border-bottom: 1px solid #eee;
+        }
+        .resumo-item:last-child {
+          border-bottom: none;
+        }
+        .resumo-label {
+          font-weight: 500;
+          color: #333;
+        }
+        .resumo-value {
+          font-weight: 700;
+        }
+        .valor-estoque {
+          color: var(--azul-escuro);
+          font-size: 1.1em;
+        }
+      </style>
+      <div class="resumo-item">
+        <span class="resumo-label">Total de Produtos Cadastrados:</span>
+        <span class="resumo-value">${totalProdutos}</span>
+      </div>
+      <div class="resumo-item">
+        <span class="resumo-label">Total de Itens em Estoque (Unid):</span>
+        <span class="resumo-value">${qtdTotal}</span>
+      </div>
+      <div class="resumo-item">
+        <span class="resumo-label">Produtos em Estoque Crítico:</span>
+        <span class="resumo-value" style="color: ${totalCriticos > 0 ? 'red' : 'green'};">${totalCriticos}</span>
+      </div>
+      <div class="resumo-item">
+        <span class="resumo-label">Próximos do Vencimento (90d):</span>
+        <span class="resumo-value" style="color: ${totalVencimento > 0 ? 'orange' : 'green'};">${totalVencimento}</span>
+      </div>
+       <div class="resumo-item">
+        <span class="resumo-label">Valor Estimado do Estoque:</span>
+        <span class="resumo-value valor-estoque">R$ ${valorTotalEstoque.toFixed(2).replace('.', ',')}</span>
+      </div>
+       <div class="resumo-item">
+        <span class="resumo-label">Total de Saídas Registradas:</span>
+        <span class="resumo-value">${totalSaidas}</span>
+      </div>
+    `;
+  }
+}
+
+	
       <style>
         .resumo-item {
           display: flex;
@@ -2774,6 +2809,7 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
 
