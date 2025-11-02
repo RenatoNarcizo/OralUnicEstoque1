@@ -1272,88 +1272,149 @@ window.filtrarUsuarios = function() {
 
 // === LOGIN E SESSÃO ===
   
-  function mostrarSistema(user) {
-    const loginView = document.getElementById("loginView");
-    const mainApp = document.getElementById("mainApp");
-    const userNameEl = document.getElementById("userName");
-    const perfilBadgeEl = document.getElementById("perfilBadge");
-    const nomeBemVindoEl = document.getElementById("nomeUsuarioBemVindo");
+function mostrarSistema(user) {
+    const loginView = document.getElementById("loginView");
+    const mainApp = document.getElementById("mainApp");
+    const userNameEl = document.getElementById("userName");
+    const perfilBadgeEl = document.getElementById("perfilBadge");
+    const nomeBemVindoEl = document.getElementById("nomeUsuarioBemVindo");
 
-    if (loginView && mainApp) {
-        loginView.style.display = "none";
-        mainApp.style.display = "block";
-    }
+    // 1. Alterna a visibilidade das telas
+    if (loginView && mainApp) {
+        loginView.style.display = "none";
+        mainApp.style.display = "block";
+    }
 
-    // Tenta encontrar o perfil do usuário logado
-    const usuarioLogado = window.usuarios.find(u => u.email.toLowerCase() === user.email.toLowerCase());
-    const nome = usuarioLogado ? usuarioLogado.nome : user.email.split('@')[0];
-    const perfil = usuarioLogado ? usuarioLogado.perfil : "DESCONHECIDO";
+    // 2. Tenta encontrar o perfil do usuário logado na lista global
+    const usuarioLogado = window.usuarios.find(u => u.email.toLowerCase() === user.email.toLowerCase());
+    
+    // 3. Define valores de fallback (garantia de que não haverá erro de tela)
+    const nomeFallback = user.email.split('@')[0]; // Usa a parte inicial do e-mail
+    const perfilFallback = "USUARIO"; // Perfil padrão se não for encontrado
 
-    if (userNameEl) userNameEl.textContent = nome;
-    if (perfilBadgeEl) perfilBadgeEl.textContent = "Perfil: " + perfil.toUpperCase();
-    if (nomeBemVindoEl) nomeBemVindoEl.textContent = nome;
-  }
+    // 4. Atribui os valores (usando o perfil encontrado ou o fallback)
+    const nome = usuarioLogado ? usuarioLogado.nome : nomeFallback;
+    const perfil = usuarioLogado ? usuarioLogado.perfil : perfilFallback;
+
+    // 5. Atualiza a interface
+    if (userNameEl) userNameEl.textContent = nome;
+    if (perfilBadgeEl) perfilBadgeEl.textContent = "Perfil: " + perfil.toUpperCase();
+    if (nomeBemVindoEl) nomeBemVindoEl.textContent = nome;
+
+    // 🚨 Extra: Se a função showSection estiver disponível, força a abertura da dashboard
+    if (typeof showSection === "function") {
+         showSection("dashboard");
+    }
+}
   
   window.fazerLogin = async function() {
-    const usuario = document.getElementById("usuarioLogin").value.trim(); 
-    const senha = document.getElementById("senhaLogin").value.trim();
+    // 1. Coleta os valores e garante que os campos vazios sejam tratados
+    const usuarioEl = document.getElementById("usuarioLogin");
+    const senhaEl = document.getElementById("senhaLogin");
 
-    if (!usuario || !senha) {
-      alert("Preencha e-mail e senha!");
-      return;
-    }
+    const usuario = usuarioEl.value.trim(); // Limpa espaços
+    const senha = senhaEl.value.trim();     // Limpa espaços
 
-    const email = usuario.trim();
-    try {
-      await signInWithEmailAndPassword(auth, email, senha);
-      // O onAuthStateChanged cuidará da transição da tela
-    } catch (error) {
-      console.error(error.code, error.message);
-      
-      let mensagemErro = "Erro desconhecido ao tentar logar.";
-      
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
-        mensagemErro = "E-mail ou senha inválidos. Verifique suas credenciais.";
-      } else if (error.code === 'auth/invalid-email') {
-        mensagemErro = "O formato do e-mail é inválido.";
-      } else {
-        mensagemErro = `Erro: ${error.message}`;
-      }
+    if (!usuario || !senha) {
+        // Usa a função de erro se estiver disponível, senão usa alert
+        if (typeof destacarErro === 'function') {
+            if (!usuario) destacarErro(usuarioEl, "Informe o e-mail!");
+            if (!senha) destacarErro(senhaEl, "Informe a senha!");
+        } else {
+            alert("Preencha e-mail e senha!");
+        }
+        return;
+    }
 
-      if (typeof mostrarMensagem === 'function') {
-        mostrarMensagem(mensagemErro, "erro");
-      } else {
-        alert(mensagemErro);
-      }
-    }
-  };
+    // 2. Padroniza o e-mail para garantir o formato correto (minúsculas)
+    const email = usuario.toLowerCase(); 
 
-  // === MONITORAR LOGIN ===
-  onAuthStateChanged(auth, (user) => {
-    const login = document.getElementById("loginView");
-    const appDiv = document.getElementById("mainApp");
-    if (user) {
-        // Logado
-        login.style.display = "none";
-        appDiv.style.display = "block";
-        carregarDadosDoFirestore().then(() => {
-             mostrarSistema(user); // Garante que a interface é atualizada após carregar os dados
-        });
-        
-    } else {
-        // Deslogado
-        login.style.display = "flex";
-        appDiv.style.display = "none";
-        
-        // Limpa campos e dados (opcional, mas recomendado)
-        if (typeof limparCampos === "function") {
-            limparCampos("loginView");
-        }
-        document.getElementById("userName").innerText = "Visitante";
-        document.getElementById("perfilBadge").innerText = "PERFIL";
-    }
-  });
+    // 3. Validação de formato de e-mail antes de enviar ao Firebase (boa prática)
+    if (!email.includes("@") || email.length < 5) {
+        if (typeof destacarErro === 'function') {
+            destacarErro(usuarioEl, "O formato do e-mail é inválido.");
+        } else {
+            alert("O formato do e-mail é inválido.");
+        }
+        return;
+    }
 
+    try {
+        // Tenta logar no Firebase Auth
+        await signInWithEmailAndPassword(auth, email, senha);
+        // O onAuthStateChanged cuidará da transição da tela
+    } catch (error) {
+        console.error(error.code, error.message);
+        
+        let mensagemErro = "Erro desconhecido ao tentar logar.";
+        
+        if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+            mensagemErro = "E-mail ou senha inválidos. Verifique suas credenciais.";
+        } else if (error.code === 'auth/invalid-email') {
+            // Este erro deve ser capturado pela nossa validação antes, mas é bom manter aqui
+            mensagemErro = "O formato do e-mail é inválido.";
+        } else {
+            mensagemErro = `Erro: ${error.message}`;
+        }
+
+        if (typeof mostrarMensagem === 'function') {
+            mostrarMensagem(mensagemErro, "erro");
+        } else {
+            alert(mensagemErro);
+        }
+    }
+};
+ 
+ 
+// Este bloco deve estar no seu <script type="module">
+
+// === MONITORAR LOGIN ===
+onAuthStateChanged(auth, (user) => {
+    const login = document.getElementById("loginView");
+    const appDiv = document.getElementById("mainApp");
+    
+    if (user) {
+        // Logado
+        login.style.display = "none";
+        appDiv.style.display = "block";
+
+        // GARANTE QUE O PERFIL DO USUÁRIO ESTÁ NA LISTA ANTES DE CARREGAR
+        const emailLogado = user.email.toLowerCase();
+        const perfilExiste = window.usuarios.find(u => u.email.toLowerCase() === emailLogado);
+
+        if (!perfilExiste) {
+             const novoPerfil = { 
+                uid: user.uid,
+                email: emailLogado,
+                nome: emailLogado.split('@')[0],
+                perfil: 'USUARIO', 
+                criadoEm: new Date().toISOString()
+            };
+            window.usuarios.push(novoPerfil);
+        }
+        
+        // Continua com o carregamento dos dados
+        carregarDadosDoFirestore().then(() => {
+            mostrarSistema(user); 
+            
+            if (!perfilExiste) {
+                // Salva o perfil recém-criado no nó global de usuários do Firestore
+                window.salvarUsuariosNoFirebase(window.usuarios); 
+            }
+        });
+        
+    } else {
+        // Deslogado
+        login.style.display = "flex";
+        appDiv.style.display = "none";
+        
+        if (typeof limparCampos === "function") {
+            limparCampos("loginView");
+        }
+        document.getElementById("userName").innerText = "Visitante";
+        document.getElementById("perfilBadge").innerText = "PERFIL";
+    }
+});
   // === LOGOUT ===
   window.logout = async function() {
     await signOut(auth);
