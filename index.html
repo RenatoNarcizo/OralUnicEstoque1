@@ -5,9 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sistema de Controle de Estoque – Oral Unic Campo Grande</title>
 
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
   <style>
+    /* ========================= VARIÁVEIS DE CORES ========================= */
     :root {
       --azul: #0d6efd;
       --azul-escuro: #003b88;
@@ -22,6 +25,71 @@
       background: var(--cinza-fundo);
       color: #222;
     }
+    
+    /* 🔹 Centralização estável da tela de login */
+    #loginView {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(135deg, var(--azul), var(--azul-escuro));
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      overflow: hidden;
+      z-index: 1000;
+    }
+    
+    .login-card {
+      background: var(--branco);
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      text-align: center;
+      width: 320px;
+    }
+
+    .login-card h2 {
+      color: var(--azul-escuro);
+      margin-bottom: 20px;
+    }
+
+    .login-card input {
+      width: 100%;
+      margin: 6px 0;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .login-card button {
+      width: 100%;
+      margin-top: 10px;
+      background: var(--azul);
+      color: var(--branco);
+      border: none;
+      padding: 8px;
+      border-radius: 5px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .login-card button:hover {
+      background: var(--azul-escuro);
+    }
+    
+    #loginMsg {
+      background: #f8d7da;
+      border-radius: 5px;
+      padding: 8px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    #loginMsg[style*="green"] {
+      background: #d4edda;
+    }
+
 
     /* ========================= HEADER ========================= */
     header {
@@ -59,28 +127,23 @@
     }
 
    /* ========================= MENU LATERAL ========================= */
- #sidebar {
-  position: fixed;
-  top: 0;
-  left: -260px; /* escondido 10px a mais */
-  width: 250px;
-  height: 100%;
-  background: var(--azul-escuro);
-  color: var(--branco);
-  overflow-y: auto;
-  transition: left 0.3s ease;
-  z-index: 800;
-  padding-top: 60px;
-  border-right: none;
-  box-shadow: none;
- }
+    #sidebar {
+      position: fixed;
+      top: 0;
+      left: -260px; /* escondido */
+      width: 250px;
+      height: 100%;
+      background: var(--azul-escuro);
+      color: var(--branco);
+      overflow-y: auto;
+      transition: left 0.3s ease;
+      z-index: 800;
+      padding-top: 60px;
+      border-right: none;
+      box-shadow: none;
+    }
 
-/* Quando ativo (aberto) */
-#sidebar.active {
-  left: 0;
-}
-
-
+    /* Quando ativo (aberto) */
     #sidebar.active {
       left: 0;
     }
@@ -110,13 +173,12 @@
     }
 
     /* ========================= ÁREA PRINCIPAL ========================= */
-   main {
-  margin: 20px;
-  padding-left: 0;
-  transition: margin-left 0.3s ease;
-  overflow-x: hidden; /* impede overflow lateral */
-}
-
+    main {
+      margin: 20px;
+      padding-left: 0;
+      transition: margin-left 0.3s ease;
+      overflow-x: hidden; /* impede overflow lateral */
+    }
 
     @media (min-width: 900px) {
       #sidebar.active + main {
@@ -124,65 +186,133 @@
       }
     }
 
+    /* ========================= SEÇÕES ========================= */
+    .section {
+      display: none;
+      max-height: calc(100vh - 140px); /* altura visível abaixo do cabeçalho */
+      overflow-y: auto; /* ativa rolagem vertical */
+      overflow-x: hidden; /* evita rolagem lateral */
+      padding-bottom: 20px; /* espaçamento inferior */
+      scroll-behavior: smooth; /* rolagem suave */
+    }
+
+    .section h2 {
+      color: var(--azul-escuro);
+      border-left: 5px solid var(--azul);
+      padding-left: 10px;
+    }
+
+    .section.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ========================= DASHBOARD ========================= */
+    .dash-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .dash-card {
+      background: var(--branco);
+      border-radius: 10px;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+      padding: 15px 20px;
+      transition: transform 0.2s ease;
+    }
+
+    .dash-card:hover {
+      transform: scale(1.02);
+    }
+
+    .dash-card h3 {
+      color: var(--azul-escuro);
+      margin-bottom: 10px;
+      border-bottom: 2px solid var(--azul);
+      padding-bottom: 5px;
+      font-size: 16px;
+    }
+
+    .dash-card ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .dash-card ul li {
+      padding: 5px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+
+    .dash-card ul li:last-child {
+      border-bottom: none;
+    }
+
     /* ========================= TABELAS ========================= */
-.table-wrap {
-  max-height: 60vh; /* altura máxima visível */
-  overflow-y: auto;          /* rolagem vertical */
-  overflow-x: auto; /* rolagem horizontal se necessário */
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: #888 #f0f0f0;
-}
+    .table-wrap {
+      max-height: 60vh; /* altura máxima visível */
+      overflow-y: auto;          /* rolagem vertical */
+      overflow-x: auto; /* rolagem horizontal se necessário */
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      scrollbar-width: thin; /* Firefox */
+      scrollbar-color: #888 #f0f0f0;
+    }
 
-/* 🔹 Mantém o cabeçalho fixo dentro da área rolável */
-.table-wrap table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 800px; /* evita desalinhamento */
-}
+    .table-wrap table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 800px; /* evita desalinhamento */
+    }
 
-.table-wrap table thead th {
-  position: sticky;
-  top: 0;
-  background: var(--azul);
-  color: #fff;
-  z-index: 10;
-  text-align: left;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
-}
+    .table-wrap table thead th {
+      position: sticky;
+      top: 0;
+      background: var(--azul);
+      color: #fff;
+      z-index: 10;
+      text-align: left;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+    }
 
-.table-wrap table td {
-  border: 1px solid #ddd;
-  padding: 10px 12px;
-  font-size: 14px;
-}
+    .table-wrap table td {
+      border: 1px solid #ddd;
+      padding: 10px 12px;
+      font-size: 14px;
+    }
 
-.table-wrap table tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
+    .table-wrap table tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
 
-/* 🔹 Scrollbar estilizada */
-.table-wrap::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-.table-wrap::-webkit-scrollbar-track {
-  background: #f0f0f0;
-  border-radius: 8px;
-}
-.table-wrap::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 8px;
-}
-.table-wrap::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
+    /* 🔹 Scrollbar estilizada */
+    .table-wrap::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    .table-wrap::-webkit-scrollbar-track {
+      background: #f0f0f0;
+      border-radius: 8px;
+    }
+    .table-wrap::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 8px;
+    }
+    .table-wrap::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
 
-
-    /* ========================= BOTÕES (Geral) ========================= */
+    /* ========================= BOTÕES ========================= */
     button {
       background: var(--azul);
       color: var(--branco);
@@ -198,7 +328,20 @@
       background: var(--azul-escuro);
     }
 
-    /* ========================= INPUTS E SELECTS (Geral) ========================= */
+    /* ========================= INPUTS E SELECTS ========================= */
+    .input-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+    
+    .input-row .flex {
+      flex: 1; /* Faz o input expandir o máximo possível */
+      min-width: 150px;
+    }
+
     input, select {
       padding: 6px 8px;
       border-radius: 4px;
@@ -212,120 +355,6 @@
     input:focus, select:focus {
       border-color: var(--azul);
     }
-
-/* ======================================================= */
-/* ====== CORREÇÃO LAYOUT E BOTÕES (Input Row, Cards) ====== */
-/* ======================================================= */
-
-/* Melhoria na aparência dos inputs nas seções */
-.section input[type="text"],
-.section input[type="number"],
-.section input[type="date"],
-.section select {
-  padding: 8px 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  box-sizing: border-box; /* Essencial para layout em linha */
-  min-height: 40px; /* Garante altura uniforme */
-}
-
-/* Otimização: Força campos em linha a se ajustarem */
-.input-row > input[type="text"].flex,
-.input-row > input[type="number"].flex {
-    flex-grow: 1;
-    min-width: 150px;
-}
-
-
-/* 🔹 Organização dos campos de formulário em linha (muito importante) */
-.input-row {
-  display: flex;
-  flex-wrap: wrap; /* Permite que os itens quebrem a linha */
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 25px !important; /* Mais espaço para o bloco */
-  padding: 15px;
-  border: 1px solid var(--cinza);
-  border-radius: 8px;
-  background: var(--branco);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
-/* 🔹 Botões de Ação nas Seções (Mais robustos) */
-.section button {
-  background: var(--azul);
-  color: var(--branco);
-  border: none;
-  padding: 10px 18px;
-  border-radius: 5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s, transform 0.1s;
-  white-space: nowrap;
-  font-size: 15px;
-}
-
-.section button:hover {
-  background: var(--azul-escuro);
-  transform: translateY(-1px);
-}
-
-/* 🔹 Melhoria nos Cards do Dashboard (Estilo modernizado com borda lateral) */
-/* Sobrescreve o estilo existente com este mais completo */
-.dash-card {
-  background: var(--branco);
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-  border-left: 5px solid var(--azul); /* Borda de destaque */
-  transition: all 0.2s ease;
-}
-
-.dash-card h3 {
-  color: var(--azul-escuro);
-  margin-top: 0;
-  font-size: 1.1em;
-  padding-bottom: 0;
-  border-bottom: none;
-}
-
-.dash-card ul {
-  list-style: none;
-  padding: 0;
-  margin-top: 10px;
-}
-
-.dash-card li {
-  padding: 6px 0;
-  border-bottom: 1px dashed #eee;
-  font-size: 0.9em;
-}
-
-.dash-card li:last-child {
-  border-bottom: none;
-}
-
-/* Botões da Tabela (Estilo secundário) */
-table button {
-  background: #6c757d; /* Cinza secundário */
-  padding: 5px 10px;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-table button:hover {
-  background: #5a6268;
-}
-
-/* Botões de Ação Específicos */
-button.btn-delete {
-  background: #dc3545 !important;
-}
-button.btn-delete:hover {
-  background: #c82333 !important;
-}
-
-
 
     /* ========================= IMAGENS ========================= */
     .thumb {
@@ -361,147 +390,24 @@ button.btn-delete:hover {
       border-radius: 10px;
       cursor: pointer;
     }
-
-    /* ========================= LOGIN ========================= */
-    .login-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background: linear-gradient(135deg, var(--azul), var(--azul-escuro));
-    }
-
-    .login-card {
-      background: var(--branco);
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    
+    /* TOAST MESSAGE */
+    #toastMessage {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 20px;
+      border-radius: 8px;
+      color: white;
       text-align: center;
-      width: 320px;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.4s, transform 0.4s;
+      pointer-events: none; /* Não impede cliques */
+      font-family: "Segoe UI, sans-serif";
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
-
-    .login-card h2 {
-      color: var(--azul-escuro);
-      margin-bottom: 20px;
-    }
-
-    .login-card input {
-      width: 100%;
-      margin: 6px 0;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-
-    .login-card button {
-      width: 100%;
-      margin-top: 10px;
-    }
-/* 🔹 Centralização estável da tela de login */
-#loginView {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background: linear-gradient(135deg, var(--azul), var(--azul-escuro));
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  overflow: hidden;
-  z-index: 1000;
-}
-
-/* Evita o scroll automático ao alternar login/sistema */
-html, body {
-  height: 100%;
-  overflow-y: auto; /* ativa rolagem vertical */
-  overflow-x: hidden; /* evita rolagem lateral */
-}
-#loginMsg {
-  background: #f8d7da;
-  border-radius: 5px;
-  padding: 8px;
-  font-weight: bold;
-}
-#loginMsg[style*="green"] {
-  background: #d4edda;
-}
-
-    /* ========================= SEÇÕES ========================= */
-    section {
-      display: none;
-    }
-
-    section h2 {
-      color: var(--azul-escuro);
-      border-left: 5px solid var(--azul);
-      padding-left: 10px;
-    }
-
-    .section.active {
-      display: block;
-      animation: fadeIn 0.3s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-	/* ========================= ROLAGEM POR SEÇÃO ========================= */
-.section {
-  max-height: calc(100vh - 140px); /* altura visível abaixo do cabeçalho */
-  overflow-y: auto; /* ativa rolagem vertical */
-  overflow-x: hidden; /* evita rolagem lateral */
-  padding-bottom: 20px; /* espaçamento inferior */
-  scroll-behavior: smooth; /* rolagem suave */
-}
-/* ========================= DASHBOARD (Ajustado) ========================= */
-.dash-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.dash-card {
-  background: var(--branco);
-  border-radius: 10px;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-  padding: 15px 20px;
-  transition: transform 0.2s ease;
-}
-
-.dash-card:hover {
-  transform: scale(1.02);
-}
-
-.dash-card h3 {
-  color: var(--azul-escuro);
-  margin-bottom: 10px;
-  border-bottom: 2px solid var(--azul);
-  padding-bottom: 5px;
-  font-size: 16px;
-}
-
-.dash-card ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.dash-card ul li {
-  padding: 5px 0;
-  border-bottom: 1px solid #eee;
-  font-size: 14px;
-}
-
-.dash-card ul li:last-child {
-  border-bottom: none;
-}
-
-
-    /* ========================= RODAPÉ (opcional futuro) ========================= */
   </style>
 </head>
 <body>
@@ -509,17 +415,16 @@ html, body {
   <div id="imagemAmpliada" onclick="this.style.display='none'">
     <img src="" alt="Imagem ampliada">
   </div>
+  
+  <div id="toastMessage" style="background:#0d6efd;"></div>
 
   <div id="loginView" class="login-container">
     <div class="login-card">
       <h2><i class="fa fa-boxes-stacked"></i> Sistema de Controle de Estoque</h2>
-      <input id="usuarioLogin" type="text" placeholder="Usuário" />
+      <input id="usuarioLogin" type="text" placeholder="E-mail de Usuário" />
       <input id="senhaLogin" type="password" placeholder="Senha" />
       <button onclick="fazerLogin()"><i class="fa fa-right-to-bracket"></i> Entrar</button>
-	  <p id="loginMsg" 
- style="display:none; color:red; font-weight:bold; text-align:center;"></p>
-      
-      </div>
+	  <p id="loginMsg" style="display:none; color:red; font-weight:bold; text-align:center;"></p>
     </div>
   </div>
 
@@ -532,19 +437,19 @@ html, body {
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
      
-     <div id="userName" style="font-weight:700">Visitante</div>
+        <div id="userName" style="font-weight:700">Visitante</div>
         <div id="perfilBadge" style="background:rgba(255,255,255,0.12);padding:6px 10px;border-radius:8px;font-size:13px;">PERFIL</div>
         <button onclick="logout()" title="Sair"><i class="fa fa-sign-out-alt"></i></button>
       </div>
     </header>
 
     <aside id="sidebar" aria-hidden="true">
+	  <button onclick="showSection('boasVindas')"><i class="fa fa-home"></i> Início</button>
 	  <button onclick="showSection('dashboard')"><i class="fa fa-chart-pie"></i> Dashboard</button>
       <button onclick="showSection('cadastro')"><i class="fa fa-box"></i> Cadastro de Produtos</button>
       <button onclick="showSection('entrada')"><i class="fa fa-arrow-down"></i> Entrada de Materiais</button>
       <button onclick="showSection('saida')"><i class="fa fa-arrow-up"></i> Saída de Materiais</button>
-      <button onclick="showSection('estoque')"><i 
- class="fa fa-warehouse"></i> Estoque Atual</button>
+      <button onclick="showSection('estoque')"><i class="fa fa-warehouse"></i> Estoque Atual</button>
       <button onclick="showSection('limites')"><i class="fa fa-sliders-h"></i> Estoque Mín/Máx</button>
       <button onclick="showSection('financeiro')"><i class="fa fa-coins"></i> Financeiro</button>
       <button onclick="showSection('relatorios')"><i class="fa fa-file-excel"></i> Relatórios</button>
@@ -553,53 +458,99 @@ html, body {
     </aside>
 
     <main>
-<section id="boasVindas" class="section active" style="text-align:center;
- padding:100px 20px;">
-  <h1 style="color:#003b88;">👋 Bem-vindo(a) <span id="nomeUsuarioBemVindo"></span>!</h1>
-  <h2 style="color:#0d6efd;">ao Sistema de Controle de Estoque – Oral Unic Campo Grande</h2>
-  <p style="margin-top:20px;
- color:#555;">Use o menu lateral para iniciar suas atividades.</p>
-</section>
-
+		<section id="boasVindas" class="section active" style="text-align:center; padding:100px 20px;">
+		  <h1 style="color:#003b88;">👋 Bem-vindo(a) <span id="nomeUsuarioBemVindo"></span>!</h1>
+		  <h2 style="color:#0d6efd;">ao Sistema de Controle de Estoque – Oral Unic Campo Grande</h2>
+		  <p style="margin-top:20px; color:#555;">Use o menu lateral para iniciar suas atividades.</p>
+		</section>
+		
+		<section id="dashboard" class="section">
+		  <h2>📊 Dashboard do Sistema</h2>
+		  <div class="dash-container">
+		
+		    <div class="dash-card">
+		      <h3>🚨 Valor Total em Estoque</h3>
+		      <div id="valorEstoque" style="font-size:24px; font-weight:bold; color:#003b88;">R$ 0.00</div>
+		    </div>
+		
+		    <div class="dash-card">
+		      <h3>💰 Custo Total de Saídas</h3>
+		      <div id="valorSaidas" style="font-size:24px; font-weight:bold; color:#d9534f;">R$ 0.00</div>
+		    </div>
+		    
+		    <div class="dash-card">
+		      <h3>⚠️ Estoque Crítico</h3>
+		      <ul id="listaEstoqueCritico" style="color:red;"></ul>
+		    </div>
+		
+		    <div class="dash-card">
+		      <h3>🕒 Produtos Próximos do Vencimento</h3>
+		      <ul id="listaProximosVencer"></ul>
+		    </div>
+		
+		    <div class="dash-card">
+		      <h3>📦 Produtos Mais Utilizados (Saídas)</h3>
+		      <ul id="listaMaisSaidas"></ul>
+		    </div>
+		
+		    <div class="dash-card">
+		      <h3>💤 Produtos com Menos Saídas</h3>
+		      <ul id="listaMenosSaidas"></ul>
+		    </div>
+		    
+		    <div class="dash-card">
+		      <h3>💰 Produtos Mais Caros (Custo Unitário)</h3>
+		      <ul id="listaMaisCaros"></ul>
+		    </div>
+		
+		    <div class="dash-card">
+		      <h3>📈 Resumo Geral</h3>
+		      <div id="resumoGeral"></div>
+		    </div>
+		
+		  </div>
+		</section>
+      
       <section id="cadastro" class="section">
         <h2><i class="fa fa-box"></i> Cadastro de Produtos</h2>
 
-        <div class="input-row">
+        <div class="input-row" style="margin-bottom:10px;gap:8px;">
           <input id="produtoNome" type="text" placeholder="Nome do produto" class="flex" />
-		  
+
           <select id="produtoCategoria">
-  <option value="">Selecione a categoria</option>
-  <option>Material de Uso e Consumo</option>
-  <option>Copa e Cozinha</option>
-  <option>Escritório</option>
-  <option>Implante e 
- Componentes</option>
-  <option>Insumo Dental</option>
-  <option>Insumo Laboratório</option>
-  <option>Medicamentos</option>
-  <option>Material de Limpeza</option>
-</select>
+            <option value="">Selecione a categoria</option>
+            <option>Material de Uso e Consumo</option>
+            <option>Copa e Cozinha</option>
+            <option>Escritório</option>
+            <option>Implante e Componentes</option>
+            <option>Insumo Dental</option>
+            <option>Insumo Laboratório</option>
+            <option>Medicamentos</option>
+            <option>Material de Limpeza</option>
+          </select>
+
           <select id="produtoEmbalagem">
-  <option value="">Selecione o tipo de embalagem</option>
-  <option>Ampola</option>
-  <option>Caixa</option>
-  <option>Fardo</option>
-  <option>Frasco</option>
-  <option>Garrafa</option>
-  <option>Gramas</option>
-  <option>Litro</option>
-  <option>Pacote</option>
-  <option>Peça</option>
-  <option>Quilogramas (KG)</option>
-  <option>Saco</option>
-  <option>Unidade</option>
-</select>
+            <option value="">Selecione o tipo de embalagem</option>
+            <option>Ampola</option>
+            <option>Caixa</option>
+            <option>Fardo</option>
+            <option>Frasco</option>
+            <option>Garrafa</option>
+            <option>Gramas</option>
+            <option>Litro</option>
+            <option>Pacote</option>
+            <option>Peça</option>
+            <option>Quilogramas (KG)</option>
+            <option>Saco</option>
+            <option>Unidade</option>
+          </select>
+          
           <input id="produtoQtdEmbalagem" type="number" placeholder="Qtd por embalagem" style="width:140px" />
-		  <input id="produtoCodigoBarras" type="text" placeholder="📷Código de Barras (opcional)" style="width:220px" />
+		      <input id="produtoCodigoBarras" type="text" placeholder="📷Código de Barras (opcional)" style="width:220px" />
 
           <input id="produtoFoto" type="file" accept="image/*" />
-    
-        <button onclick="cadastrarProduto()"><i class="fa fa-save"></i> Cadastrar</button>
+          <button onclick="cadastrarProduto()"><i class="fa fa-save"></i> Cadastrar</button>
+  
         </div>
 
         <div style="margin-bottom:10px;">
@@ -609,16 +560,14 @@ html, body {
         <div class="table-wrap">
           <table id="tabelaProdutos">
             <thead>
-            
-  <tr>
+              <tr>
                 <th>#</th>
                 <th>Foto</th>
                 <th>Nome</th>
                 <th>Categoria</th>
                 <th>Embalagem</th>
                 <th>Qtd/Emb.</th>
-				 <th>Cód.
- Barras</th>
+				        <th>Cód. Barras</th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -627,2178 +576,1961 @@ html, body {
         </div>
       </section>
 
-     <section id="entrada" class="section" style="display:none;">
-
-  <h2><i class="fa 
- fa-arrow-down"></i> Entrada de Materiais</h2>
-   <div class="input-row">
-<input id="entradaCodigoBarras" type="text" placeholder="📷 Ler código de barras" 
-       style="min-width:200px;"
- oninput="buscarProdutoPorCodigo('entrada')" />
-    <input id="entradaProduto" type="text" placeholder="Nome do produto" style="min-width:220px" />
-    <input id="entradaQuantidade" type="number" placeholder="Quantidade" style="width:120px" />
-    <input id="entradaValor" type="number" placeholder="Valor Unitário (R$)" step="0.01" style="width:150px" />
-    <input id="entradaData" type="date" style="width:160px" />
-    <input id="entradaNota" type="text" placeholder="Nota Fiscal" />
-    <input id="entradaFornecedor" type="text" placeholder="Fornecedor" />
-    <input id="entradaCNPJ" type="text" placeholder="CNPJ" />
-    <input id="entradaLote" type="text" placeholder="Lote" />
-    <input id="entradaValidade" type="date" placeholder="Validade" />
-    
-    <select id="entradaSetor">
-     
-   <option value="">Selecione o Setor Utilizado</option>
-      <option>Limpeza da Clínica</option>
-      <option>Laboratório</option>
-      <option>Escritório</option>
-      <option>Copa e Cozinha</option>
-      <option>Clínico Geral</option>
-      <option>Centro Cirúrgico</option>
-    </select>
-
-    <button onclick="registrarEntrada()"><i class="fa fa-save"></i> Registrar Entrada</button>
-  </div>
-
-  <div style="margin-bottom:10px;">
-    <input id="filtroEntrada" type="text" placeholder="🔍 Buscar por produto, fornecedor ou NF" style="width:98%" oninput="filtrarEntradas()" />
-  </div>
-
-  <div class="table-wrap">
-  <table id="tabelaEntradas">
-    <thead>
-      <tr>
- 
-        <th>#</th>
-        <th>Produto</th>
-        <th>Código de Barras</th>
-        <th>Qtd</th>
-        <th>Valor (R$)</th>
-        <th>Data</th>
-        <th>NF</th>
-        <th>Fornecedor</th>
-        <th>CNPJ</th>
-        <th>Lote</th>
-        <th>Validade</th>
-        <th>Setor</th>
-  
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
-
-</section>
-
-
-
- <section id="saida" class="section" style="display:none;">
-  <h2><i class="fa fa-arrow-up"></i> Saída de Materiais</h2>
-
-  <div class="input-row">
-  <input id="saidaCodigoBarras" type="text" placeholder="📷 Ler código de barras" oninput="atualizarSetorAutomatico()" />
-
-           
-    <input id="saidaProduto" type="text" placeholder="Nome do produto" style="min-width:220px" oninput="atualizarSetorAutomatico()" />
-    <input id="saidaQuantidade" type="number" placeholder="Quantidade" style="width:120px" />
-    <input id="saidaResponsavel" type="text" placeholder="Responsável" />
-    <input id="saidaObservacao" type="text" 
- placeholder="Observação (opcional)" />
-    <select id="saidaSetor">
-      <option value="">Selecione o Setor</option>
-    </select>
-    <input id="saidaData" type="date" style="width:160px" />
-    <button onclick="registrarSaida()"><i class="fa fa-save"></i> Registrar Saída</button>
-  </div>
-
-  <div style="margin-bottom:10px;">
-    <input id="filtroSaida" type="text" placeholder="🔍 Buscar por produto, setor ou responsável" style="width:98%" oninput="filtrarSaidas()" />
-  </div>
-
-  <div class="table-wrap">
-    <table id="tabelaSaidas">
-      <thead>
-        <tr>
-          <th>#</th>
-        
-          <th>Produto</th>
-		   <th>Código de Barras</th>
-          <th>Qtd</th>
-          <th>Data</th>
-          <th>Setor</th>
-          <th>Responsável</th>
-          <th>Observação</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</section>
-
-
-
-      <section id="estoque" class="section" style="display:none;">
-        <h2><i class="fa fa-warehouse"></i> Estoque Atual</h2>
-
-        <div style="margin-bottom:10px;">
-          <input id="filtroEstoque" type="text" placeholder="🔍 Buscar no estoque (produto, categoria)" style="width:98%" oninput="filtrarEstoque()" />
-        </div>
-
-        <div class="table-wrap">
-        <table id="tabelaEstoque">
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>Produto</th>
-  
-      <th>Código de Barras</th>
-      <th>Categoria</th>
-      <th>Quantidade</th>
-      <th>Lote</th>
-      <th>Validade</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
-        </div>
-      </section>
-
-<section id="limites" class="section" style="display:none;">
-  <h2><i class="fa fa-boxes"></i> Estoque Mínimo e Máximo</h2>
-
-  <div id="resumoEstoque" style="margin-bottom:10px;
- font-weight:bold; color:#333;">
-    🧾 Total de Produtos: 0 |
-    ⚠️ Abaixo do Mínimo: 0 |
-    ✅ Dentro do Limite: 0 |
-    📦 Acima do Máximo: 0
-  </div>
-
-  <div style="display:flex;
- flex-wrap:wrap; gap:10px; margin-bottom:15px;">
-    <input
-      id="filtroLimite"
-      type="text"
-      placeholder="🔍 Buscar por produto"
-      style="flex:1;
- min-width:220px"
-      oninput="atualizarTabelaLimites()"
-    />
-
-    <select id="filtroCategoria" onchange="atualizarTabelaLimites()" style="min-width:220px;">
-      <option value="">Todas as Categorias</option>
-      <option>Material de Uso e Consumo</option>
-      <option>Copa e Cozinha</option>
-      <option>Escritório</option>
-      <option>Implante e Componentes</option>
-      <option>Insumo Dental</option>
-      <option>Insumo Laboratório</option>
-      <option>Medicamentos</option>
-      <option>Material de Limpeza</option>
-    </select>
-
-    <button onclick="gerarListaCompra()"><i class="fa fa-list"></i> Gerar Lista 
- de Compra</button>
-    <button onclick="limparListaCompra()"><i class="fa fa-trash"></i> Limpar Lista</button>
-  </div>
-
-  <div class="table-wrap">
-  <table id="tabelaLimites">
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>Produto</th>
-      <th>Código de Barras</th>
-      <th>Categoria</th>
-      <th>Qtd Atual</th>
-      <th>Mínimo</th>
-      <th>Máximo</th>
-      <th>Status</th>
-      <th>Recomendação</th>
-      <th>Ações</th>
-    </tr>
-  </thead>
- 
-  <tbody></tbody>
-</table>
-
-
-  </div>
-
-  
-  <div id="listaCompraContainer" style="display:none;
- margin-top:20px;">
-  <h3><i class="fa fa-shopping-cart"></i> Lista de Compra Gerada</h3>
-
- <div class="table-wrap" style="max-height:400px; overflow-y:auto; overflow-x:auto;
- border:1px solid #ccc;">
-    <table id="tabelaListaCompra" class="tabela-padrao">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Produto</th>
-          <th>Código de Barras</th>
-          <th>Categoria</th>
-          <th>Qtd Atual</th>
-          <th>Mínimo</th>
-          <th>Recomendado Comprar</th>
-    
-     </tr>
-      </thead>
-      <tbody></tbody>
-      <tfoot>
-        <tr>
-          <td colspan="6" style="text-align:right;
- font-weight:bold;">Total de Itens:</td>
-          <td id="totalItensCompra" style="font-weight:bold;">0</td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
-
-  <div style="margin-top:10px;">
-    <button onclick="exportarListaExcel()">
-      <i class="fa fa-file-excel"></i> Exportar para Excel
-    </button>
-    <button onclick="gerarPedidoPDF()">
-      <i class="fa fa-file-pdf"></i> Gerar Pedido de Orçamento (PDF)
-    </button>
-  </div>
-</div>
-
-</section>
-
-
-
-
-
-
-
-      <section id="financeiro" class="section" style="display:none;">
-  <h2><i class="fa fa-chart-line"></i> Painel Financeiro</h2>
-
-  <div style="display:flex;
- flex-wrap:wrap; gap:15px; margin-bottom:20px;">
-
-    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px;
- padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-      <h3>💰 Último Valor de Entrada</h3>
-      <p id="valorUltimaEntrada" style="font-size:1.4em;
- font-weight:bold; color:#007bff;">R$ 0,00</p>
-    </div>
-
-    <div style="flex:1;
- min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-      <h3>📊 Custo Médio Ponderado</h3>
-      <p id="valorCustoMedio" style="font-size:1.4em;
- font-weight:bold; color:#6f42c1;">R$ 0,00</p>
-    </div>
-
-    <div style="flex:1;
- min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-      <h3>📦 Valor Total do Estoque Atual</h3>
-      <p id="valorEstoqueAtualPainel" style="font-size:1.4em;
- font-weight:bold; color:#28a745;">R$ 0,00</p>
-    </div>
-  </div>
-
-  <div style="display:flex; flex-wrap:wrap;
- gap:15px; margin-bottom:20px;">
-    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center;
- box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-      <h3>💰 Valor Total do Estoque Atual (Contábil)</h3>
-      <p id="valorEstoque" style="font-size:1.4em;
- font-weight:bold; color:#28a745;">R$ 0,00</p>
-    </div>
-
-    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center;
- box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-      <h3>💸 Valor Total das Saídas (Estimado)</h3>
-      <p id="valorSaidas" style="font-size:1.4em;
- font-weight:bold; color:#dc3545;">R$ 0,00</p>
-    </div>
-  </div>
-
-  <h3 style="margin-top:25px;"><i class="fa fa-file-invoice"></i> Entradas Agrupadas por Nota Fiscal</h3>
-  <div class="table-wrap">
-    <table id="tabelaFinanceiro">
-      <thead>
-        <tr>
-          <th>Fornecedor</th>
-          <th>Nota Fiscal</th>
-          <th>Valor Total da Nota (R$)</th>
-          <th>Saldo da Nota (R$)</th>
+     <section id="entrada" class="section">
+      <h2><i class="fa fa-arrow-down"></i> Entrada de Materiais</h2>
+      <div class="input-row" style="margin-bottom:10px;gap:8px;">
       
-    </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</section>
-
-
-
-
-      <section id="relatorios" class="section" style="display:none;">
-  <h2><i class="fa fa-chart-line"></i> Relatórios</h2>
-
-  <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
-    <button onclick="gerarRelatorioProdutos()"><i class="fa fa-file-excel"></i> Produtos</button>
-    <button onclick="gerarRelatorioEntradas()"><i class="fa fa-file-excel"></i> Entradas</button>
-    <button onclick="gerarRelatorioSaidas()"><i class="fa fa-file-excel"></i> Saídas</button>
-    <button onclick="gerarRelatorioEstoque()"><i class="fa fa-file-excel"></i> Estoque</button>
-  </div>
-
-  <div id="filtroPeriodo" style="margin: 15px 
- 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
-    <label><b>Data Início:</b></label>
-    <input type="date" id="dataInicioRelatorio" style="padding: 4px 6px;">
-    <label><b>Data Fim:</b></label>
-    <input type="date" id="dataFimRelatorio" style="padding: 4px 6px;">
-    <button onclick="filtrarRelatoriosPorPeriodo()">Filtrar</button>
-    <button onclick="definirPeriodoRapido('7dias')">Últimos 7 dias</button>
-    <button onclick="definirPeriodoRapido('30dias')">Últimos 30 dias</button>
-    <button onclick="definirPeriodoRapido('mes')">Mês Atual</button>
-    <button onclick="limparPeriodo()">Limpar</button>
-  </div>
-
-  <div style="background:#fff;padding:10px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
-    <p>Os relatórios são gerados em formato Excel (.csv) e incluem todos os dados das tabelas correspondentes.</p>
-  </div>
-</section>
-
-
-      <section id="usuarios" class="section" style="display:none;">
-        <h2><i class="fa fa-users"></i> Gerenciar Usuários e Perfis</h2>
+        <input id="entradaCodigoBarras" type="text" placeholder="📷 Ler código de barras" style="min-width:200px;" oninput="buscarProdutoPorCodigo('entrada')" />
         
-        <div class="input-row">
-          <input id="usuarioNome" type="text" placeholder="Nome" />
-          <input id="usuarioCPF" type="text" placeholder="CPF" />
-          <input id="usuarioEmail" type="email" placeholder="E-mail" />
-          <input id="usuarioSenha" type="password" placeholder="Senha" />
-          <select id="usuarioPerfil">
-            <option value="admin">Administrador</option>
-            <option value="simples1">Simples 01</option>
-            <option value="simples2">Simples 02</option>
+        <input id="entradaProduto" type="text" placeholder="Nome do produto" list="listaProdutos" style="min-width:220px" />
+        <datalist id="listaProdutos"></datalist>
+        
+        <input id="entradaQuantidade" type="number" placeholder="Quantidade" style="width:120px" />
+        <input id="entradaValor" type="number" placeholder="Valor Unitário (R$)" step="0.01" style="width:150px" />
+        <input id="entradaData" type="date" style="width:160px" />
+        <input id="entradaNota" type="text" placeholder="Nota Fiscal" />
+        <input id="entradaFornecedor" type="text" placeholder="Fornecedor" />
+        <input id="entradaCNPJ" type="text" placeholder="CNPJ" />
+        <input id="entradaLote" type="text" placeholder="Lote" />
+        <input id="entradaValidade" type="date" placeholder="Validade" />
+
+        <select id="entradaSetor">
+          <option value="">Selecione o Setor Utilizado</option>
+          <option>Limpeza da Clínica</option>
+          <option>Laboratório</option>
+          <option>Escritório</option>
+          <option>Copa e Cozinha</option>
+          <option>Clínico Geral</option>
+          <option>Centro Cirúrgico</option>
+        </select>
+
+        <button onclick="registrarEntrada()"><i class="fa fa-save"></i> Registrar Entrada</button>
+      </div>
+
+      <div style="margin-bottom:10px;">
+        <input id="filtroEntrada" type="text" placeholder="🔍 Buscar por produto, fornecedor ou NF" style="width:98%" oninput="filtrarEntradas()" />
+      </div>
+
+      <div class="table-wrap">
+        <table id="tabelaEntradas">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Produto</th>
+              <th>Cód. Barras</th>
+              <th>Qtd</th>
+              <th>Valor (R$)</th>
+              <th>Data</th>
+              <th>NF</th>
+              <th>Fornecedor</th>
+              <th>CNPJ</th>
+              <th>Lote</th>
+              <th>Validade</th>
+              <th>Setor</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+    </section>
+
+     <section id="saida" class="section">
+      <h2><i class="fa fa-arrow-up"></i> Saída de Materiais</h2>
+      <div class="input-row" style="margin-bottom:10px;gap:8px;">
+        <input id="saidaCodigoBarras" type="text" placeholder="📷 Ler código de barras" oninput="buscarProdutoPorCodigo('saida'); atualizarSetorAutomatico()" />
+        
+        <input id="saidaProduto" type="text" placeholder="Nome do produto" list="listaProdutos" style="min-width:220px" oninput="atualizarSetorAutomatico()" />
+        
+        <input id="saidaQuantidade" type="number" placeholder="Quantidade" style="width:120px" />
+        <input id="saidaResponsavel" type="text" placeholder="Responsável" />
+        <input id="saidaObservacao" type="text" placeholder="Observação (opcional)" />
+        <select id="saidaSetor">
+          <option value="">Selecione o Setor</option>
           </select>
-          <button onclick="salvarUsuario()"><i class="fa fa-save"></i> Salvar</button>
+        <input id="saidaData" type="date" style="width:160px" />
+        <button onclick="registrarSaida()"><i class="fa fa-save"></i> Registrar Saída</button>
+      </div>
+
+      <div style="margin-bottom:10px;">
+        <input id="filtroSaida" type="text" placeholder="🔍 Buscar por produto, responsável ou setor" style="width:98%" oninput="filtrarSaidas()" />
+      </div>
+
+      <div class="table-wrap">
+        <table id="tabelaSaidas">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Produto</th>
+              <th>Cód. Barras</th>
+              <th>Qtd</th>
+              <th>Data</th>
+              <th>Setor</th>
+              <th>Responsável</th>
+              <th>Observação</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+    
+    <section id="estoque" class="section">
+      <h2><i class="fa fa-warehouse"></i> Estoque Atual</h2>
+      
+      <div style="margin-bottom:10px;">
+        <input id="filtroEstoque" type="text" placeholder="🔍 Filtrar por produto ou categoria" style="width:98%" oninput="filtrarEstoque()" />
+      </div>
+
+      <div class="table-wrap">
+        <table id="tabelaEstoque">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Foto</th>
+              <th>Nome</th>
+              <th>Categoria</th>
+              <th>Cód. Barras</th>
+              <th>Qtd. Atual</th>
+              <th>Último Valor (R$)</th>
+              <th>Validade</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      
+      <div id="resumoEstoque" style="margin-top:10px; padding:10px; background:#fff; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+        </div>
+    </section>
+    
+    <section id="limites" class="section">
+      <h2><i class="fa fa-sliders-h"></i> Estoque Mínimo/Máximo</h2>
+      
+      <div style="margin-bottom:10px;">
+        <input id="filtroLimites" type="text" placeholder="🔍 Filtrar por produto" style="width:calc(100% - 300px); margin-right:10px;" oninput="filtrarLimites()" />
+        <button onclick="abrirPopupLimites()">Definir Limites em Massa</button>
         </div>
 
-        <div class="table-wrap">
-          <table id="tabelaUsuarios">
+      <div class="input-row">
+        <select id="filtroCategoria" onchange="gerarListaCompra()">
+          <option value="">Filtrar por Categoria (Lista de Compra)</option>
+          <option>Material de Uso e Consumo</option>
+          <option>Copa e Cozinha</option>
+          <option>Escritório</option>
+          <option>Implante e Componentes</option>
+          <option>Insumo Dental</option>
+          <option>Insumo Laboratório</option>
+          <option>Medicamentos</option>
+          <option>Material de Limpeza</option>
+        </select>
+        <button onclick="gerarListaCompra()"><i class="fa fa-list"></i> Gerar Lista de Compra</button>
+        <button onclick="limparListaCompra()"><i class="fa fa-trash"></i> Limpar Lista</button>
+      </div>
+      
+
+      <div class="table-wrap">
+        <table id="tabelaLimites">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Produto</th>
+              <th>Cód. Barras</th>
+              <th>Categoria</th>
+              <th>Qtd Atual</th>
+              <th>Mínimo</th>
+              <th>Máximo</th>
+              <th>Status</th>
+              <th>Recomendação</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      
+      <div id="listaCompraContainer" style="display:none; margin-top:20px;">
+        <h3><i class="fa fa-shopping-cart"></i> Lista de Compra Gerada</h3>
+        <div class="table-wrap" style="max-height:400px; overflow-y:auto; overflow-x:auto;">
+          <table id="tabelaListaCompra">
             <thead>
               <tr>
                 <th>#</th>
-                <th>Nome</th>
-                <th>CPF</th>
-                <th>Email</th>
-                <th>Perfil</th>
-                <th>Ações</th>
+                <th>Produto</th>
+                <th>Cód. Barras</th>
+                <th>Categoria</th>
+                <th>Qtd Atual</th>
+                <th>Mín.</th>
+                <th>Recomendação</th>
+                <th>Ação</th>
               </tr>
             </thead>
             <tbody></tbody>
+            <tfoot>
+              <tr>
+                <td colspan="6" style="text-align:right; font-weight:bold;">Total de Itens:</td>
+                <td id="totalItensCompra" style="font-weight:bold;">0</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
-      </section>
 
-      <section id="dashboard" class="section">
-        <h2>📊 Dashboard do Sistema</h2>
-
-        <div class="dash-container">
-          <div class="dash-card">
-            <h3>🕒 Produtos Próximos do Vencimento</h3>
-            <ul id="listaProximosVencer"></ul>
-          </div>
-          <div class="dash-card">
-            <h3>⚠️ Itens Abaixo do Estoque Mínimo</h3>
-            <ul id="listaEstoqueMinimo"></ul>
-          </div>
-          <div class="dash-card">
-            <h3>📈 Top 5 Produtos (Mais Saída)</h3>
-            <ul id="listaTopSaidas"></ul>
-          </div>
-          <div class="dash-card">
-            <h3>🏥 Top 5 Setores (Mais Consumo)</h3>
-            <ul id="listaTopSetores"></ul>
-          </div>
+        <div style="margin-top:10px;">
+          <button onclick="exportarListaExcel()">
+            <i class="fa fa-file-excel"></i> Exportar para Excel
+          </button>
+          <button onclick="gerarPedidoPDF()">
+            <i class="fa fa-file-pdf"></i> Gerar Pedido de Orçamento (PDF)
+          </button>
         </div>
+      </div>
+    </section>
+    
+    <section id="financeiro" class="section">
+      <h2><i class="fa fa-coins"></i> Painel Financeiro</h2>
+      
+      <div class="dash-container" style="margin-top:0; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+        <div class="dash-card">
+          <h3>Total Entrada (Notas)</h3>
+          <div id="totalEntradaNotas" style="font-size:1.2rem; font-weight:bold; color:#28a745;">R$ 0.00</div>
+        </div>
+        <div class="dash-card">
+          <h3>Total Saída (Custo)</h3>
+          <div id="totalSaidaCusto" style="font-size:1.2rem; font-weight:bold; color:#dc3545;">R$ 0.00</div>
+        </div>
+        <div class="dash-card">
+          <h3>Valor Contábil Estoque</h3>
+          <div id="valorEstoqueContabil" style="font-size:1.2rem; font-weight:bold; color:#0d6efd;">R$ 0.00</div>
+        </div>
+        <div class="dash-card">
+          <h3>Custo Médio Ponderado Total</h3>
+          <div id="custoMedioTotal" style="font-size:1.2rem; font-weight:bold; color:#ffc107;">R$ 0.00</div>
+        </div>
+      </div>
+      
+      <h3 style="margin-top:20px; border-left:none; border-bottom:1px solid #ccc; padding-bottom:5px;">Detalhe Financeiro por Nota</h3>
+      
+      <div class="table-wrap">
+        <table id="tabelaFinanceiro">
+          <thead>
+            <tr>
+              <th>Fornecedor</th>
+              <th>Nota Fiscal</th>
+              <th>Data</th>
+              <th>Valor Total Nota</th>
+              <th>Custo Saídas Relacionadas</th>
+              <th>Saldo (Estoque Restante)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+    
+    <section id="relatorios" class="section">
+      <h2><i class="fa fa-file-excel"></i> Geração de Relatórios</h2>
+      
+      <div class="input-row">
+        <label for="dataInicioRelatorio">De:</label>
+        <input type="date" id="dataInicioRelatorio" style="width:150px;" />
+        <label for="dataFimRelatorio">Até:</label>
+        <input type="date" id="dataFimRelatorio" style="width:150px;" />
+        <button onclick="definirPeriodoRapido('7dias')">Últimos 7 dias</button>
+        <button onclick="definirPeriodoRapido('30dias')">Últimos 30 dias</button>
+        <button onclick="definirPeriodoRapido('mes')">Mês Atual</button>
+        <button onclick="limparPeriodo()">Limpar</button>
+      </div>
 
-      </section>
+      <div class="input-row" style="margin-top:10px;">
+        <button onclick="exportarTabelaExcel('tabelaEntradas', 'Entradas', 'Entradas_')" style="background:#28a745;">
+          <i class="fa fa-file-excel"></i> Exportar Entradas
+        </button>
+        <button onclick="exportarTabelaExcel('tabelaSaidas', 'Saídas', 'Saidas_')" style="background:#dc3545;">
+          <i class="fa fa-file-excel"></i> Exportar Saídas
+        </button>
+        <button onclick="exportarTabelaExcel('tabelaEstoque', 'Estoque', 'Estoque_')" style="background:#0d6efd;">
+          <i class="fa fa-file-excel"></i> Exportar Estoque Atual
+        </button>
+        <button onclick="exportarTabelaExcel('tabelaFinanceiro', 'Financeiro', 'Financeiro_')" style="background:#ffc107;">
+          <i class="fa fa-file-excel"></i> Exportar Financeiro
+        </button>
+      </div>
+
+      <div style="background:#fff;padding:10px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1); margin-top:20px;">
+        <p>Os relatórios em Excel (.csv) consideram o período de data selecionado para Entradas e Saídas. Os relatórios de Estoque e Financeiro consideram o estado atual.</p>
+      </div>
+    </section>
+    
+    <section id="usuarios" class="section">
+      <h2><i class="fa fa-users"></i> Gerenciar Usuários e Perfis</h2>
+      <p>⚠️ **Funcionalidade Firebase:** A criação e gestão de usuários (e-mail/senha) é feita diretamente pelo painel de controle do Firebase. Aqui, gerenciamos apenas os perfis e metadados locais (localStorage/Firestore).</p>
+      
+      <div class="input-row" style="margin-top:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
+        <input id="usuarioNome" type="text" placeholder="Nome Completo" class="flex" />
+        <input id="usuarioEmail" type="email" placeholder="E-mail (ID do Firebase)" class="flex" />
+        <select id="usuarioPerfil" style="width:200px;">
+          <option value="">Selecione o Perfil</option>
+          <option>ADMIN</option>
+          <option>GERENTE</option>
+          <option>ESTOQUISTA</option>
+        </select>
+        <button onclick="salvarUsuarioLocal()"><i class="fa fa-user-plus"></i> Salvar/Atualizar Perfil</button>
+      </div>
+      
+      <div style="margin-bottom:10px; margin-top:10px;">
+        <input id="filtroUsuarios" type="text" placeholder="🔍 Filtrar por nome ou e-mail" style="width:98%" oninput="filtrarUsuarios()" />
+      </div>
+      
+      <div class="table-wrap">
+        <table id="tabelaUsuarios">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nome</th>
+              <th>E-mail</th>
+              <th>Perfil</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
 
     </main>
   </div>
+
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+
+  // Configuração do Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw", // ⚠️ MANTENHA ESTA CHAVE PRIVADA
+    authDomain: "oralunicestoque.firebaseapp.com",
+    projectId: "oralunicestoque",
+    storageBucket: "oralunicestoque.firebasestorage.app",
+    messagingSenderId: "660233908877",
+    appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
+  };
   
-  <script>
-    // ================================ 🔹 VARIÁVEIS GLOBAIS (DADOS) 🔹 ================================
-    let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
-    let entradas = JSON.parse(localStorage.getItem("entradas")) || [];
-    let saidas = JSON.parse(localStorage.getItem("saidas")) || [];
-    let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
-    let usuarioLogado = null; // Armazena dados do usuário logado
+  // Inicialização
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-    // ================================ 🛠️ FUNÇÕES DE UTILIDADE ================================
-
-    /* ========================= 🔹 Alternar Menu Lateral ========================= */
-    function toggleSidebar() {
-      const sidebar = document.getElementById("sidebar");
-      const mainContent = document.querySelector("main");
-      sidebar.classList.toggle("active");
-
-      // Adiciona/remove classe do main para ajuste de margem
-      if (window.innerWidth >= 900) {
-        if (sidebar.classList.contains("active")) {
-          mainContent.style.marginLeft = "250px";
-        } else {
-          mainContent.style.marginLeft = "0";
-        }
+  // Variáveis globais para dados
+  window.produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+  window.entradas = JSON.parse(localStorage.getItem("entradas")) || [];
+  window.saidas = JSON.parse(localStorage.getItem("saidas")) || [];
+  window.usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+  
+  // === FUNÇÕES DE PERSISTÊNCIA (Firestore/Local) ===
+  
+  // 🔹 Salva dados globais no localStorage (fallback)
+  function salvarTodosLocal() {
+      localStorage.setItem("produtos", JSON.stringify(window.produtos));
+      localStorage.setItem("entradas", JSON.stringify(window.entradas));
+      localStorage.setItem("saidas", JSON.stringify(window.saidas));
+      localStorage.setItem("usuarios", JSON.stringify(window.usuarios));
+  }
+  
+  // 🔹 Salva/Busca no Firestore (Mais robusto para multiusuário)
+  async function salvarDadosNoFirestore(nomeColecao, dados) {
+      if (!auth.currentUser) return;
+      try {
+          // Usa o UID do usuário para criar uma subcoleção única para os dados
+          const docRef = doc(db, "estoqueData", auth.currentUser.uid);
+          await setDoc(docRef, { [nomeColecao]: dados }, { merge: true });
+          // console.log("Dados salvos no Firestore:", nomeColecao);
+      } catch (e) {
+          console.error("Erro ao salvar no Firestore: ", e);
       }
-    }
+  }
 
-    /* ========================= 🔹 Exibir Seção ========================= */
-    function showSection(id) {
-      document.querySelectorAll(".section").forEach(sec => {
-        sec.classList.remove("active");
-        sec.style.display = "none";
-      });
-      const section = document.getElementById(id);
-      if (section) {
-        section.classList.add("active");
-        section.style.display = "block";
-        section.scrollTop = 0; // Volta ao topo da seção
+  async function carregarDadosDoFirestore() {
+      if (!auth.currentUser) return;
+      try {
+          const docRef = doc(db, "estoqueData", auth.currentUser.uid);
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists()) {
+              const data = docSnap.data();
+              // Atualiza as variáveis globais e o localStorage com os dados do Firestore
+              window.produtos = data.produtos || [];
+              window.entradas = data.entradas || [];
+              window.saidas = data.saidas || [];
+              window.usuarios = data.usuarios || [];
+              salvarTodosLocal();
+              // console.log("Dados carregados do Firestore.");
+          } else {
+              // console.log("Nenhum dado encontrado no Firestore para este usuário, usando localStorage.");
+              // Se não houver dados no Firestore, salva o que está no localStorage para começar
+              salvarDadosNoFirestore("produtos", window.produtos);
+              salvarDadosNoFirestore("entradas", window.entradas);
+              salvarDadosNoFirestore("saidas", window.saidas);
+              salvarDadosNoFirestore("usuarios", window.usuarios);
+          }
+          
+          // Re-renderiza todas as tabelas e dashboard após carregar os dados
+          if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+          if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
+          if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
+          if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
+          if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
+          if (typeof atualizarDashboard === "function") atualizarDashboard();
+          if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
+          if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
+          if (typeof atualizarSelectProdutos === "function") atualizarSelectProdutos();
+          if (typeof ordenarListasAlfabeticamente === "function") ordenarListasAlfabeticamente();
+          
+      } catch (e) {
+          console.error("Erro ao carregar do Firestore: ", e);
       }
-      
-      // 🔹 Atualiza dados se for financeiro
-      if (id === "financeiro" && typeof atualizarPainelFinanceiro === "function") {
-        atualizarPainelFinanceiro();
-      }
-      // 🔹 Atualiza dados se for o dashboard
-      if (id === "dashboard" && typeof atualizarDashboard === "function") {
-        atualizarDashboard();
-      }
+  }
+  
+  // 🔹 Wrappers para usar o Firestore
+  window.salvarProdutosNoFirebase = (dados) => salvarDadosNoFirestore("produtos", dados);
+  window.salvarEntradasNoFirebase = (dados) => salvarDadosNoFirestore("entradas", dados);
+  window.salvarSaidasNoFirebase = (dados) => salvarDadosNoFirestore("saidas", dados);
+  window.salvarUsuariosNoFirebase = (dados) => salvarDadosNoFirestore("usuarios", dados);
 
-      // 🔹 Mantém a tela centralizada no login
-      window.scrollTo(0, 0); 
-    }
+  // === LOGIN E SESSÃO ===
+  
+  function mostrarSistema(user) {
+    const loginView = document.getElementById("loginView");
+    const mainApp = document.getElementById("mainApp");
+    const userNameEl = document.getElementById("userName");
+    const perfilBadgeEl = document.getElementById("perfilBadge");
+    const nomeBemVindoEl = document.getElementById("nomeUsuarioBemVindo");
 
-    /* ========================= 🔹 Logout ========================= */
-    function logout() {
-      // 🔹 Remove sessão salva
-      localStorage.removeItem("usuarioLogado");
-      // 🔹 Esconde o app e volta para tela de login
-      document.getElementById("mainApp").style.display = "none";
-      document.getElementById("loginView").style.display = "flex";
-      // 🔹 Limpa os campos de login e mensagem
-      const usuarioEl = document.getElementById("usuarioLogin");
-      const senhaEl = document.getElementById("senhaLogin");
-      const msg = document.getElementById("loginMsg");
-      if (usuarioEl) usuarioEl.value = "";
-      if (senhaEl) senhaEl.value = "";
-      if (msg) {
-        msg.textContent = "";
-        msg.style.display = "none";
-      }
-      // 🔹 Opcional: foco no campo usuário
-      usuarioEl.focus();
-    }
-
-
-    /* ================================ 🔐 LOGIN, VERIFICAÇÃO E LOGOUT ================================ */
-    
-    // Executa quando o DOM estiver pronto
-    document.addEventListener("DOMContentLoaded", () => {
-        verificarSessao();
-    });
-
-    // === FUNÇÃO DE LOGIN ===
-    function fazerLogin() {
-      const nome = document.getElementById("usuarioLogin")?.value.trim();
-      const senha = document.getElementById("senhaLogin")?.value.trim();
-      let msg = document.getElementById("loginMsg");
-      if (!msg) {
-        msg = document.createElement("p");
-        msg.id = "loginMsg";
-        msg.style.cssText = "margin-top:10px; font-weight:bold; text-align:center;";
-        document.getElementById("loginView").appendChild(msg);
-      }
-      
-      msg.style.display = "none";
-      
-      // 🔹 Verificação no Array de Usuários (sem Firebase)
-      const usuarioEncontrado = usuarios.find(u => u.email === nome && u.senha === senha);
-
-      if (usuarioEncontrado) {
-        // Sucesso
-        msg.textContent = "Login bem-sucedido!";
-        msg.style.cssText = "display:block; color:green; background:#d4edda; padding:8px; border-radius:4px;";
-        
-        // Salva sessão no localStorage
-        localStorage.setItem("usuarioLogado", JSON.stringify(usuarioEncontrado));
-        
-        setTimeout(() => {
-          mostrarSistema(usuarioEncontrado);
-        }, 800);
-        
-      } else {
-        // Falha no Login
-        msg.textContent = "Erro: Usuário ou senha inválidos.";
-        msg.style.cssText = "display:block; color:red; background:#f8d7da; padding:8px; border-radius:4px;";
-      }
-    }
-
-
-    // === MOSTRA SISTEMA ===
-    function mostrarSistema(sessao) {
-      const loginView = document.getElementById("loginView");
-      const mainApp = document.getElementById("mainApp");
-      const userName = document.getElementById("userName");
-      const perfilBadge = document.getElementById("perfilBadge");
-      const sidebar = document.getElementById("sidebar");
-
-      if (loginView && mainApp) {
+    if (loginView && mainApp) {
         loginView.style.display = "none";
         mainApp.style.display = "block";
-      }
-
-      if (userName && sessao?.nome) userName.textContent = sessao.nome;
-      if (perfilBadge && sessao?.perfil) perfilBadge.textContent = "Perfil: " + sessao.perfil.toUpperCase();
-      
-      // 🔹 Mostra mensagem de boas-vindas
-      const nomeBemVindo = document.getElementById("nomeUsuarioBemVindo");
-      if (nomeBemVindo) nomeBemVindo.textContent = sessao.nome;
-      
-      // 🔹 Oculta todas as outras seções e mostra apenas a de boas-vindas
-      document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
-      const boasVindas = document.getElementById("boasVindas");
-      if (boasVindas) boasVindas.style.display = "block";
-
-      // 🔹 Garante que o menu lateral esteja fechado
-      if (sidebar && sidebar.classList.contains("active")) {
-        sidebar.classList.remove("active");
-      }
-
-      // 🔹 Atualiza variáveis e permissões
-      window.usuarioLogado = sessao;
-      if (typeof aplicarPermissoes === "function") aplicarPermissoes();
-      if (typeof bloquearAcoesSimples2 === "function") bloquearAcoesSimples2();
-
     }
 
-    // === VERIFICAÇÃO DE SESSÃO (ao carregar) ===
-    function verificarSessao() {
-      const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado") || "{}");
-      const loginView = document.getElementById("loginView");
-      const mainApp = document.getElementById("mainApp");
+    // Tenta encontrar o perfil do usuário logado
+    const usuarioLogado = window.usuarios.find(u => u.email.toLowerCase() === user.email.toLowerCase());
+    const nome = usuarioLogado ? usuarioLogado.nome : user.email.split('@')[0];
+    const perfil = usuarioLogado ? usuarioLogado.perfil : "DESCONHECIDO";
 
-      if (usuarioLogado && usuarioLogado.nome) {
-        // Usuário logado encontrado
-        mostrarSistema(usuarioLogado);
-      } else {
-        // Nenhum usuário logado, mantém tela de login
-        if (loginView) loginView.style.display = "flex";
-        if (mainApp) mainApp.style.display = "none";
-      }
+    if (userNameEl) userNameEl.textContent = nome;
+    if (perfilBadgeEl) perfilBadgeEl.textContent = "Perfil: " + perfil.toUpperCase();
+    if (nomeBemVindoEl) nomeBemVindoEl.textContent = nome;
+  }
+  
+  window.fazerLogin = async function() {
+    // CORREÇÃO: Usar os IDs corretos do HTML de login
+    const usuario = document.getElementById("usuarioLogin").value.trim(); 
+    const senha = document.getElementById("senhaLogin").value.trim();
+
+    if (!usuario || !senha) {
+      alert("Preencha e-mail e senha!");
+      return;
     }
 
-
-    /* ========================= 📦 Cadastro de produtos ========================= */
-    function cadastrarProduto() {
-      if (typeof padronizarCamposAntesDeSalvar === "function") padronizarCamposAntesDeSalvar();
-
-      const nomeEl = document.getElementById("produtoNome");
-      const categoriaEl = document.getElementById("produtoCategoria");
-      const embalagemEl = document.getElementById("produtoEmbalagem");
-      const qtdEl = document.getElementById("produtoQtdEmbalagem");
-      const fotoInput = document.getElementById("produtoFoto");
-      const codigoBarrasEl = document.getElementById("produtoCodigoBarras");
-      const codigoBarras = codigoBarrasEl ? codigoBarrasEl.value.trim() : "";
-
-      // 🔹 Remove marcações anteriores
-      [nomeEl, categoriaEl, embalagemEl, qtdEl, fotoInput, codigoBarrasEl].forEach(el => {
-        if (el) el.style.border = "1px solid #ccc";
-      });
-
-      // 🔹 Validações — mantém o que foi digitado
-      if (!nomeEl.value.trim()) {
-        alert("Informe o nome do produto!");
-        nomeEl.style.border = "2px solid red";
-        nomeEl.focus();
-        return false;
-      }
-      if (!categoriaEl.value.trim()) {
-        alert("Selecione a categoria do produto!");
-        categoriaEl.style.border = "2px solid red";
-        categoriaEl.focus();
-        return false;
-      }
-      if (!embalagemEl.value.trim()) {
-        alert("Selecione o tipo de embalagem!");
-        embalagemEl.style.border = "2px solid red";
-        embalagemEl.focus();
-        return false;
-      }
-      if (!qtdEl.value || Number(qtdEl.value) <= 0) {
-        alert("Informe a quantidade por embalagem!");
-        qtdEl.style.border = "2px solid red";
-        qtdEl.focus();
-        return false;
-      }
-      if (!fotoInput.files || !fotoInput.files[0]) {
-        alert("É obrigatório inserir uma foto do produto!");
-        fotoInput.style.border = "2px solid red";
-        fotoInput.focus();
-        return false;
-      }
-
-      // 🔹 Verifica duplicidade (apenas nome)
-      if (produtos.some(p => p.nome.toLowerCase() === nomeEl.value.trim().toLowerCase())) {
-          alert("Este produto já está cadastrado!");
-          nomeEl.style.border = "2px solid orange";
-          nomeEl.focus();
-          return false;
-      }
-
-      // Transforma a imagem em Base64
-      const file = fotoInput.files[0];
-      const reader = new FileReader();
-
-      reader.onload = function(event) {
-        const fotoBase64 = event.target.result;
-
-        // Cria o novo produto
-        const novoProduto = {
-          nome: nomeEl.value.trim(),
-          categoria: categoriaEl.value,
-          embalagem: embalagemEl.value,
-          qtdEmbalagem: Number(qtdEl.value),
-          codigoBarras: codigoBarras,
-          foto: fotoBase64,
-          quantidade: 0, // Estoque inicial 0
-          minimo: 0,
-          maximo: 0,
-        };
-
-        // Adiciona e salva
-        produtos.push(novoProduto);
-        localStorage.setItem("produtos", JSON.stringify(produtos));
-        
-        // Atualiza tabelas e limpa
-        atualizarTabelaProdutos();
-        preencherProdutosSelect();
-        limparCampos("cadastro");
-        alert("Produto cadastrado com sucesso!");
-      };
-
-      reader.readAsDataURL(file);
+    const email = usuario.trim();
+    try {
+      await signInWithEmailAndPassword(auth, email, senha);
+      // O onAuthStateChanged cuidará da transição da tela
+      // alert("✅ Login realizado com sucesso!");
+    } catch (error) {
+      console.error(error.code, error.message);
+      mostrarMensagem(`Erro de login: ${error.code}`, "erro");
     }
+  };
 
-    function atualizarTabelaProdutos() {
-      const tbody = document.querySelector("#tabelaProdutos tbody");
-      if (!tbody) return;
-
-      tbody.innerHTML = "";
-      // Ordena por nome
-      produtos.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
-
-      produtos.forEach((p, i) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${i + 1}</td>
-          <td>${p.foto ? `<img src="${p.foto}" class="thumb" onclick="ampliarImagem('${p.foto}')">` : "-"}</td>
-          <td>${p.nome}</td>
-          <td>${p.categoria}</td>
-          <td>${p.embalagem}</td>
-          <td>${p.qtdEmbalagem}</td>
-          <td style="font-size:12px; color:#555;">${p.codigoBarras || "-"}</td>
-          <td>
-            <button onclick="editarProduto(${i})"><i class="fa fa-edit"></i></button>
-            <button onclick="excluirProduto(${i})" class="btn-delete"><i class="fa fa-trash"></i></button>
-          </td>
-        `;
-        tbody.appendChild(row);
-      });
-    }
-
-    function excluirProduto(i) {
-      if (!confirm("Excluir este produto? Esta ação não pode ser desfeita e removerá o produto, entradas e saídas relacionadas.")) return;
-      
-      const nomeProduto = produtos[i].nome;
-
-      produtos.splice(i, 1);
-      
-      // Remove entradas e saídas relacionadas
-      entradas = entradas.filter(e => e.produto !== nomeProduto);
-      saidas = saidas.filter(s => s.produto !== nomeProduto);
-
-      localStorage.setItem("produtos", JSON.stringify(produtos));
-      localStorage.setItem("entradas", JSON.stringify(entradas));
-      localStorage.setItem("saidas", JSON.stringify(saidas));
-      
-      atualizarTabelaProdutos();
-      if(typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
-      if(typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-      if(typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-      if(typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-      
-      preencherProdutosSelect();
-      alert("Produto e todos os registros relacionados excluídos!");
-    }
-
-    function ampliarImagem(src) {
-      const modal = document.getElementById("imagemAmpliada");
-      const img = modal.querySelector("img");
-      if (modal && img) {
-        img.src = src;
-        modal.style.display = "flex";
-      }
-    }
-
-    function filtrarProdutos() {
-      const termo = document.getElementById("filtroProduto").value.toLowerCase();
-      const tbody = document.querySelector("#tabelaProdutos tbody");
-      if (!tbody) return;
-
-      tbody.querySelectorAll("tr").forEach(tr => {
-        const texto = tr.textContent.toLowerCase();
-        tr.style.display = texto.includes(termo) ? "" : "none";
-      });
-    }
-    
-    // Função de edição para o futuro (placeholder)
-    function editarProduto(i) {
-        alert("Função de Edição do Produto " + produtos[i].nome + " (Índice: " + i + ") - A ser implementada.");
-    }
-
-
-    /* ========================= 🔹 Busca por Código de Barras ========================= */
-    function buscarProdutoPorCodigo(contexto) {
-      const campoCodigo = document.getElementById(`${contexto}CodigoBarras`);
-      if (!campoCodigo) return;
-
-      const codigo = campoCodigo.value.trim();
-      
-      // Limpa a borda vermelha se começar a digitar
-      campoCodigo.style.border = "1px solid #ccc";
-      campoCodigo.title = "";
-
-      if (!codigo) return;
-
-      const produto = produtos.find(p => (p.codigoBarras || "").trim() === codigo);
-
-      if (!produto) {
-        campoCodigo.style.border = "2px solid red";
-        campoCodigo.title = "Código de barras não encontrado.";
-        return;
-      }
-      
-      // Preenche o campo do nome automaticamente
-      const campoProduto = document.getElementById(`${contexto}Produto`);
-      if (campoProduto) campoProduto.value = produto.nome;
-      
-      // Se for entrada, tenta buscar dados recentes
-      if (contexto === 'entrada' && typeof preencherEntradaAutomatica === 'function') {
-           preencherEntradaAutomatica(produto.nome);
-      }
-      
-       // Se for saída, atualiza o setor
-      if (contexto === 'saida' && typeof atualizarSetorAutomatico === 'function') {
-           atualizarSetorAutomatico();
-      }
-    }
-    
-    /* ========================= 🔹 Entradas ========================= */
-    function registrarEntrada() {
-      if (typeof padronizarCamposAntesDeSalvar === "function") padronizarCamposAntesDeSalvar();
-
-      const produtoEl = document.getElementById("entradaProduto");
-      const qtdEl = document.getElementById("entradaQuantidade");
-      const valorEl = document.getElementById("entradaValor");
-      const dataEl = document.getElementById("entradaData");
-      const notaEl = document.getElementById("entradaNota");
-      const fornecedorEl = document.getElementById("entradaFornecedor");
-      const cnpjEl = document.getElementById("entradaCNPJ");
-      const loteEl = document.getElementById("entradaLote");
-      const validadeEl = document.getElementById("entradaValidade");
-      const setorEl = document.getElementById("entradaSetor");
-      const codigoBarrasEl = document.getElementById("entradaCodigoBarras");
-      
-      // Limpa bordas
-      const camposParaReset = [produtoEl, qtdEl, valorEl, dataEl, notaEl, fornecedorEl, setorEl];
-      camposParaReset.forEach(el => { if (el) el.style.border = "1px solid #ccc"; });
-
-
-      // Validações
-      if (!produtoEl.value.trim()) { alert("Informe o nome do produto!"); produtoEl.style.border = "2px solid red"; produtoEl.focus(); return false; }
-      const qtd = Number(qtdEl.value);
-      if (qtd <= 0 || isNaN(qtd)) { alert("Quantidade deve ser maior que zero!"); qtdEl.style.border = "2px solid red"; qtdEl.focus(); return false; }
-      const valor = Number(valorEl.value);
-      if (valor <= 0 || isNaN(valor)) { alert("Valor unitário deve ser maior que zero!"); valorEl.style.border = "2px solid red"; valorEl.focus(); return false; }
-      if (!dataEl.value) { alert("Informe a data de entrada!"); dataEl.style.border = "2px solid red"; dataEl.focus(); return false; }
-      if (!notaEl.value.trim()) { alert("Informe a Nota Fiscal!"); notaEl.style.border = "2px solid red"; notaEl.focus(); return false; }
-      if (!fornecedorEl.value.trim()) { alert("Informe o Fornecedor!"); fornecedorEl.style.border = "2px solid red"; fornecedorEl.focus(); return false; }
-      if (!setorEl.value.trim()) { alert("Selecione o Setor Utilizado!"); setorEl.style.border = "2px solid red"; setorEl.focus(); return false; }
-      
-      // Procura o produto no estoque (para verificar se existe)
-      const produtoNoEstoque = produtos.find(p => p.nome === produtoEl.value.trim());
-      if (!produtoNoEstoque) {
-          alert(`Produto "${produtoEl.value.trim()}" não encontrado no cadastro. Cadastre o produto primeiro.`);
-          produtoEl.style.border = "2px solid red";
-          produtoEl.focus();
-          return false;
-      }
-
-
-      // Cria objeto de entrada
-      const novaEntrada = {
-        produto: produtoEl.value.trim(),
-        codigoBarras: codigoBarrasEl.value.trim() || produtoNoEstoque.codigoBarras,
-        qtd: qtd,
-        valorUnitario: valor,
-        data: dataEl.value,
-        nota: notaEl.value.trim(),
-        fornecedor: fornecedorEl.value.trim(),
-        cnpj: cnpjEl.value.trim(),
-        lote: loteEl.value.trim(),
-        validade: validadeEl.value,
-        setor: setorEl.value.trim(),
-      };
-
-      // Adiciona e salva
-      entradas.push(novaEntrada);
-      localStorage.setItem("entradas", JSON.stringify(entradas));
-      
-      // Atualiza estoque (soma) e tabelas
-      atualizarEstoque(novaEntrada.produto, novaEntrada.qtd);
-      atualizarTabelaEntradas();
-      
-      // Limpa campos (usando setTimeout para garantir que a atualização visual do erro passe primeiro)
-      setTimeout(() => limparCampos("entrada"), 300);
-      alert("Entrada registrada com sucesso!");
-      return true; // Sucesso
-    }
-
-    function atualizarTabelaEntradas() {
-      const tbody = document.querySelector("#tabelaEntradas tbody");
-      if (!tbody) return;
-
-      tbody.innerHTML = "";
-      // Exibe as entradas da mais recente para a mais antiga
-      entradas.slice().reverse().forEach((e, i) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${entradas.length - i}</td>
-          <td>${e.produto}</td>
-          <td>${e.codigoBarras || '-'}</td>
-          <td>${e.qtd}</td>
-          <td>R$ ${e.valorUnitario ? e.valorUnitario.toFixed(2).replace('.', ',') : '0,00'}</td>
-          <td>${e.data}</td>
-          <td>${e.nota}</td>
-          <td>${e.fornecedor}</td>
-          <td>${e.cnpj}</td>
-          <td>${e.lote || '-'}</td>
-          <td style="color:${e.validade && new Date(e.validade) < new Date() ? 'red' : 'inherit'};">${e.validade || '-'}</td>
-          <td>${e.setor}</td>
-          <td>
-            <button onclick="excluirEntrada(${entradas.length - 1 - i})" class="btn-delete"><i class="fa fa-trash"></i></button>
-          </td>
-        `;
-        tbody.appendChild(row);
-      });
-      // Garante que o painel financeiro seja atualizado
-      if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
-    }
-
-    function excluirEntrada(i) {
-      if (!confirm("Excluir este registro de entrada? O estoque será ajustado.")) return;
-      
-      const entrada = entradas[i];
-      
-      // Atualiza estoque (subtrai)
-      if (entrada.qtd) {
-         atualizarEstoque(entrada.produto, -entrada.qtd);
-      }
-      
-      entradas.splice(i, 1);
-      localStorage.setItem("entradas", JSON.stringify(entradas));
-      
-      atualizarTabelaEntradas();
-      if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-      if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-      
-      alert("Entrada excluída e estoque ajustado!");
-    }
-
-    function filtrarEntradas() {
-      const termo = document.getElementById("filtroEntrada").value.toLowerCase();
-      const tbody = document.querySelector("#tabelaEntradas tbody");
-      if (!tbody) return;
-
-      tbody.querySelectorAll("tr").forEach(tr => {
-        const texto = tr.textContent.toLowerCase();
-        tr.style.display = texto.includes(termo) ? "" : "none";
-      });
-    }
-
-    // Função para preencher automaticamente campos de entrada com base no último registro
-    function preencherEntradaAutomatica(nomeProduto) {
-        const ultimaEntrada = entradas.slice().reverse().find(e => e.produto === nomeProduto);
-        if (ultimaEntrada) {
-            document.getElementById("entradaFornecedor").value = ultimaEntrada.fornecedor || '';
-            document.getElementById("entradaCNPJ").value = ultimaEntrada.cnpj || '';
-            document.getElementById("entradaLote").value = ultimaEntrada.lote || '';
-            document.getElementById("entradaValidade").value = ultimaEntrada.validade || '';
-            document.getElementById("entradaSetor").value = ultimaEntrada.setor || '';
-            document.getElementById("entradaValor").value = ultimaEntrada.valorUnitario || '';
-        }
-    }
-    
-    /* ========================= 🔹 Saídas ========================= */
-    // Função principal: valida e grava a saída (retorna true em sucesso, false em erro)
-    function registrarSaida() {
-      if (typeof padronizarCamposAntesDeSalvar === "function") padronizarCamposAntesDeSalvar();
-
-      const produtoEl = document.getElementById("saidaProduto");
-      const qtdEl = document.getElementById("saidaQuantidade");
-      const responsavelEl = document.getElementById("saidaResponsavel");
-      const observacaoEl = document.getElementById("saidaObservacao");
-      const setorEl = document.getElementById("saidaSetor");
-      const dataEl = document.getElementById("saidaData");
-      const codigoBarrasEl = document.getElementById("saidaCodigoBarras");
-
-      // Protege caso algum elemento falte no DOM (evita TypeError)
-      const camposParaReset = [produtoEl, qtdEl, responsavelEl, setorEl, dataEl];
-      camposParaReset.forEach(el => { if (el) el.style.border = "1px solid #ccc"; });
-
-      // Validações — mantêm os valores preenchidos em caso de erro
-      if (!produtoEl || !produtoEl.value.trim()) { alert("Informe o nome do produto!"); if (produtoEl) { produtoEl.style.border = "2px solid red"; produtoEl.focus(); } return false; }
-      const produto = produtoEl.value.trim();
-      
-      const qtd = Number(qtdEl.value);
-      if (qtd <= 0 || isNaN(qtd)) { alert("Quantidade deve ser maior que zero!"); if (qtdEl) { qtdEl.style.border = "2px solid red"; qtdEl.focus(); } return false; }
-      
-      if (!responsavelEl || !responsavelEl.value.trim()) { alert("Informe o responsável pela retirada!"); if (responsavelEl) { responsavelEl.style.border = "2px solid red"; responsavelEl.focus(); } return false; }
-      const responsavel = responsavelEl.value.trim();
-      
-      if (!setorEl || !setorEl.value.trim()) { alert("Selecione o setor de destino!"); if (setorEl) { setorEl.style.border = "2px solid red"; setorEl.focus(); } return false; }
-      const setor = setorEl.value.trim();
-      
-      if (!dataEl || !dataEl.value) { alert("Informe a data da saída!"); if (dataEl) { dataEl.style.border = "2px solid red"; dataEl.focus(); } return false; }
-      const data = dataEl.value;
-      
-      const observacao = observacaoEl ? observacaoEl.value.trim() : "";
-      const codigoBarras = codigoBarrasEl ? codigoBarrasEl.value.trim() : "";
-
-      // 🔹 Checagem de estoque
-      const produtoNoEstoque = produtos.find(p => p.nome === produto);
-      if (!produtoNoEstoque) {
-        alert(`Produto "${produto}" não encontrado no cadastro.`);
-        if (produtoEl) { produtoEl.style.border = "2px solid red"; produtoEl.focus(); }
-        return false;
-      }
-      
-      const estoqueAtual = Number(produtoNoEstoque.quantidade) || 0;
-      if (qtd > estoqueAtual) {
-        alert(`Estoque insuficiente: há ${estoqueAtual} unidade(s) disponíveis.`);
-        if (qtdEl) { qtdEl.style.border = "2px solid red"; qtdEl.focus(); }
-        return false;
-      }
-
-      // Tudo ok -> registra a saída
-      saidas.push({ 
-          produto, 
-          qtd, 
-          data, 
-          setor, 
-          responsavel, 
-          observacao,
-          codigoBarras: codigoBarras || produtoNoEstoque.codigoBarras // Usa o código de barras do cadastro se não foi lido
-      });
-      localStorage.setItem("saidas", JSON.stringify(saidas));
-      
-      // Atualiza estoque (subtrai) e tabelas
-      atualizarEstoque(produto, -qtd);
-      if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-      if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-      
-      alert("Saída registrada com sucesso!");
-      return true; 
-    }
-
-    // Wrapper: chama registrarSaida e limpa os campos somente se retornar true
-    const _registrarSaidaOriginal = registrarSaida;
-    registrarSaida = function() {
-        try {
-            const result = _registrarSaidaOriginal();
-            if (result === true) {
-                // limpa os campos da seção "saida" após sucesso
-                setTimeout(() => limparCampos("saida"), 300);
-            } else {
-                // mantém os dados e navega até o campo com erro (se houver)
-                const erroEl = document.querySelector("#saida input[style*='red'], #saida select[style*='red']");
-                if (erroEl) erroEl.scrollIntoView({ behavior: "smooth", block: "center" });
-            }
-        } catch (err) {
-            console.error("Erro ao registrar saída:", err);
-        }
-    };
-
-    function atualizarTabelaSaidas() {
-      const tbody = document.querySelector("#tabelaSaidas tbody");
-      if (!tbody) return;
-
-      tbody.innerHTML = "";
-      // Exibe as saídas da mais recente para a mais antiga
-      saidas.slice().reverse().forEach((s, i) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${saidas.length - i}</td>
-          <td>${s.produto}</td>
-		  <td>${s.codigoBarras || '-'}</td>
-          <td>${s.qtd}</td>
-          <td>${s.data}</td>
-          <td>${s.setor}</td>
-          <td>${s.responsavel}</td>
-          <td>${s.observacao || '-'}</td>
-          <td>
-            <button onclick="excluirSaida(${saidas.length - 1 - i})" class="btn-delete"><i class="fa fa-trash"></i></button>
-          </td>
-        `;
-        tbody.appendChild(row);
-      });
-    }
-
-    function excluirSaida(i) {
-      if (!confirm("Excluir este registro de saída? O estoque será revertido.")) return;
-      
-      const saida = saidas[i];
-      
-      // Atualiza estoque (reverte a saída, ou seja, soma)
-      if (saida.qtd) {
-        atualizarEstoque(saida.produto, saida.qtd);
-      }
-      
-      saidas.splice(i, 1);
-      localStorage.setItem("saidas", JSON.stringify(saidas));
-      
-      atualizarTabelaSaidas();
-      if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-      if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-      
-      alert("Saída excluída e estoque ajustado!");
-    }
-
-    function filtrarSaidas() {
-      const termo = document.getElementById("filtroSaida").value.toLowerCase();
-      const tbody = document.querySelector("#tabelaSaidas tbody");
-      if (!tbody) return;
-
-      tbody.querySelectorAll("tr").forEach(tr => {
-        const texto = tr.textContent.toLowerCase();
-        tr.style.display = texto.includes(termo) ? "" : "none";
-      });
-    }
-    
-    /* ========================= 🔹 Atualiza setor automaticamente ao digitar ou ler código de barras ========================= */
-    function atualizarSetorAutomatico() {
-      const produtoInput = document.getElementById("saidaProduto");
-      const codigoInput = document.getElementById("saidaCodigoBarras");
-      const setorSelect = document.getElementById("saidaSetor");
-      
-      if (!produtoInput || !setorSelect) return;
-
-      const nomeProduto = produtoInput.value.trim();
-      const codigo = codigoInput ? codigoInput.value.trim() : "";
-      
-      let nomeParaBusca = nomeProduto;
-
-      // 🔹 Primeiro tenta achar pela leitura do código de barras
-      if (codigo && Array.isArray(produtos)) {
-          const produto = produtos.find(p => p.codigoBarras === codigo);
-          if (produto) {
-              produtoInput.value = produto.nome;
-              nomeParaBusca = produto.nome;
-          }
-      }
-      
-      // 🔹 Busca a entrada mais recente
-      let entradaEncontrada = null;
-      if (nomeParaBusca) {
-           entradaEncontrada = (entradas || []).slice().reverse().find(e => e.produto === nomeParaBusca);
-      }
-
-      // 🔹 Atualiza o campo de setor
-      if (entradaEncontrada && entradaEncontrada.setor) {
-          // Cria o select com apenas a opção mais recente
-          setorSelect.innerHTML = `<option value="${entradaEncontrada.setor}">Último Setor: ${entradaEncontrada.setor}</option>`;
-      } else {
-          // Se não houver entrada, exibe as opções padrão
-          setorSelect.innerHTML = `
-              <option value="">Selecione o Setor</option>
-              <option>Limpeza da Clínica</option>
-              <option>Laboratório</option>
-              <option>Escritório</option>
-              <option>Copa e Cozinha</option>
-              <option>Clínico Geral</option>
-              <option>Centro Cirúrgico</option>
-          `;
-      }
-    }
-
-
-    /* ========================= 🔹 Atualizar Estoque ========================= */
-    function atualizarEstoque(produtoNome, delta) {
-      const produto = produtos.find(p => p.nome === produtoNome);
-      if (produto) {
-        let qtdAtual = Number(produto.quantidade) || 0;
-        qtdAtual += delta;
-        produto.quantidade = Math.max(0, qtdAtual); // Garante que a quantidade não seja negativa
-        localStorage.setItem("produtos", JSON.stringify(produtos));
-        
-        // Atualiza tabelas que dependem do estoque
-        if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-        if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-        if (typeof atualizarDashboard === "function") atualizarDashboard();
-        if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
-      }
-    }
-
-
-    /* ========================= 🔹 Estoque Atual ========================= */
-    function atualizarTabelaEstoque() {
-      const tbody = document.querySelector("#tabelaEstoque tbody");
-      if (!tbody) return;
-
-      tbody.innerHTML = "";
-      
-      // Filtra entradas válidas para obter informações de lote/validade
-      const estoqueDetalhado = {};
-
-      entradas.forEach(e => {
-        const produto = e.produto;
-        const lote = e.lote || 'Geral';
-        const chave = `${produto}|${lote}`;
-
-        if (!estoqueDetalhado[chave]) {
-          estoqueDetalhado[chave] = {
-            produto: produto,
-            codigoBarras: e.codigoBarras,
-            validade: e.validade,
-            lote: lote,
-            quantidade: 0,
-            categoria: produtos.find(p => p.nome === produto)?.categoria || '-',
-          };
-        }
-        // Soma as entradas
-        estoqueDetalhado[chave].quantidade += e.qtd;
-      });
-
-      saidas.forEach(s => {
-        const produto = s.produto;
-        // Tenta achar o lote na saída, mas pode ser difícil parear 1:1.
-        // Por simplicidade (e como o lote não é obrigatório na saída no código atual),
-        // subtrai do estoque total do produto, e se tiver lote/validade específicos,
-        // o usuário deve gerenciar a lógica de saída por lote.
-        // Aqui, faremos uma subtração simplificada do estoque total do produto.
-        // O modelo ideal exigiria que a saída especificasse o LOTE.
-        // Como o código não tem essa complexidade, usaremos o "estoque total do produto".
-      });
-      
-      // Usa a quantidade TOTAL do produto para o estoque
-      produtos.forEach(p => {
-        const chaveGeral = `${p.nome}|Geral`;
-        estoqueDetalhado[chaveGeral] = {
-            produto: p.nome,
-            codigoBarras: p.codigoBarras,
-            validade: '-',
-            lote: '-',
-            quantidade: Number(p.quantidade) || 0,
-            categoria: p.categoria || '-',
-        };
-      });
-      
-      // Remove entradas com quantidade 0 (após saídas)
-      const estoqueFinal = Object.values(estoqueDetalhado).filter(item => item.quantidade > 0);
-      
-      estoqueFinal.forEach((item, i) => {
-        const row = document.createElement("tr");
-        const isVencido = item.validade && new Date(item.validade) < new Date();
-        const status = isVencido ? 'VENCIDO' : (item.quantidade <= 0 ? 'ZERADO' : 'OK');
-        const statusColor = isVencido ? 'red' : (item.quantidade <= 0 ? '#777' : 'green');
-        
-        row.innerHTML = `
-          <td>${i + 1}</td>
-          <td>${item.produto}</td>
-          <td>${item.codigoBarras || '-'}</td>
-          <td>${item.categoria}</td>
-          <td>${item.quantidade}</td>
-          <td>${item.lote || '-'}</td>
-          <td style="color:${isVencido ? 'red' : 'inherit'};">${item.validade || '-'}</td>
-          <td style="color:${statusColor}; font-weight:bold;">${status}</td>
-        `;
-        tbody.appendChild(row);
-      });
-    }
-
-    function filtrarEstoque() {
-      const termo = document.getElementById("filtroEstoque").value.toLowerCase();
-      const tbody = document.querySelector("#tabelaEstoque tbody");
-      if (!tbody) return;
-
-      tbody.querySelectorAll("tr").forEach(tr => {
-        const texto = tr.textContent.toLowerCase();
-        tr.style.display = texto.includes(termo) ? "" : "none";
-      });
-    }
-    
-    
-    
-    /* ========================= 🔹 Estoque Mínimo e Máximo ========================= */
-    // Variável global para armazenar a lista de compra
-    let listaDeCompra = []; 
-    
-    function atualizarTabelaLimites() {
-      const tbody = document.querySelector("#tabelaLimites tbody");
-      const filtroTexto = document.getElementById("filtroLimite")?.value.toLowerCase().trim();
-      const filtroCategoria = document.getElementById("filtroCategoria")?.value.toLowerCase().trim();
-      const resumoEl = document.getElementById("resumoEstoque");
-      if (!tbody || !resumoEl) return;
-
-      tbody.innerHTML = "";
-      
-      let totalProdutos = 0;
-      let abaixoMinimo = 0;
-      let dentroLimite = 0;
-      let acimaMaximo = 0;
-
-      // Ordena por status (Abaixo, Acima, Dentro)
-      const produtosOrdenados = produtos.slice().sort((a, b) => {
-          const statusA = (Number(a.quantidade) || 0) < (Number(a.minimo) || 0) ? 0 : 1;
-          const statusB = (Number(b.quantidade) || 0) < (Number(b.minimo) || 0) ? 0 : 1;
-          return statusA - statusB;
-      });
-      
-      produtosOrdenados.forEach((p, i) => {
-          const nome = (p.nome || "").toLowerCase();
-          const categoria = (p.categoria || "").toLowerCase();
-          const minimo = Number(p.minimo) || 0;
-          const maximo = Number(p.maximo) || 0;
-          const qtd = Number(p.quantidade) || 0;
-          
-          let statusTexto = "";
-          let statusCor = "";
-          let recomendacao = "";
-          
-          if (qtd < minimo) {
-              statusTexto = "⚠️ Abaixo do mínimo";
-              statusCor = "red";
-              recomendacao = `Comprar ${minimo - qtd} unidade(s)`;
-              abaixoMinimo++;
-          } else if (maximo && qtd > maximo) {
-              statusTexto = "📦 Acima do máximo";
-              statusCor = "orange";
-              recomendacao = "Reduzir estoque";
-              acimaMaximo++;
-          } else {
-              statusTexto = "✅ Dentro do limite";
-              statusCor = "green";
-              recomendacao = "OK";
-              dentroLimite++;
-          }
-          
-          // ------- FILTROS -------
-          if (filtroCategoria && filtroCategoria !== "" && categoria !== filtroCategoria) return; 
-
-          if (filtroTexto) { 
-              const codigo = (p.codigoBarras || "").toLowerCase();
-              const qtdStr = String(qtd).toLowerCase();
-              const statusLower = statusTexto.toLowerCase();
-              const recLower = (recomendacao || "").toLowerCase();
-              
-              const matches = nome.includes(filtroTexto) ||
-                  codigo.includes(filtroTexto) ||
-                  categoria.includes(filtroTexto) ||
-                  qtdStr.includes(filtroTexto) ||
-                  statusLower.includes(filtroTexto) ||
-                  recLower.includes(filtroTexto);
-                  
-              if (!matches) return;
-          }
-          
-          // Se passou nos filtros, conta
-          totalProdutos++;
-
-          const row = document.createElement("tr");
-          row.innerHTML = `
-              <td>${i + 1}</td>
-              <td>${p.nome}</td>
-              <td>${p.codigoBarras || '-'}</td>
-              <td>${p.categoria}</td>
-              <td>${qtd}</td>
-              <td><input type="number" value="${minimo}" onchange="salvarLimite('${p.nome}', 'minimo', this.value)" style="width:80px"></td>
-              <td><input type="number" value="${maximo}" onchange="salvarLimite('${p.nome}', 'maximo', this.value)" style="width:80px"></td>
-              <td style="color:${statusCor}; font-weight:bold;">${statusTexto}</td>
-              <td>${recomendacao}</td>
-              <td>
-                  <button onclick="adicionarAlistaCompra('${p.nome}')" title="Adicionar à Lista de Compra"><i class="fa fa-shopping-cart"></i></button>
-              </td>
-          `;
-          tbody.appendChild(row);
-      });
-      
-      // Atualiza resumo
-      resumoEl.innerHTML = `
-          🧾 Total de Produtos: ${totalProdutos} |
-          ⚠️ Abaixo do Mínimo: ${abaixoMinimo} |
-          ✅ Dentro do Limite: ${dentroLimite} |
-          📦 Acima do Máximo: ${acimaMaximo}
-      `;
-    }
-
-    function salvarLimite(nomeProduto, tipoLimite, valor) {
-      const produto = produtos.find(p => p.nome === nomeProduto);
-      if (produto) {
-        let valorNumerico = Number(valor);
-        if (isNaN(valorNumerico) || valorNumerico < 0) valorNumerico = 0;
-        
-        produto[tipoLimite] = valorNumerico;
-        localStorage.setItem("produtos", JSON.stringify(produtos));
-        
-        // Re-renderiza a tabela para atualizar status/recomendação
-        atualizarTabelaLimites();
-        
-        // Atualiza dashboard se estiver ativo
-        if (typeof atualizarDashboard === "function") atualizarDashboard();
-      }
-    }
-    
-    function adicionarAlistaCompra(nomeProduto) {
-        const produto = produtos.find(p => p.nome === nomeProduto);
-        if (!produto) return;
-        
-        const qtd = Number(produto.quantidade) || 0;
-        const minimo = Number(produto.minimo) || 0;
-        const recomendado = minimo > qtd ? minimo - qtd : 0;
-        
-        if (recomendado > 0) {
-            // Verifica se já está na lista
-            const itemExistente = listaDeCompra.find(item => item.produto === nomeProduto);
-            if (itemExistente) {
-                // Atualiza a quantidade se já estiver
-                itemExistente.recomendadoComprar = recomendado;
-            } else {
-                 // Adiciona à lista
-                listaDeCompra.push({
-                    produto: produto.nome,
-                    codigoBarras: produto.codigoBarras,
-                    categoria: produto.categoria,
-                    qtdAtual: qtd,
-                    minimo: minimo,
-                    recomendadoComprar: recomendado
-                });
-            }
-            atualizarTabelaListaCompra();
-            document.getElementById("listaCompraContainer").style.display = 'block';
-            alert(`Adicionado à lista de compra: ${recomendado} unidade(s) de ${nomeProduto}.`);
-        } else {
-            alert(`O produto ${nomeProduto} já está dentro do limite.`);
-        }
-    }
-    
-    function gerarListaCompra() {
-        // Limpa a lista atual
-        listaDeCompra = []; 
-        
-        produtos.forEach(p => {
-            const qtd = Number(p.quantidade) || 0;
-            const minimo = Number(p.minimo) || 0;
-            const recomendado = minimo > qtd ? minimo - qtd : 0;
-            
-            if (recomendado > 0) {
-                 listaDeCompra.push({
-                    produto: p.nome,
-                    codigoBarras: p.codigoBarras,
-                    categoria: p.categoria,
-                    qtdAtual: qtd,
-                    minimo: minimo,
-                    recomendadoComprar: recomendado
-                });
-            }
+  // === MONITORAR LOGIN ===
+  onAuthStateChanged(auth, (user) => {
+    const login = document.getElementById("loginView");
+    const appDiv = document.getElementById("mainApp");
+    if (user) {
+        // Logado
+        login.style.display = "none";
+        appDiv.style.display = "block";
+        carregarDadosDoFirestore().then(() => {
+             mostrarSistema(user); // Garante que a interface é atualizada após carregar os dados
         });
         
-        atualizarTabelaListaCompra();
+    } else {
+        // Deslogado
+        login.style.display = "flex";
+        appDiv.style.display = "none";
         
-        if (listaDeCompra.length > 0) {
-            document.getElementById("listaCompraContainer").style.display = 'block';
-            alert(`Lista de compra gerada com ${listaDeCompra.length} itens abaixo do mínimo!`);
-            document.getElementById("listaCompraContainer").scrollIntoView({ behavior: "smooth" });
-        } else {
-            document.getElementById("listaCompraContainer").style.display = 'none';
-            alert("Nenhum produto está abaixo do estoque mínimo.");
+        // Limpa campos e dados (opcional, mas recomendado)
+        if (typeof limparCampos === "function") {
+            limparCampos("loginView");
         }
+        document.getElementById("userName").innerText = "Visitante";
+        document.getElementById("perfilBadge").innerText = "PERFIL";
+    }
+  });
+
+  // === LOGOUT ===
+  window.logout = async function() {
+    await signOut(auth);
+    mostrarMensagem("Sessão encerrada!", "info");
+  };
+  
+  // Expor Firestore para uso em outras funções, se necessário
+  window.db = db;
+  window.auth = auth;
+  
+ </script>
+
+<script>
+// --- VARIÁVEIS GLOBAIS ---
+// Elas são inicializadas no script type="module" acima, mas devem ser declaradas aqui para o escopo global.
+if (typeof produtos === "undefined") window.produtos = [];
+if (typeof entradas === "undefined") window.entradas = [];
+if (typeof saidas === "undefined") window.saidas = [];
+if (typeof usuarios === "undefined") window.usuarios = [];
+
+// --- FUNÇÕES GERAIS DE UI ---
+
+/**
+ * 🔹 Mostra/Esconde a sidebar
+ */
+function toggleSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const main = document.querySelector("main");
+  const isActive = sidebar.classList.toggle("active");
+  
+  // Ajusta a margem da área principal para dar espaço à sidebar no desktop
+  if (window.innerWidth >= 900) {
+      main.style.marginLeft = isActive ? "270px" : "20px";
+  }
+}
+
+/**
+ * 🔹 Alterna a seção visível
+ */
+function showSection(id) {
+  document.querySelectorAll(".section").forEach(s => {
+    s.classList.remove("active");
+  });
+  const newSection = document.getElementById(id);
+  if (newSection) {
+    newSection.classList.add("active");
+    // Garante que o menu lateral feche no mobile
+    if (window.innerWidth < 900) {
+      document.getElementById("sidebar").classList.remove("active");
+      document.querySelector("main").style.marginLeft = "20px";
+    }
+    // Rola para o topo da seção
+    newSection.scrollTo(0, 0);
+  }
+  // Atualiza o dashboard sempre que a seção for aberta
+  if (id === "dashboard") atualizarDashboard();
+  if (id === "estoque") atualizarTabelaEstoque();
+  if (id === "limites") atualizarTabelaLimites();
+  if (id === "financeiro") atualizarPainelFinanceiro();
+  if (id === "cadastro") atualizarTabelaProdutos();
+  if (id === "entrada") atualizarTabelaEntradas();
+  if (id === "saida") atualizarTabelaSaidas();
+  if (id === "usuarios") atualizarTabelaUsuarios();
+}
+
+/**
+ * 🔹 Exibe uma notificação de "toast" no rodapé
+ */
+function mostrarMensagem(texto, tipo = "info") {
+  const box = document.getElementById("toastMessage");
+  if (!box) {
+      // Cria a caixa se não existir
+      const newBox = document.createElement("div");
+      newBox.id = "toastMessage";
+      document.body.appendChild(newBox);
+      // Reaplica a variável box
+      box = document.getElementById("toastMessage");
+  }
+
+  box.textContent = texto;
+  box.style.background = tipo === "erro" ? "#dc3545" : tipo === "sucesso" ? "#28a745" : "#0d6efd";
+  box.style.opacity = "1";
+  box.style.transform = "translateX(-50%) translateY(0)"; // Move para cima
+
+  setTimeout(() => {
+      box.style.opacity = "0";
+      box.style.transform = "translateX(-50%) translateY(20px)"; // Move para baixo
+  }, 4000);
+}
+
+/**
+ * 🔹 Destaca o campo com erro
+ */
+function destacarErro(el, msg) {
+  el.style.border = "2px solid red";
+  el.focus();
+  mostrarMensagem(msg, "erro");
+}
+
+/**
+ * 🔹 Remove marcações de erro
+ */
+function limparErros(secaoId) {
+    document.querySelectorAll(`#${secaoId} input, #${secaoId} select`).forEach(el => {
+        el.style.border = "1px solid #ccc";
+        el.title = "";
+    });
+}
+
+/**
+ * 🔹 Função genérica — limpa todos os inputs e selects dentro de uma seção
+ */
+function limparCampos(secaoId) {
+  const secao = document.getElementById(secaoId);
+  if (!secao) return;
+  secao.querySelectorAll("input, select").forEach(el => {
+    if (el.type === "file") {
+      el.value = "";
+    } else if (el.tagName === "SELECT") {
+      el.selectedIndex = 0;
+    } else {
+      el.value = "";
+    }
+  });
+}
+
+/**
+ * 🔹 Amplia a imagem do produto no modal
+ */
+function ampliarImagem(src) {
+  const modal = document.getElementById("imagemAmpliada");
+  modal.querySelector("img").src = src;
+  modal.style.display = "flex";
+}
+
+/**
+ * 🔹 Função utilitária: busca código de barras do produto
+ */
+function buscarCodigoBarrasDoProduto(nome) {
+    const p = produtos.find(p => p.nome === nome);
+    return p ? p.codigoBarras : "-";
+}
+
+/**
+ * 🔹 Atualiza o campo 'quantidade' no estoque global
+ */
+function atualizarEstoque(nomeProduto, quantidadeDelta) {
+  const produtoRef = produtos.find(p => p.nome.trim().toLowerCase() === nomeProduto.trim().toLowerCase());
+  
+  if (produtoRef) {
+    // Garante que quantidade é numérica e trata o caso de ser undefined/null
+    let qtdAtual = Number(produtoRef.quantidade || 0); 
+    qtdAtual += quantidadeDelta;
+    
+    // Evita estoque negativo (se for saída)
+    produtoRef.quantidade = Math.max(0, qtdAtual);
+    
+    // Salva e atualiza
+    salvarProdutosNoFirebase(produtos); 
+    atualizarTabelaEstoque();
+    atualizarDashboard();
+    atualizarPainelFinanceiro();
+  }
+}
+
+// --- PADRONIZAÇÃO DE DADOS ---
+
+/**
+ * 🔹 Formata o texto para padrão (Primeira Letra Maiúscula)
+ */
+function formatarTextoPadrao(texto) {
+  if (!texto) return "";
+  return texto
+    .toLowerCase()
+    .split(" ")
+    .filter(p => p.trim() !== "")
+    .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+    .join(" ");
+}
+
+/**
+ * 🔸 Aplica automaticamente a padronização ao sair de campos de texto
+ */
+document.addEventListener("blur", (e) => {
+  const el = e.target;
+  if (el.tagName === "INPUT" && el.type === "text") {
+    // Ignora campos que não devem ser alterados (ex: códigos, e-mail)
+    if (
+      el.id.toLowerCase().includes("cnpj") ||
+      el.id.toLowerCase().includes("email") ||
+      el.id.toLowerCase().includes("login") ||
+      el.id.toLowerCase().includes("lote") ||
+      el.id.toLowerCase().includes("barras")
+    ) return;
+    el.value = formatarTextoPadrao(el.value);
+  }
+}, true);
+
+/**
+ * 🔸 Garante padronização em todos os campos antes de salvar/cadastrar
+ */
+function padronizarCamposAntesDeSalvar() {
+  document.querySelectorAll('input[type="text"]').forEach(el => {
+    // Mesma lógica de ignorar campos específicos
+    if (
+      el.id.toLowerCase().includes("cnpj") ||
+      el.id.toLowerCase().includes("email") ||
+      el.id.toLowerCase().includes("login") ||
+      el.id.toLowerCase().includes("lote") ||
+      el.id.toLowerCase().includes("barras")
+    ) return;
+    el.value = formatarTextoPadrao(el.value);
+  });
+}
+
+// --- CADASTRO DE PRODUTOS ---
+
+function cadastrarProduto() {
+  padronizarCamposAntesDeSalvar();
+  limparErros("cadastro");
+  
+  const nomeEl = document.getElementById("produtoNome");
+  const categoriaEl = document.getElementById("produtoCategoria");
+  const embalagemEl = document.getElementById("produtoEmbalagem");
+  const qtdEl = document.getElementById("produtoQtdEmbalagem");
+  const fotoInput = document.getElementById("produtoFoto");
+  const codigoBarrasEl = document.getElementById("produtoCodigoBarras");
+  const codigoBarras = codigoBarrasEl ? codigoBarrasEl.value.trim() : "";
+
+  // 🔹 Validações
+  if (!nomeEl.value.trim()) return destacarErro(nomeEl, "Informe o nome do produto!");
+  if (!categoriaEl.value.trim()) return destacarErro(categoriaEl, "Selecione a categoria!");
+  if (!embalagemEl.value.trim()) return destacarErro(embalagemEl, "Selecione a embalagem!");
+  if (!qtdEl.value || Number(qtdEl.value) <= 0) return destacarErro(qtdEl, "Informe a Qtd. por Embalagem (maior que zero)!");
+  
+  // Verifica se o produto já existe
+  const nome = nomeEl.value.trim();
+  if (produtos.some(p => p.nome.toLowerCase() === nome.toLowerCase())) {
+    return destacarErro(nomeEl, "Produto com este nome já cadastrado!");
+  }
+  
+  // Verifica se o código de barras já existe
+  if (codigoBarras && produtos.some(p => p.codigoBarras === codigoBarras)) {
+    return destacarErro(codigoBarrasEl, "Já existe um produto cadastrado com este código de barras!");
+  }
+
+  // ✅ Leitura de imagem e salvamento
+  return new Promise((resolve) => {
+    if (fotoInput.files.length > 0) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const foto = e.target.result;
+            produtos.push({ 
+                nome, 
+                categoria: categoriaEl.value.trim(), 
+                embalagem: embalagemEl.value.trim(), 
+                qtdEmbalagem: Number(qtdEl.value), 
+                foto, 
+                quantidade: 0, 
+                codigoBarras: codigoBarras || "",
+                minimo: 0,
+                maximo: 0
+            });
+            await salvarProdutosNoFirebase(produtos);
+            atualizarTabelaProdutos();
+            atualizarSelectProdutos();
+            ordenarListasAlfabeticamente();
+            limparCampos("cadastro");
+            mostrarMensagem("Produto cadastrado com sucesso!", "sucesso");
+            resolve(true);
+        };
+        reader.readAsDataURL(fotoInput.files[0]);
+    } else {
+        // Sem foto
+        produtos.push({ 
+            nome, 
+            categoria: categoriaEl.value.trim(), 
+            embalagem: embalagemEl.value.trim(), 
+            qtdEmbalagem: Number(qtdEl.value), 
+            foto: "", 
+            quantidade: 0, 
+            codigoBarras: codigoBarras || "",
+            minimo: 0,
+            maximo: 0
+        });
+        salvarProdutosNoFirebase(produtos);
+        atualizarTabelaProdutos();
+        atualizarSelectProdutos();
+        ordenarListasAlfabeticamente();
+        limparCampos("cadastro");
+        mostrarMensagem("Produto cadastrado com sucesso (sem foto).", "sucesso");
+        resolve(true);
+    }
+  });
+}
+
+function atualizarTabelaProdutos() {
+  const tbody = document.querySelector("#tabelaProdutos tbody");
+  const filtro = document.getElementById("filtroProduto").value.toLowerCase();
+  tbody.innerHTML = "";
+
+  produtos.forEach((p, i) => {
+    const nome = (p.nome || "").toLowerCase();
+    const categoria = (p.categoria || "").toLowerCase();
+    
+    if (filtro && !nome.includes(filtro) && !categoria.includes(filtro)) return;
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${p.foto ? `<img src="${p.foto}" class="thumb" onclick="ampliarImagem('${p.foto}')">` : "-"}</td>
+      <td>${p.nome}</td>
+      <td>${p.categoria}</td>
+      <td>${p.embalagem}</td>
+      <td>${p.qtdEmbalagem}</td>
+      <td style="font-size:12px; color:#555;">${p.codigoBarras || "-"}</td>
+      <td>
+        <button onclick="editarProduto(${i})"><i class="fa fa-edit"></i></button>
+        <button onclick="excluirProduto(${i})"><i class="fa fa-trash"></i></button>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function editarProduto(i) {
+  // Lógica de edição completa (popup/modal ou preenchimento de campos)
+  mostrarMensagem("Funcionalidade de Edição em construção. Por favor, edite manualmente no console (temporariamente).", "info");
+}
+
+function excluirProduto(i) {
+  if (!confirm(`Excluir o produto "${produtos[i].nome}"? Todas as entradas e saídas relacionadas serão mantidas, mas o estoque será recontado.`)) return;
+  
+  const nomeProduto = produtos[i].nome;
+  
+  // Remove o produto da lista principal
+  produtos.splice(i, 1);
+  salvarProdutosNoFirebase(produtos);
+
+  // Recalcula o estoque de todos os produtos (apenas para segurança, embora o estoque deva estar correto)
+  // Nota: Em um sistema robusto, isso deveria recalcular a Qtd atual = Soma Entradas - Soma Saídas para este produto.
+  // Por simplicidade, assumimos que as entradas/saídas guardam a história.
+  
+  atualizarTabelaProdutos();
+  atualizarTabelaEstoque();
+  atualizarSelectProdutos();
+  ordenarListasAlfabeticamente();
+  mostrarMensagem(`Produto "${nomeProduto}" excluído.`, "sucesso");
+}
+
+function filtrarProdutos() {
+    atualizarTabelaProdutos();
+}
+
+// --- ENTRADA DE MATERIAIS ---
+
+function atualizarSelectProdutos() {
+  const selectEntrada = document.getElementById("listaProdutos");
+  
+  if (!selectEntrada) return;
+  
+  // limpa todas as opções
+  selectEntrada.innerHTML = "";
+
+  // garante que a lista esteja ordenada
+  const listaOrdenada = [...produtos].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: 'base' }));
+
+  listaOrdenada.forEach(p => {
+    const option = document.createElement("option");
+    option.value = p.nome;
+    selectEntrada.appendChild(option);
+  });
+}
+
+function buscarProdutoPorCodigo(contexto) {
+  const campoCodigo = document.getElementById(`${contexto}CodigoBarras`);
+  const campoProduto = document.getElementById(`${contexto}Produto`);
+  
+  if (!campoCodigo || !campoProduto) return;
+  
+  const codigo = campoCodigo.value.trim();
+  
+  // Limpa o erro anterior
+  campoCodigo.style.border = "1px solid #ccc";
+  campoCodigo.title = "";
+  campoProduto.value = "";
+  
+  if (!codigo) return;
+  
+  const produto = produtos.find(p => p.codigoBarras === codigo);
+  
+  if (!produto) {
+    campoCodigo.style.border = "2px solid red";
+    campoCodigo.title = "Código de barras não encontrado.";
+    mostrarMensagem("Código de barras não encontrado!", "erro");
+    return;
+  }
+  
+  // Preenche o campo do nome automaticamente
+  campoProduto.value = produto.nome;
+  mostrarMensagem(`Produto "${produto.nome}" encontrado.`, "info");
+}
+
+
+function registrarEntrada() {
+  padronizarCamposAntesDeSalvar();
+  limparErros("entrada");
+  
+  const produtoEl = document.getElementById("entradaProduto");
+  const qtdEl = document.getElementById("entradaQuantidade");
+  const valorEl = document.getElementById("entradaValor");
+  const dataEl = document.getElementById("entradaData");
+  const notaEl = document.getElementById("entradaNota");
+  const fornecedorEl = document.getElementById("entradaFornecedor");
+  const cnpjEl = document.getElementById("entradaCNPJ");
+  const loteEl = document.getElementById("entradaLote");
+  const validadeEl = document.getElementById("entradaValidade");
+  const setorEl = document.getElementById("entradaSetor");
+  const codigoBarrasEl = document.getElementById("entradaCodigoBarras");
+  
+  const nomeProduto = produtoEl.value.trim();
+
+  // 🔹 Validação simples
+  if (!nomeProduto) return destacarErro(produtoEl, "Informe o nome do produto!");
+  if (!qtdEl.value || Number(qtdEl.value) <= 0) return destacarErro(qtdEl, "Informe a quantidade (maior que zero)!");
+  if (!valorEl.value || Number(valorEl.value) <= 0) return destacarErro(valorEl, "Informe o Valor Unitário (maior que zero)!");
+  if (!dataEl.value) return destacarErro(dataEl, "Informe a data da entrada!");
+  if (!notaEl.value.trim()) return destacarErro(notaEl, "Informe a Nota Fiscal!");
+  if (!fornecedorEl.value.trim()) return destacarErro(fornecedorEl, "Informe o Fornecedor!");
+  if (!setorEl.value.trim()) return destacarErro(setorEl, "Selecione o Setor Utilizado!");
+  
+  // Garante que o produto existe (não pode ser uma entrada para um produto não cadastrado)
+  const produtoExiste = produtos.some(p => p.nome.toLowerCase() === nomeProduto.toLowerCase());
+  if (!produtoExiste) {
+      return destacarErro(produtoEl, "Produto não encontrado no Cadastro de Produtos!");
+  }
+
+  // Tudo ok -> registra a entrada
+  const novaEntrada = {
+    produto: nomeProduto,
+    qtd: Number(qtdEl.value),
+    valor: Number(valorEl.value),
+    data: dataEl.value,
+    nota: notaEl.value.trim(),
+    fornecedor: fornecedorEl.value.trim(),
+    cnpj: cnpjEl.value.trim(),
+    lote: loteEl.value.trim(),
+    validade: validadeEl.value,
+    setor: setorEl.value.trim(),
+    codigoBarras: codigoBarrasEl.value.trim() || buscarCodigoBarrasDoProduto(nomeProduto),
+    usuario: auth.currentUser ? auth.currentUser.email : "desconhecido",
+    timestamp: new Date().toISOString()
+  };
+
+  // 🔹 Salva no Firebase
+  entradas.push(novaEntrada);
+  salvarEntradasNoFirebase(entradas); 
+
+  // 🔹 Atualiza produto relacionado no estoque global
+  atualizarEstoque(novaEntrada.produto, novaEntrada.qtd);
+  
+  // 🔹 Limpa e atualiza
+  atualizarTabelaEntradas();
+  limparCampos("entrada");
+  mostrarMensagem("Entrada registrada com sucesso!", "sucesso");
+  return true;
+}
+
+function atualizarTabelaEntradas() {
+  const tbody = document.querySelector("#tabelaEntradas tbody");
+  const filtro = document.getElementById("filtroEntrada").value.toLowerCase();
+  tbody.innerHTML = "";
+
+  entradas.slice().reverse().forEach((e, i) => { // Inverte para mostrar as mais recentes primeiro
+    const idxOriginal = entradas.length - 1 - i;
+    const produto = (e.produto || "").toLowerCase();
+    const fornecedor = (e.fornecedor || "").toLowerCase();
+    const nota = (e.nota || "").toLowerCase();
+    
+    if (filtro && !produto.includes(filtro) && !fornecedor.includes(filtro) && !nota.includes(filtro)) return;
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${idxOriginal + 1}</td>
+      <td>${e.produto || "-"}</td>
+      <td style="font-size:12px; color:#555;">${e.codigoBarras || "-"}</td>
+      <td>${e.qtd || 0}</td>
+      <td>${(e.valor || 0).toFixed(2)}</td>
+      <td>${e.data || "-"}</td>
+      <td>${e.nota || "-"}</td>
+      <td>${e.fornecedor || "-"}</td>
+      <td>${e.cnpj || "-"}</td>
+      <td>${e.lote || "-"}</td>
+      <td>${e.validade || "-"}</td>
+      <td>${e.setor || "-"}</td>
+      <td>
+        <button onclick="editarEntrada(${idxOriginal})" title="Editar Entrada"><i class="fa fa-edit"></i></button>
+        <button onclick="excluirEntrada(${idxOriginal})" title="Excluir Entrada"><i class="fa fa-trash"></i></button>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function excluirEntrada(i) {
+  const entrada = entradas[i];
+  if (!confirm(`Excluir a entrada do produto "${entrada.produto}" (Qtd: ${entrada.qtd})? O estoque será ajustado.`)) return;
+
+  // 🔹 Diminui a quantidade no estoque global
+  atualizarEstoque(entrada.produto, -entrada.qtd); 
+  
+  // 🔹 Remove a entrada
+  entradas.splice(i, 1);
+  salvarEntradasNoFirebase(entradas); 
+  
+  // 🔹 Atualiza
+  atualizarTabelaEntradas();
+  atualizarTabelaEstoque();
+  atualizarPainelFinanceiro();
+  mostrarMensagem("Entrada excluída e estoque ajustado.", "sucesso");
+}
+
+function filtrarEntradas() {
+    atualizarTabelaEntradas();
+}
+
+// --- SAÍDA DE MATERIAIS ---
+
+function atualizarSetorAutomatico() {
+  const produtoInput = document.getElementById("saidaProduto");
+  const setorSelect = document.getElementById("saidaSetor");
+  const codigoInput = document.getElementById("saidaCodigoBarras");
+  
+  if (!produtoInput || !setorSelect) return;
+
+  const nomeProduto = produtoInput.value.trim();
+  const codigo = codigoInput ? codigoInput.value.trim() : "";
+  let entradaEncontrada = null;
+
+  // 1. Tenta achar pela leitura do código de barras
+  if (codigo && Array.isArray(produtos)) {
+    const produto = produtos.find(p => p.codigoBarras === codigo);
+    if (produto) {
+        // Se achou o produto, tenta achar a última entrada dele para o setor
+        entradaEncontrada = entradas.slice().reverse().find(e => e.produto === produto.nome);
+    }
+  }
+
+  // 2. Se não achou pelo código ou se não tem código, tenta pelo nome do produto
+  if (!entradaEncontrada && nomeProduto) {
+    // Tenta achar a última entrada para este produto
+    entradaEncontrada = entradas.slice().reverse().find(e => e.produto.toLowerCase() === nomeProduto.toLowerCase());
+  }
+
+  // 3. Preenche as opções do select de Setor
+  const setoresUnicos = Array.from(new Set(entradas.map(e => e.setor).filter(s => s)));
+  setorSelect.innerHTML = '<option value="">Selecione o Setor</option>';
+  setoresUnicos.forEach(setor => {
+    const option = document.createElement("option");
+    option.value = setor;
+    option.textContent = setor;
+    setorSelect.appendChild(option);
+  });
+  
+  // 4. Se encontrou uma entrada, sugere o setor
+  if (entradaEncontrada && entradaEncontrada.setor) {
+      setorSelect.value = entradaEncontrada.setor;
+  }
+}
+
+function registrarSaida() {
+  padronizarCamposAntesDeSalvar();
+  limparErros("saida");
+  
+  const produtoEl = document.getElementById("saidaProduto");
+  const qtdEl = document.getElementById("saidaQuantidade");
+  const dataEl = document.getElementById("saidaData");
+  const setorEl = document.getElementById("saidaSetor");
+  const responsavelEl = document.getElementById("saidaResponsavel");
+  const observacaoEl = document.getElementById("saidaObservacao");
+
+  const produto = produtoEl.value.trim();
+  const qtd = Number(qtdEl.value);
+
+  // 🔹 Validações
+  if (!produto) return destacarErro(produtoEl, "Informe o nome do produto!");
+  if (!qtd || qtd <= 0) return destacarErro(qtdEl, "Informe a quantidade da saída (maior que zero)!");
+  if (!setorEl.value.trim()) return destacarErro(setorEl, "Selecione o setor!");
+  if (!dataEl.value) return destacarErro(dataEl, "Informe a data da saída!");
+  if (!responsavelEl.value.trim()) return destacarErro(responsavelEl, "Informe o responsável!");
+
+  // Garante que o produto existe (não pode ser uma saída para um produto não cadastrado)
+  const produtoRef = produtos.find(p => p.nome.toLowerCase() === produto.toLowerCase());
+  if (!produtoRef) {
+      return destacarErro(produtoEl, "Produto não encontrado no Cadastro de Produtos!");
+  }
+  
+  // 🔹 Validação de Estoque
+  const estoqueAtual = Number(produtoRef.quantidade || 0);
+  if (qtd > estoqueAtual) {
+    return destacarErro(qtdEl, `Estoque insuficiente: há ${estoqueAtual} unidade(s) disponíveis.`);
+  }
+
+  // Tudo ok -> registra a saída
+  saidas.push({
+    produto,
+    qtd,
+    data: dataEl.value,
+    setor: setorEl.value.trim(),
+    responsavel: responsavelEl.value.trim(),
+    observacao: observacaoEl.value.trim(),
+    codigoBarras: produtoRef.codigoBarras || "",
+    usuario: auth.currentUser ? auth.currentUser.email : "desconhecido",
+    timestamp: new Date().toISOString()
+  });
+  salvarSaidasNoFirebase(saidas); 
+
+  // Atualiza estoque (subtrai) e tabelas
+  atualizarEstoque(produto, -qtd);
+  atualizarTabelaSaidas();
+  limparCampos("saida");
+  mostrarMensagem("Saída registrada com sucesso!", "sucesso");
+  return true;
+}
+
+function atualizarTabelaSaidas() {
+  const tbody = document.querySelector("#tabelaSaidas tbody");
+  const filtro = document.getElementById("filtroSaida").value.toLowerCase();
+  tbody.innerHTML = "";
+  
+  saidas.slice().reverse().forEach((s, i) => { // Inverte para mostrar as mais recentes primeiro
+    const idxOriginal = saidas.length - 1 - i;
+    const produto = (s.produto || "").toLowerCase();
+    const responsavel = (s.responsavel || "").toLowerCase();
+    const setor = (s.setor || "").toLowerCase();
+    
+    if (filtro && !produto.includes(filtro) && !responsavel.includes(filtro) && !setor.includes(filtro)) return;
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${idxOriginal + 1}</td>
+      <td>${s.produto || "-"}</td>
+      <td style="font-size:12px; color:#555;">${s.codigoBarras || "-"}</td>
+      <td>${s.qtd || 0}</td>
+      <td>${s.data || "-"}</td>
+      <td>${s.setor || "-"}</td>
+      <td>${s.responsavel || "-"}</td>
+      <td>${s.observacao || "-"}</td>
+      <td>
+        <button onclick="editarSaida(${idxOriginal})"><i class="fa fa-edit"></i></button>
+        <button onclick="excluirSaida(${idxOriginal})"><i class="fa fa-trash"></i></button>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function excluirSaida(i) {
+  const saida = saidas[i];
+  if (!confirm(`Excluir a saída do produto "${saida.produto}" (Qtd: ${saida.qtd})? O estoque será ajustado.`)) return;
+
+  // 🔹 Aumenta a quantidade no estoque global
+  atualizarEstoque(saida.produto, +saida.qtd); 
+  
+  // 🔹 Remove a saída
+  saidas.splice(i, 1);
+  salvarSaidasNoFirebase(saidas); 
+  
+  // 🔹 Atualiza
+  atualizarTabelaSaidas();
+  atualizarTabelaEstoque();
+  atualizarPainelFinanceiro();
+  mostrarMensagem("Saída excluída e estoque ajustado.", "sucesso");
+}
+
+function filtrarSaidas() {
+    atualizarTabelaSaidas();
+}
+
+// --- ESTOQUE ATUAL ---
+
+function atualizarTabelaEstoque() {
+  const tbody = document.querySelector("#tabelaEstoque tbody");
+  const filtro = document.getElementById("filtroEstoque").value.toLowerCase();
+  const resumoDiv = document.getElementById("resumoEstoque");
+  tbody.innerHTML = "";
+  let totalItens = 0;
+  let totalQuantidade = 0;
+  let valorTotal = 0;
+
+  produtos.forEach((p, i) => {
+    const nome = (p.nome || "").toLowerCase();
+    const categoria = (p.categoria || "").toLowerCase();
+    const qtd = Number(p.quantidade) || 0;
+    
+    if (filtro && !nome.includes(filtro) && !categoria.includes(filtro)) return;
+    
+    // 🔹 Busca a última entrada para obter o valor e validade
+    const entradasDoProduto = entradas.filter(e => e.produto === p.nome);
+    const ultimaEntrada = entradasDoProduto.length > 0 ? entradasDoProduto.slice(-1)[0] : {};
+    const valorUnitario = ultimaEntrada.valor || 0;
+    const validade = ultimaEntrada.validade || "-";
+    
+    // 🔹 Cálculos de resumo
+    totalItens++;
+    totalQuantidade += qtd;
+    valorTotal += qtd * valorUnitario;
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${p.foto ? `<img src="${p.foto}" class="thumb" onclick="ampliarImagem('${p.foto}')">` : "-"}</td>
+      <td>${p.nome}</td>
+      <td>${p.categoria}</td>
+      <td style="font-size:12px; color:#555;">${p.codigoBarras || "-"}</td>
+      <td style="font-weight:bold;">${qtd}</td>
+      <td>R$ ${(valorUnitario || 0).toFixed(2)}</td>
+      <td style="color:${validade && new Date(validade) < new Date() ? 'red' : 'inherit'}; font-weight:${validade && new Date(validade) < new Date() ? 'bold' : 'normal'};">
+        ${validade}
+      </td>
+      <td>
+        <button onclick="editarProduto(${i})"><i class="fa fa-edit"></i></button>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+  
+  // 🔹 Atualiza o resumo
+  resumoDiv.innerHTML = `
+    <strong>Total de Produtos Cadastrados:</strong> ${produtos.length} | 
+    <strong>Total de Itens em Estoque:</strong> ${totalQuantidade} | 
+    <strong>Valor Total do Estoque (Último Custo):</strong> <span style="color:#003b88; font-weight:bold;">R$ ${valorTotal.toFixed(2)}</span>
+  `;
+}
+
+function filtrarEstoque() {
+    atualizarTabelaEstoque();
+}
+
+// --- LIMITES E LISTA DE COMPRA ---
+
+function atualizarTabelaLimites() {
+  const tbody = document.querySelector("#tabelaLimites tbody");
+  const filtro = document.getElementById("filtroLimites").value.toLowerCase();
+  tbody.innerHTML = "";
+  
+  produtos.forEach((p, i) => {
+    const nome = (p.nome || "").toLowerCase();
+    
+    if (filtro && !nome.includes(filtro)) return;
+
+    const minimo = Number(p.minimo) || 0;
+    const maximo = Number(p.maximo) || 0;
+    const qtd = Number(p.quantidade) || 0;
+    
+    // calcula status e recomendação
+    let statusTexto = "";
+    let statusCor = "";
+    let recomendacao = "";
+
+    if (qtd < minimo) {
+      statusTexto = "⚠️ Abaixo do mínimo";
+      statusCor = "red";
+      recomendacao = `Comprar ${minimo - qtd} unidade(s)`;
+    } else if (maximo && qtd > maximo) {
+      statusTexto = "📦 Acima do máximo";
+      statusCor = "orange";
+      recomendacao = "Reduzir estoque";
+    } else {
+      statusTexto = "✅ Dentro do limite";
+      statusCor = "green";
+      recomendacao = "-";
+    }
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${p.nome}</td>
+      <td style="font-size:12px; color:#555;">${p.codigoBarras || "-"}</td>
+      <td>${p.categoria}</td>
+      <td>${qtd}</td>
+      <td><input type="number" value="${minimo}" onchange="salvarLimite('${p.nome}', this.value, 'minimo')" style="width:70px;"></td>
+      <td><input type="number" value="${maximo}" onchange="salvarLimite('${p.nome}', this.value, 'maximo')" style="width:70px;"></td>
+      <td style="color:${statusCor}; font-weight:bold;">${statusTexto}</td>
+      <td>${recomendacao}</td>
+      <td>
+        <button onclick="removerLimites('${p.nome}')" title="Remover Limites"><i class="fa fa-times"></i></button>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function salvarLimite(nome, valor, tipo) {
+    const produtoRef = produtos.find(p => p.nome === nome);
+    if (produtoRef) {
+        produtoRef[tipo] = Number(valor);
+        salvarProdutosNoFirebase(produtos);
+        atualizarTabelaLimites(); // Recarrega para atualizar o status/recomendação
+        mostrarMensagem(`Limite ${tipo} de ${nome} salvo.`, "sucesso");
+    }
+}
+
+function removerLimites(nome) {
+    const produtoRef = produtos.find(p => p.nome === nome);
+    if (produtoRef && confirm(`Remover limites de estoque (mínimo e máximo) para "${nome}"?`)) {
+        produtoRef.minimo = 0;
+        produtoRef.maximo = 0;
+        salvarProdutosNoFirebase(produtos);
+        atualizarTabelaLimites();
+        mostrarMensagem(`Limites de ${nome} removidos.`, "sucesso");
+    }
+}
+
+function filtrarLimites() {
+    atualizarTabelaLimites();
+}
+
+function gerarListaCompra() {
+    const container = document.getElementById("listaCompraContainer");
+    const tabela = document.getElementById("tabelaListaCompra");
+    const tbody = tabela ? tabela.querySelector("tbody") : null;
+    const totalSpan = document.getElementById("totalItensCompra");
+    
+    if (!container || !tabela || !tbody || !totalSpan) {
+        console.error("⚠️ Elementos da lista de compra não encontrados no DOM.");
+        mostrarMensagem("Erro: tabela da lista de compra não encontrada.", "erro");
+        return;
+    }
+
+    const filtroCategoria = (document.getElementById("filtroCategoria")?.value || "").toLowerCase();
+    
+    // 🔹 Filtra produtos abaixo do mínimo
+    const produtosAbaixo = produtos.filter(p => {
+        const categoria = (p.categoria || "").toLowerCase();
+        const qtd = Number(p.quantidade) || 0;
+        const minimo = Number(p.minimo) || 0;
+
+        if (filtroCategoria && filtroCategoria !== "" && categoria !== filtroCategoria) return false;
+        
+        return qtd < minimo;
+    }).sort((a, b) => a.nome.localeCompare(b.nome)); // Ordena alfabeticamente
+    
+    tbody.innerHTML = "";
+    if (!produtosAbaixo.length) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#777;">Nenhum item abaixo do estoque mínimo.</td></tr>`;
+        totalSpan.textContent = "0";
+        container.style.display = "block";
+        container.scrollIntoView({ behavior: "smooth" });
+        return;
+    }
+
+    let contador = 0;
+    produtosAbaixo.forEach((p, i) => {
+        contador++;
+        const minimo = Number(p.minimo) || 0;
+        const qtd = Number(p.quantidade) || 0;
+        const recomendacao = minimo - qtd;
+        
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${contador}</td>
+            <td>${p.nome}</td>
+            <td>${p.codigoBarras || "-"}</td>
+            <td>${p.categoria}</td>
+            <td>${qtd}</td>
+            <td>${minimo}</td>
+            <td style="font-weight:bold; color:blue;">${recomendacao}</td>
+            <td>
+                <button onclick="removerItemListaCompra(this)"><i class="fa fa-times"></i></button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    totalSpan.textContent = contador;
+    container.style.display = "block";
+    container.scrollIntoView({ behavior: "smooth" });
+    mostrarMensagem(`Lista de Compra gerada com ${contador} itens.`, "info");
+}
+
+function removerItemListaCompra(btn) {
+    const row = btn.closest("tr");
+    if (row) {
+        row.remove();
+        // Atualiza a contagem total
+        const totalSpan = document.getElementById("totalItensCompra");
+        if (totalSpan) {
+            totalSpan.textContent = Number(totalSpan.textContent) - 1;
+        }
+        mostrarMensagem("Item removido da lista temporariamente.", "info");
+    }
+}
+
+function limparListaCompra() {
+    const container = document.getElementById("listaCompraContainer");
+    const tbody = document.querySelector("#tabelaListaCompra tbody");
+    const totalSpan = document.getElementById("totalItensCompra");
+    
+    if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#777;">Nenhum item abaixo do estoque mínimo.</td></tr>`;
+    if (totalSpan) totalSpan.textContent = "0";
+    if (container) container.style.display = "none";
+    
+    // Limpa também o filtro de categoria
+    limparCampos("limites");
+    mostrarMensagem("Lista de Compra limpa.", "info");
+}
+
+
+// --- PAINEL FINANCEIRO ---
+
+function calcularValorSaida(saida) {
+    // Tenta encontrar o valor unitário da última entrada para o produto
+    const entradasDoProduto = entradas.filter(e => e.produto.toLowerCase() === saida.produto.toLowerCase());
+    
+    // 1. Usa o valor da última entrada se existir
+    if (entradasDoProduto.length > 0) {
+        const ultimaEntrada = entradasDoProduto.slice(-1)[0];
+        return (ultimaEntrada.valor || 0) * (saida.qtd || 0);
     }
     
-    function limparListaCompra() {
-        listaDeCompra = [];
-        atualizarTabelaListaCompra();
-        document.getElementById("listaCompraContainer").style.display = 'none';
-        alert("Lista de compra limpa.");
-    }
+    // 2. Se não houver entrada, o custo de saída é 0 (ou pode-se tentar um custo médio se implementado)
+    return 0;
+}
 
-    function atualizarTabelaListaCompra() {
-      const tbody = document.querySelector("#tabelaListaCompra tbody");
-      const totalSpan = document.getElementById("totalItensCompra");
-      const container = document.getElementById("listaCompraContainer");
-      
-      if (!tbody || !totalSpan || !container) { 
-        console.error("Erro: Elementos da lista de compra não encontrados. Verifique o HTML.");
-        return; 
-      }
-
-      if (!listaDeCompra.length) {
-          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#777;">Lista de compra vazia.</td></tr>`;
-          totalSpan.textContent = "0";
-          container.style.display = "block";
-          return;
-      }
-      
-      tbody.innerHTML = "";
-      let totalItens = 0;
-      listaDeCompra.forEach((item, i) => {
-          totalItens += item.recomendadoComprar;
-          const row = document.createElement("tr");
-          row.innerHTML = `
-              <td>${i + 1}</td>
-              <td>${item.produto}</td>
-              <td>${item.codigoBarras || '-'}</td>
-              <td>${item.categoria}</td>
-              <td>${item.qtdAtual}</td>
-              <td>${item.minimo}</td>
-              <td style="font-weight:bold; color:red;">${item.recomendadoComprar}</td>
-          `;
-          tbody.appendChild(row);
-      });
-      totalSpan.textContent = totalItens;
-      container.style.display = "block";
-    }
-
-    /* ========================= 🔹 Financeiro ========================= */
-    function atualizarPainelFinanceiro() {
-      // 1. Valor Total do Estoque (Contábil)
-      let valorEstoqueTotal = 0;
-      
-      produtos.forEach(produto => {
-          const entradasDoProduto = entradas.filter(e => e.produto === produto.nome);
-          const qtdAtual = Number(produto.quantidade) || 0;
-          
-          if (qtdAtual > 0 && entradasDoProduto.length > 0) {
-              // Cálculo do Custo Médio Ponderado (CMP)
-              let somaValores = 0;
-              let somaQuantidades = 0;
-              
-              entradasDoProduto.forEach(e => {
-                  somaValores += e.qtd * e.valorUnitario;
-                  somaQuantidades += e.qtd;
-              });
-              
-              const custoMedio = somaQuantidades > 0 ? somaValores / somaQuantidades : 0;
-              valorEstoqueTotal += qtdAtual * custoMedio;
-          }
-      });
-      
-      document.getElementById("valorEstoque") ? document.getElementById("valorEstoque").textContent = `R$ ${valorEstoqueTotal.toFixed(2).replace('.', ',')}` : null;
-      document.getElementById("valorEstoqueAtualPainel") ? document.getElementById("valorEstoqueAtualPainel").textContent = `R$ ${valorEstoqueTotal.toFixed(2).replace('.', ',')}` : null;
-
-      // 2. Valor Total das Saídas (Estimado)
-      let valorSaidasTotal = 0;
-      
-      saidas.forEach(saida => {
-          const entradasDoProduto = entradas.filter(e => e.produto === saida.produto);
-          
-          if (entradasDoProduto.length > 0) {
-              // Custo Médio Ponderado (CMP) no momento da saída
-              let somaValores = 0;
-              let somaQuantidades = 0;
-              
-              entradasDoProduto.forEach(e => {
-                  // A rigor, o CMP deve ser calculado com base nas entradas *anteriores* à saída.
-                  // Aqui, por simplicidade, usamos o CMP total.
-                  somaValores += e.qtd * e.valorUnitario;
-                  somaQuantidades += e.qtd;
-              });
-              
-              const custoMedio = somaQuantidades > 0 ? somaValores / somaQuantidades : 0;
-              valorSaidasTotal += (saida.qtd || 0) * custoMedio;
-          }
-      });
-      
-      document.getElementById("valorSaidas") ? document.getElementById("valorSaidas").textContent = `R$ ${valorSaidasTotal.toFixed(2).replace('.', ',')}` : null;
-      
-      // 3. Último Valor de Entrada (simplesmente a última entrada registrada)
-      const ultimaEntrada = entradas.length > 0 ? entradas[entradas.length - 1] : null;
-      const valorUltima = ultimaEntrada ? (ultimaEntrada.qtd * ultimaEntrada.valorUnitario) : 0;
-      document.getElementById("valorUltimaEntrada") ? document.getElementById("valorUltimaEntrada").textContent = `R$ ${valorUltima.toFixed(2).replace('.', ',')}` : null;
-      
-      // 4. Custo Médio Ponderado Geral (Média de todos os produtos)
-      const custoMedioGeral = produtos.length > 0 ? valorEstoqueTotal / produtos.reduce((acc, p) => acc + (Number(p.quantidade) || 0), 0) : 0;
-      document.getElementById("valorCustoMedio") ? document.getElementById("valorCustoMedio").textContent = `R$ ${custoMedioGeral.toFixed(2).replace('.', ',')}` : null;
-
-
-      // 5. Entradas Agrupadas por Nota Fiscal
-      const agrupadas = {};
-
-      // Primeiro, agrupa as entradas para calcular o valor total da nota
-      entradas.forEach(e => {
-        const chave = `${e.fornecedor}|${e.nota}`;
-        const valorEntrada = (e.qtd || 0) * (e.valorUnitario || 0);
-
-        if (!agrupadas[chave]) {
-          agrupadas[chave] = {
-            fornecedor: e.fornecedor,
-            nota: e.nota,
-            valorNota: 0,
-            valorSaida: 0,
-            itens: []
-          };
+function atualizarPainelFinanceiro() {
+    let valorTotalEntradas = 0;
+    let valorTotalSaidas = 0;
+    let totalCustoMedioPonderado = 0;
+    
+    // 🔹 1. Calcular Entradas Totais e Custos de Saída
+    entradas.forEach(e => {
+        valorTotalEntradas += (e.valor || 0) * (e.qtd || 0);
+    });
+    
+    saidas.forEach(s => {
+        valorTotalSaidas += calcularValorSaida(s);
+    });
+    
+    // 🔹 2. Calcular Valor Contábil
+    const valorEstoqueContabil = valorTotalEntradas - valorTotalSaidas;
+    
+    // 🔹 3. Calcular Custo Médio Ponderado Total
+    let somaProdutosPorCustoMedio = 0;
+    let somaTotalItensEstoque = 0;
+    
+    produtos.forEach(p => {
+        const qtdAtual = Number(p.quantidade || 0);
+        if (qtdAtual > 0) {
+            const entradasDoProduto = entradas.filter(e => e.produto === p.nome);
+            const totalQtdEntradas = entradasDoProduto.reduce((s, e) => s + Number(e.qtd || 0), 0);
+            const totalValorEntradas = entradasDoProduto.reduce((s, e) => s + (Number(e.qtd || 0) * Number(e.valor || 0)), 0);
+            const custoMedio = totalQtdEntradas > 0 ? totalValorEntradas / totalQtdEntradas : 0;
+            
+            somaProdutosPorCustoMedio += qtdAtual * custoMedio;
+            somaTotalItensEstoque += qtdAtual;
         }
-        agrupadas[chave].valorNota += valorEntrada;
-        agrupadas[chave].itens.push(e.produto);
-      });
-      
-      // Em seguida, subtrai as saídas estimadas
-      saidas.forEach(s => {
-          // Itera sobre todas as notas para saber de qual nota aquela saída "pertence"
-          // O modelo ideal seria vincular a SAÍDA à ENTRADA específica.
-          // Por simplicidade, assumimos que a saída consome o item mais antigo (FIFO),
-          // mas como não temos essa complexidade, vamos calcular o valor total
-          // da saída e apenas mostrar o saldo da nota no painel (simplificado).
-          const produtoEntradas = entradas.filter(e => e.produto === s.produto);
-          if (produtoEntradas.length > 0) {
-             const custoMedio = produtoEntradas.reduce((sum, e) => sum + (e.qtd * e.valorUnitario), 0) / produtoEntradas.reduce((sum, e) => sum + e.qtd, 0);
-             const valorSaida = (s.qtd || 0) * custoMedio;
-             
-             // Por não saber a qual nota fiscal a saída se refere, vamos apenas
-             // mostrar o valorSaida na primeira nota fiscal encontrada para o produto (simplificação para este painel).
-             const chaveEntradaMaisRecente = `${produtoEntradas[produtoEntradas.length - 1].fornecedor}|${produtoEntradas[produtoEntradas.length - 1].nota}`;
-             if (agrupadas[chaveEntradaMaisRecente]) {
-                 agrupadas[chaveEntradaMaisRecente].valorSaida += valorSaida;
-             }
-          }
-      });
-      
+    });
+    
+    totalCustoMedioPonderado = somaTotalItensEstoque > 0 ? somaProdutosPorCustoMedio / somaTotalItensEstoque : 0;
 
-      // Renderizar tabela agrupada
-      const tbody = document.querySelector("#tabelaFinanceiro tbody");
-      if (!tbody) return;
-      tbody.innerHTML = "";
+    // 🔹 4. Atualiza os indicadores
+    document.getElementById("totalEntradaNotas").textContent = `R$ ${valorTotalEntradas.toFixed(2)}`;
+    document.getElementById("totalSaidaCusto").textContent = `R$ ${valorTotalSaidas.toFixed(2)}`;
+    document.getElementById("valorEstoqueContabil").textContent = `R$ ${valorEstoqueContabil.toFixed(2)}`;
+    document.getElementById("custoMedioTotal").textContent = `R$ ${totalCustoMedioPonderado.toFixed(2)}`;
+    
+    // 🔹 5. Detalhe Financeiro por Nota (Tabela Agrupada)
+    const agrupadas = {}; // chave: fornecedor + nota
+    entradas.forEach(e => {
+        const chave = `${e.fornecedor}|${e.nota}`;
+        
+        if (!agrupadas[chave]) {
+            agrupadas[chave] = {
+                fornecedor: e.fornecedor,
+                nota: e.nota,
+                data: e.data,
+                valorNota: 0,
+                valorSaida: 0
+            };
+        }
+        // Soma o valor do produto na nota (precisa de uma lógica mais robusta se uma NF tiver mais de um item)
+        // Por simplicidade: soma o custo total do item nesta entrada
+        agrupadas[chave].valorNota += (e.valor || 0) * (e.qtd || 0);
+    });
+    
+    // Distribui o custo das saídas nas notas
+    saidas.forEach(s => {
+        // Encontra a entrada mais recente (ou a que deu origem ao estoque)
+        const entradaRelacionado = entradas.slice().reverse().find(e => e.produto && s.produto && e.produto.toLowerCase() === s.produto.toLowerCase());
+        
+        if (entradaRelacionado) {
+            const chave = `${entradaRelacionado.fornecedor}|${entradaRelacionado.nota}`;
+            const valorSaida = (entradaRelacionado.valor || 0) * (s.qtd || 0);
+            
+            if (agrupadas[chave]) {
+                agrupadas[chave].valorSaida += valorSaida;
+            } else {
+                // Caso a saída tenha sido registrada antes da entrada, ou a NF não tenha sido agrupada
+                // Cria um item temporário para esta saída (Nota "Desconhecida")
+                const chaveDesconhecida = "Desconhecido|N/A";
+                if (!agrupadas[chaveDesconhecida]) {
+                    agrupadas[chaveDesconhecida] = {
+                        fornecedor: "Desconhecido",
+                        nota: "N/A",
+                        data: s.data,
+                        valorNota: 0,
+                        valorSaida: 0
+                    };
+                }
+                agrupadas[chaveDesconhecida].valorSaida += valorSaida;
+            }
+        }
+    });
 
-      Object.values(agrupadas).forEach(a => {
+    // Renderizar tabela agrupada
+    const tbody = document.querySelector("#tabelaFinanceiro tbody");
+    tbody.innerHTML = "";
+
+    Object.values(agrupadas).forEach(a => {
         const saldo = a.valorNota - a.valorSaida;
         const row = document.createElement("tr");
         row.innerHTML = `
-          <td>${a.fornecedor}</td>
-          <td>${a.nota}</td>
-          <td>R$ ${a.valorNota.toFixed(2).replace('.', ',')}</td>
-          <td style="color:${saldo < 0 ? 'red' : 'green'}; font-weight:bold;">R$ ${saldo.toFixed(2).replace('.', ',')}</td>
+            <td>${a.fornecedor}</td>
+            <td>${a.nota}</td>
+            <td>${a.data}</td>
+            <td style="color:#28a745; font-weight:bold;">R$ ${a.valorNota.toFixed(2)}</td>
+            <td style="color:#dc3545; font-weight:bold;">R$ ${a.valorSaida.toFixed(2)}</td>
+            <td style="color:${saldo < 0 ? 'red' : '#0d6efd'}; font-weight:bold;">R$ ${saldo.toFixed(2)}</td>
         `;
         tbody.appendChild(row);
-      });
-    }
+    });
+}
 
-    /* ========================= 🔹 Relatórios ========================= */
-    function exportarCSV(nome, dados) {
-      if (!dados || !dados.length) return alert("Nenhum dado para exportar!");
+// --- DASHBOARD ---
+
+function calcularFrequenciaSaida() {
+    const frequencia = {};
+    const hoje = new Date();
+    const trintaDiasAtras = new Date(hoje);
+    trintaDiasAtras.setDate(hoje.getDate() - 30);
+
+    saidas.forEach(s => {
+        const dataSaida = new Date(s.data);
+        if (dataSaida >= trintaDiasAtras) {
+            frequencia[s.produto] = (frequencia[s.produto] || 0) + (s.qtd || 0);
+        }
+    });
+
+    // Converte para array para ordenar
+    return Object.entries(frequencia)
+        .map(([produto, qtd]) => ({ produto, qtd }))
+        .sort((a, b) => b.qtd - a.qtd); // Mais saídas primeiro
+}
+
+function atualizarDashboard() {
+  const listaProximosVencer = document.getElementById("listaProximosVencer");
+  const listaMaisCaros = document.getElementById("listaMaisCaros");
+  const listaMaisSaidas = document.getElementById("listaMaisSaidas");
+  const listaMenosSaidas = document.getElementById("listaMenosSaidas");
+  const listaEstoqueCritico = document.getElementById("listaEstoqueCritico");
+  const resumoGeral = document.getElementById("resumoGeral");
+  
+  // Limpa listas
+  [listaProximosVencer, listaMaisCaros, listaMaisSaidas, listaMenosSaidas, listaEstoqueCritico].forEach(el => el.innerHTML = "");
+
+  // --- Estoque Crítico (Qtd < Mínimo) ---
+  const criticos = produtos.filter(p => p.minimo && Number(p.quantidade || 0) <= Number(p.minimo));
+  listaEstoqueCritico.innerHTML = criticos.length > 0 ? criticos.map(p => 
+      `<li>${p.nome} - Estoque: ${p.quantidade || 0} (Mín: ${p.minimo})</li>`
+  ).join("") : "<li>Nenhum produto crítico no momento.</li>";
+
+  // --- Próximos do Vencimento (Próximos 60 dias) ---
+  const hoje = new Date();
+  const limiteValidade = new Date();
+  limiteValidade.setDate(hoje.getDate() + 60);
+  
+  const proximosVencer = entradas
+    .filter(e => e.validade && new Date(e.validade) > hoje && new Date(e.validade) <= limiteValidade)
+    .sort((a, b) => new Date(a.validade) - new Date(b.validade)); // Mais próximos primeiro
+
+  listaProximosVencer.innerHTML = proximosVencer.length > 0 ? proximosVencer.map(e => {
+    const validade = new Date(e.validade).toLocaleDateString('pt-BR');
+    return `<li>${e.produto} - Lote: ${e.lote} (Validade: ${validade})</li>`;
+  }).join("") : "<li>Nenhum produto próximo do vencimento nos próximos 60 dias.</li>";
+
+  // --- Produtos Mais Caros (Custo Unitário da Última Entrada) ---
+  const produtosComCusto = produtos.map(p => {
+    const entradasDoProduto = entradas.filter(e => e.produto === p.nome);
+    const ultimoValor = entradasDoProduto.length > 0 ? entradasDoProduto.slice(-1)[0].valor || 0 : 0;
+    return { nome: p.nome, custo: ultimoValor };
+  }).sort((a, b) => b.custo - a.custo).slice(0, 5);
+  
+  listaMaisCaros.innerHTML = produtosComCusto.map(p => 
+      `<li>${p.nome} - R$ ${p.custo.toFixed(2)}</li>`
+  ).join("");
+  
+  // --- Frequência de Saída (Últimos 30 dias) ---
+  const frequenciaSaidas = calcularFrequenciaSaida();
+  
+  const maisSaidas = frequenciaSaidas.slice(0, 5);
+  listaMaisSaidas.innerHTML = maisSaidas.length > 0 ? maisSaidas.map(f => 
+      `<li>${f.produto} - Qtd: ${f.qtd}</li>`
+  ).join("") : "<li>Sem saídas recentes.</li>";
+  
+  // Produtos com Menos Saídas (Produtos que tiveram zero ou poucas saídas)
+  const produtosComSaida = new Set(frequenciaSaidas.map(f => f.produto));
+  const menosSaidas = produtos
+    .filter(p => !produtosComSaida.has(p.nome))
+    .slice(0, 5); // Pega os 5 primeiros que não tiveram saída
+  
+  listaMenosSaidas.innerHTML = menosSaidas.length > 0 ? menosSaidas.map(p => 
+      `<li>${p.nome}</li>`
+  ).join("") : "<li>Todos os produtos tiveram saídas.</li>";
+  
+  // --- Resumo Geral ---
+  let qtdTotal = produtos.reduce((soma, p) => soma + (Number(p.quantidade) || 0), 0);
+  resumoGeral.innerHTML = `
+      <p>🧾 Total de Produtos Cadastrados: <strong>${produtos.length}</strong></p>
+      <p>📦 Total de Itens em Estoque: <strong>${qtdTotal}</strong></p>
+      <p>⚠️ Produtos em Estoque Crítico: <strong style="color:red;">${criticos.length}</strong></p>
+      <p>📈 Total de Entradas Registradas: <strong>${entradas.length}</strong></p>
+      <p>📉 Total de Saídas Registradas: <strong>${saidas.length}</strong></p>
+  `;
+  
+  // Atualiza indicadores do Financeiro no Dashboard (se implementados)
+  atualizarPainelFinanceiro();
+}
+
+
+// --- RELATÓRIOS ---
+
+function definirPeriodoRapido(tipo) {
+  const hoje = new Date();
+  let dataInicio, dataFim;
+
+  if (tipo === '7dias') {
+    dataInicio = new Date(hoje);
+    dataInicio.setDate(hoje.getDate() - 7);
+  } else if (tipo === '30dias') {
+    dataInicio = new Date(hoje);
+    dataInicio.setDate(hoje.getDate() - 30);
+  } else if (tipo === 'mes') {
+    dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  } else {
+    return; // Não faz nada se o tipo for inválido
+  }
+  
+  dataFim = hoje;
+  
+  document.getElementById("dataInicioRelatorio").value = dataInicio.toISOString().split('T')[0];
+  document.getElementById("dataFimRelatorio").value = dataFim.toISOString().split('T')[0];
+  mostrarMensagem(`Período definido para: ${tipo}.`, "info");
+}
+
+function limparPeriodo() {
+  document.getElementById("dataInicioRelatorio").value = "";
+  document.getElementById("dataFimRelatorio").value = "";
+  mostrarMensagem("Filtro de período limpo.", "info");
+}
+
+/**
+ * 🔹 Função genérica para exportar qualquer tabela para Excel (CSV)
+ */
+function exportarTabelaExcel(idTabela, nomeArquivoBase, prefixo) {
+  const tabela = document.getElementById(idTabela);
+  if (!tabela) return alert("Tabela não encontrada.");
+  
+  const dataInicio = document.getElementById("dataInicioRelatorio").value;
+  const dataFim = document.getElementById("dataFimRelatorio").value;
+  
+  let dadosFiltrados = [];
+  let cabecalho = [];
+
+  // 1. Obtém o cabeçalho
+  tabela.querySelectorAll('thead th').forEach(th => {
+    // Ignora colunas de Ações e Foto para um CSV mais limpo
+    if (th.textContent.trim() !== "Ações" && th.textContent.trim() !== "Foto") {
+      cabecalho.push(th.textContent.trim());
+    }
+  });
+
+  // 2. Obtém os dados e filtra por data (se for tabela de Entradas ou Saídas)
+  const isEntradaOuSaida = idTabela === 'tabelaEntradas' || idTabela === 'tabelaSaidas';
+  const dataColuna = isEntradaOuSaida ? 5 : -1; // Coluna 5 é a 'Data' em Entradas e Saídas (índice 0)
+
+  tabela.querySelectorAll('tbody tr').forEach(row => {
+    let rowData = [];
+    let shouldInclude = true;
+    let dataDaLinha = "";
+    
+    row.querySelectorAll('td').forEach((td, index) => {
+      // Ignora a última coluna (Ações) e a segunda (Foto)
+      if (index === row.cells.length - 1 || td.querySelector('.thumb')) return;
       
-      // Converte para formato que funcione bem em Excel (usando ponto e vírgula como separador)
-      const dadosTratados = dados.map(obj => {
-          const novoObj = {};
-          for (const key in obj) {
-              let valor = obj[key];
-              // Converte números para string e trata o separador decimal
-              if (typeof valor === 'number') {
-                  valor = valor.toFixed(2).replace('.', ',');
-              }
-              // Remove ponto e vírgula do texto para não quebrar a coluna
-              if (typeof valor === 'string') {
-                  valor = valor.replace(/;/g, ','); 
-              }
-              novoObj[key] = valor;
-          }
-          return novoObj;
-      });
-
-      const header = Object.keys(dadosTratados[0]).join(";");
-      const rows = dadosTratados.map((obj) => Object.values(obj).join(";"));
-      const csv = [header, ...rows].join("\n");
-
-      // Adiciona o BOM para garantir caracteres especiais (acentos) no Excel
-      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = nome + ".csv";
-      link.click();
-    }
-    
-    // Filtro de período - Função de utilidade para relatórios
-    function filtrarDadosPorPeriodo(dados) {
-        const dataInicio = document.getElementById("dataInicioRelatorio")?.value;
-        const dataFim = document.getElementById("dataFimRelatorio")?.value;
-        
-        if (!dataInicio && !dataFim) return dados;
-        
-        return dados.filter(item => {
-            // Assume que todos os dados de entrada/saída têm um campo 'data'
-            const dataItem = new Date(item.data);
-            
-            let dataInicioFiltro = dataInicio ? new Date(dataInicio) : null;
-            let dataFimFiltro = dataFim ? new Date(dataFim) : null;
-            
-            // Ajusta a data fim para o final do dia
-            if (dataFimFiltro) {
-                dataFimFiltro.setHours(23, 59, 59, 999);
-            }
-            
-            const aposInicio = !dataInicioFiltro || dataItem >= dataInicioFiltro;
-            const antesFim = !dataFimFiltro || dataItem <= dataFimFiltro;
-            
-            return aposInicio && antesFim;
-        });
-    }
-    
-    function definirPeriodoRapido(tipo) {
-        const hoje = new Date();
-        const dataInicioEl = document.getElementById("dataInicioRelatorio");
-        const dataFimEl = document.getElementById("dataFimRelatorio");
-        let dataInicio;
-        
-        switch(tipo) {
-            case '7dias':
-                dataInicio = new Date(hoje.setDate(hoje.getDate() - 7));
-                break;
-            case '30dias':
-                dataInicio = new Date(hoje.setDate(hoje.getDate() - 30));
-                break;
-            case 'mes':
-                dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-                break;
-            default:
-                return;
-        }
-
-        dataInicioEl.value = dataInicio.toISOString().split('T')[0];
-        dataFimEl.value = new Date().toISOString().split('T')[0];
-    }
-    
-    function limparPeriodo() {
-        document.getElementById("dataInicioRelatorio").value = '';
-        document.getElementById("dataFimRelatorio").value = '';
-        alert("Filtro de período limpo. Os próximos relatórios incluirão todos os dados.");
-    }
-    
-    function filtrarRelatoriosPorPeriodo() {
-        // Apenas informa o usuário. O filtro é aplicado na geração.
-        alert("Filtro de período aplicado. Clique nos botões para gerar os relatórios filtrados.");
-    }
-
-
-    function gerarRelatorioProdutos() {
-      exportarCSV("Produtos", produtos);
-    }
-    
-    function gerarRelatorioEntradas() {
-      const dadosFiltrados = filtrarDadosPorPeriodo(entradas);
-      exportarCSV("Entradas", dadosFiltrados);
-    }
-    
-    function gerarRelatorioSaidas() {
-      const dadosFiltrados = filtrarDadosPorPeriodo(saidas);
-      exportarCSV("Saidas", dadosFiltrados);
-    }
-    
-    function gerarRelatorioEstoque() {
-      // O estoque é um snapshot, então o filtro de data só faria sentido se
-      // fosse um estoque em uma data passada (que é complexo). Exportamos o atual.
-      const dados = produtos.map((p) => ({ 
-          nome: p.nome, 
-          categoria: p.categoria, 
-          codigoBarras: p.codigoBarras || '-',
-          quantidade_atual: p.quantidade || 0,
-          estoque_minimo: p.minimo || 0,
-          estoque_maximo: p.maximo || 0
-      }));
-      exportarCSV("Estoque_Atual", dados);
-    }
-
-    // PDF da Lista de Compra
-    function gerarPedidoPDF() {
-        if (!listaDeCompra.length) return alert("A lista de compra está vazia!");
-        
-        // Importa a biblioteca jsPDF (necessário incluir no HTML)
-        if (typeof window.jspdf === "undefined") {
-            alert("Erro: Biblioteca jsPDF não carregada. Verifique o script no final do HTML.");
-            return;
-        }
-        
-        const { jsPDF } = window.jspdf;
-        const tabela = document.getElementById("tabelaListaCompra");
-        const usuario = window.usuarioLogado || {};
-        const nomeSolicitante = usuario.nome || "Não informado";
-        
-        // 🔹 Cria documento
-        const doc = new jsPDF({
-            orientation: "portrait",
-            unit: "mm",
-            format: "a4"
-        });
-
-        const larguraPagina = doc.internal.pageSize.getWidth();
-        const dataAtual = new Date().toLocaleDateString();
-
-        // ---------- CABEÇALHO ----------
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(16);
-        doc.text("ORAL UNIC CAMPO GRANDE", larguraPagina / 2, 20, { align: "center" });
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "normal");
-        doc.text("Pedido de Orçamento", larguraPagina / 2, 28, { align: "center" });
-
-        doc.setFontSize(10);
-        doc.text(`Data: ${dataAtual}`, 14, 38);
-        doc.text(`Solicitante: ${nomeSolicitante}`, 14, 44);
-
-        // ---------- LINHA SEPARADORA ----------
-        doc.setDrawColor(150);
-        doc.line(14, 48, larguraPagina - 14, 48);
-
-        // ---------- CABEÇALHO DA TABELA ----------
-        let y = 55;
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(11);
-        doc.text("#", 14, y);
-        doc.text("Produto", 25, y);
-        doc.text("Categoria", 105, y);
-        doc.text("Qtd. Comprar", 185, y, { align: "right" });
-
-        // ---------- CONTEÚDO DA TABELA ----------
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        y += 7;
-
-        listaDeCompra.forEach((item, i) => {
-             // Limite de página
-            if (y > 280) {
-                doc.addPage();
-                y = 20;
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(11);
-                doc.text("#", 14, y);
-                doc.text("Produto", 25, y);
-                doc.text("Categoria", 105, y);
-                doc.text("Qtd. Comprar", 185, y, { align: "right" });
-                doc.setFont("helvetica", "normal");
-                doc.setFontSize(10);
-                y += 7;
-            }
-            
-            doc.text(String(i + 1), 14, y);
-            
-            // Quebra de linha para nome longo do produto
-            const nomeProduto = item.produto;
-            const nomeLinhas = doc.splitTextToSize(nomeProduto, 80); // 80mm de largura para o nome
-            doc.text(nomeLinhas, 25, y);
-            
-            doc.text(item.categoria, 105, y);
-            
-            doc.setFont("helvetica", "bold");
-            doc.setTextColor(255, 0, 0); // Vermelho para a quantidade
-            doc.text(String(item.recomendadoComprar), 185, y, { align: "right" });
-            
-            // Volta ao normal
-            doc.setFont("helvetica", "normal");
-            doc.setTextColor(0, 0, 0); 
-            
-            // Incrementa Y para a próxima linha (baseado no nome mais longo)
-            y += (nomeLinhas.length * 4) + 2; 
-        });
-
-
-        // ---------- RODAPÉ / RESUMO ----------
-        doc.setDrawColor(150);
-        doc.line(14, y, larguraPagina - 14, y);
-        y += 5;
-        
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.text(`Total de Itens Solicitados: ${listaDeCompra.reduce((sum, item) => sum + item.recomendadoComprar, 0)}`, larguraPagina - 14, y, { align: "right" });
-        
-
-        doc.save("Pedido_Orcamento.pdf");
-        alert("PDF gerado com sucesso!");
-    }
-
-
-    /* ========================= 🔹 Usuários ========================= */
-    function salvarUsuario() {
-        if (typeof padronizarCamposAntesDeSalvar === "function") padronizarCamposAntesDeSalvar();
-        
-        const nomeEl = document.getElementById("usuarioNome");
-        const cpfEl = document.getElementById("usuarioCPF");
-        const emailEl = document.getElementById("usuarioEmail");
-        const senhaEl = document.getElementById("usuarioSenha");
-        const perfilEl = document.getElementById("usuarioPerfil");
-        
-        // 🔹 Limpa bordas de erro
-        [nomeEl, emailEl, senhaEl].forEach(el => el.style.border = "1px solid #ccc");
-
-        // 🔹 Validação
-        if (!nomeEl.value.trim()) { alert("Informe o nome do usuário!"); nomeEl.style.border = "2px solid red"; return; }
-        if (!emailEl.value.trim().includes('@')) { alert("Informe um e-mail válido!"); emailEl.style.border = "2px solid red"; return; }
-        if (usuarios.some(u => u.email === emailEl.value.trim())) { alert("Este e-mail já está cadastrado!"); emailEl.style.border = "2px solid red"; return; }
-        if (senhaEl.value.trim().length < 6) { alert("A senha deve ter no mínimo 6 caracteres!"); senhaEl.style.border = "2px solid red"; return; }
-
-        const novoUsuario = {
-            nome: nomeEl.value.trim(),
-            cpf: cpfEl.value.trim(),
-            email: emailEl.value.trim(),
-            senha: senhaEl.value.trim(),
-            perfil: perfilEl.value
-        };
-
-        usuarios.push(novoUsuario);
-        localStorage.setItem("usuarios", JSON.stringify(usuarios));
-        atualizarTabelaUsuarios();
-        limparCampos("usuarios");
-        alert("Usuário salvo com sucesso!");
-    }
-
-    function atualizarTabelaUsuarios() {
-        const tbody = document.querySelector("#tabelaUsuarios tbody");
-        if (!tbody) return;
-
-        tbody.innerHTML = "";
-        
-        usuarios.forEach((u, i) => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-                <td>${i + 1}</td>
-                <td>${u.nome}</td>
-                <td>${u.cpf || '-'}</td>
-                <td>${u.email}</td>
-                <td>${u.perfil.toUpperCase()}</td>
-                <td>
-                    <button onclick="excluirUsuario(${i})" class="btn-delete"><i class="fa fa-trash"></i></button>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
-    }
-
-    function excluirUsuario(i) {
-        if (!confirm("Excluir este usuário?")) return;
-        
-        usuarios.splice(i, 1);
-        localStorage.setItem("usuarios", JSON.stringify(usuarios));
-        atualizarTabelaUsuarios();
-    }
-    
-    
-    /* ========================= 📊 Dashboard ========================= */
-    function atualizarDashboard() {
-        const listaVencerEl = document.getElementById("listaProximosVencer");
-        const listaMinimoEl = document.getElementById("listaEstoqueMinimo");
-        const listaTopSaidasEl = document.getElementById("listaTopSaidas");
-        const listaTopSetoresEl = document.getElementById("listaTopSetores");
-        
-        if (!listaVencerEl || !listaMinimoEl || !listaTopSaidasEl || !listaTopSetoresEl) return;
-
-        // --- 1. Próximos do Vencimento (Itens com validade) ---
-        listaVencerEl.innerHTML = "";
-        const hoje = new Date();
-        const trintaDias = new Date(hoje);
-        trintaDias.setDate(hoje.getDate() + 30);
-
-        // Agrupa entradas por produto/validade e filtra
-        const itensVencer = {};
-        
-        entradas.forEach(e => {
-            if (e.validade) {
-                const dataValidade = new Date(e.validade);
-                const produto = produtos.find(p => p.nome === e.produto);
-                const qtdAtual = Number(produto?.quantidade) || 0;
-                
-                // Se a validade for nos próximos 30 dias ou já estiver vencida
-                if (dataValidade <= trintaDias && qtdAtual > 0) {
-                     const chave = `${e.produto}|${e.validade}`;
-                     if (!itensVencer[chave]) {
-                         itensVencer[chave] = {
-                             produto: e.produto,
-                             validade: e.validade,
-                             qtd: 0
-                         };
-                     }
-                     itensVencer[chave].qtd += e.qtd;
-                }
-            }
-        });
-        
-        const listaVencimento = Object.values(itensVencer).sort((a, b) => new Date(a.validade) - new Date(b.validade));
-        
-        if (listaVencimento.length === 0) {
-             listaVencerEl.innerHTML = `<li>Nenhum item próximo de vencer.</li>`;
-        } else {
-            listaVencimento.slice(0, 5).forEach(item => { // Limita a 5
-                const data = new Date(item.validade).toLocaleDateString();
-                const diff = Math.ceil((new Date(item.validade) - hoje) / (1000 * 60 * 60 * 24));
-                const texto = diff <= 0 ? 'VENCIDO' : `em ${diff} dias`;
-                const cor = diff <= 0 ? 'red' : (diff <= 15 ? 'orange' : 'inherit');
-                
-                listaVencerEl.innerHTML += `
-                    <li style="color:${cor};">
-                        <strong>${item.produto}</strong>: ${item.qtd} un. (${data}) - <i>${texto}</i>
-                    </li>`;
-            });
-        }
-
-
-        // --- 2. Estoque Mínimo ---
-        listaMinimoEl.innerHTML = "";
-        const abaixoDoMinimo = produtos.filter(p => (Number(p.quantidade) || 0) < (Number(p.minimo) || 0));
-        
-        if (abaixoDoMinimo.length === 0) {
-            listaMinimoEl.innerHTML = `<li>Nenhum item abaixo do estoque mínimo.</li>`;
-        } else {
-            abaixoDoMinimo.slice(0, 5).forEach(p => { // Limita a 5
-                const falta = (Number(p.minimo) || 0) - (Number(p.quantidade) || 0);
-                listaMinimoEl.innerHTML += `
-                    <li style="color:red;">
-                        <strong>${p.nome}</strong>: ${p.quantidade} un. (Faltam ${falta})
-                    </li>`;
-            });
-        }
-        
-        // --- 3. Top 5 Produtos (Mais Saída) ---
-        listaTopSaidasEl.innerHTML = "";
-        const contagemSaidas = {};
-        saidas.forEach(s => {
-            contagemSaidas[s.produto] = (contagemSaidas[s.produto] || 0) + (s.qtd || 0);
-        });
-        
-        const topSaidas = Object.entries(contagemSaidas)
-            .sort(([, a], [, b]) => b - a)
-            .slice(0, 5); // Top 5
-            
-        if (topSaidas.length === 0) {
-             listaTopSaidasEl.innerHTML = `<li>Nenhuma saída registrada.</li>`;
-        } else {
-            topSaidas.forEach(([produto, qtd], i) => {
-                listaTopSaidasEl.innerHTML += `
-                    <li>
-                        <strong>${i + 1}. ${produto}</strong>: ${qtd} un.
-                    </li>`;
-            });
-        }
-        
-        // --- 4. Top 5 Setores (Mais Consumo) ---
-        listaTopSetoresEl.innerHTML = "";
-        const contagemSetores = {};
-        saidas.forEach(s => {
-            contagemSetores[s.setor] = (contagemSetores[s.setor] || 0) + (s.qtd || 0);
-        });
-        
-        const topSetores = Object.entries(contagemSetores)
-            .sort(([, a], [, b]) => b - a)
-            .slice(0, 5); // Top 5
-            
-        if (topSetores.length === 0) {
-             listaTopSetoresEl.innerHTML = `<li>Nenhuma saída registrada.</li>`;
-        } else {
-            topSetores.forEach(([setor, qtd], i) => {
-                listaTopSetoresEl.innerHTML += `
-                    <li>
-                        <strong>${i + 1}. ${setor}</strong>: ${qtd} un.
-                    </li>`;
-            });
-        }
-    }
-
-
-    /* ========================= 📝 PADRONIZAÇÃO DE TEXTO (Primeira maiúscula e o resto minúsculo) ========================= */
-    function formatarTextoPadrao(texto) {
-      if (!texto) return "";
-      return texto
-        .toLowerCase()
-        .split(" ")
-        .filter(p => p.trim() !== "")
-        .map(p => {
-             // Ignora palavras pequenas como 'e', 'de', 'do'
-            if (p.length <= 2 && p !== 'o' && p !== 'a') return p; 
-            return p.charAt(0).toUpperCase() + p.slice(1);
-        })
-        .join(" ");
-    }
-
-    /* 🔸 Aplica automaticamente ao sair do campo de texto */
-    document.addEventListener("blur", (e) => {
-      const el = e.target;
-      if (el.tagName === "INPUT" && el.type === "text") {
-        // Ignora campos que não devem ser alterados
-        if (
-          el.id.toLowerCase().includes("cnpj") ||
-          el.id.toLowerCase().includes("email") ||
-          el.id.toLowerCase().includes("login") ||
-          el.id.toLowerCase().includes("observacao")
-        ) return;
-        el.value = formatarTextoPadrao(el.value);
-      }
-    }, true);
-
-    /* 🔸 Garante padronização antes de salvar/cadastrar */
-    function padronizarCamposAntesDeSalvar() {
-      document.querySelectorAll('input[type="text"]').forEach(el => {
-        if (
-          !el.id.toLowerCase().includes("cnpj") &&
-          !el.id.toLowerCase().includes("email") &&
-          !el.id.toLowerCase().includes("login") &&
-          !el.id.toLowerCase().includes("observacao")
-        ) {
-          el.value = formatarTextoPadrao(el.value);
-        }
-      });
-    }
-
-    /* ========================= 🔠 ORDENAR LISTAS GLOBAIS ALFABETICAMENTE ========================= */
-    function ordenarListasAlfabeticamente() {
-      // 🔹 Produtos
-      if (typeof produtos !== "undefined" && Array.isArray(produtos)) {
-        produtos.sort((a, b) =>
-          (a.nome || "").localeCompare(b.nome || "", 'pt-BR', { sensitivity: 'base' })
-        );
-        localStorage.setItem("produtos", JSON.stringify(produtos));
-      }
-      // 🔹 Entradas (Fornecedor)
-      if (typeof entradas !== "undefined" && Array.isArray(entradas)) {
-        entradas.sort((a, b) =>
-          (a.fornecedor || "").localeCompare(b.fornecedor || "", 'pt-BR', { sensitivity: 'base' })
-        );
-        localStorage.setItem("entradas", JSON.stringify(entradas));
-      }
-      // 🔹 Usuários e Perfis (Gerenciar Usuários)
-      if (typeof usuarios !== "undefined" && Array.isArray(usuarios)) {
-        usuarios.sort((a, b) =>
-          (a.nome || "").localeCompare(b.nome || "", 'pt-BR', { sensitivity: 'base' })
-        );
-        localStorage.setItem("usuarios", JSON.stringify(usuarios));
-      }
+      const texto = td.textContent.trim();
+      rowData.push(texto);
       
-      // 🔹 Atualiza tabelas e selects se as funções existirem
-      if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-      if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
-      if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-      if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-      if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
-      if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
-      if (typeof atualizarDashboard === "function") atualizarDashboard();
-      
-      // 🔹 Atualiza selects de produto (Entrada e Saída)
-      atualizarSelectProdutos();
+      if (isEntradaOuSaida && index === dataColuna) {
+        dataDaLinha = texto;
+      }
+    });
+    
+    // Filtra por data se aplicável
+    if (isEntradaOuSaida && dataDaLinha && dataInicio && dataFim) {
+        const dataLinha = new Date(dataDaLinha);
+        const inicio = new Date(dataInicio);
+        const fim = new Date(dataFim);
+        // Adiciona um dia ao fim para incluir a data final
+        fim.setDate(fim.getDate() + 1); 
+
+        if (dataLinha < inicio || dataLinha >= fim) {
+            shouldInclude = false;
+        }
+    }
+
+    if (shouldInclude && rowData.length > 0) {
+      dadosFiltrados.push(rowData);
+    }
+  });
+  
+  if (dadosFiltrados.length === 0) {
+      alert("Nenhum dado encontrado para exportar com base nos filtros (se houver).");
+      return;
+  }
+
+  // 3. Cria o conteúdo CSV
+  let csvContent = cabecalho.join(";") + "\n";
+  dadosFiltrados.forEach(row => {
+    // Substitui vírgulas por pontos e vírgulas para evitar problemas de formatação em Excel
+    csvContent += row.map(item => item.replace(/;/g, ",").replace(/\r?\n|\r/g, " ")).join(";") + "\n";
+  });
+
+  // 4. Cria o Blob e baixa o arquivo
+  const nomeCompleto = `${prefixo || ""}${nomeArquivoBase}_${new Date().toISOString().split('T')[0]}.csv`;
+  const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' }); // \uFEFF for BOM (UTF-8 encoding in Excel)
+  const link = document.createElement("a");
+  if (link.download !== undefined) {
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", nomeCompleto);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    mostrarMensagem(`Relatório '${nomeArquivoBase}' exportado com sucesso!`, "sucesso");
+  }
+}
+
+function exportarListaExcel() {
+    exportarTabelaExcel('tabelaListaCompra', 'Lista_de_Compra', 'Compra_');
+}
+
+/**
+ * 🔹 Função para gerar Pedido de Orçamento em PDF (usando jspdf e autotable)
+ */
+function gerarPedidoPDF() {
+    if (typeof jspdf === 'undefined' || typeof jspdf.jsPDF === 'undefined') {
+        alert("Erro: Biblioteca jsPDF não carregada. Verifique as tags <script> no final do arquivo.");
+        return;
     }
     
-    /* ========================= 🔹 Atualiza o <select> de produtos em ordem alfabética ========================= */
-    function atualizarSelectProdutos() {
-      // Como estamos usando input text com preenchimento automático para produto (Entrada/Saída), 
-      // esta função não é mais estritamente necessária para <select>, mas o nome
-      // do produto deve estar no `produtos` array para validação/busca.
+    // Pega os dados da lista de compra ATUAL (o que está na tela)
+    const tabela = document.getElementById("tabelaListaCompra");
+    const tbody = tabela ? tabela.querySelector("tbody") : null;
+    if (!tbody || tbody.textContent.includes("Nenhum item abaixo")) {
+        alert("⚠️ Nenhuma Lista de Compra gerada para exportar!");
+        return;
     }
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4'); // Paisagem, milímetros, A4
+    const larguraPagina = doc.internal.pageSize.getWidth();
+    const dataAtual = new Date().toLocaleDateString('pt-BR');
+    
+    // --- CABEÇALHO ---
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("ORAL UNIC CAMPO GRANDE", larguraPagina / 2, 20, { align: "center" });
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.text("Pedido de Orçamento", larguraPagina / 2, 28, { align: "center" });
+    
+    doc.setFontSize(10);
+    doc.text(`Data: ${dataAtual}`, 14, 38);
+    doc.text(`Solicitante: ${document.getElementById("userName").textContent}`, 14, 44);
 
+    // --- LINHA SEPARADORA ---
+    doc.setDrawColor(180);
+    doc.line(14, 48, larguraPagina - 14, 48);
+    
+    // --- TABELA ---
+    const headers = [
+        ['#', 'Produto', 'Cód. Barras', 'Categoria', 'Qtd Atual', 'Mínimo', 'Recomendação', 'Observação']
+    ];
+    
+    const body = [];
+    tbody.querySelectorAll("tr").forEach(tr => {
+        const cols = tr.querySelectorAll("td");
+        if (cols.length > 1) { // Ignora linha de rodapé e linha de erro
+            body.push([
+                cols[0].textContent.trim(),
+                cols[1].textContent.trim(),
+                cols2.textContent.trim(), // Cód. Barras
+                cols[3].textContent.trim(),
+                cols[4].textContent.trim(),
+                cols[5].textContent.trim(),
+                cols[6].textContent.trim(),
+                '' // Coluna vazia para observação manual do fornecedor
+            ]);
+        }
+    });
 
-    /* ========================= 🔎 FILTROS GENÉRICOS DE TABELA ========================= */
-    function filtrarTabela(tabelaId, filtroId) {
-      const termo = document.getElementById(filtroId).value.toLowerCase();
-      const tbody = document.querySelector(`#${tabelaId} tbody`);
-      if (!tbody) return;
+    doc.autoTable({
+        head: headers,
+        body: body,
+        startY: 55,
+        theme: 'striped',
+        headStyles: { fillColor: [13, 110, 253] }, // Azul
+        columnStyles: {
+            0: { cellWidth: 10 },
+            1: { cellWidth: 40 },
+            2: { cellWidth: 25 },
+            6: { fontStyle: 'bold' },
+        },
+        styles: { fontSize: 8, overflow: 'linebreak' },
+    });
+    
+    // --- RODAPÉ ---
+    const finalY = doc.autoTable.previous.finalY;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "italic");
+    doc.text("Este documento não é um pedido oficial de compra, mas um pedido de orçamento.", 14, finalY + 10);
+    
+    doc.save(`Pedido_Orcamento_${new Date().toISOString().split('T')[0]}.pdf`);
+    mostrarMensagem("Pedido de Orçamento exportado para PDF.", "sucesso");
+}
 
-      tbody.querySelectorAll("tr").forEach(tr => {
-        const texto = tr.textContent.toLowerCase();
-        tr.style.display = texto.includes(termo) ? "" : "none";
-      });
+// --- USUÁRIOS E PERFIS ---
+
+function salvarUsuarioLocal() {
+    padronizarCamposAntesDeSalvar();
+    limparErros("usuarios");
+    
+    const nomeEl = document.getElementById("usuarioNome");
+    const emailEl = document.getElementById("usuarioEmail");
+    const perfilEl = document.getElementById("usuarioPerfil");
+    
+    if (!nomeEl.value.trim()) return destacarErro(nomeEl, "Informe o nome!");
+    if (!emailEl.value.trim().includes("@")) return destacarErro(emailEl, "Informe um e-mail válido!");
+    if (!perfilEl.value.trim()) return destacarErro(perfilEl, "Selecione o perfil!");
+    
+    const email = emailEl.value.trim().toLowerCase();
+    const nome = nomeEl.value.trim();
+    const perfil = perfilEl.value.trim();
+    
+    const index = usuarios.findIndex(u => u.email.toLowerCase() === email);
+    
+    if (index > -1) {
+        // Atualiza
+        usuarios[index].nome = nome;
+        usuarios[index].perfil = perfil;
+        mostrarMensagem(`Perfil de ${nome} atualizado.`, "sucesso");
+    } else {
+        // Novo
+        usuarios.push({ nome, email, perfil });
+        mostrarMensagem(`Novo usuário/perfil salvo localmente.`, "sucesso");
     }
+    
+    // Salva e atualiza
+    salvarUsuariosNoFirebase(usuarios); 
+    atualizarTabelaUsuarios();
+    limparCampos("usuarios");
+}
 
-    /* ========================= 🧹 LIMPAR CAMPOS AUTOMATICAMENTE (GLOBAL) ========================= */
-    // 🔹 Função genérica — limpa todos os inputs e selects dentro de uma seção
-    function limparCampos(secaoId) {
-      const secao = document.getElementById(secaoId);
-      if (!secao) return;
+function atualizarTabelaUsuarios() {
+    const tbody = document.querySelector("#tabelaUsuarios tbody");
+    const filtro = document.getElementById("filtroUsuarios").value.toLowerCase();
+    tbody.innerHTML = "";
+    
+    usuarios.forEach((u, i) => {
+        const nome = (u.nome || "").toLowerCase();
+        const email = (u.email || "").toLowerCase();
+        
+        if (filtro && !nome.includes(filtro) && !email.includes(filtro)) return;
+        
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${i + 1}</td>
+            <td>${u.nome}</td>
+            <td>${u.email}</td>
+            <td>${u.perfil}</td>
+            <td>
+                <button onclick="preencherParaEdicao('${u.email}', '${u.nome}', '${u.perfil}')" title="Editar"><i class="fa fa-edit"></i></button>
+                <button onclick="excluirUsuarioLocal(${i})" title="Excluir Perfil Local"><i class="fa fa-trash"></i></button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
 
-      secao.querySelectorAll("input, select").forEach(el => {
-        if (el.type === "file") {
-          el.value = "";
-        } else if (el.tagName === "SELECT") {
-          el.selectedIndex = 0;
-        } else {
-          el.value = "";
-        }
-        // Remove borda vermelha de erro
-        el.style.border = "1px solid #ccc";
-      });
-    }
+function preencherParaEdicao(email, nome, perfil) {
+    document.getElementById("usuarioNome").value = nome;
+    document.getElementById("usuarioEmail").value = email;
+    document.getElementById("usuarioPerfil").value = perfil;
+    document.getElementById("usuarioEmail").focus();
+}
 
-    /* ========================= 🔄 RENOMEAR PRODUTO (Manutenção) ========================= */
-    // Função para ser chamada quando um produto for editado e seu nome for alterado
-    function renomearProdutoGlobal(nomeAntigo, novoNome) {
-      if (nomeAntigo === novoNome) return;
-      let alterado = false;
+function excluirUsuarioLocal(i) {
+    const usuario = usuarios[i];
+    if (!confirm(`Excluir o perfil local de "${usuario.nome}" (${usuario.email})? Note que isso NÃO exclui o usuário do Firebase Authentication.`)) return;
+    
+    usuarios.splice(i, 1);
+    salvarUsuariosNoFirebase(usuarios); 
+    atualizarTabelaUsuarios();
+    mostrarMensagem(`Perfil local de ${usuario.nome} excluído.`, "sucesso");
+}
 
-      // Atualiza nome nas entradas
-      entradas.forEach(e => {
-        if (e.produto === nomeAntigo) {
-          e.produto = novoNome;
-          alterado = true;
-        }
-      });
+function filtrarUsuarios() {
+    atualizarTabelaUsuarios();
+}
 
-      // Atualiza nome nas saídas
-      saidas.forEach(s => {
-        if (s.produto === nomeAntigo) {
-          s.produto = novoNome;
-          alterado = true;
-        }
-      });
+// --- UTILITÁRIOS GLOBAIS ---
 
-      // Atualiza nome no estoque (caso mantenha cache separado)
-      produtos.forEach(p => {
-        if (p.nome === nomeAntigo) {
-          p.nome = novoNome;
-          alterado = true;
-        }
-      });
+function ordenarListasAlfabeticamente() {
+  if (typeof produtos !== "undefined" && Array.isArray(produtos)) {
+    produtos.sort((a, b) => (a.nome || "").localeCompare(b.nome || "", 'pt-BR', { sensitivity: 'base' }));
+    // Não precisa salvar, pois esta é apenas uma função de ordenação visual/de referência
+  }
 
-      if (alterado) {
-        localStorage.setItem("entradas", JSON.stringify(entradas));
-        localStorage.setItem("saidas", JSON.stringify(saidas));
-        localStorage.setItem("produtos", JSON.stringify(produtos));
-        atualizarTabelaEntradas();
-        atualizarTabelaSaidas();
-        atualizarTabelaEstoque();
-        if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-        if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
-      }
-    }
+  if (typeof entradas !== "undefined" && Array.isArray(entradas)) {
+    entradas.sort((a, b) => (a.fornecedor || "").localeCompare(b.fornecedor || "", 'pt-BR', { sensitivity: 'base' }));
+  }
+
+  if (typeof saidas !== "undefined" && Array.isArray(saidas)) {
+    saidas.sort((a, b) => (a.produto || "").localeCompare(b.produto || "", 'pt-BR', { sensitivity: 'base' }));
+  }
+
+  if (typeof usuarios !== "undefined" && Array.isArray(usuarios)) {
+    usuarios.sort((a, b) => (a.nome || "").localeCompare(b.nome || "", 'pt-BR', { sensitivity: 'base' }));
+  }
+  
+  // Atualiza selects de produto
+  if (typeof atualizarSelectProdutos === "function") atualizarSelectProdutos();
+}
 
 
-    </script>
+// --- EXECUÇÃO INICIAL ---
+
+document.addEventListener("DOMContentLoaded", () => {
+    // A autenticação Firebase (no script type="module" acima) cuida do carregamento e atualização inicial.
+    // Garante que o menu de setor é preenchido na seção de Saída
+    atualizarSetorAutomatico(); 
+});
+
+
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  // Chamadas iniciais para preencher as tabelas e ordenar (opcionalmente)
-  ordenarListasAlfabeticamente(); 
-  if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-  if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-  if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
-  if (typeof atualizarDashboard === "function") atualizarDashboard();
-});
-</script>
-</body>
-</html>
