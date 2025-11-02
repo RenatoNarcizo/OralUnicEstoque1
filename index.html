@@ -869,8 +869,9 @@
       <p>⚠️ **Funcionalidade Firebase:** A criação e gestão de usuários (e-mail/senha) é feita diretamente pelo painel de controle do Firebase. Aqui, gerenciamos apenas os perfis e metadados locais (localStorage/Firestore).</p>
       
       <div class="input-row" style="margin-top:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
-        <input id="usuarioNome" type="text" placeholder="Nome Completo" class="flex" />
-        <input id="usuarioEmail" type="email" placeholder="E-mail (ID do Firebase)" class="flex" />
+  <input id="usuarioNome" type="text" placeholder="Nome Completo" class="flex" />
+  <input id="usuarioEmail" type="email" placeholder="E-mail (ID do Firebase)" class="flex" />
+  <input id="usuarioSenha" type="password" placeholder="Definir Senha (Mín. 6 caracteres)" class="flex" style="min-width: 200px;" /> <select id="usuarioPerfil" style="width:200px;">
         <select id="usuarioPerfil" style="width:200px;">
           <option value="">Selecione o Perfil</option>
           <option>ADMIN</option>
@@ -906,7 +907,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
   import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 
@@ -1000,7 +1001,34 @@
   window.salvarEntradasNoFirebase = (dados) => salvarDadosNoFirestore("entradas", dados);
   window.salvarSaidasNoFirebase = (dados) => salvarDadosNoFirestore("saidas", dados);
   window.salvarUsuariosNoFirebase = (dados) => salvarDadosNoFirestore("usuarios", dados);
+// === CRIAÇÃO DE USUÁRIO (FIREBASE AUTH) ===
 
+  window.criarUsuarioNoFirebase = async function(email, senha) {
+    if (!auth.currentUser) {
+        mostrarMensagem("Apenas usuários logados podem criar novas contas.", "erro");
+        return false;
+    }
+    
+    // Para criar um novo usuário com senha, é necessário usar a função de criação
+    // Lembre-se que o usuário logado (Admin) precisa ter permissão no Firebase para isso (geralmente ele tem)
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+        // Não é necessário fazer login com esta nova conta, apenas a criação
+        return userCredential.user;
+    } catch (error) {
+        let msg = "Erro ao criar usuário: " + error.code;
+        if (error.code === 'auth/weak-password') {
+            msg = "A senha deve ter pelo menos 6 caracteres.";
+        } else if (error.code === 'auth/email-already-in-use') {
+            msg = "O e-mail já está em uso por outra conta.";
+        } else if (error.code === 'auth/invalid-email') {
+            msg = "E-mail inválido.";
+        }
+        mostrarMensagem(msg, "erro");
+        console.error("Erro ao criar usuário:", error.code, error.message);
+        return false;
+    }
+  }
   // === LOGIN E SESSÃO ===
   
   function mostrarSistema(user) {
@@ -2412,14 +2440,16 @@ function gerarPedidoPDF() {
 
 // --- USUÁRIOS E PERFIS ---
 
-function salvarUsuarioLocal() {
+async function salvarUsuarioLocal() { // 👈 Tornada assíncrona
     padronizarCamposAntesDeSalvar();
     limparErros("usuarios");
     
     const nomeEl = document.getElementById("usuarioNome");
     const emailEl = document.getElementById("usuarioEmail");
     const perfilEl = document.getElementById("usuarioPerfil");
-    
+    const senhaEl = document.getElementById("usuarioSenha"); // 👈 Novo
+
+    // 1. Validações
     if (!nomeEl.value.trim()) return destacarErro(nomeEl, "Informe o nome!");
     if (!emailEl.value.trim().includes("@")) return destacarErro(emailEl, "Informe um e-mail válido!");
     if (!perfilEl.value.trim()) return destacarErro(perfilEl, "Selecione o perfil!");
@@ -2427,25 +2457,43 @@ function salvarUsuarioLocal() {
     const email = emailEl.value.trim().toLowerCase();
     const nome = nomeEl.value.trim();
     const perfil = perfilEl.value.trim();
-    
+    const senha = senhaEl.value.trim(); // 👈 Novo
+
     const index = usuarios.findIndex(u => u.email.toLowerCase() === email);
     
-    if (index > -1) {
-        // Atualiza
+    let isNovoUsuario = index === -1;
+
+    if (isNovoUsuario) {
+        // 2. Tenta criar o usuário no FIREBASE AUTH se for um novo usuário
+        if (!senha || senha.length < 6) return destacarErro(senhaEl, "A senha é obrigatória (mín. 6 caracteres) para um novo usuário.");
+        
+        const usuarioCriado = await criarUsuarioNoFirebase(email, senha);
+        
+        if (usuarioCriado === false) {
+             // O erro já foi exibido pela função criarUsuarioNoFirebase
+             return; 
+        }
+        
+        // 3. Salva o Perfil no Firestore/Local
+        usuarios.push({ nome, email, perfil });
+        mostrarMensagem(`✅ Usuário "${nome}" criado no Firebase Auth e perfil salvo!`, "sucesso");
+
+    } else {
+        // Se for edição de perfil (não de senha)
         usuarios[index].nome = nome;
         usuarios[index].perfil = perfil;
-        mostrarMensagem(`Perfil de ${nome} atualizado.`, "sucesso");
-    } else {
-        // Novo
-        usuarios.push({ nome, email, perfil });
-        mostrarMensagem(`Novo usuário/perfil salvo localmente.`, "sucesso");
+        
+        // Se houver senha preenchida, é uma troca de senha (opcional, precisa de mais tratamento)
+        if (senha) {
+            // Nota: Trocar a senha de outro usuário é um processo mais complexo no Firebase e
+            // exige a função "Admin SDK". Para simplificar, o admin deve resetar a senha
+            // diretamente no painel do Firebase ou fazer o usuário editar a própria senha.
+            // Aqui, vamos apenas atualizar o perfil local e ignorar a senha.
+            mostrarMensagem("⚠️ Senha não alterada. Use o painel do Firebase para alterar senhas de outros usuários.", "info");
+        } else {
+            mostrarMensagem(`✅ Perfil de ${nome} atualizado.`, "sucesso");
+        }
     }
-    
-    // Salva e atualiza
-    salvarUsuariosNoFirebase(usuarios); 
-    atualizarTabelaUsuarios();
-    limparCampos("usuarios");
-}
 
 function atualizarTabelaUsuarios() {
     const tbody = document.querySelector("#tabelaUsuarios tbody");
@@ -2534,3 +2582,4 @@ document.addEventListener("DOMContentLoaded", () => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
