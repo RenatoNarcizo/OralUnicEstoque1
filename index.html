@@ -2224,14 +2224,57 @@ function atualizarBlocoResumo(totalProdutos, qtdTotalEstoque, totalSaidas, valor
         </div>
     `;
 }
-
+/**
+ * Função auxiliar para formatar valores como moeda Real (R$).
+ */
+function formatarMoeda(valor) {
+    if (typeof valor !== 'number' || isNaN(valor)) return 'R$ 0,00';
+    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
 
 /**
- * Função Principal para calcular e popular o Dashboard.
- * Contém a lógica de Top 5 Vencimento e Menos Saídas.
+ * Função auxiliar para montar o bloco de Resumo Geral com o design exato da imagem.
+ * (Requer o CSS e o HTML com id="resumoGeralNovo" já configurados)
+ */
+function atualizarBlocoResumo(totalProdutos, qtdTotalEstoque, totalSaidas, valorUltimaEntrada, valorEstoqueContabil, criticosCount) {
+    const resumoEl = document.getElementById("resumoGeralNovo");
+    if (!resumoEl) return;
+
+    resumoEl.innerHTML = `
+        <div class="resumo-metric">
+            <span class="resumo-label"><i class="fas fa-boxes resumo-icon icon-produtos"></i> Total de produtos:</span>
+            <span class="resumo-value">${totalProdutos}</span>
+        </div>
+        <div class="resumo-metric">
+            <span class="resumo-label"><i class="fas fa-box-open resumo-icon icon-estoque"></i> Quantidade total em estoque:</span>
+            <span class="resumo-value">${qtdTotalEstoque.toFixed(0)}</span>
+        </div>
+        <div class="resumo-metric">
+            <span class="resumo-label"><i class="fas fa-sign-out-alt resumo-icon icon-saidas"></i> Total de saídas registradas:</span>
+            <span class="resumo-value">${totalSaidas}</span>
+        </div>
+        <hr style="margin: 10px 0; border-color: #ddd;">
+        <div class="resumo-metric">
+            <span class="resumo-label"><i class="fas fa-coins resumo-icon icon-valor"></i> Valor total (Último valor de entrada):</span>
+            <span class="resumo-value">${formatarMoeda(valorUltimaEntrada)}</span>
+        </div>
+        <div class="resumo-metric">
+            <span class="resumo-label"><i class="fas fa-chart-line resumo-icon icon-contabil"></i> Valor total do Estoque Atual (Contábil/CMP):</span>
+            <span class="resumo-value">${formatarMoeda(valorEstoqueContabil)}</span>
+        </div>
+        <hr style="margin: 10px 0; border-color: #ddd;">
+        <div class="resumo-metric">
+            <span class="resumo-label"><i class="fas fa-exclamation-triangle resumo-icon" style="color: ${criticosCount > 0 ? 'red' : 'green'};"></i> Produtos em Estoque Crítico:</span>
+            <span class="resumo-value" style="color: ${criticosCount > 0 ? 'red' : 'green'};">${criticosCount}</span>
+        </div>
+    `;
+}
+
+/**
+ * Função Principal: Calcula e popula todas as listas Top 5 e o Resumo Geral.
  */
 function atualizarDashboard() {
-    // Carrega dados de forma segura (assume que você tem as variáveis produtos, entradas, saidas definidas ou no localStorage)
+    // Carrega dados de forma segura
     const produtosLocal = JSON.parse(localStorage.getItem("produtos")) || (typeof produtos !== 'undefined' ? produtos : []);
     const entradasLocal = JSON.parse(localStorage.getItem("entradas")) || (typeof entradas !== 'undefined' ? entradas : []);
     const saidasLocal = JSON.parse(localStorage.getItem("saidas")) || (typeof saidas !== 'undefined' ? saidas : []);
@@ -2292,7 +2335,7 @@ function atualizarDashboard() {
     });
 
 
-    // --- 3. POPULANDO AS LISTAS (TOP 5) ---
+    // --- 3. POPULANDO AS LISTAS (NA ORDEM SOLICITADA) ---
     const criarLi = (item) => `<li>${item}</li>`;
 
     // a. 🕒 Produtos Próximos do Vencimento (Top 5)
@@ -2336,7 +2379,7 @@ function atualizarDashboard() {
 
     // d. 💤 Produtos com Menos Saídas (Top 5)
     const menosSaidas = estoqueDetalhado
-        .filter(p => p.qtdAtual > 0) // Apenas itens que ESTÃO em estoque
+        .filter(p => p.qtdAtual > 0) 
         .sort((a, b) => a.qtdSaidas - b.qtdSaidas)
         .slice(0, 5);
     
@@ -2378,137 +2421,11 @@ function atualizarDashboard() {
     atualizarBlocoResumo(totalProdutos, qtdTotalEmEstoque, totalSaidasRegistradas, valorUltimaEntrada, valorEstoqueContabil, criticosCount);
 }
 
-// Chame esta função na inicialização: document.addEventListener("DOMContentLoaded", atualizarDashboard);
+// Lembre-se de chamar esta função no carregamento da página:
+// document.addEventListener("DOMContentLoaded", atualizarDashboard);
+// Ou no seu fluxo de atualização.
 
-  if (resumoGeral) {
-    // Adiciona CSS básico no JS para formatar o resumo de forma mais clara
-    resumoGeral.innerHTML = `
-      <style>
-    /* DENTRO DA SUA TAG: <style> */
 
-/* ... (Mantenha seus outros estilos aqui) ... */
-
-/* Estilos para o Resumo Geral (Imagem de referência) */
-.resumo-metric {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #eee;
-}
-
-.resumo-metric:last-child {
-    border-bottom: none;
-}
-
-.resumo-label {
-    display: flex;
-    align-items: center;
-    font-weight: 500;
-    color: #444;
-}
-
-.resumo-icon {
-    font-size: 1.2em;
-    margin-right: 8px;
-    width: 25px; /* Para alinhar melhor */
-    text-align: center;
-}
-
-.resumo-value {
-    font-weight: 700;
-    font-size: 1.05em;
-    color: var(--azul-escuro); /* Cor padrão para valores */
-}
-
-/* Cores específicas dos ícones (Conforme a imagem) */
-.icon-produtos { color: #28a745; /* Verde */ }
-.icon-estoque { color: #007bff; /* Azul */ }
-.icon-saidas { color: #dc3545; /* Vermelho */ }
-.icon-valor { color: #ffc107; /* Amarelo/Ouro */ }
-.icon-contabil { color: #17a2b8; /* Ciano */ }
-      </style>
-      <div class="resumo-item">
-        <span class="resumo-label">Total de Produtos Cadastrados:</span>
-        <span class="resumo-value">${totalProdutos}</span>
-      </div>
-      <div class="resumo-item">
-        <span class="resumo-label">Total de Itens em Estoque (Unid):</span>
-        <span class="resumo-value">${qtdTotal}</span>
-      </div>
-      <div class="resumo-item">
-        <span class="resumo-label">Produtos em Estoque Crítico:</span>
-        <span class="resumo-value" style="color: ${totalCriticos > 0 ? 'red' : 'green'};">${totalCriticos}</span>
-      </div>
-      <div class="resumo-item">
-        <span class="resumo-label">Próximos do Vencimento (90d):</span>
-        <span class="resumo-value" style="color: ${totalVencimento > 0 ? 'orange' : 'green'};">${totalVencimento}</span>
-      </div>
-       <div class="resumo-item">
-        <span class="resumo-label">Valor Estimado do Estoque:</span>
-        <span class="resumo-value valor-estoque">R$ ${valorTotalEstoque.toFixed(2).replace('.', ',')}</span>
-      </div>
-       <div class="resumo-item">
-        <span class="resumo-label">Total de Saídas Registradas:</span>
-        <span class="resumo-value">${totalSaidas}</span>
-      </div>
-    `;
-  }
-}
-	
-if (resumoGeral) {
-    // Adiciona CSS básico no JS para formatar o resumo de forma mais clara
-    resumoGeral.innerHTML = `
-	
-      <style>
-        .resumo-item {
-          display: flex;
-          justify-content: space-between;
-          padding: 6px 0;
-          border-bottom: 1px solid #eee;
-        }
-        .resumo-item:last-child {
-          border-bottom: none;
-        }
-        .resumo-label {
-          font-weight: 500;
-          color: #333;
-        }
-        .resumo-value {
-          font-weight: 700;
-        }
-        .valor-estoque {
-          color: var(--azul-escuro);
-          font-size: 1.1em;
-        }
-     
- </style>
-      <div class="resumo-item">
-        <span class="resumo-label">Total de Produtos Cadastrados:</span>
-        <span class="resumo-value">${totalProdutos}</span>
-      </div>
-      <div class="resumo-item">
-        <span class="resumo-label">Total de Itens em Estoque (Unid):</span>
-        <span class="resumo-value">${qtdTotal}</span>
-      </div>
-      <div class="resumo-item">
-        <span class="resumo-label">Produtos em Estoque Crítico:</span>
-        <span class="resumo-value" style="color: ${totalCriticos > 0 ? 'red' : 'green'};">${totalCriticos}</span>
-      </div>
-      <div class="resumo-item">
-        <span class="resumo-label">Próximos do Vencimento (90d):</span>
-        <span class="resumo-value" style="color: ${totalVencimento > 0 ? 'orange' : 'green'};">${totalVencimento}</span>
-      </div>
-       <div class="resumo-item">
-        <span class="resumo-label">Valor Estimado do Estoque:</span>
-        <span class="resumo-value valor-estoque">R$ ${valorTotalEstoque.toFixed(2).replace('.', ',')}</span>
-      </div>
-       <div class="resumo-item">
-        <span class="resumo-label">Total de Saídas Registradas:</span>
-        <span class="resumo-value">${totalSaidas}</span>
-      </div>
-    `;
-  }
 
 // --- RELATÓRIOS ---
 
@@ -2882,6 +2799,7 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
 
