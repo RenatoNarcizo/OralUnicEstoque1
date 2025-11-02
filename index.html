@@ -952,13 +952,34 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+// ==========================================================
+// ADICIONE ESTE BLOCO NO INÍCIO DO SEU <script type="module">
+// ==========================================================
 
+// ==========================================================
   // Variáveis globais para dados
   window.produtos = JSON.parse(localStorage.getItem("produtos")) || [];
   window.entradas = JSON.parse(localStorage.getItem("entradas")) || [];
   window.saidas = JSON.parse(localStorage.getItem("saidas")) || [];
   window.usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
-  
+  window.PERMISSOES = {
+    'ADMIN': {
+        canView: ['dashboard', 'produtos', 'entradas', 'saidas', 'estoque', 'limites', 'usuarios', 'relatorios'],
+        canEdit: true
+    },
+    'GERENTE': {
+        canView: ['dashboard', 'produtos', 'entradas', 'saidas', 'estoque', 'limites', 'relatorios'],
+        canEdit: ['produtos', 'entradas', 'saidas']
+    },
+    'ESTOQUISTA': {
+        canView: ['estoque', 'relatorios'],
+        canEdit: false
+    },
+    'USUARIO': { 
+        canView: ['estoque'],
+        canEdit: false
+    },
+};
  
  // === FUNÇÕES DE PERSISTÊNCIA (Firestore/Local) ===
 
@@ -1085,6 +1106,10 @@ window.salvarUsuariosNoFirebase = (dados) => salvarDadosNoFirestore("usuarios", 
 
 window.salvarUsuarioLocal = async function() {
 
+    // 🚨 PASSO 1: ARMAZENA O CONTEXTO ATUAL DO ADMIN
+    const adminEmailLogado = auth.currentUser ? auth.currentUser.email.toLowerCase() : null;
+
+    // 1. Coleta e validação dos campos do PERFIL
     const nomeEl = document.getElementById("usuarioNome");
     const emailEl = document.getElementById("usuarioEmail");
     const senhaEl = document.getElementById("usuarioSenha");
@@ -1113,6 +1138,7 @@ window.salvarUsuarioLocal = async function() {
                 return typeof destacarErro === 'function' ? destacarErro(senhaEl, "A senha é obrigatória (mín. 6 caracteres) para um novo usuário.") : alert("A senha é obrigatória (mín. 6 caracteres) para um novo usuário.");
             }
             
+            // Cria o usuário no Firebase Auth (Isto dispara o evento de login temporário)
             const firebaseUser = await window.criarUsuarioNoFirebase(email, senha);
 
             if (!firebaseUser) {
@@ -1132,7 +1158,7 @@ window.salvarUsuarioLocal = async function() {
             if (typeof mostrarMensagem === 'function') mostrarMensagem(`✅ Usuário "${nome}" criado no Firebase Auth e perfil salvo!`, "sucesso");
 
         } else {
-            // AÇÃO 2: EDIÇÃO DE PERFIL
+            // AÇÃO 2: EDIÇÃO DE PERFIL (Mantida)
             window.usuarios[index].nome = nome;
             window.usuarios[index].perfil = perfil;
             
@@ -1145,7 +1171,7 @@ window.salvarUsuarioLocal = async function() {
             emailEl.disabled = false;
         }
         
-        // 🚨 NOVO: PREVENÇÃO DE DUPLICATAS ANTES DE SALVAR (PONTO 2)
+        // Prevenção de Duplicatas (Mantida)
         const uidsUnicos = new Set();
         const usuariosSemDuplicatas = [];
         window.usuarios.forEach(u => {
@@ -1154,17 +1180,29 @@ window.salvarUsuarioLocal = async function() {
                 usuariosSemDuplicatas.push(u);
             }
         });
-        window.usuarios = usuariosSemDuplicatas; // Atualiza a lista global com a versão limpa
-        
+        window.usuarios = usuariosSemDuplicatas;
         
         // 3. Persiste os dados atualizados no LocalStorage e no Firestore
         if (typeof salvarTodosLocal === 'function') salvarTodosLocal();
         await window.salvarUsuariosNoFirebase(window.usuarios); 
         
-        // 🚨 PONTO CRÍTICO: REFORÇA O ESTADO DO ADMIN APÓS O SALVAMENTO (PONTO 1)
-        if (auth.currentUser) {
-             // Garante que o perfil do Admin seja reexibido imediatamente.
-             mostrarSistema(auth.currentUser); 
+        // 🚨 PASSO 2: RESTAURA O CONTEXTO DO ADMIN MANUALMENTE
+        if (adminEmailLogado) {
+             // 1. Tenta encontrar o PERFIL DO ADMIN na lista ATUALIZADA
+             const adminPerfilNaLista = window.usuarios.find(u => u.email.toLowerCase() === adminEmailLogado);
+             
+             if (adminPerfilNaLista) {
+                 // 2. Cria um contexto de usuário (objeto simples) com o perfil encontrado
+                 const userContextAdmin = { 
+                     email: adminPerfilNaLista.email, 
+                     uid: adminPerfilNaLista.uid
+                 };
+                 // 3. Força a exibição do sistema usando o perfil conhecido do Admin
+                 mostrarSistema(userContextAdmin); 
+             } else {
+                 // Fallback para o método padrão
+                 mostrarSistema(auth.currentUser); 
+             }
         }
         
         // 4. Atualiza a interface da tabela
@@ -1274,37 +1312,70 @@ window.filtrarUsuarios = function() {
 // === LOGIN E SESSÃO ===
   
 function mostrarSistema(user) {
+    // ... (Seu código inicial, Mantido)
     const loginView = document.getElementById("loginView");
     const mainApp = document.getElementById("mainApp");
     const userNameEl = document.getElementById("userName");
     const perfilBadgeEl = document.getElementById("perfilBadge");
     const nomeBemVindoEl = document.getElementById("nomeUsuarioBemVindo");
 
-    // 1. Alterna a visibilidade das telas
     if (loginView && mainApp) {
         loginView.style.display = "none";
         mainApp.style.display = "block";
     }
 
-    // 2. Tenta encontrar o perfil do usuário logado na lista global
     const usuarioLogado = window.usuarios.find(u => u.email.toLowerCase() === user.email.toLowerCase());
+    const nomeFallback = user.email.split('@')[0];
     
-    // 3. Define valores de fallback (garantia de que não haverá erro de tela)
-    const nomeFallback = user.email.split('@')[0]; // Usa a parte inicial do e-mail
-    const perfilFallback = "USUARIO"; // Perfil padrão se não for encontrado
-
-    // 4. Atribui os valores (usando o perfil encontrado ou o fallback)
+    // 🚨 GARANTINDO O PERFIL CORRETO
     const nome = usuarioLogado ? usuarioLogado.nome : nomeFallback;
-    const perfil = usuarioLogado ? usuarioLogado.perfil : perfilFallback;
-
-    // 5. Atualiza a interface
+    const perfil = usuarioLogado ? usuarioLogado.perfil.toUpperCase() : "USUARIO";
+    
     if (userNameEl) userNameEl.textContent = nome;
-    if (perfilBadgeEl) perfilBadgeEl.textContent = "Perfil: " + perfil.toUpperCase();
+    if (perfilBadgeEl) perfilBadgeEl.textContent = "Perfil: " + perfil;
     if (nomeBemVindoEl) nomeBemVindoEl.textContent = nome;
 
-    // 🚨 Extra: Se a função showSection estiver disponível, força a abertura da dashboard
+    // ==========================================================
+    // APLICAÇÃO DAS PERMISSÕES: Agora usa a variável global window.PERMISSOES
+    // ==========================================================
+    const permissoesDoUsuario = window.PERMISSOES[perfil] || window.PERMISSOES['USUARIO'];
+    
+    // 1. Oculta ou exibe os itens de menu
+    const menuLinks = document.querySelectorAll('#sidebar a[data-section]');
+    menuLinks.forEach(link => {
+        const sectionName = link.getAttribute('data-section');
+        // Usa a lista canView para determinar o que mostrar
+        if (permissoesDoUsuario.canView.includes(sectionName)) { 
+            link.style.display = ''; 
+        } else {
+            link.style.display = 'none'; 
+        }
+    });
+
+    // 2. Redireciona para a primeira seção permitida
+    let initialSection = permissoesDoUsuario.canView.includes('dashboard') ? 'dashboard' : permissoesDoUsuario.canView[0];
+    
     if (typeof showSection === "function") {
-         showSection("dashboard");
+         showSection(initialSection);
+    }
+    // ==========================================================
+
+    // Seções de Cadastro e Movimentação devem ser desabilitadas para Estoquista
+    // O GERENTE tem permissão de edição nas seções.
+    const podeEditar = permissoesDoUsuario.canEdit === true || (Array.isArray(permissoesDoUsuario.canEdit) && (permissoesDoUsuario.canEdit.includes('produtos') || permissoesDoUsuario.canEdit.includes('entradas') || permissoesDoUsuario.canEdit.includes('saidas')));
+    
+    const entradaBtn = document.getElementById('adicionarEntradaBtn');
+    const saidaBtn = document.getElementById('adicionarSaidaBtn');
+    const addProdutoBtn = document.getElementById('adicionarProdutoBtn'); 
+    
+    if (!podeEditar) {
+         if (entradaBtn) entradaBtn.style.display = 'none';
+         if (saidaBtn) saidaBtn.style.display = 'none';
+         if (addProdutoBtn) addProdutoBtn.style.display = 'none';
+    } else {
+         if (entradaBtn) entradaBtn.style.display = '';
+         if (saidaBtn) saidaBtn.style.display = '';
+         if (addProdutoBtn) addProdutoBtn.style.display = '';
     }
 }
   
@@ -1416,6 +1487,8 @@ onAuthStateChanged(auth, (user) => {
         document.getElementById("perfilBadge").innerText = "PERFIL";
     }
 });
+
+
   // === LOGOUT ===
   window.logout = async function() {
     await signOut(auth);
@@ -3180,6 +3253,7 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
 
