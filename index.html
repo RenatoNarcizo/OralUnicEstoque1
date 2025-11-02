@@ -973,23 +973,6 @@ function salvarTodosLocal() {
 }
 
 // 🔹 Salva/Busca no Firestore (Corrigida a lógica de usuários)
-async function salvarDadosNoFirestore(nomeColecao, dados) {
-    if (!auth.currentUser) return;
-    try {
-        if (nomeColecao === "usuarios") {
-            // 🚨 CORREÇÃO 1: SALVA USUÁRIOS EM UM NÓ CENTRALIZADO (estoqueGlobal)
-            const docRefGlobal = doc(db, "estoqueGlobal", "usuarios");
-            await setDoc(docRefGlobal, { usuarios: dados });
-        } else {
-            // Salva dados de ESTOQUE no nó isolado do usuário
-            const docRefUser = doc(db, "estoqueData", auth.currentUser.uid);
-            await setDoc(docRefUser, { [nomeColecao]: dados }, { merge: true });
-        }
-    } catch (e) {
-        console.error("Erro ao salvar no Firestore: ", e);
-    }
-}
-
 async function carregarDadosDoFirestore() {
     if (!auth.currentUser) return;
     try {
@@ -1003,20 +986,25 @@ async function carregarDadosDoFirestore() {
             window.entradas = data.entradas || [];
             window.saidas = data.saidas || [];
         } else {
-            // Se não houver dados de estoque, inicializa com vazio (e será salvo abaixo)
+            // 🚨 GARANTIA DE INICIALIZAÇÃO: Se não houver dados de estoque, inicializa com vazio.
             window.produtos = [];
             window.entradas = [];
             window.saidas = [];
+
+            // Também inicializa o nó do usuário no Firestore com dados vazios
+            await salvarDadosNoFirestore("produtos", window.produtos);
+            await salvarDadosNoFirestore("entradas", window.entradas);
+            await salvarDadosNoFirestore("saidas", window.saidas);
         }
 
-        // 2. CARREGA DADOS DE USUÁRIOS (CENTRALIZADO, para TODOS verem os perfis)
+        // 2. CARREGA DADOS DE USUÁRIOS (CENTRALIZADO)
         const docRefGlobal = doc(db, "estoqueGlobal", "usuarios");
         const docSnapGlobal = await getDoc(docRefGlobal);
 
         if (docSnapGlobal.exists() && docSnapGlobal.data().usuarios) {
             window.usuarios = docSnapGlobal.data().usuarios;
         } else {
-            // Se o nó global não existe (primeira vez), usa o local e inicializa o nó global
+            // Se o nó global não existe, usa o local e inicializa o nó global
             await salvarDadosNoFirestore("usuarios", window.usuarios); 
         }
 
@@ -1025,7 +1013,7 @@ async function carregarDadosDoFirestore() {
         const perfilExiste = window.usuarios.find(u => u.email.toLowerCase() === emailLogado);
         
         if (!perfilExiste) {
-            // 🚨 CRUCIAL: Se o usuário logou, mas não tem perfil (ou foi apagado), recria um básico e salva.
+            // Se o perfil não foi encontrado (e o usuário logou), recria um básico e salva.
             const novoPerfil = { 
                 uid: auth.currentUser.uid,
                 email: emailLogado,
@@ -1034,7 +1022,8 @@ async function carregarDadosDoFirestore() {
                 criadoEm: new Date().toISOString()
             };
             window.usuarios.push(novoPerfil);
-            await salvarDadosNoFirestore("usuarios", window.usuarios); // Salva a lista atualizada
+            // 🚨 Salva a lista ATUALIZADA no nó global (não no nó do usuário)
+            await salvarDadosNoFirestore("usuarios", window.usuarios); 
         }
 
         // 4. Salva no local e atualiza a interface
@@ -1053,7 +1042,9 @@ async function carregarDadosDoFirestore() {
         if (typeof ordenarListasAlfabeticamente === "function") ordenarListasAlfabeticamente();
         
     } catch (e) {
-        console.error("Erro ao carregar do Firestore: ", e);
+        console.error("Erro CRÍTICO ao carregar dados do Firestore: ", e);
+        // 🚨 CRUCIAL: Se houver qualquer erro, ainda assim resolve a promessa para não quebrar a UI
+        return; 
     }
 }
 // ...
@@ -1097,9 +1088,6 @@ window.salvarUsuariosNoFirebase = (dados) => salvarDadosNoFirestore("usuarios", 
 // === FUNÇÕES DE GERENCIAMENTO DE USUÁRIOS E PERFIS (INTEGRADO AQUI) ===
 // =================================================================================
 
-/**
- * 🔹 Função principal para salvar ou atualizar um Perfil de Usuário.
- */
 window.salvarUsuarioLocal = async function() {
 
     // 1. Coleta e validação dos campos do PERFIL
@@ -1129,14 +1117,16 @@ window.salvarUsuarioLocal = async function() {
 
     try {
         if (isNovoUsuario) {
+            // ==========================================================
             // AÇÃO 1: CRIAÇÃO DE NOVO USUÁRIO (Firebase Auth + Perfil)
+            // ==========================================================
             
             // Requisito de senha para o Firebase Auth
             if (!senha || senha.length < 6) {
                 return typeof destacarErro === 'function' ? destacarErro(senhaEl, "A senha é obrigatória (mín. 6 caracteres) para um novo usuário.") : alert("A senha é obrigatória (mín. 6 caracteres) para um novo usuário.");
             }
             
-            // 🚨 1. Cria o usuário no Firebase Auth 
+            // 🚨 1. Cria o usuário no Firebase Auth
             const firebaseUser = await window.criarUsuarioNoFirebase(email, senha);
 
             if (!firebaseUser) {
@@ -1145,7 +1135,7 @@ window.salvarUsuarioLocal = async function() {
             
             // 🚨 2. Salva o PERFIL no Local/Firestore (com o UID do Firebase)
             const novoUsuarioPerfil = {
-                uid: firebaseUser.uid, // 👈 CORREÇÃO PRINCIPAL: CAPTURA DO UID
+                uid: firebaseUser.uid, 
                 email: email,
                 nome: nome,
                 perfil: perfil,
@@ -1153,11 +1143,13 @@ window.salvarUsuarioLocal = async function() {
             };
             
             window.usuarios.push(novoUsuarioPerfil);
+            
             if (typeof mostrarMensagem === 'function') mostrarMensagem(`✅ Usuário "${nome}" criado no Firebase Auth e perfil salvo!`, "sucesso");
 
         } else {
-            // AÇÃO 2: EDIÇÃO DE PERFIL (Apenas metadados)
-            
+            // ==========================================================
+            // AÇÃO 2: EDIÇÃO DE PERFIL
+            // ==========================================================
             window.usuarios[index].nome = nome;
             window.usuarios[index].perfil = perfil;
             
@@ -1170,10 +1162,16 @@ window.salvarUsuarioLocal = async function() {
             emailEl.disabled = false;
         }
         
-        // 🚨 CORREÇÃO DO "NÃO SALVANDO": PERSISTÊNCIA GLOBAL
+        // 🚨 PONTO DE CORREÇÃO: PERSISTÊNCIA GLOBAL
         // 3. Persiste os dados atualizados no LocalStorage e no Firestore
         if (typeof salvarTodosLocal === 'function') salvarTodosLocal();
-        await window.salvarUsuariosNoFirebase(window.usuarios); 
+        await window.salvarUsuariosNoFirebase(window.usuarios); // Salva a lista de usuários no nó global
+        
+        // 🚨 CORREÇÃO FINAL: Garante que o perfil do Admin seja reexibido
+        if (auth.currentUser) {
+             // Re-executa o mostrarSistema com o usuário logado para estabilizar a UI do Admin.
+             mostrarSistema(auth.currentUser); 
+        }
         
         // 4. Atualiza a interface da tabela
         if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
