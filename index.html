@@ -1004,12 +1004,10 @@ async function carregarDadosDoFirestore() {
             window.entradas = data.entradas || [];
             window.saidas = data.saidas || [];
         } else {
-            // GARANTIA DE INICIALIZAÇÃO: Se não houver dados de estoque, inicializa com vazio.
+            // Inicializa o nó do usuário no Firestore com dados vazios
             window.produtos = [];
             window.entradas = [];
             window.saidas = [];
-
-            // Também inicializa o nó do usuário no Firestore com dados vazios
             await salvarDadosNoFirestore("produtos", window.produtos);
             await salvarDadosNoFirestore("entradas", window.entradas);
             await salvarDadosNoFirestore("saidas", window.saidas);
@@ -1025,26 +1023,13 @@ async function carregarDadosDoFirestore() {
             await salvarDadosNoFirestore("usuarios", window.usuarios); 
         }
 
-        // 3. Verifica se o perfil do usuário logado existe na lista centralizada
-        const emailLogado = auth.currentUser.email.toLowerCase();
-        const perfilExiste = window.usuarios.find(u => u.email.toLowerCase() === emailLogado);
-        
-        if (!perfilExiste) {
-            const novoPerfil = { 
-                uid: auth.currentUser.uid,
-                email: emailLogado,
-                nome: emailLogado.split('@')[0],
-                perfil: 'USUARIO',
-                criadoEm: new Date().toISOString()
-            };
-            window.usuarios.push(novoPerfil);
-            await salvarDadosNoFirestore("usuarios", window.usuarios); 
-        }
+        // 3. REMOÇÃO DA CRIAÇÃO DE FALLBACK PARA EVITAR DUPLICAÇÃO
+        // Se o usuário logou e não tem perfil, o mostrarSistema usará o e-mail/USUARIO
+        // como fallback, sem duplicar o registro no banco.
 
         // 4. Salva no local e atualiza a interface
         salvarTodosLocal();
         
-        // ... (resto do código para atualizar as tabelas, mantido)
         if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
         if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
         if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
@@ -1100,50 +1085,40 @@ window.salvarUsuariosNoFirebase = (dados) => salvarDadosNoFirestore("usuarios", 
 
 window.salvarUsuarioLocal = async function() {
 
-    // 1. Coleta e validação dos campos do PERFIL
     const nomeEl = document.getElementById("usuarioNome");
     const emailEl = document.getElementById("usuarioEmail");
     const senhaEl = document.getElementById("usuarioSenha");
     const perfilEl = document.getElementById("usuarioPerfil");
     
-    // Limpa erros anteriores e garante que o campo e-mail está habilitado
+    // ... (Validações e coleta de dados, Mantidas)
     if (typeof limparErros === 'function') limparErros("usuarios");
     emailEl.disabled = false;
     
-    // Validações básicas
     if (!nomeEl.value.trim()) return typeof destacarErro === 'function' ? destacarErro(nomeEl, "Informe o nome!") : alert("Informe o nome!");
     if (!emailEl.value.trim().includes("@")) return typeof destacarErro === 'function' ? destacarErro(emailEl, "Informe um e-mail válido!") : alert("Informe um e-mail válido!");
     if (!perfilEl.value.trim()) return typeof destacarErro === 'function' ? destacarErro(perfilEl, "Selecione o perfil!") : alert("Selecione o perfil!");
 
-    // Padroniza os valores
     const email = emailEl.value.trim().toLowerCase();
     const nome = nomeEl.value.trim(); 
     const perfil = perfilEl.value.trim();
     const senha = senhaEl.value.trim();
     
-    // Tenta encontrar o perfil do usuário pelo email na lista global
     const index = window.usuarios.findIndex(u => u.email.toLowerCase() === email);
     let isNovoUsuario = index === -1;
 
     try {
         if (isNovoUsuario) {
-            // ==========================================================
-            // AÇÃO 1: CRIAÇÃO DE NOVO USUÁRIO (Firebase Auth + Perfil)
-            // ==========================================================
             
-            // Requisito de senha para o Firebase Auth
             if (!senha || senha.length < 6) {
                 return typeof destacarErro === 'function' ? destacarErro(senhaEl, "A senha é obrigatória (mín. 6 caracteres) para um novo usuário.") : alert("A senha é obrigatória (mín. 6 caracteres) para um novo usuário.");
             }
             
-            // 🚨 1. Cria o usuário no Firebase Auth
             const firebaseUser = await window.criarUsuarioNoFirebase(email, senha);
 
             if (!firebaseUser) {
                 return; 
             }
             
-            // 🚨 2. Salva o PERFIL no Local/Firestore (com o UID do Firebase)
             const novoUsuarioPerfil = {
                 uid: firebaseUser.uid, 
                 email: email,
@@ -1157,9 +1132,7 @@ window.salvarUsuarioLocal = async function() {
             if (typeof mostrarMensagem === 'function') mostrarMensagem(`✅ Usuário "${nome}" criado no Firebase Auth e perfil salvo!`, "sucesso");
 
         } else {
-            // ==========================================================
             // AÇÃO 2: EDIÇÃO DE PERFIL
-            // ==========================================================
             window.usuarios[index].nome = nome;
             window.usuarios[index].perfil = perfil;
             
@@ -1172,14 +1145,25 @@ window.salvarUsuarioLocal = async function() {
             emailEl.disabled = false;
         }
         
-        // 🚨 PONTO DE CORREÇÃO: PERSISTÊNCIA GLOBAL
+        // 🚨 NOVO: PREVENÇÃO DE DUPLICATAS ANTES DE SALVAR (PONTO 2)
+        const uidsUnicos = new Set();
+        const usuariosSemDuplicatas = [];
+        window.usuarios.forEach(u => {
+            if (!uidsUnicos.has(u.uid)) {
+                uidsUnicos.add(u.uid);
+                usuariosSemDuplicatas.push(u);
+            }
+        });
+        window.usuarios = usuariosSemDuplicatas; // Atualiza a lista global com a versão limpa
+        
+        
         // 3. Persiste os dados atualizados no LocalStorage e no Firestore
         if (typeof salvarTodosLocal === 'function') salvarTodosLocal();
-        await window.salvarUsuariosNoFirebase(window.usuarios); // Salva a lista de usuários no nó global
+        await window.salvarUsuariosNoFirebase(window.usuarios); 
         
-        // 🚨 CORREÇÃO FINAL: Garante que o perfil do Admin seja reexibido
+        // 🚨 PONTO CRÍTICO: REFORÇA O ESTADO DO ADMIN APÓS O SALVAMENTO (PONTO 1)
         if (auth.currentUser) {
-             // Re-executa o mostrarSistema com o usuário logado para estabilizar a UI do Admin.
+             // Garante que o perfil do Admin seja reexibido imediatamente.
              mostrarSistema(auth.currentUser); 
         }
         
@@ -3196,6 +3180,7 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
 
