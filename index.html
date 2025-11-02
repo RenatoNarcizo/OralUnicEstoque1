@@ -1068,26 +1068,44 @@
     if (nomeBemVindoEl) nomeBemVindoEl.textContent = nome;
   }
   
-  window.fazerLogin = async function() {
-    // CORREÇÃO: Usar os IDs corretos do HTML de login
-    const usuario = document.getElementById("usuarioLogin").value.trim(); 
-    const senha = document.getElementById("senhaLogin").value.trim();
+// === LOGIN E SESSÃO ===
+// ... (código da função mostrarSistema)
 
-    if (!usuario || !senha) {
-      alert("Preencha e-mail e senha!");
-      return;
-    }
+window.fazerLogin = async function() {
+    const usuario = document.getElementById("usuarioLogin").value.trim(); 
+    const senha = document.getElementById("senhaLogin").value.trim();
 
-    const email = usuario.trim();
-    try {
-      await signInWithEmailAndPassword(auth, email, senha);
-      // O onAuthStateChanged cuidará da transição da tela
-      // alert("✅ Login realizado com sucesso!");
-    } catch (error) {
-      console.error(error.code, error.message);
-      mostrarMensagem(`Erro de login: ${error.code}`, "erro");
-    }
-  };
+    if (!usuario || !senha) {
+      alert("Preencha e-mail e senha!");
+      return;
+    }
+
+    const email = usuario.trim();
+    try {
+      await signInWithEmailAndPassword(auth, email, senha);
+      // O onAuthStateChanged cuidará da transição da tela
+    } catch (error) {
+      console.error(error.code, error.message);
+      
+      let mensagemErro = "Erro desconhecido ao tentar logar.";
+      
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+        // Mensagem clara para o erro 400 (Bad Request)
+        mensagemErro = "E-mail ou senha inválidos. Verifique suas credenciais.";
+      } else if (error.code === 'auth/invalid-email') {
+        mensagemErro = "O formato do e-mail é inválido.";
+      } else {
+        mensagemErro = `Erro: ${error.message}`;
+      }
+
+      // Certifique-se de que a função mostrarMensagem esteja definida em outro lugar
+      if (typeof mostrarMensagem === 'function') {
+        mostrarMensagem(mensagemErro, "erro");
+      } else {
+        alert(mensagemErro);
+      }
+    }
+};
 
   // === MONITORAR LOGIN ===
   onAuthStateChanged(auth, (user) => {
@@ -2984,5 +3002,6 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
