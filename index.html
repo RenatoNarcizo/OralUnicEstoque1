@@ -215,88 +215,50 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* ========================= DASHBOARD ========================= */
-    .dash-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-      margin-top: 20px;
-    }
-
-    .dash-card {
-      background: var(--branco);
-      border-radius: 10px;
-      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-      padding: 15px 20px;
-      transition: transform 0.2s ease;
-    }
-
-    .dash-card:hover {
-      transform: scale(1.02);
-    }
-
-    .dash-card h3 {
-      color: var(--azul-escuro);
-      margin-bottom: 10px;
-      border-bottom: 2px solid var(--azul);
-      padding-bottom: 5px;
-      font-size: 16px;
-    }
-
-    .dash-card ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .dash-card ul li {
-      padding: 5px 0;
-      border-bottom: 1px solid #eee;
-      font-size: 14px;
-    }
-
-    .dash-card ul li:last-child {
-      border-bottom: none;
-    }
-/* Estilos para o Resumo Geral */
-.resumo-metric {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #eee; /* Linha divisória */
+/* ========================= DASHBOARD ========================= */
+.dash-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
 }
 
-.resumo-metric:last-child {
-    border-bottom: none;
+.dash-card {
+  background: var(--branco);
+  border-radius: 10px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  padding: 15px 20px;
+  transition: transform 0.2s ease;
 }
 
-.resumo-label {
-    display: flex;
-    align-items: center;
-    font-weight: 500;
-    color: #444;
+.dash-card:hover {
+  transform: scale(1.02);
 }
 
-.resumo-icon {
-    font-size: 1.2em;
-    margin-right: 8px;
-    width: 25px; /* Para alinhar melhor os ícones */
-    text-align: center;
+.dash-card h3 {
+  color: var(--azul-escuro);
+  margin-bottom: 10px;
+  border-bottom: 2px solid var(--azul);
+  padding-bottom: 5px;
+  font-size: 16px;
 }
 
-.resumo-value {
-    font-weight: 700;
-    font-size: 1.05em;
-    color: var(--azul-escuro); 
+.dash-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-/* Cores dos ícones */
-.icon-produtos { color: #28a745; /* Verde */ }
-.icon-estoque { color: #007bff; /* Azul */ }
-.icon-saidas { color: #dc3545; /* Vermelho */ }
-.icon-valor { color: #ffc107; /* Amarelo/Ouro */ }
-.icon-contabil { color: #17a2b8; /* Ciano */ }
+.dash-card ul li {
+  padding: 5px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.dash-card ul li:last-child {
+  border-bottom: none;
+}
+
     /* ========================= TABELAS ========================= */
     .table-wrap {
       max-height: 60vh; /* altura máxima visível */
@@ -505,45 +467,39 @@
 		  <p style="margin-top:20px; color:#555;">Use o menu lateral para iniciar suas atividades.</p>
 		</section>
 		
-		<section id="dashboard" class="section">
+<section id="dashboard" class="section">
     <h2>📊 Dashboard do Sistema</h2>
-<div class="dash-container">
-    
-    <div class="dash-card">
-        <h3>🕒 Produtos Próximos do Vencimento</h3>
-        <ul id="listaProximosVencer" style="list-style-type: none; padding-left: 0;"></ul>
-    </div>
+    <div class="dash-container">
+        <div class="dash-card">
+            <h3>🕒 Produtos Próximos do Vencimento</h3>
+            <ul id="listaProximosVencer"></ul>
+        </div>
+        <div class="dash-card">
+            <h3>💰 Produtos Mais Caros</h3>
+            <ul id="listaMaisCaros"></ul>
+        </div>
+        <div class="dash-card">
+            <h3>📦 Produtos Mais Utilizados</h3>
+            <ul id="listaMaisSaidas"></ul>
+        </div>
+        <div class="dash-card">
+            <h3>💤 Produtos com Menos Saídas</h3>
+            <ul id="listaMenosSaidas"></ul>
+        </div>
 
-    <div class="dash-card">
-        <h3>💰 Produtos Mais Caros (Último Custo)</h3>
-        <ul id="listaMaisCaros" style="list-style-type: none; padding-left: 0;"></ul>
-    </div>
-    
-    <div class="dash-card">
-        <h3>📦 Produtos Mais Utilizados (Saídas)</h3>
-        <ul id="listaMaisSaidas" style="list-style-type: none; padding-left: 0;"></ul>
-    </div>
+        <div class="dash-card">
+            <h3>⚠️ Estoque Crítico</h3>
+            <ul id="listaEstoqueCritico"></ul>
+        </div>
 
-    <div class="dash-card">
-        <h3>💤 Produtos com Menos Saídas</h3>
-        <ul id="listaMenosSaidas" style="list-style-type: none; padding-left: 0;"></ul>
+        <div class="dash-card">
+            <h3>📈 Resumo Geral</h3>
+            <div id="resumoGeral"></div>
+        </div>
     </div>
+</section>
 
-    <div class="dash-card">
-        <h3>⚠️ Estoque Crítico</h3>
-        <ul id="listaEstoqueCritico" style="color:red; list-style-type: none; padding-left: 0;"></ul>
-    </div>
-    
-    <section id="dashboard" class="content-section">
-    <div class="dash-card dash-resumo" style="grid-column: span 1 / auto; min-width:300px;">
-        <h3>📈 Resumo Geral</h3>
-        <div id="resumoGeralNovo">
-            </div>
-    </div>
-    
-    </section>
 
-</div>
       
       <section id="cadastro" class="section">
         <h2><i class="fa fa-box"></i> Cadastro de Produtos</h2>
@@ -670,47 +626,47 @@
 
     </section>
 
-     <section id="saida" class="section">
-      <h2><i class="fa fa-arrow-up"></i> Saída de Materiais</h2>
-      <div class="input-row" style="margin-bottom:10px;gap:8px;">
-        <input id="saidaCodigoBarras" type="text" placeholder="📷 Ler código de barras" oninput="buscarProdutoPorCodigo('saida'); atualizarSetorAutomatico()" />
-        
-        <input id="saidaProduto" type="text" placeholder="Nome do produto" list="listaProdutos" style="min-width:220px" oninput="atualizarSetorAutomatico()" />
-        
-        <input id="saidaQuantidade" type="number" placeholder="Quantidade" style="width:120px" />
-        <input id="saidaResponsavel" type="text" placeholder="Responsável" />
-        <input id="saidaObservacao" type="text" placeholder="Observação (opcional)" />
-        <select id="saidaSetor">
-          <option value="">Selecione o Setor</option>
-          </select>
-        <input id="saidaData" type="date" style="width:160px" />
-        <button onclick="registrarSaida()"><i class="fa fa-save"></i> Registrar Saída</button>
-      </div>
+     <section id="saida" class="section" style="display:none;">
+  <h2><i class="fa fa-arrow-up"></i> Saída de Materiais</h2>
 
-      <div style="margin-bottom:10px;">
-        <input id="filtroSaida" type="text" placeholder="🔍 Buscar por produto, responsável ou setor" style="width:98%" oninput="filtrarSaidas()" />
-      </div>
+  <div class="input-row" style="margin-bottom:10px;gap:8px;">
+  <input id="saidaCodigoBarras" type="text" placeholder="📷 Ler código de barras" oninput="atualizarSetorAutomatico()" />
 
-      <div class="table-wrap">
-        <table id="tabelaSaidas">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Produto</th>
-              <th>Cód. Barras</th>
-              <th>Qtd</th>
-              <th>Data</th>
-              <th>Setor</th>
-              <th>Responsável</th>
-              <th>Observação</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-    
+           
+    <input id="saidaProduto" type="text" placeholder="Nome do produto" style="min-width:220px" oninput="atualizarSetorAutomatico()" />
+    <input id="saidaQuantidade" type="number" placeholder="Quantidade" style="width:120px" />
+    <input id="saidaResponsavel" type="text" placeholder="Responsável" />
+    <input id="saidaObservacao" type="text" placeholder="Observação (opcional)" />
+    <select id="saidaSetor">
+      <option value="">Selecione o Setor</option>
+    </select>
+    <input id="saidaData" type="date" style="width:160px" />
+    <button onclick="registrarSaida()"><i class="fa fa-save"></i> Registrar Saída</button>
+  </div>
+
+  <div style="margin-bottom:10px;">
+    <input id="filtroSaida" type="text" placeholder="🔍 Buscar por produto, setor ou responsável" style="width:98%" oninput="filtrarSaidas()" />
+  </div>
+
+  <div class="table-wrap">
+    <table id="tabelaSaidas">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Produto</th>
+		   <th>Código de Barras</th>
+          <th>Qtd</th>
+          <th>Data</th>
+          <th>Setor</th>
+          <th>Responsável</th>
+          <th>Observação</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
     <section id="estoque" class="section">
       <h2><i class="fa fa-warehouse"></i> Estoque Atual</h2>
       
@@ -1813,7 +1769,79 @@ function atualizarTabelaSaidas() {
     tbody.appendChild(row);
   });
 }
+// --- FUNÇÃO PRINCIPAL DE CONTROLE DO SETOR ---
+function controlarSelecaoSetor() {
+    const inputProduto = document.getElementById('inputProdutoSaida');
+    const selectSetor = document.getElementById('selectSetorSaida');
+    const nomeOuCodigo = inputProduto.value.trim();
 
+    // Resetar o Select (limpa e desabilita)
+    selectSetor.innerHTML = '<option value="">-- Digite o Produto Primeiro --</option>';
+    selectSetor.disabled = true;
+    
+    if (nomeOuCodigo.length < 3) {
+        // Ignora se o campo estiver muito vazio
+        return;
+    }
+    
+    // 1. Encontrar o Produto
+    // No seu sistema, o produto precisa ter um campo 'setor' ou 'setores'. 
+    // Assumimos que a lista de setores é uma string separada por vírgula ou um array.
+    const produtoEncontrado = getProdutos().find(p => 
+        p.nome.toLowerCase() === nomeOuCodigo.toLowerCase() || 
+        (p.codigo && p.codigo.toLowerCase() === nomeOuCodigo.toLowerCase())
+    );
+
+    if (!produtoEncontrado) {
+        selectSetor.innerHTML = '<option value="">-- Produto Não Encontrado --</option>';
+        return;
+    }
+
+    // 2. Extrair os Setores
+    let setoresAssociados = [];
+    
+    if (produtoEncontrado.setores) {
+        // Se for uma string como "Setor A,Setor B", transforma em array
+        if (typeof produtoEncontrado.setores === 'string') {
+            setoresAssociados = produtoEncontrado.setores.split(',').map(s => s.trim()).filter(s => s);
+        } else if (Array.isArray(produtoEncontrado.setores)) {
+            setoresAssociados = produtoEncontrado.setores.filter(s => s);
+        }
+    }
+
+    if (setoresAssociados.length === 0) {
+        selectSetor.innerHTML = '<option value="">-- Produto sem Setor Associado --</option>';
+        return;
+    }
+
+    // 3. Habilitar o Select e Preencher
+    selectSetor.disabled = false;
+    selectSetor.innerHTML = '';
+
+    if (setoresAssociados.length === 1) {
+        // CASO 1: Único Setor (Seleção Automática)
+        const setorUnico = setoresAssociados[0];
+        selectSetor.innerHTML += `<option value="${setorUnico}" selected>${setorUnico}</option>`;
+        
+    } else {
+        // CASO 2: Múltiplos Setores (Permite Escolha)
+        selectSetor.innerHTML += '<option value="">-- Selecione o Setor --</option>';
+        setoresAssociados.forEach(setor => {
+            selectSetor.innerHTML += `<option value="${setor}">${setor}</option>`;
+        });
+    }
+}
+
+// --- CONFIGURAÇÃO DO EVENTO ---
+
+// Adicionar um 'event listener' ao campo de Produto.
+document.addEventListener('DOMContentLoaded', () => {
+    const inputProduto = document.getElementById('inputProdutoSaida');
+    if (inputProduto) {
+        // Usar 'input' para rodar a lógica a cada tecla digitada (tempo real)
+        inputProduto.addEventListener('input', controlarSelecaoSetor); 
+    }
+});
 function excluirSaida(i) {
   const saida = saidas[i];
   if (!confirm(`Excluir a saída do produto "${saida.produto}" (Qtd: ${saida.qtd})? O estoque será ajustado.`)) return;
@@ -2213,25 +2241,28 @@ function calcularFrequenciaSaida() {
 }
 
 // ===============================================
-// FUNÇÕES AUXILIARES
+// FUNÇÕES AUXILIARES DO DASHBOARD
 // ===============================================
 
 /**
  * Função auxiliar para formatar valores como moeda Real (R$).
  */
 function formatarMoeda(valor) {
-    if (typeof valor !== 'number' || isNaN(valor)) return 'R$ 0,00';
-    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    // Converte o valor para número e formata como Real Brasileiro
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    }).format(Number(valor));
 }
 
 /**
  * Função auxiliar para montar o bloco de Resumo Geral com o design EXATO da imagem.
  */
 function atualizarBlocoResumo(totalProdutos, qtdTotalEstoque, totalSaidas, valorUltimaEntrada, valorEstoqueContabil, criticosCount) {
-    const resumoEl = document.getElementById("resumoGeralNovo");
-    // ID "resumoGeralNovo" deve estar no seu HTML
+    const resumoEl = document.getElementById("resumoGeral"); 
     if (!resumoEl) return; 
 
+    // O HTML INJETADO USA AS CLASSES CSS FORNECIDAS
     resumoEl.innerHTML = `
         <div class="resumo-metric">
             <span class="resumo-label"><i class="fas fa-boxes resumo-icon icon-produtos"></i> Total de Produtos Cadastrados:</span>
@@ -2267,10 +2298,10 @@ function atualizarBlocoResumo(totalProdutos, qtdTotalEstoque, totalSaidas, valor
 // ===============================================
 
 function atualizarDashboard() {
-    // 1. Carrega dados de forma segura (sempre tente o localStorage primeiro)
-    const produtosLocal = JSON.parse(localStorage.getItem("produtos")) || [];
-    const entradasLocal = JSON.parse(localStorage.getItem("entradas")) || [];
-    const saidasLocal = JSON.parse(localStorage.getItem("saidas")) || [];
+    // Busca dados no cache local (window.produtos, window.entradas, window.saidas)
+    const produtosLocal = window.produtos || [];
+    const entradasLocal = window.entradas || [];
+    const saidasLocal = window.saidas || [];
 
     // Funções de Busca e Cálculo
     function buscarValorUnitario(nomeProduto) {
@@ -2284,8 +2315,8 @@ function atualizarDashboard() {
     // Calcula a soma total de saídas por nome do produto
     const contagemSaidas = saidasLocal.reduce((acc, s) => {
         const nome = s.produto;
-        // Garante que a quantidade é um número
-        const qtdSaida = Number(s.quantidade) || 0; 
+        // Tenta usar 'qtd' ou 'quantidade' para compatibilidade
+        const qtdSaida = Number(s.qtd || s.quantidade) || 0; 
         acc[nome] = (acc[nome] || 0) + qtdSaida;
         return acc;
     }, {});
@@ -2293,21 +2324,21 @@ function atualizarDashboard() {
     // 2. PREPARAÇÃO DE DADOS DETALHADOS POR PRODUTO
     const estoqueDetalhado = produtosLocal.map(p => {
         const qtdAtual = Number(p.quantidade) || 0;
-        // CORRIGIDO: O erro estava aqui. Agora chama buscarValorUnitario
+        // CORRIGIDO: Chama a função com o nome correto
         const valorUnitario = buscarValorUnitario(p.nome); 
         const qtdSaidas = contagemSaidas[p.nome] || 0;
 
         // CÁLCULO CUSTO MÉDIO PONDERADO (CMP)
-        const entradasProduto = entradasLocal.filter(e => e.produto === p.nome && Number(e.valor) > 0 && Number(e.quantidade) > 0);
-        const custoTotalProduto = entradasProduto.reduce((sum, e) => sum + (Number(e.valor) * Number(e.quantidade)), 0);
-        const qtdTotalEntradaProduto = entradasProduto.reduce((sum, e) => sum + Number(e.quantidade), 0);
+        // Usa 'qtd' ou 'quantidade'
+        const entradasProduto = entradasLocal.filter(e => e.produto === p.nome && Number(e.valor) > 0 && Number(e.qtd || e.quantidade) > 0);
+        const custoTotalProduto = entradasProduto.reduce((sum, e) => sum + (Number(e.valor) * Number(e.qtd || e.quantidade)), 0);
+        const qtdTotalEntradaProduto = entradasProduto.reduce((sum, e) => sum + Number(e.qtd || e.quantidade), 0);
         const CMP_produto = qtdTotalEntradaProduto > 0 ? custoTotalProduto / qtdTotalEntradaProduto : 0;
 
         // Calcula a validade mais próxima
         let validadeMaisProxima = null;
         entradasLocal.filter(e => e.produto === p.nome && e.validade)
                      .forEach(e => {
-            // Adiciona 'T00:00:00' para evitar problemas de fuso horário na comparação de datas
             const dataValidade = new Date(e.validade + 'T00:00:00'); 
             if (!validadeMaisProxima || dataValidade < validadeMaisProxima) {
                 validadeMaisProxima = dataValidade;
@@ -2316,7 +2347,6 @@ function atualizarDashboard() {
 
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
-        // Calcula a diferença em dias (pode ser negativo se estiver vencido)
         const diasVencer = validadeMaisProxima ? Math.ceil((validadeMaisProxima.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24)) : Infinity;
 
         return {
@@ -2337,7 +2367,7 @@ function atualizarDashboard() {
     // --- 3. POPULANDO AS LISTAS TOP 5 ---
     const criarLi = (item) => `<li>${item}</li>`;
 
-    // a. 🕒 Produtos Próximos do Vencimento (TOP 5 MAIS PRÓXIMOS, SEM DATA LIMITE)
+    // a. 🕒 Produtos Próximos do Vencimento
     const proximosVencer = estoqueDetalhado
         .filter(p => p.validade && p.qtdAtual > 0 && p.diasVencer > -30) 
         .sort((a, b) => a.diasVencer - b.diasVencer) 
@@ -2347,13 +2377,13 @@ function atualizarDashboard() {
     if (listaVencer) {
         listaVencer.innerHTML = proximosVencer.length > 0 
             ? proximosVencer.map(p => {
-                const status = p.diasVencer <= 0 ? `<span style="color: red;">(VENCIDO)</span>` : `(Vence em: ${p.diasVencer} dias)`;
+                const status = p.diasVencer <= 0 ? `<span style="color: red; font-weight: bold;">(VENCIDO)</span>` : `(Vence em: ${p.diasVencer} dias)`;
                 return criarLi(`${p.nome} (${p.qtdAtual} ${p.embalagem}) - ${status}`);
             }).join('') 
             : criarLi('Nenhum produto próximo do vencimento.');
     }
 
-    // b. 💰 Produtos Mais Caros (Último Custo) (Top 5)
+    // b. 💰 Produtos Mais Caros
     const maisCaros = estoqueDetalhado
         .filter(p => p.ultimoCusto > 0)
         .sort((a, b) => b.ultimoCusto - a.ultimoCusto)
@@ -2366,7 +2396,7 @@ function atualizarDashboard() {
             : criarLi('Nenhum custo registrado.');
     }
 
-    // c. 📦 Produtos Mais Utilizados (Saídas) (Top 5)
+    // c. 📦 Produtos Mais Utilizados
     const maisSaidas = estoqueDetalhado
         .filter(p => p.qtdSaidas > 0) 
         .sort((a, b) => b.qtdSaidas - a.qtdSaidas)
@@ -2379,7 +2409,7 @@ function atualizarDashboard() {
             : criarLi('Nenhuma saída registrada.');
     }
 
-    // d. 💤 Produtos com Menos Saídas (Top 5)
+    // d. 💤 Produtos com Menos Saídas
     const menosSaidas = estoqueDetalhado
         .filter(p => p.qtdAtual > 0) 
         .sort((a, b) => a.qtdSaidas - b.qtdSaidas)
@@ -2392,7 +2422,7 @@ function atualizarDashboard() {
             : criarLi('Nenhum produto encontrado em estoque.');
     }
     
-    // e. ⚠️ Estoque Crítico (Top 5)
+    // e. ⚠️ Estoque Crítico
     const criticos = estoqueDetalhado
         .filter(p => p.isCritico) 
         .sort((a, b) => (a.qtdAtual - a.minimo) - (b.qtdAtual - b.minimo))
@@ -2401,31 +2431,63 @@ function atualizarDashboard() {
     const listaCriticos = document.getElementById("listaEstoqueCritico");
     if (listaCriticos) {
         listaCriticos.innerHTML = criticos.length > 0 
-            ? criticos.map(p => criarLi(`${p.nome} (${p.qtdAtual} ${p.embalagem} - Min: ${p.minimo})`)).join('') 
+            ? criticos.map(p => criarLi(`${p.nome} (${p.qtdAtual} ${p.embalagem} - Mín: ${p.minimo})`)).join('') 
             : criarLi('Tudo OK!');
     }
 
 
-    // --- 4. CÁLCULOS PARA O RESUMO GERAL ---
+   // --- 4. CÁLCULOS PARA O RESUMO GERAL ---
+    
+    const totalProdutos = produtosLocal.length;
+    const qtdTotalEmEstoque = estoqueDetalhado.reduce((sum, p) => sum + p.qtdAtual, 0);
+    // Soma a quantidade total de saídas registradas (e não apenas o número de registros)
+    const totalSaidasRegistradas = saidasLocal.reduce((sum, s) => sum + (Number(s.qtd || s.quantidade) || 0), 0); 
+    const criticosCount = estoqueDetalhado.filter(p => p.isCritico).length;
+    
+    const valorUltimaEntrada = estoqueDetalhado.reduce((sum, p) => sum + (p.qtdAtual * p.ultimoCusto), 0);
+    const valorEstoqueCustoMedio = estoqueDetalhado.reduce((sum, p) => sum + (p.qtdAtual * p.cmp), 0); 
     
-    const totalProdutos = produtosLocal.length;
-    const qtdTotalEmEstoque = estoqueDetalhado.reduce((sum, p) => sum + p.qtdAtual, 0);
-    const totalSaidasRegistradas = saidasLocal.length; 
-    const criticosCount = estoqueDetalhado.filter(p => p.isCritico).length;
+    // VARIÁVEIS DO NOVO MODELO (Ajustadas para o seu cálculo):
+    const valorTotalUltimaEntrada = valorUltimaEntrada; // O seu 'valorUltimaEntrada'
+    const valorTotalCustoMedio = valorEstoqueCustoMedio; // O seu 'valorEstoqueContabil'
     
-    // Valor total (Último valor de entrada) = Estoque Atual * Último Custo
-    const valorUltimaEntrada = estoqueDetalhado.reduce((sum, p) => sum + (p.qtdAtual * p.ultimoCusto), 0);
+    // O valor Total do Estoque Atual é geralmente o Custo Médio Ponderado
+    const valorTotalEstoqueAtual = valorEstoqueCustoMedio; 
+    
+    // O valor Contábil (usando o seu CMP)
+    const valorTotalEstoqueContabil = valorEstoqueCustoMedio; 
 
-    // Valor total do Estoque Atual (Contábil/CMP) = Estoque Atual * CMP
-    const valorEstoqueContabil = estoqueDetalhado.reduce((sum, p) => sum + (p.qtdAtual * p.cmp), 0);
+
+    // 5. EXIBIÇÃO DO RESUMO GERAL
+    const resumoGeral = document.getElementById("resumoGeral");
     
-    // 5. EXIBIÇÃO DO RESUMO GERAL (Chama a função auxiliar com o design corrigido)
-    atualizarBlocoResumo(totalProdutos, qtdTotalEmEstoque, totalSaidasRegistradas, valorUltimaEntrada, valorEstoqueContabil, criticosCount);
+   if (resumoGeral) {
+        resumoGeral.innerHTML = `
+            <p><b>Total de produtos:</b> ${totalProdutos}</p>
+            <p><b>Quantidade total em estoque:</b> ${qtdTotalEmEstoque}</p>
+            <p><b>Total de saídas registradas:</b> ${totalSaidasRegistradas}</p>
+            <hr>
+            <p><b>💰 Valor total (Último valor de entrada):</b> R$ ${valorTotalUltimaEntrada.toFixed(2)}</p>
+            <p><b>📊 Valor total (Custo médio ponderado):</b> R$ ${valorTotalCustoMedio.toFixed(2)}</p>
+            <p><b>📦 Valor total do Estoque Atual:</b> R$ ${valorTotalEstoqueAtual.toFixed(2)}</p>
+            <p><b>💼 Valor total do Estoque Atual (Contábil):</b> R$ ${valorTotalEstoqueContabil.toFixed(2)}</p>
+            
+            `;
+    }
 }
-	
-	
-// Chame esta função no evento DOMContentLoaded ou no seu fluxo de atualização:
-// document.addEventListener("DOMContentLoaded", atualizarDashboard);
+
+// Para garantir que o dashboard atualize ao ser acessado:
+document.querySelector("#sidebar button[onclick=\"showSection('dashboard')\"]").addEventListener('click', () => {
+    // É importante que 'atualizarDashboard()' seja chamada após 'carregarDadosDoFirestore()'
+    // Se a função 'carregarDadosDoFirestore' estiver funcionando e chamando 'atualizarDashboard'
+    // no final, você não precisa disso. Mas é uma garantia.
+    if (typeof carregarDadosDoFirestore === 'function') {
+        carregarDadosDoFirestore();
+    } else {
+        atualizarDashboard();
+    }
+});
+
 // --- RELATÓRIOS ---
 
 function definirPeriodoRapido(tipo) {
@@ -2798,28 +2860,3 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
