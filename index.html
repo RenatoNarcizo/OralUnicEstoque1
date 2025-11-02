@@ -869,17 +869,19 @@
       <p>⚠️ **Funcionalidade Firebase:** A criação e gestão de usuários (e-mail/senha) é feita diretamente pelo painel de controle do Firebase. Aqui, gerenciamos apenas os perfis e metadados locais (localStorage/Firestore).</p>
       
       <div class="input-row" style="margin-top:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
-  <input id="usuarioNome" type="text" placeholder="Nome Completo" class="flex" />
-  <input id="usuarioEmail" type="email" placeholder="E-mail (ID do Firebase)" class="flex" />
-  <input id="usuarioSenha" type="password" placeholder="Definir Senha (Mín. 6 caracteres)" class="flex" style="min-width: 200px;" /> <select id="usuarioPerfil" style="width:200px;">
-        <select id="usuarioPerfil" style="width:200px;">
-          <option value="">Selecione o Perfil</option>
-          <option>ADMIN</option>
-          <option>GERENTE</option>
-          <option>ESTOQUISTA</option>
-        </select>
-        <button onclick="salvarUsuarioLocal()"><i class="fa fa-user-plus"></i> Salvar/Atualizar Perfil</button>
-      </div>
+        <input id="usuarioNome" type="text" placeholder="Nome Completo" class="flex" />
+    <input id="usuarioEmail" type="email" placeholder="E-mail (ID do Firebase)" class="flex" />
+    <input id="usuarioSenha" type="password" placeholder="Definir Senha (Mín. 6 caracteres)" class="flex" style="min-width: 200px;" /> 
+    
+    <select id="usuarioPerfil" style="width:200px;">
+      <option value="">Selecione o Perfil</option>
+      <option>ADMIN</option>
+      <option>GERENTE</option>
+      <option>ESTOQUISTA</option>
+    </select>
+    
+    <button onclick="salvarUsuarioLocal()"><i class="fa fa-user-plus"></i> Salvar/Atualizar Perfil</button>
+  </div>
       
       <div style="margin-bottom:10px; margin-top:10px;">
         <input id="filtroUsuarios" type="text" placeholder="🔍 Filtrar por nome ou e-mail" style="width:98%" oninput="filtrarUsuarios()" />
@@ -2607,6 +2609,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
 
