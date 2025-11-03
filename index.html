@@ -800,46 +800,60 @@
       </div>
     </section>
     
-    <section id="financeiro" class="section">
-      <h2><i class="fa fa-coins"></i> Painel Financeiro</h2>
-      
-      <div class="dash-container" style="margin-top:0; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-        <div class="dash-card">
-          <h3>Total Entrada (Notas)</h3>
-          <div id="totalEntradaNotas" style="font-size:1.2rem; font-weight:bold; color:#28a745;">R$ 0.00</div>
-        </div>
-        <div class="dash-card">
-          <h3>Total Saída (Custo)</h3>
-          <div id="totalSaidaCusto" style="font-size:1.2rem; font-weight:bold; color:#dc3545;">R$ 0.00</div>
-        </div>
-        <div class="dash-card">
-          <h3>Valor Contábil Estoque</h3>
-          <div id="valorEstoqueContabil" style="font-size:1.2rem; font-weight:bold; color:#0d6efd;">R$ 0.00</div>
-        </div>
-        <div class="dash-card">
-          <h3>Custo Médio Ponderado Total</h3>
-          <div id="custoMedioTotal" style="font-size:1.2rem; font-weight:bold; color:#ffc107;">R$ 0.00</div>
-        </div>
-      </div>
-      
-      <h3 style="margin-top:20px; border-left:none; border-bottom:1px solid #ccc; padding-bottom:5px;">Detalhe Financeiro por Nota</h3>
-      
-      <div class="table-wrap">
-        <table id="tabelaFinanceiro">
-          <thead>
-            <tr>
-              <th>Fornecedor</th>
-              <th>Nota Fiscal</th>
-              <th>Data</th>
-              <th>Valor Total Nota</th>
-              <th>Custo Saídas Relacionadas</th>
-              <th>Saldo (Estoque Restante)</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
+    <section id="financeiro" class="section" style="display:none;">
+  <h2><i class="fa fa-chart-line"></i> Painel Financeiro</h2>
+
+  <!-- 🔸 Indicadores financeiros detalhados -->
+  <div style="display:flex; flex-wrap:wrap; gap:15px; margin-bottom:20px;">
+
+    <!-- Último valor de entrada -->
+    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+      <h3>💰 Último Valor de Entrada</h3>
+      <p id="valorUltimaEntrada" style="font-size:1.4em; font-weight:bold; color:#007bff;">R$ 0,00</p>
+    </div>
+
+    <!-- Custo médio ponderado -->
+    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+      <h3>📊 Custo Médio Ponderado</h3>
+      <p id="valorCustoMedio" style="font-size:1.4em; font-weight:bold; color:#6f42c1;">R$ 0,00</p>
+    </div>
+
+    <!-- Valor total do estoque atual -->
+    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+      <h3>📦 Valor Total do Estoque Atual</h3>
+      <p id="valorEstoqueAtualPainel" style="font-size:1.4em; font-weight:bold; color:#28a745;">R$ 0,00</p>
+    </div>
+  </div>
+
+  <!-- 🔸 Indicadores principais existentes -->
+  <div style="display:flex; flex-wrap:wrap; gap:15px; margin-bottom:20px;">
+    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+      <h3>💰 Valor Total do Estoque Atual (Contábil)</h3>
+      <p id="valorEstoque" style="font-size:1.4em; font-weight:bold; color:#28a745;">R$ 0,00</p>
+    </div>
+
+    <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+      <h3>💸 Valor Total das Saídas (Estimado)</h3>
+      <p id="valorSaidas" style="font-size:1.4em; font-weight:bold; color:#dc3545;">R$ 0,00</p>
+    </div>
+  </div>
+
+  <!-- 🔸 Entradas agrupadas -->
+  <h3 style="margin-top:25px;"><i class="fa fa-file-invoice"></i> Entradas Agrupadas por Nota Fiscal</h3>
+  <div class="table-wrap">
+    <table id="tabelaFinanceiro">
+      <thead>
+        <tr>
+          <th>Fornecedor</th>
+          <th>Nota Fiscal</th>
+          <th>Valor Total da Nota (R$)</th>
+          <th>Saldo da Nota (R$)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
     
     <section id="relatorios" class="section">
       <h2><i class="fa fa-file-excel"></i> Geração de Relatórios</h2>
@@ -3263,6 +3277,7 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
 
