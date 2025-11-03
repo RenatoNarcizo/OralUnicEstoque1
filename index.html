@@ -2620,124 +2620,147 @@ function limparListaCompra() {
 // --- PAINEL FINANCEIRO ---
 
 function atualizarPainelFinanceiro() {
-  const entradas = JSON.parse(localStorage.getItem("entradas")) || [];
-  const saidas = JSON.parse(localStorage.getItem("saidas")) || [];
-  const produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+    // 1. Carrega dados
+    const entradas = window.entradas || []; // Usa window.entradas, pois deve estar atualizado pelo Firestore
+    const saidas = window.saidas || [];     // Usa window.saidas
+    const produtos = window.produtos || []; // Usa window.produtos
 
-  let valorTotalEntradas = 0;
-  let valorTotalSaidas = 0;
+    let valorTotalEntradas = 0;
+    let valorTotalSaidas = 0;
 
-  // 🔹 Calcular total de entradas e saídas (financeiro geral)
-  entradas.forEach(e => {
-    valorTotalEntradas += (e.valor || 0) * (e.qtd || 0);
-  });
+    // 2. Calcular total de entradas (valor contábil das notas)
+    entradas.forEach(e => {
+        valorTotalEntradas += (Number(e.valor) || 0) * (Number(e.qtd) || 0);
+    });
 
-  saidas.forEach(s => {
-    // ⚠️ Se o produto existe em entradas, usa o valor unitário dele
-    const entradaRelacionado = entradas.find(
-      e => e.produto && s.produto && e.produto.toLowerCase() === s.produto.toLowerCase()
-    );
-    const valorUnitario = entradaRelacionado ? (entradaRelacionado.valor || 0) : 0;
-    valorTotalSaidas += valorUnitario * (s.qtd || 0);
-  });
+    // 3. Calcular total de saídas (custo dos itens que saíram)
+    saidas.forEach(s => {
+        // Encontrar a entrada mais relevante para usar o custo unitário (aqui estamos simplificando, mas o ideal seria Custo Médio Ponderado)
+        const entradaRelacionado = entradas.find(
+            e => e.produto && s.produto && e.produto.toLowerCase() === s.produto.toLowerCase()
+        );
+        const valorUnitario = entradaRelacionado ? (Number(entradaRelacionado.valor) || 0) : 0;
+        valorTotalSaidas += valorUnitario * (Number(s.qtd) || 0);
+    });
 
-  // 🔹 Valor total contábil do estoque (entradas - saídas)
-  const valorEstoqueAtual = valorTotalEntradas - valorTotalSaidas;
+    // 4. Cálculo de Valores Totais para os Cards (Baseado no seu HTML)
+    
+    // Valor total do estoque atual (Entradas - Saídas em custo)
+    const valorEstoqueContabil = valorTotalEntradas - valorTotalSaidas;
+    
+    // Calcula o Custo Médio Ponderado Total dos produtos em estoque
+    let valorTotalCustoMedio = 0;
+    
+    produtos.forEach(p => {
+        const entradasDoProduto = entradas.filter(e => e.produto === p.nome);
+        if (entradasDoProduto.length === 0) return;
 
-  // Atualiza os dois indicadores principais (já existentes)
-  document.getElementById("valorEstoque").textContent = `R$ ${valorEstoqueAtual.toFixed(2)}`;
-  document.getElementById("valorSaidas").textContent = `R$ ${valorTotalSaidas.toFixed(2)}`;
+        // Custo médio ponderado por produto
+        const totalQtdEntradas = entradasDoProduto.reduce((s, e) => s + (Number(e.qtd) || 0), 0);
+        const totalValorEntradas = entradasDoProduto.reduce(
+            (s, e) => s + ((Number(e.qtd) || 0) * (Number(e.valor) || 0)),
+            0
+        );
+        const custoMedio = totalQtdEntradas > 0 ? totalValorEntradas / totalQtdEntradas : 0;
+        
+        // Quantidade atual do produto
+        const qtdAtual = Number(p.quantidade || 0);
+        
+        // Custo do estoque atual deste produto (Qtd Atual * Custo Médio)
+        valorTotalCustoMedio += qtdAtual * custoMedio;
+    });
+    
 
-  // --------------------------------------------------------------------------------
-  // 💰 Cálculo de Último valor de entrada, CMP e Estoque Atual (três novos valores)
-  // --------------------------------------------------------------------------------
-  let qtdTotal = 0;
-  let valorTotalUltimaEntrada = 0;
-  let valorTotalCustoMedio = 0;
-
-  produtos.forEach(p => {
-    const entradasDoProduto = entradas.filter(e => e.produto === p.nome);
-    if (entradasDoProduto.length === 0) return;
-
-    // Último valor de entrada
-    const ultimaEntrada = entradasDoProduto.slice(-1)[0];
-    const valorUltimo = Number(ultimaEntrada.valor || 0);
-
-    // Custo médio ponderado
-    const totalQtdEntradas = entradasDoProduto.reduce((s, e) => s + Number(e.qtd || 0), 0);
-    const totalValorEntradas = entradasDoProduto.reduce(
-      (s, e) => s + (Number(e.qtd || 0) * Number(e.valor || 0)),
-      0
-    );
-    const custoMedio = totalQtdEntradas > 0 ? totalValorEntradas / totalQtdEntradas : 0;
-
-    const qtdAtual = Number(p.quantidade || 0);
-    qtdTotal += qtdAtual;
-    valorTotalUltimaEntrada += qtdAtual * valorUltimo;
-    valorTotalCustoMedio += qtdAtual * custoMedio;
-  });
-
-  const valorTotalEstoqueAtualPainel = (valorTotalUltimaEntrada + valorTotalCustoMedio) / 2;
-
-  // Atualiza os novos indicadores
-  document.getElementById("valorUltimaEntrada").textContent = `R$ ${valorTotalUltimaEntrada.toFixed(2)}`;
-  document.getElementById("valorCustoMedio").textContent = `R$ ${valorTotalCustoMedio.toFixed(2)}`;
-  document.getElementById("valorEstoqueAtualPainel").textContent = `R$ ${valorTotalEstoqueAtualPainel.toFixed(2)}`;
-
-  // --------------------------------------------------------------------------------
-  // 📦 Agrupar por fornecedor e nota fiscal (mantido igual ao seu original)
-  // --------------------------------------------------------------------------------
-  const agrupadas = {};
-
-  entradas.forEach(e => {
-    const fornecedor = e.fornecedor || "Fornecedor não informado";
-    const nota = e.nota || "Sem Nota Fiscal";
-    const chave = `${fornecedor}_${nota}`;
-
-    if (!agrupadas[chave]) {
-      agrupadas[chave] = {
-        fornecedor,
-        nota,
-        valorNota: 0,
-        valorSaida: 0
-      };
+    // 5. ATUALIZAÇÃO DOS CARDS (AQUI ESTÁ A CORREÇÃO DE SEGURANÇA E MAPPING DE IDS)
+    
+    // totalEntradaNotas
+    const elemEntradaNotas = document.getElementById("totalEntradaNotas");
+    if (elemEntradaNotas) {
+        elemEntradaNotas.textContent = `R$ ${valorTotalEntradas.toFixed(2)}`;
     }
-
-    agrupadas[chave].valorNota += (e.valor || 0) * (e.qtd || 0);
-  });
-
-  saidas.forEach(s => {
-    const entrada = entradas.find(
-      e => e.produto && s.produto && e.produto.toLowerCase() === s.produto.toLowerCase()
-    );
-    if (!entrada) return;
-
-    const fornecedor = entrada.fornecedor || "Fornecedor não informado";
-    const nota = entrada.nota || "Sem Nota Fiscal";
-    const chave = `${fornecedor}_${nota}`;
-
-    const valorUnitario = entrada.valor || 0;
-    const valorSaida = valorUnitario * (s.qtd || 0);
-
-    if (agrupadas[chave]) {
-      agrupadas[chave].valorSaida += valorSaida;
+    
+    // totalSaidaCusto
+    const elemSaidaCusto = document.getElementById("totalSaidaCusto");
+    if (elemSaidaCusto) {
+        elemSaidaCusto.textContent = `R$ ${valorTotalSaidas.toFixed(2)}`;
     }
-  });
+    
+    // valorEstoqueContabil
+    const elemEstoqueContabil = document.getElementById("valorEstoqueContabil");
+    if (elemEstoqueContabil) {
+        elemEstoqueContabil.textContent = `R$ ${valorEstoqueContabil.toFixed(2)}`;
+    }
+    
+    // custoMedioTotal
+    const elemCustoMedioTotal = document.getElementById("custoMedioTotal");
+    if (elemCustoMedioTotal) {
+        elemCustoMedioTotal.textContent = `R$ ${valorTotalCustoMedio.toFixed(2)}`;
+    }
+    
+    
+    // --------------------------------------------------------------------------------
+    // 📦 Agrupar por fornecedor e nota fiscal (Renderização da Tabela Detalhada)
+    // --------------------------------------------------------------------------------
+    const agrupadas = {};
+    
+    // Agrupa entradas e calcula o valor total da nota
+    entradas.forEach(e => {
+        const fornecedor = e.fornecedor || "Fornecedor não informado";
+        const nota = e.nota || "Sem Nota Fiscal";
+        const chave = `${fornecedor}_${nota}`;
+    
+        if (!agrupadas[chave]) {
+            agrupadas[chave] = {
+                fornecedor,
+                nota,
+                data: e.data, // Adicionado a data
+                valorNota: 0,
+                valorSaida: 0
+            };
+        }
+    
+        agrupadas[chave].valorNota += (Number(e.valor) || 0) * (Number(e.qtd) || 0);
+    });
 
-  // Renderizar tabela agrupada
-  const tbody = document.querySelector("#tabelaFinanceiro tbody");
-  tbody.innerHTML = "";
-  Object.values(agrupadas).forEach(a => {
-    const saldo = a.valorNota - a.valorSaida;
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${a.fornecedor}</td>
-      <td>${a.nota}</td>
-      <td>R$ ${a.valorNota.toFixed(2)}</td>
-      <td>R$ ${saldo.toFixed(2)}</td>
-    `;
-    tbody.appendChild(row);
-  });
+    // Calcula o custo das saídas relacionadas a cada nota
+    saidas.forEach(s => {
+        // Encontra a entrada que deu origem ao produto para vincular à nota
+        const entrada = entradas.find(
+            e => e.produto && s.produto && e.produto.toLowerCase() === s.produto.toLowerCase()
+        );
+        if (!entrada) return;
+        
+        const fornecedor = entrada.fornecedor || "Fornecedor não informado";
+        const nota = entrada.nota || "Sem Nota Fiscal";
+        const chave = `${fornecedor}_${nota}`;
+
+        const valorUnitario = Number(entrada.valor) || 0;
+        const valorSaida = valorUnitario * (Number(s.qtd) || 0);
+
+        if (agrupadas[chave]) {
+            agrupadas[chave].valorSaida += valorSaida;
+        }
+    });
+
+
+    // Renderizar tabela agrupada (A tabela também precisa de verificação de segurança)
+    const tbody = document.querySelector("#tabelaFinanceiro tbody");
+    if (tbody) {
+        tbody.innerHTML = "";
+        Object.values(agrupadas).forEach(a => {
+            const saldo = a.valorNota - a.valorSaida;
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${a.fornecedor}</td>
+                <td>${a.nota}</td>
+                <td>${a.data || 'S/ Data'}</td> 
+                <td>R$ ${a.valorNota.toFixed(2)}</td>
+                <td>R$ ${a.valorSaida.toFixed(2)}</td>
+                <td>R$ ${saldo.toFixed(2)}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
 }
 
 // --- DASHBOARD ---
@@ -3275,6 +3298,7 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
 
