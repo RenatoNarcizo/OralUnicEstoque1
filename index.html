@@ -951,16 +951,23 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
-// ==========================================================
-// ADICIONE ESTE BLOCO NO INÍCIO DO SEU <script type="module">
-// ==========================================================
 
-// ==========================================================
-  // Variáveis globais para dados
-  window.produtos = JSON.parse(localStorage.getItem("produtos")) || [];
-  window.entradas = JSON.parse(localStorage.getItem("entradas")) || [];
-  window.saidas = JSON.parse(localStorage.getItem("saidas")) || [];
-  window.usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+// =============================
+// 🔹 INICIALIZAÇÃO DOS ARRAYS GLOBAIS
+// =============================
+window.produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+window.entradas = JSON.parse(localStorage.getItem("entradas")) || [];
+window.saidas = JSON.parse(localStorage.getItem("saidas")) || [];
+
+// 🔹 Corrige e inicializa os limites
+if (!window.limites || !Array.isArray(window.limites)) {
+  window.limites = JSON.parse(localStorage.getItem("limites")) || [];
+}
+
+// 🔹 Outros arrays, se existirem
+window.usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+
+
   window.PERMISSOES = {
     'ADMIN': {
         canView: ['dashboard', 'produtos', 'entradas', 'saidas', 'estoque', 'limites', 'usuarios', 'relatorios'],
@@ -980,18 +987,7 @@
     },
 };
  
- // === FUNÇÕES DE PERSISTÊNCIA (Firestore/Local) ===
 
-// 🔹 Salva dados globais no localStorage (mantida)
-// === FUNÇÕES DE PERSISTÊNCIA (Firestore/Local) ===
- 
-// 🔹 Salva dados globais no localStorage (fallback)
-function salvarTodosLocal() {
-    localStorage.setItem("produtos", JSON.stringify(window.produtos));
-    localStorage.setItem("entradas", JSON.stringify(window.entradas));
-    localStorage.setItem("saidas", JSON.stringify(window.saidas));
-    localStorage.setItem("usuarios", JSON.stringify(window.usuarios)); 
-}
  
 // 🔹 Salva/Busca no Firestore (Corrigida a lógica de usuários)
 async function salvarDadosNoFirestore(nomeColecao, dados) { // 🚨 ESTA É A FUNÇÃO QUE ESTAVA FALTANDO!
@@ -1934,29 +1930,197 @@ function editarProduto(i) {
   mostrarMensagem("Funcionalidade de Edição em construção. Por favor, edite manualmente no console (temporariamente).", "info");
 }
 
-function excluirProduto(i) {
-  if (!confirm(`Excluir o produto "${produtos[i].nome}"? Todas as entradas e saídas relacionadas serão mantidas, mas o estoque será recontado.`)) return;
-  
-  const nomeProduto = produtos[i].nome;
-  
-  // Remove o produto da lista principal
-  produtos.splice(i, 1);
-  salvarProdutosNoFirebase(produtos);
+// =============================
+// ✅ EDIÇÃO DE PRODUTOS COM BOTÃO DE CANCELAR
+// =============================
 
-  // Recalcula o estoque de todos os produtos (apenas para segurança, embora o estoque deva estar correto)
-  // Nota: Em um sistema robusto, isso deveria recalcular a Qtd atual = Soma Entradas - Soma Saídas para este produto.
-  // Por simplicidade, assumimos que as entradas/saídas guardam a história.
-  
+// Variável global para controle do produto em edição
+let indiceEdicaoProduto = null;
+
+/**
+ * 🔹 Inicia o modo de edição de um produto
+ */
+function editarProduto(index) {
+  const produto = window.produtos[index];
+  if (!produto) return;
+
+  indiceEdicaoProduto = index;
+
+  // Preenche os campos com os dados do produto
+  document.getElementById("produtoNome").value = produto.nome || "";
+  document.getElementById("produtoCategoria").value = produto.categoria || "";
+  document.getElementById("produtoEmbalagem").value = produto.embalagem || "";
+  document.getElementById("produtoQtdEmbalagem").value = produto.qtdEmbalagem || "";
+  document.getElementById("produtoCodigoBarras").value = produto.codigoBarras || "";
+
+  // Destaca visualmente o produto sendo editado
+  document.querySelectorAll("#tabelaProdutos tbody tr").forEach((tr, i) => {
+    tr.style.background = i === index ? "#fff3cd" : ""; // amarelo claro
+  });
+
+  // Mostra o botão "Cancelar Edição"
+  mostrarBotaoCancelar(true);
+
+  mostrarMensagem(`✏️ Editando o produto: ${produto.nome}`, "info");
+}
+
+/**
+ * 🔹 Cancela a edição do produto atual
+ */
+function cancelarEdicaoProduto() {
+  indiceEdicaoProduto = null;
+  limparCampos("cadastro");
+
+  // Remove destaque visual
+  document.querySelectorAll("#tabelaProdutos tbody tr").forEach((tr) => {
+    tr.style.background = "";
+  });
+
+  // Esconde o botão "Cancelar Edição"
+  mostrarBotaoCancelar(false);
+
+  mostrarMensagem("🚫 Edição cancelada.", "info");
+}
+
+/**
+ * 🔹 Salva novo produto ou atualiza um existente
+ */
+function cadastrarProduto() {
+  const nome = document.getElementById("produtoNome").value.trim();
+  const categoria = document.getElementById("produtoCategoria").value.trim();
+  const embalagem = document.getElementById("produtoEmbalagem").value.trim();
+  const qtdEmbalagem = document.getElementById("produtoQtdEmbalagem").value.trim();
+  const codigoBarras = document.getElementById("produtoCodigoBarras").value.trim();
+
+  if (!nome || !categoria) {
+    mostrarMensagem("⚠️ Preencha ao menos nome e categoria do produto.", "erro");
+    return;
+  }
+
+  // Se for edição
+  if (indiceEdicaoProduto !== null) {
+    const produtoAntigo = window.produtos[indiceEdicaoProduto];
+    const nomeAntigo = produtoAntigo.nome;
+
+    // Atualiza dados do produto
+    produtoAntigo.nome = nome;
+    produtoAntigo.categoria = categoria;
+    produtoAntigo.embalagem = embalagem;
+    produtoAntigo.qtdEmbalagem = qtdEmbalagem;
+    produtoAntigo.codigoBarras = codigoBarras;
+
+    // Atualiza referências em outras listas
+    atualizarReferenciasProduto(nomeAntigo, nome);
+
+    mostrarMensagem(`✅ Produto "${nome}" atualizado com sucesso!`, "sucesso");
+
+    // Finaliza modo de edição
+    indiceEdicaoProduto = null;
+    mostrarBotaoCancelar(false);
+  } else {
+    // Novo cadastro
+    const novoProduto = {
+      nome,
+      categoria,
+      embalagem,
+      qtdEmbalagem,
+      codigoBarras,
+      quantidade: 0,
+    };
+    window.produtos.push(novoProduto);
+    mostrarMensagem(`✅ Produto "${nome}" cadastrado!`, "sucesso");
+  }
+
+  // Salva e atualiza tudo
+  salvarTodosLocal();
   atualizarTabelaProdutos();
   atualizarTabelaEstoque();
-  atualizarSelectProdutos();
-  ordenarListasAlfabeticamente();
-  mostrarMensagem(`Produto "${nomeProduto}" excluído.`, "sucesso");
+  atualizarTabelaEntradas();
+  atualizarTabelaSaidas();
+  atualizarTabelaLimites();
+  atualizarDashboard();
+
+  limparCampos("cadastro");
+  document.querySelectorAll("#tabelaProdutos tbody tr").forEach((tr) => {
+    tr.style.background = "";
+  });
 }
 
-function filtrarProdutos() {
-    atualizarTabelaProdutos();
+/**
+ * 🔹 Atualiza o nome do produto em todas as tabelas e listas relacionadas
+ */
+function atualizarReferenciasProduto(nomeAntigo, nomeNovo) {
+  if (!nomeAntigo || !nomeNovo || nomeAntigo === nomeNovo) return;
+
+  window.entradas.forEach((e) => {
+    if (e.produto === nomeAntigo) e.produto = nomeNovo;
+  });
+  window.saidas.forEach((s) => {
+    if (s.produto === nomeAntigo) s.produto = nomeNovo;
+  });
+  window.produtos.forEach((p) => {
+    if (p.nome === nomeAntigo) p.nome = nomeNovo;
+  });
+
+  salvarTodosLocal();
+  mostrarMensagem("🔄 Referências atualizadas em todo o sistema.", "info");
 }
+
+/**
+ * 🔹 Mostra ou esconde o botão "Cancelar Edição"
+ */
+function mostrarBotaoCancelar(exibir) {
+  let botaoCancelar = document.getElementById("botaoCancelarEdicao");
+
+  if (exibir) {
+    if (!botaoCancelar) {
+      botaoCancelar = document.createElement("button");
+      botaoCancelar.id = "botaoCancelarEdicao";
+      botaoCancelar.textContent = "Cancelar Edição";
+      botaoCancelar.style.background = "#dc3545";
+      botaoCancelar.style.color = "#fff";
+      botaoCancelar.style.marginLeft = "10px";
+      botaoCancelar.style.borderRadius = "5px";
+      botaoCancelar.onclick = cancelarEdicaoProduto;
+
+      // Adiciona ao lado do botão de cadastrar
+      const botaoCadastrar = document.querySelector('#cadastro button[onclick*="cadastrarProduto"]');
+      if (botaoCadastrar) {
+        botaoCadastrar.insertAdjacentElement("afterend", botaoCancelar);
+      }
+    }
+  } else {
+    if (botaoCancelar) botaoCancelar.remove();
+  }
+}
+
+
+
+/**
+ * 🔹 Atualiza o nome do produto em todas as tabelas e listas relacionadas
+ */
+function atualizarReferenciasProduto(nomeAntigo, nomeNovo) {
+  if (!nomeAntigo || !nomeNovo || nomeAntigo === nomeNovo) return;
+
+  // Atualiza nas entradas
+  window.entradas.forEach((e) => {
+    if (e.produto === nomeAntigo) e.produto = nomeNovo;
+  });
+
+  // Atualiza nas saídas
+  window.saidas.forEach((s) => {
+    if (s.produto === nomeAntigo) s.produto = nomeNovo;
+  });
+
+  // Atualiza no estoque
+  window.produtos.forEach((p) => {
+    if (p.nome === nomeAntigo) p.nome = nomeNovo;
+  });
+
+  salvarTodosLocal();
+  mostrarMensagem("🔄 Referências atualizadas em todo o sistema.", "info");
+}
+
 
 // --- ENTRADA DE MATERIAIS ---
 
@@ -2115,6 +2279,166 @@ function atualizarTabelaEntradas() {
   });
 }
 
+// =============================
+// ✅ EDIÇÃO DE ENTRADAS DE MATERIAIS
+// =============================
+
+// Índice global para controle da entrada em edição
+let indiceEdicaoEntrada = null;
+
+/**
+ * 🔹 Inicia a edição de uma entrada
+ */
+function editarEntrada(index) {
+  const entrada = window.entradas[index];
+  if (!entrada) return;
+
+  indiceEdicaoEntrada = index;
+
+  // Preenche os campos do formulário com os dados da entrada
+  document.getElementById("entradaProduto").value = entrada.produto || "";
+  document.getElementById("entradaQuantidade").value = entrada.quantidade || "";
+  document.getElementById("entradaValor").value = entrada.valor || "";
+  document.getElementById("entradaData").value = entrada.data || "";
+  document.getElementById("entradaNota").value = entrada.nota || "";
+  document.getElementById("entradaFornecedor").value = entrada.fornecedor || "";
+  document.getElementById("entradaCNPJ").value = entrada.cnpj || "";
+  document.getElementById("entradaLote").value = entrada.lote || "";
+  document.getElementById("entradaValidade").value = entrada.validade || "";
+  document.getElementById("entradaSetor").value = entrada.setor || "";
+  document.getElementById("entradaCodigoBarras").value = entrada.codigoBarras || "";
+
+  // Destaca a linha em edição
+  document.querySelectorAll("#tabelaEntradas tbody tr").forEach((tr, i) => {
+    tr.style.background = i === index ? "#fff3cd" : "";
+  });
+
+  // Mostra botão "Cancelar Edição"
+  mostrarBotaoCancelarEntrada(true);
+
+  mostrarMensagem(`✏️ Editando entrada do produto: ${entrada.produto}`, "info");
+}
+
+/**
+ * 🔹 Cancela a edição da entrada atual
+ */
+function cancelarEdicaoEntrada() {
+  indiceEdicaoEntrada = null;
+  limparCampos("entrada");
+
+  // Remove o destaque da tabela
+  document.querySelectorAll("#tabelaEntradas tbody tr").forEach((tr) => {
+    tr.style.background = "";
+  });
+
+  // Esconde o botão de cancelar
+  mostrarBotaoCancelarEntrada(false);
+
+  mostrarMensagem("🚫 Edição de entrada cancelada.", "info");
+}
+
+/**
+ * 🔹 Registra uma nova entrada ou atualiza uma existente
+ */
+function registrarEntrada() {
+  const produto = document.getElementById("entradaProduto").value.trim();
+  const quantidade = parseFloat(document.getElementById("entradaQuantidade").value.trim()) || 0;
+  const valor = parseFloat(document.getElementById("entradaValor").value.trim()) || 0;
+  const data = document.getElementById("entradaData").value.trim();
+  const nota = document.getElementById("entradaNota").value.trim();
+  const fornecedor = document.getElementById("entradaFornecedor").value.trim();
+  const cnpj = document.getElementById("entradaCNPJ").value.trim();
+  const lote = document.getElementById("entradaLote").value.trim();
+  const validade = document.getElementById("entradaValidade").value.trim();
+  const setor = document.getElementById("entradaSetor").value.trim();
+  const codigoBarras = document.getElementById("entradaCodigoBarras").value.trim();
+
+  if (!produto || !quantidade || !valor || !data) {
+    mostrarMensagem("⚠️ Preencha todos os campos obrigatórios!", "erro");
+    return;
+  }
+
+  if (indiceEdicaoEntrada !== null) {
+    // Atualiza entrada existente
+    const e = window.entradas[indiceEdicaoEntrada];
+    e.produto = produto;
+    e.quantidade = quantidade;
+    e.valor = valor;
+    e.data = data;
+    e.nota = nota;
+    e.fornecedor = fornecedor;
+    e.cnpj = cnpj;
+    e.lote = lote;
+    e.validade = validade;
+    e.setor = setor;
+    e.codigoBarras = codigoBarras;
+
+    mostrarMensagem(`✅ Entrada de "${produto}" atualizada com sucesso!`, "sucesso");
+
+    indiceEdicaoEntrada = null;
+    mostrarBotaoCancelarEntrada(false);
+  } else {
+    // Nova entrada
+    const novaEntrada = {
+      produto,
+      quantidade,
+      valor,
+      data,
+      nota,
+      fornecedor,
+      cnpj,
+      lote,
+      validade,
+      setor,
+      codigoBarras,
+    };
+
+    window.entradas.push(novaEntrada);
+    mostrarMensagem(`✅ Entrada registrada para "${produto}"`, "sucesso");
+  }
+
+  salvarTodosLocal();
+  atualizarTabelaEntradas();
+  atualizarTabelaEstoque();
+  atualizarPainelFinanceiro();
+  atualizarDashboard();
+
+  limparCampos("entrada");
+  document.querySelectorAll("#tabelaEntradas tbody tr").forEach((tr) => {
+    tr.style.background = "";
+  });
+}
+
+/**
+ * 🔹 Cria ou remove o botão "Cancelar Edição" da seção Entrada
+ */
+function mostrarBotaoCancelarEntrada(exibir) {
+  let botaoCancelar = document.getElementById("botaoCancelarEdicaoEntrada");
+
+  if (exibir) {
+    if (!botaoCancelar) {
+      botaoCancelar = document.createElement("button");
+      botaoCancelar.id = "botaoCancelarEdicaoEntrada";
+      botaoCancelar.textContent = "Cancelar Edição";
+      botaoCancelar.style.background = "#dc3545";
+      botaoCancelar.style.color = "#fff";
+      botaoCancelar.style.marginLeft = "10px";
+      botaoCancelar.style.borderRadius = "5px";
+      botaoCancelar.onclick = cancelarEdicaoEntrada;
+
+      const botaoRegistrar = document.querySelector(
+        '#entrada button[onclick*="registrarEntrada"]'
+      );
+      if (botaoRegistrar) {
+        botaoRegistrar.insertAdjacentElement("afterend", botaoCancelar);
+      }
+    }
+  } else {
+    if (botaoCancelar) botaoCancelar.remove();
+  }
+}
+
+
 function excluirEntrada(i) {
   const entrada = entradas[i];
   if (!confirm(`Excluir a entrada do produto "${entrada.produto}" (Qtd: ${entrada.qtd})? O estoque será ajustado.`)) return;
@@ -2206,60 +2530,112 @@ function atualizarSetorAutomatico() {
   }
 }
 
-function registrarSaida() {
-  padronizarCamposAntesDeSalvar();
-  limparErros("saida");
-  
-  const produtoEl = document.getElementById("saidaProduto");
-  const qtdEl = document.getElementById("saidaQuantidade");
-  const dataEl = document.getElementById("saidaData");
-  const setorEl = document.getElementById("saidaSetor");
-  const responsavelEl = document.getElementById("saidaResponsavel");
-  const observacaoEl = document.getElementById("saidaObservacao");
+async function registrarSaida() {
+  const produto = document.getElementById("saidaProduto").value.trim();
+  const quantidadeInput = document.getElementById("saidaQuantidade").value.trim();
+  const quantidade = quantidadeInput === "" ? 0 : parseFloat(quantidadeInput.replace(",", "."));
+  const responsavel = document.getElementById("saidaResponsavel").value.trim();
+  const observacao = document.getElementById("saidaObservacao").value.trim();
+  const setor = document.getElementById("saidaSetor").value.trim();
+  const data = document.getElementById("saidaData").value.trim();
+  const codigoBarras = document.getElementById("saidaCodigoBarras").value.trim();
 
-  const produto = produtoEl.value.trim();
-  const qtd = Number(qtdEl.value);
-
-  // 🔹 Validações
-  if (!produto) return destacarErro(produtoEl, "Informe o nome do produto!");
-  if (!qtd || qtd <= 0) return destacarErro(qtdEl, "Informe a quantidade da saída (maior que zero)!");
-  if (!setorEl.value.trim()) return destacarErro(setorEl, "Selecione o setor!");
-  if (!dataEl.value) return destacarErro(dataEl, "Informe a data da saída!");
-  if (!responsavelEl.value.trim()) return destacarErro(responsavelEl, "Informe o responsável!");
-
-  // Garante que o produto existe (não pode ser uma saída para um produto não cadastrado)
-  const produtoRef = produtos.find(p => p.nome.toLowerCase() === produto.toLowerCase());
-  if (!produtoRef) {
-      return destacarErro(produtoEl, "Produto não encontrado no Cadastro de Produtos!");
-  }
-  
-  // 🔹 Validação de Estoque
-  const estoqueAtual = Number(produtoRef.quantidade || 0);
-  if (qtd > estoqueAtual) {
-    return destacarErro(qtdEl, `Estoque insuficiente: há ${estoqueAtual} unidade(s) disponíveis.`);
+  if (!produto || !quantidade || !setor || !data) {
+    mostrarMensagem("⚠️ Preencha todos os campos obrigatórios!", "erro");
+    return;
   }
 
-  // Tudo ok -> registra a saída
-  saidas.push({
-    produto,
-    qtd,
-    data: dataEl.value,
-    setor: setorEl.value.trim(),
-    responsavel: responsavelEl.value.trim(),
-    observacao: observacaoEl.value.trim(),
-    codigoBarras: produtoRef.codigoBarras || "",
-    usuario: auth.currentUser ? auth.currentUser.email : "desconhecido",
-    timestamp: new Date().toISOString()
-  });
-  salvarSaidasNoFirebase(saidas); 
+  if (indiceEdicaoSaida !== null) {
+    // Atualiza saída existente
+    const s = window.saidas[indiceEdicaoSaida];
+    s.produto = produto;
+    s.quantidade = Number(quantidade);
+    s.responsavel = responsavel;
+    s.observacao = observacao;
+    s.setor = setor;
+    s.data = data;
+    s.codigoBarras = codigoBarras;
 
-  // Atualiza estoque (subtrai) e tabelas
-  atualizarEstoque(produto, -qtd);
+    mostrarMensagem(`✅ Saída de "${produto}" atualizada com sucesso!`, "sucesso");
+
+    indiceEdicaoSaida = null;
+    mostrarBotaoCancelarSaida(false);
+  } else {
+    // Nova saída
+    const novaSaida = {
+      produto,
+      quantidade: Number(quantidade),
+      responsavel,
+      observacao,
+      setor,
+      data,
+      codigoBarras,
+    };
+    window.saidas.push(novaSaida);
+    mostrarMensagem(`✅ Saída registrada para "${produto}"`, "sucesso");
+  }
+
+  // 🔹 Recalcula estoques (atualiza tabela de produtos, limites, dashboard)
+  recalcularEstoquePorSaidas();
+
+  // 🔹 SALVA DIRETAMENTE NO FIREBASE
+  await window.salvarSaidasNoFirebase(window.saidas);
+
+  // 🔹 Atualiza visualmente todas as tabelas
   atualizarTabelaSaidas();
+  atualizarTabelaEstoque();
+  atualizarTabelaProdutos();
+  atualizarTabelaLimites();
+  atualizarPainelFinanceiro();
+  atualizarDashboard();
+
   limparCampos("saida");
-  mostrarMensagem("Saída registrada com sucesso!", "sucesso");
-  return true;
+  document.querySelectorAll("#tabelaSaidas tbody tr").forEach((tr) => {
+    tr.style.background = "";
+  });
 }
+
+
+/**
+ * 🔹 Recalcula as quantidades do estoque com base nas entradas e saídas atuais
+ */
+function recalcularEstoquePorSaidas() {
+  // Reinicia as quantidades
+  window.produtos.forEach((p) => (p.quantidade = 0));
+
+  // Soma entradas
+  window.entradas.forEach((e) => {
+    const produto = window.produtos.find((p) => p.nome === e.produto);
+    if (produto) produto.quantidade += parseFloat(e.quantidade) || 0;
+  });
+
+  // Subtrai saídas
+  window.saidas.forEach((s) => {
+    const produto = window.produtos.find((p) => p.nome === s.produto);
+    if (produto) produto.quantidade -= parseFloat(s.quantidade) || 0;
+  });
+
+  // 🔹 Atualiza limites (verifica se window.limites é um array)
+  if (Array.isArray(window.limites)) {
+    window.produtos.forEach((p) => {
+      const limite = window.limites.find((l) => l.produto === p.nome);
+      if (limite) {
+        p.minimo = limite.minimo;
+        p.maximo = limite.maximo;
+      }
+    });
+  }
+
+  // Atualiza as tabelas e salva
+  atualizarTabelaEstoque();
+  atualizarTabelaLimites();
+  atualizarDashboard();
+
+  salvarTodosLocal();
+}
+
+
+
 
 function atualizarTabelaSaidas() {
   const tbody = document.querySelector("#tabelaSaidas tbody");
@@ -2389,6 +2765,171 @@ document.addEventListener('DOMContentLoaded', () => {
         inputProduto.addEventListener('input', controlarSelecaoSetor); 
     }
 });
+// =============================
+// ✅ EDIÇÃO DE SAÍDA DE MATERIAIS
+// =============================
+
+// Índice global da saída em edição
+let indiceEdicaoSaida = null;
+
+/**
+ * 🔹 Inicia a edição de uma saída existente
+ */
+function editarSaida(index) {
+  const saida = window.saidas[index];
+  if (!saida) return;
+
+  indiceEdicaoSaida = index;
+
+  // Preenche os campos da saída com os dados existentes
+  document.getElementById("saidaProduto").value = saida.produto || "";
+  document.getElementById("saidaQuantidade").value = saida.quantidade || "";
+  document.getElementById("saidaResponsavel").value = saida.responsavel || "";
+  document.getElementById("saidaObservacao").value = saida.observacao || "";
+  document.getElementById("saidaSetor").value = saida.setor || "";
+  document.getElementById("saidaData").value = saida.data || "";
+  document.getElementById("saidaCodigoBarras").value = saida.codigoBarras || "";
+
+  // Destaca a linha da saída em edição
+  document.querySelectorAll("#tabelaSaidas tbody tr").forEach((tr, i) => {
+    tr.style.background = i === index ? "#fff3cd" : ""; // Amarelo claro
+  });
+
+  // Mostra o botão de "Cancelar Edição"
+  mostrarBotaoCancelarSaida(true);
+
+  mostrarMensagem(`✏️ Editando saída do produto: ${saida.produto}`, "info");
+}
+
+/**
+ * 🔹 Cancela a edição da saída atual
+ */
+function cancelarEdicaoSaida() {
+  indiceEdicaoSaida = null;
+  limparCampos("saida");
+
+  // Remove destaque da tabela
+  document.querySelectorAll("#tabelaSaidas tbody tr").forEach((tr) => {
+    tr.style.background = "";
+  });
+
+  // Esconde o botão de cancelar
+  mostrarBotaoCancelarSaida(false);
+
+  mostrarMensagem("🚫 Edição de saída cancelada.", "info");
+}
+
+/**
+ * 🔹 Registra nova saída ou atualiza uma existente
+ */
+
+function registrarSaida() {
+  const produto = document.getElementById("saidaProduto").value.trim();
+  const quantidadeInput = document.getElementById("saidaQuantidade").value.trim();
+  const quantidade = quantidadeInput === "" ? 0 : parseFloat(quantidadeInput.replace(",", "."));
+  const responsavel = document.getElementById("saidaResponsavel").value.trim();
+  const observacao = document.getElementById("saidaObservacao").value.trim();
+  const setor = document.getElementById("saidaSetor").value.trim();
+  const data = document.getElementById("saidaData").value.trim();
+  const codigoBarras = document.getElementById("saidaCodigoBarras").value.trim();
+
+  if (!produto || !quantidade || !setor || !data) {
+    mostrarMensagem("⚠️ Preencha todos os campos obrigatórios!", "erro");
+    return;
+  }
+
+  // Se for edição
+  if (indiceEdicaoSaida !== null) {
+    const s = window.saidas[indiceEdicaoSaida];
+
+    // Atualiza todos os campos, inclusive quantidade
+    s.produto = produto;
+    s.quantidade = Number(quantidade);
+    s.responsavel = responsavel;
+    s.observacao = observacao;
+    s.setor = setor;
+    s.data = data;
+    s.codigoBarras = codigoBarras;
+
+    mostrarMensagem(`✅ Saída de "${produto}" atualizada com sucesso!`, "sucesso");
+
+    indiceEdicaoSaida = null;
+    mostrarBotaoCancelarSaida(false);
+  } else {
+    // Nova saída
+    const novaSaida = {
+      produto,
+      quantidade: Number(quantidade),
+      responsavel,
+      observacao,
+      setor,
+      data,
+      codigoBarras,
+    };
+    window.saidas.push(novaSaida);
+    mostrarMensagem(`✅ Saída registrada para "${produto}"`, "sucesso");
+  }
+
+  // 🔹 Recalcula estoque e atualiza exibições
+  recalcularEstoquePorSaidas();
+
+  // 🔹 Salva permanentemente
+  salvarSaidasLocal();
+
+  // 🔹 Atualiza as tabelas e painéis
+  atualizarTabelaSaidas();
+  atualizarTabelaEstoque();
+  atualizarTabelaLimites();
+  atualizarPainelFinanceiro();
+  atualizarDashboard();
+
+  // Limpa e remove destaque
+  limparCampos("saida");
+  document.querySelectorAll("#tabelaSaidas tbody tr").forEach((tr) => {
+    tr.style.background = "";
+  });
+}
+/**
+ * 🔹 Salva apenas as saídas no localStorage (ou Firebase, se usar)
+ */
+function salvarSaidasLocal() {
+  try {
+    localStorage.setItem("saidas", JSON.stringify(window.saidas || []));
+  } catch (e) {
+    console.error("Erro ao salvar saídas localmente:", e);
+  }
+}
+
+/**
+ * 🔹 Cria ou remove o botão "Cancelar Edição" da seção Saída
+ */
+function mostrarBotaoCancelarSaida(exibir) {
+  let botaoCancelar = document.getElementById("botaoCancelarEdicaoSaida");
+
+  if (exibir) {
+    if (!botaoCancelar) {
+      botaoCancelar = document.createElement("button");
+      botaoCancelar.id = "botaoCancelarEdicaoSaida";
+      botaoCancelar.textContent = "Cancelar Edição";
+      botaoCancelar.style.background = "#dc3545";
+      botaoCancelar.style.color = "#fff";
+      botaoCancelar.style.marginLeft = "10px";
+      botaoCancelar.style.borderRadius = "5px";
+      botaoCancelar.onclick = cancelarEdicaoSaida;
+
+      const botaoRegistrar = document.querySelector(
+        '#saida button[onclick*="registrarSaida"]'
+      );
+      if (botaoRegistrar) {
+        botaoRegistrar.insertAdjacentElement("afterend", botaoCancelar);
+      }
+    }
+  } else {
+    if (botaoCancelar) botaoCancelar.remove();
+  }
+}
+
+
 function excluirSaida(i) {
   const saida = saidas[i];
   if (!confirm(`Excluir a saída do produto "${saida.produto}" (Qtd: ${saida.qtd})? O estoque será ajustado.`)) return;
@@ -3373,10 +3914,21 @@ document.addEventListener('click', (event) => {
         }
     }
 });
-
+function salvarTodosLocal() {
+  try {
+    localStorage.setItem("produtos", JSON.stringify(window.produtos || []));
+    localStorage.setItem("entradas", JSON.stringify(window.entradas || []));
+    localStorage.setItem("saidas", JSON.stringify(window.saidas || []));
+    localStorage.setItem("limites", JSON.stringify(window.limites || []));
+    localStorage.setItem("usuarios", JSON.stringify(window.usuarios || []));
+  } catch (e) {
+    console.error("Erro ao salvar dados localmente:", e);
+  }
+}
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
