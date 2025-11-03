@@ -2627,42 +2627,39 @@ function atualizarPainelFinanceiro() {
 
     let valorTotalEntradas = 0;
     let valorTotalSaidas = 0;
-    let valorTotalEstoqueContabil = 0;
     let valorTotalCustoMedioGeral = 0;
     let valorTotalUltimaEntradaGeral = 0;
+    
+    // --- CÁLCULOS PRINCIPAIS (Para todos os 5 cards) ---
 
-    // 2. Cálculo de Valores Totais para os Cards
+    // Total de entradas (Valor total das notas)
     entradas.forEach(e => {
         valorTotalEntradas += (Number(e.valor) || 0) * (Number(e.qtd) || 0);
     });
 
-    // Calcula Saídas e prepara o Custo Médio Ponderado por produto
+    // Calcula Saídas (Estimadas) e Custo Médio Ponderado por produto
     produtos.forEach(p => {
         const entradasDoProduto = entradas.filter(e => e.produto === p.nome);
-        
-        // Se não há entradas, não podemos calcular custos
-        if (entradasDoProduto.length === 0) return;
-
-        // Custo médio ponderado por produto
-        const totalQtdEntradas = entradasDoProduto.reduce((s, e) => s + (Number(e.qtd) || 0), 0);
-        const totalValorEntradas = entradasDoProduto.reduce(
-            (s, e) => s + ((Number(e.qtd) || 0) * (Number(e.valor) || 0)), 0
-        );
-        const custoMedio = totalQtdEntradas > 0 ? totalValorEntradas / totalQtdEntradas : 0;
-        
-        // Último valor de entrada
-        const ultimaEntrada = entradasDoProduto.slice(-1)[0];
-        const valorUltimo = Number(ultimaEntrada.valor || 0);
-        
         const qtdAtual = Number(p.quantidade || 0);
         
-        // Acumula os totais gerais (para os cards)
-        valorTotalCustoMedioGeral += qtdAtual * custoMedio;
-        valorTotalUltimaEntradaGeral += qtdAtual * valorUltimo;
+        if (entradasDoProduto.length > 0) {
+            // Custo médio ponderado por produto
+            const totalQtdEntradas = entradasDoProduto.reduce((s, e) => s + (Number(e.qtd) || 0), 0);
+            const totalValorEntradas = entradasDoProduto.reduce(
+                (s, e) => s + ((Number(e.qtd) || 0) * (Number(e.valor) || 0)), 0
+            );
+            const custoMedio = totalQtdEntradas > 0 ? totalValorEntradas / totalQtdEntradas : 0;
+            
+            // Último valor de entrada
+            const valorUltimo = Number(entradasDoProduto.slice(-1)[0].valor || 0);
+            
+            // Acumula os totais gerais
+            valorTotalCustoMedioGeral += qtdAtual * custoMedio;
+            valorTotalUltimaEntradaGeral += qtdAtual * valorUltimo;
+        }
     });
-    
-    // Cálculo do Custo das Saídas (Usando Custo Médio Ponderado)
-    // Este cálculo é mais complexo, vamos usar o valor de entrada para simplificar, como você estava fazendo:
+
+    // Custo Total de Saídas (Usando valor de entrada mais antigo/relacionado para o custo)
     saidas.forEach(s => {
         const entradaRelacionado = entradas.find(
             e => e.produto && s.produto && e.produto.toLowerCase() === s.produto.toLowerCase()
@@ -2671,70 +2668,53 @@ function atualizarPainelFinanceiro() {
         valorTotalSaidas += valorUnitario * (Number(s.qtd) || 0);
     });
 
-    // Valor Total do Estoque Atual Contábil (Entradas Totais - Saídas Totais)
-    valorTotalEstoqueContabil = valorTotalEntradas - valorTotalSaidas;
-
-    // Valor Total do Estoque Atual (Estimado) - Usamos a média dos dois métodos
+    // Valor Total do Estoque Atual Contábil (Este é o valor que estava "a mais", agora é o cálculo simples)
+    const valorTotalEstoqueContabil = valorTotalEntradas - valorTotalSaidas;
+    
+    // Valor Total do Estoque Atual (Estimado) - Para o card do meio
     const valorEstoqueAtualEstimado = (valorTotalCustoMedioGeral + valorTotalUltimaEntradaGeral) / 2;
 
 
-    // 3. ATUALIZAÇÃO DOS CARDS (Com os IDs ajustados)
+    // 2. ATUALIZAÇÃO DOS 5 CARDS (Com verificação de segurança)
     
-    // Último Valor de Entrada (novo ID: valorUltimaEntrada)
+    // 💰 Último Valor de Entrada
     const elemUltimaEntrada = document.getElementById("valorUltimaEntrada");
-    if (elemUltimaEntrada) {
-        elemUltimaEntrada.textContent = `R$ ${valorTotalUltimaEntradaGeral.toFixed(2)}`;
-    }
+    if (elemUltimaEntrada) elemUltimaEntrada.textContent = `R$ ${valorTotalUltimaEntradaGeral.toFixed(2)}`;
     
-    // Custo Médio Ponderado (novo ID: valorCustoMedio)
+    // 📊 Custo Médio Ponderado
     const elemCustoMedio = document.getElementById("valorCustoMedio");
-    if (elemCustoMedio) {
-        elemCustoMedio.textContent = `R$ ${valorTotalCustoMedioGeral.toFixed(2)}`;
-    }
+    if (elemCustoMedio) elemCustoMedio.textContent = `R$ ${valorTotalCustoMedioGeral.toFixed(2)}`;
     
-    // Estoque Atual (Custo Estimado) (novo ID: valorEstoqueAtualPainel)
+    // 📦 Valor Total do Estoque Atual (Estimado)
     const elemEstoqueEstimado = document.getElementById("valorEstoqueAtualPainel");
-    if (elemEstoqueEstimado) {
-        elemEstoqueEstimado.textContent = `R$ ${valorEstoqueAtualEstimado.toFixed(2)}`;
-    }
+    if (elemEstoqueEstimado) elemEstoqueEstimado.textContent = `R$ ${valorEstoqueAtualEstimado.toFixed(2)}`;
     
-    // Estoque Atual (Contábil) (ID: valorEstoqueContabil)
-    const elemEstoqueContabil = document.getElementById("valorEstoqueContabil");
-    if (elemEstoqueContabil) {
-        elemEstoqueContabil.textContent = `R$ ${valorTotalEstoqueContabil.toFixed(2)}`;
-    }
+    // 💰 Valor Total do Estoque Atual (Contábil) - ID: valorEstoque
+    const elemEstoqueContabil = document.getElementById("valorEstoque");
+    if (elemEstoqueContabil) elemEstoqueContabil.textContent = `R$ ${valorTotalEstoqueContabil.toFixed(2)}`;
     
-    // Total Saídas (Custo Estimado) (ID: totalSaidaCusto)
-    const elemSaidaCusto = document.getElementById("totalSaidaCusto");
-    if (elemSaidaCusto) {
-        elemSaidaCusto.textContent = `R$ ${valorTotalSaidas.toFixed(2)}`;
-    }
-
+    // 💸 Valor Total das Saídas (Estimado) - ID: valorSaidas
+    const elemSaidaCusto = document.getElementById("valorSaidas");
+    if (elemSaidaCusto) elemSaidaCusto.textContent = `R$ ${valorTotalSaidas.toFixed(2)}`;
     
-    // 4. ATUALIZAÇÃO DA TABELA (Entradas Agrupadas por Nota Fiscal)
+    
+    // 3. ATUALIZAÇÃO DA TABELA (4 COLUNAS)
     
     const agrupadas = {};
     
-    // Agrupa entradas e calcula o valor total da nota
+    // Agrupa entradas e calcula o valor total da nota e o custo das saídas por nota
     entradas.forEach(e => {
         const fornecedor = e.fornecedor || "Fornecedor não informado";
         const nota = e.nota || "Sem Nota Fiscal";
         const chave = `${fornecedor}_${nota}`;
     
         if (!agrupadas[chave]) {
-            agrupadas[chave] = {
-                fornecedor,
-                nota,
-                data: e.data, 
-                valorNota: 0,
-                valorSaida: 0
-            };
+            agrupadas[chave] = { fornecedor, nota, valorNota: 0, valorSaida: 0 };
         }
     
         agrupadas[chave].valorNota += (Number(e.valor) || 0) * (Number(e.qtd) || 0);
     });
 
-    // Calcula o custo das saídas relacionadas a cada nota
     saidas.forEach(s => {
         const entrada = entradas.find(
             e => e.produto && s.produto && e.produto.toLowerCase() === s.produto.toLowerCase()
@@ -2753,7 +2733,7 @@ function atualizarPainelFinanceiro() {
         }
     });
 
-    // Renderizar tabela agrupada (6 Colunas)
+    // Renderizar tabela agrupada (4 Colunas: Fornecedor, Nota, Valor Total, Saldo)
     const tbody = document.querySelector("#tabelaFinanceiro tbody");
     if (tbody) {
         tbody.innerHTML = "";
@@ -2763,9 +2743,7 @@ function atualizarPainelFinanceiro() {
             row.innerHTML = `
                 <td>${a.fornecedor}</td>
                 <td>${a.nota}</td>
-                <td>${a.data || 'S/ Data'}</td> 
                 <td>R$ ${a.valorNota.toFixed(2)}</td>
-                <td>R$ ${a.valorSaida.toFixed(2)}</td>
                 <td>R$ ${saldo.toFixed(2)}</td>
             `;
             tbody.appendChild(row);
@@ -3308,6 +3286,7 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
 
