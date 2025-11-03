@@ -675,7 +675,13 @@
   
   <section id="estoque" class="section">
   <h2><i class="fa fa-warehouse"></i> Estoque Atual</h2>
-
+  <!-- 🔹 Resumo de contagem -->
+  <div id="resumoEstoque" style="margin-bottom:10px; font-weight:bold; color:#333;">
+    🧾 Total de Produtos: 0 |
+    ⚠️ Abaixo do Mínimo: 0 |
+    ✅ Dentro do Limite: 0 |
+    📦 Acima do Máximo: 0
+  </div>
   <div style="margin-bottom:10px;">
     <input id="filtroEstoque" type="text" placeholder="🔍 Filtrar por produto ou categoria" style="width:98%" oninput="filtrarEstoque()" />
   </div>
@@ -706,13 +712,7 @@
     <section id="limites" class="section" style="display:none;">
   <h2><i class="fa fa-boxes"></i> Estoque Mínimo e Máximo</h2>
 
-  <!-- 🔹 Resumo de contagem -->
-  <div id="resumoEstoque" style="margin-bottom:10px; font-weight:bold; color:#333;">
-    🧾 Total de Produtos: 0 |
-    ⚠️ Abaixo do Mínimo: 0 |
-    ✅ Dentro do Limite: 0 |
-    📦 Acima do Máximo: 0
-  </div>
+
 
   <!-- 🔍 Filtros -->
   <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
@@ -3263,6 +3263,7 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
 
