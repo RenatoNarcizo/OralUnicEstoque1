@@ -1440,52 +1440,61 @@ function mostrarSistema(user) {
 // Este bloco deve estar no seu <script type="module">
 
 // === MONITORAR LOGIN ===
+// === MONITORAR LOGIN ===
 onAuthStateChanged(auth, (user) => {
-    const login = document.getElementById("loginView");
-    const appDiv = document.getElementById("mainApp");
-    
-    if (user) {
-        // Logado
-        login.style.display = "none";
-        appDiv.style.display = "block";
+  const login = document.getElementById("loginView");
+  const appDiv = document.getElementById("mainApp");
 
-        // GARANTE QUE O PERFIL DO USUÁRIO ESTÁ NA LISTA ANTES DE CARREGAR
-        const emailLogado = user.email.toLowerCase();
-        const perfilExiste = window.usuarios.find(u => u.email.toLowerCase() === emailLogado);
+  if (user) {
+    // Usuário logado
+    login.style.display = "none";
+    appDiv.style.display = "block";
 
-        if (!perfilExiste) {
-             const novoPerfil = { 
-                uid: user.uid,
-                email: emailLogado,
-                nome: emailLogado.split('@')[0],
-                perfil: 'USUARIO', 
-                criadoEm: new Date().toISOString()
-            };
-            window.usuarios.push(novoPerfil);
-        }
-        
-        // Continua com o carregamento dos dados
-        carregarDadosDoFirestore().then(() => {
-            mostrarSistema(user); 
-            
-            if (!perfilExiste) {
-                // Salva o perfil recém-criado no nó global de usuários do Firestore
-                window.salvarUsuariosNoFirebase(window.usuarios); 
-            }
-        });
-        
-    } else {
-        // Deslogado
-        login.style.display = "flex";
-        appDiv.style.display = "none";
-        
-        if (typeof limparCampos === "function") {
-            limparCampos("loginView");
-        }
-        document.getElementById("userName").innerText = "Visitante";
-        document.getElementById("perfilBadge").innerText = "PERFIL";
+    const emailLogado = user.email.toLowerCase();
+    const perfilExiste = window.usuarios.find(
+      (u) => u.email.toLowerCase() === emailLogado
+    );
+
+    if (!perfilExiste) {
+      const novoPerfil = {
+        uid: user.uid,
+        email: emailLogado,
+        nome: emailLogado.split("@")[0],
+        perfil: "USUARIO",
+        criadoEm: new Date().toISOString(),
+      };
+      window.usuarios.push(novoPerfil);
     }
+
+    // Carrega dados e mostra apenas a tela de Boas-Vindas
+    carregarDadosDoFirestore().then(() => {
+      mostrarSistema(user);
+
+      // 🔹 Garante que o nome apareça corretamente
+      const usuario = window.usuarios.find(
+        (u) => u.email.toLowerCase() === emailLogado
+      );
+      const nomeUsuario =
+        (usuario && usuario.nome) || user.email.split("@")[0] || "Usuário";
+      document.getElementById("nomeUsuarioBemVindo").innerText = nomeUsuario;
+
+      // 🔹 Mostra apenas a tela de Boas-Vindas (sem entrar no dashboard)
+      showSection("boasVindas");
+    });
+
+    // Atualiza lista de usuários no Firebase se for novo
+    if (!perfilExiste) {
+      window.salvarUsuariosNoFirebase(window.usuarios);
+    }
+  } else {
+    // Usuário deslogado
+    login.style.display = "flex";
+    appDiv.style.display = "none";
+    document.getElementById("userName").innerText = "Visitante";
+    document.getElementById("perfilBadge").innerText = "PERFIL";
+  }
 });
+
 
 
   // === LOGOUT ===
@@ -1511,19 +1520,85 @@ if (typeof usuarios === "undefined") window.usuarios = [];
 
 // --- FUNÇÕES GERAIS DE UI ---
 
+
+// ==========================================================
+// 🚨 CORREÇÃO 2: DUPLO CLIQUE NO MENU LATERAL
+// ==========================================================
+
 /**
- * 🔹 Mostra/Esconde a sidebar
+ * Alterna a visibilidade da barra lateral (sidebar).
+ * Usa getComputedStyle para ler o valor exato do CSS, 
+ * resolvendo o problema do duplo clique de forma confiável.
  */
 function toggleSidebar() {
   const sidebar = document.getElementById("sidebar");
-  const main = document.querySelector("main");
-
-  if (!sidebar || !main) return;
+  const mainContent = document.querySelector("main");
 
   const isOpen = sidebar.style.left === "0px";
-  sidebar.style.left = isOpen ? "-220px" : "0px";
-  main.style.marginLeft = isOpen ? "20px" : "240px";
+
+  if (isOpen) {
+    // Fechar menu
+    sidebar.style.left = "-220px";
+    mainContent.style.marginLeft = "20px";
+    sidebar.setAttribute("aria-hidden", "true");
+  } else {
+    // Abrir menu
+    sidebar.style.left = "0px";
+    mainContent.style.marginLeft = "240px";
+    sidebar.setAttribute("aria-hidden", "false");
+  }
 }
+
+// Fecha o menu ao clicar fora dele
+document.addEventListener("click", (event) => {
+  const sidebar = document.getElementById("sidebar");
+  const menuToggle = document.getElementById("menuToggle");
+
+  if (!sidebar || !menuToggle) return;
+
+  const isClickInsideSidebar = sidebar.contains(event.target);
+  const isClickOnToggle = menuToggle.contains(event.target);
+
+  if (!isClickInsideSidebar && !isClickOnToggle && sidebar.style.left === "0px") {
+    toggleSidebar(); // fecha o menu
+  }
+})
+
+
+// --- EXECUÇÃO INICIAL (AJUSTADA) ---
+
+document.addEventListener("DOMContentLoaded", () => {
+    // A autenticação Firebase (no script type="module" acima) cuida do carregamento e atualização inicial.
+    // Garante que o menu de setor é preenchido na seção de Saída
+    if (typeof atualizarSetorAutomatico === "function") atualizarSetorAutomatico(); 
+});
+
+
+// 🚨 CORREÇÃO DO EVENT LISTENER (para fechar ao clicar fora)
+document.addEventListener('click', (event) => {
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.getElementById('menuToggle');
+    
+    if (!sidebar || !menuToggle) return;
+    
+    // Lê o valor atual usando a mesma lógica robusta
+    const currentLeft = parseFloat(window.getComputedStyle(sidebar).getPropertyValue('left'));
+
+    // Se a sidebar estiver visível (currentLeft >= 0)
+    if (currentLeft >= 0) {
+        
+        // Verifica se o clique foi dentro da sidebar OU no botão de toggle
+        const isClickInsideSidebar = sidebar.contains(event.target);
+        const isClickOnToggle = menuToggle.contains(event.target);
+
+        // Se o clique não foi dentro da sidebar E não foi no botão de toggle, fecha
+        if (!isClickInsideSidebar && !isClickOnToggle) {
+            toggleSidebar();
+        }
+    }
+});
+
+// ... (restante dos scripts) ...
 
 // ... (após a definição de showSection, logout, etc.)
 
@@ -1551,21 +1626,28 @@ window.toggleSidebar = function() {
 }
 
 // A função showSection DEVE chamar toggleSidebar para fechar o menu
+// =============================
+// ✅ MOSTRAR SEÇÕES DO SISTEMA
+// =============================
 function showSection(id) {
-    document.querySelectorAll('section').forEach(section => {
-        section.style.display = 'none';
-    });
-    const sectionToShow = document.getElementById(id);
-    if (sectionToShow) {
-        sectionToShow.style.display = 'block';
-    }
-    
-    // 👈 NOVO: Fecha o menu lateral após selecionar uma opção
-    // Ele só fechará se estiver aberto (left: 0px)
-    if (document.getElementById("sidebar").style.left === '0px') {
-        toggleSidebar(); 
-    }
-  // Atualiza o dashboard sempre que a seção for aberta
+  // Esconde todas as seções
+  document.querySelectorAll("section").forEach((section) => {
+    section.style.display = "none";
+  });
+
+  // Mostra apenas a seção selecionada
+  const sectionToShow = document.getElementById(id);
+  if (sectionToShow) {
+    sectionToShow.style.display = "block";
+  }
+
+  // Fecha o menu se ele estiver aberto
+  const sidebar = document.getElementById("sidebar");
+  if (sidebar.style.left === "0px") {
+    toggleSidebar();
+  }
+
+  // Atualiza automaticamente os painéis conforme a seção
   if (id === "dashboard") atualizarDashboard();
   if (id === "estoque") atualizarTabelaEstoque();
   if (id === "limites") atualizarTabelaLimites();
@@ -1575,6 +1657,13 @@ function showSection(id) {
   if (id === "saida") atualizarTabelaSaidas();
   if (id === "usuarios") atualizarTabelaUsuarios();
 }
+
+// =============================
+// ✅ MOSTRAR TELA DE BOAS-VINDAS APÓS LOGIN
+// =============================
+// Dentro do onAuthStateChanged (lá no seu script type="module"),
+// troque qualquer chamada "showSection('dashboard')" por isto:
+showSection('boasVindas');
 
 /**
  * 🔹 Exibe uma notificação de "toast" no rodapé
@@ -3266,15 +3355,20 @@ document.addEventListener('click', (event) => {
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menuToggle');
     
+    if (!sidebar || !menuToggle) return;
+
+    // Use a mesma lógica robusta: Se a sidebar não estiver completamente escondida
+    const currentLeft = parseFloat(window.getComputedStyle(sidebar).getPropertyValue('left'));
+    
     // Se a sidebar estiver visível (left: 0px)
-    if (sidebar && sidebar.style.left === '0px') {
+    if (currentLeft >= 0) {
         
-        // Verifica se o clique foi fora da sidebar E fora do botão de abrir/fechar
         const isClickInsideSidebar = sidebar.contains(event.target);
         const isClickOnToggle = menuToggle.contains(event.target);
 
         // Se o clique não foi dentro da sidebar e não foi no botão de toggle, fecha
         if (!isClickInsideSidebar && !isClickOnToggle) {
+            // Chamamos toggleSidebar para fechar a sidebar
             toggleSidebar();
         }
     }
@@ -3286,19 +3380,3 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
