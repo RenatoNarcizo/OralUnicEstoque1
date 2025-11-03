@@ -676,13 +676,7 @@
   <section id="estoque" class="section">
   <h2><i class="fa fa-warehouse"></i> Estoque Atual</h2>
   <!-- 🔹 Resumo de contagem -->
-  <div id="resumoEstoque" style="margin-bottom:10px; font-weight:bold; color:#333;">
-    🧾 Total de Produtos: 0 |
-    ⚠️ Abaixo do Mínimo: 0 |
-    ✅ Dentro do Limite: 0 |
-    📦 Acima do Máximo: 0
-  </div>
-  <div style="margin-bottom:10px;">
+   <div style="margin-bottom:10px;">
     <input id="filtroEstoque" type="text" placeholder="🔍 Filtrar por produto ou categoria" style="width:98%" oninput="filtrarEstoque()" />
   </div>
 
@@ -711,7 +705,12 @@
     
     <section id="limites" class="section" style="display:none;">
   <h2><i class="fa fa-boxes"></i> Estoque Mínimo e Máximo</h2>
-
+ <div id="resumoEstoque" style="margin-bottom:10px; font-weight:bold; color:#333;">
+    🧾 Total de Produtos: 0 |
+    ⚠️ Abaixo do Mínimo: 0 |
+    ✅ Dentro do Limite: 0 |
+    📦 Acima do Máximo: 0
+  </div>
 
 
   <!-- 🔍 Filtros -->
@@ -954,13 +953,13 @@
 // ==========================================================
 // ADICIONE ESTE BLOCO NO INÍCIO DO SEU <script type="module">
 // ==========================================================
+  
+// 🔹 Criação de variáveis globais
+window.produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+window.entradas = JSON.parse(localStorage.getItem("entradas")) || [];
+window.saidas = JSON.parse(localStorage.getItem("saidas")) || [];
+window.usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
 
-// ==========================================================
-  // Variáveis globais para dados
-  window.produtos = JSON.parse(localStorage.getItem("produtos")) || [];
-  window.entradas = JSON.parse(localStorage.getItem("entradas")) || [];
-  window.saidas = JSON.parse(localStorage.getItem("saidas")) || [];
-  window.usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
   window.PERMISSOES = {
     'ADMIN': {
         canView: ['dashboard', 'produtos', 'entradas', 'saidas', 'estoque', 'limites', 'usuarios', 'relatorios'],
@@ -1437,55 +1436,61 @@ function mostrarSistema(user) {
 };
  
  
-// Este bloco deve estar no seu <script type="module">
-
 // === MONITORAR LOGIN ===
 onAuthStateChanged(auth, (user) => {
-    const login = document.getElementById("loginView");
-    const appDiv = document.getElementById("mainApp");
-    
-    if (user) {
-        // Logado
-        login.style.display = "none";
-        appDiv.style.display = "block";
+  const login = document.getElementById("loginView");
+  const appDiv = document.getElementById("mainApp");
 
-        // GARANTE QUE O PERFIL DO USUÁRIO ESTÁ NA LISTA ANTES DE CARREGAR
-        const emailLogado = user.email.toLowerCase();
-        const perfilExiste = window.usuarios.find(u => u.email.toLowerCase() === emailLogado);
+  if (user) {
+    // Usuário logado
+    login.style.display = "none";
+    appDiv.style.display = "block";
 
-        if (!perfilExiste) {
-             const novoPerfil = { 
-                uid: user.uid,
-                email: emailLogado,
-                nome: emailLogado.split('@')[0],
-                perfil: 'USUARIO', 
-                criadoEm: new Date().toISOString()
-            };
-            window.usuarios.push(novoPerfil);
-        }
-        
-        // Continua com o carregamento dos dados
-        carregarDadosDoFirestore().then(() => {
-            mostrarSistema(user); 
-            
-            if (!perfilExiste) {
-                // Salva o perfil recém-criado no nó global de usuários do Firestore
-                window.salvarUsuariosNoFirebase(window.usuarios); 
-            }
-        });
-        
-    } else {
-        // Deslogado
-        login.style.display = "flex";
-        appDiv.style.display = "none";
-        
-        if (typeof limparCampos === "function") {
-            limparCampos("loginView");
-        }
-        document.getElementById("userName").innerText = "Visitante";
-        document.getElementById("perfilBadge").innerText = "PERFIL";
+    const emailLogado = user.email.toLowerCase();
+    const perfilExiste = window.usuarios.find(
+      (u) => u.email.toLowerCase() === emailLogado
+    );
+
+    if (!perfilExiste) {
+      const novoPerfil = {
+        uid: user.uid,
+        email: emailLogado,
+        nome: emailLogado.split("@")[0],
+        perfil: "USUARIO",
+        criadoEm: new Date().toISOString(),
+      };
+      window.usuarios.push(novoPerfil);
     }
+
+    // Carrega dados e mostra apenas a tela de Boas-Vindas
+    carregarDadosDoFirestore().then(() => {
+      mostrarSistema(user);
+
+      // 🔹 Garante que o nome apareça corretamente
+      const usuario = window.usuarios.find(
+        (u) => u.email.toLowerCase() === emailLogado
+      );
+      const nomeUsuario =
+        (usuario && usuario.nome) || user.email.split("@")[0] || "Usuário";
+      document.getElementById("nomeUsuarioBemVindo").innerText = nomeUsuario;
+
+      // 🔹 Mostra apenas a tela de Boas-Vindas (sem entrar no dashboard)
+      showSection("boasVindas");
+    });
+
+    // Atualiza lista de usuários no Firebase se for novo
+    if (!perfilExiste) {
+      window.salvarUsuariosNoFirebase(window.usuarios);
+    }
+  } else {
+    // Usuário deslogado
+    login.style.display = "flex";
+    appDiv.style.display = "none";
+    document.getElementById("userName").innerText = "Visitante";
+    document.getElementById("perfilBadge").innerText = "PERFIL";
+  }
 });
+
 
 
   // === LOGOUT ===
@@ -1509,21 +1514,79 @@ if (typeof entradas === "undefined") window.entradas = [];
 if (typeof saidas === "undefined") window.saidas = [];
 if (typeof usuarios === "undefined") window.usuarios = [];
 
-// --- FUNÇÕES GERAIS DE UI ---
 
-/**
- * 🔹 Mostra/Esconde a sidebar
- */
+
+
+
 function toggleSidebar() {
   const sidebar = document.getElementById("sidebar");
-  const main = document.querySelector("main");
-
-  if (!sidebar || !main) return;
+  const mainContent = document.querySelector("main");
 
   const isOpen = sidebar.style.left === "0px";
-  sidebar.style.left = isOpen ? "-220px" : "0px";
-  main.style.marginLeft = isOpen ? "20px" : "240px";
+
+  if (isOpen) {
+    // Fechar menu
+    sidebar.style.left = "-220px";
+    mainContent.style.marginLeft = "20px";
+    sidebar.setAttribute("aria-hidden", "true");
+  } else {
+    // Abrir menu
+    sidebar.style.left = "0px";
+    mainContent.style.marginLeft = "240px";
+    sidebar.setAttribute("aria-hidden", "false");
+  }
 }
+
+// Fecha o menu ao clicar fora dele
+document.addEventListener("click", (event) => {
+  const sidebar = document.getElementById("sidebar");
+  const menuToggle = document.getElementById("menuToggle");
+
+  if (!sidebar || !menuToggle) return;
+
+  const isClickInsideSidebar = sidebar.contains(event.target);
+  const isClickOnToggle = menuToggle.contains(event.target);
+
+  if (!isClickInsideSidebar && !isClickOnToggle && sidebar.style.left === "0px") {
+    toggleSidebar(); // fecha o menu
+  }
+})
+
+
+// --- EXECUÇÃO INICIAL (AJUSTADA) ---
+
+document.addEventListener("DOMContentLoaded", () => {
+    // A autenticação Firebase (no script type="module" acima) cuida do carregamento e atualização inicial.
+    // Garante que o menu de setor é preenchido na seção de Saída
+    if (typeof atualizarSetorAutomatico === "function") atualizarSetorAutomatico(); 
+});
+
+
+// 🚨 CORREÇÃO DO EVENT LISTENER (para fechar ao clicar fora)
+document.addEventListener('click', (event) => {
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.getElementById('menuToggle');
+    
+    if (!sidebar || !menuToggle) return;
+    
+    // Lê o valor atual usando a mesma lógica robusta
+    const currentLeft = parseFloat(window.getComputedStyle(sidebar).getPropertyValue('left'));
+
+    // Se a sidebar estiver visível (currentLeft >= 0)
+    if (currentLeft >= 0) {
+        
+        // Verifica se o clique foi dentro da sidebar OU no botão de toggle
+        const isClickInsideSidebar = sidebar.contains(event.target);
+        const isClickOnToggle = menuToggle.contains(event.target);
+
+        // Se o clique não foi dentro da sidebar E não foi no botão de toggle, fecha
+        if (!isClickInsideSidebar && !isClickOnToggle) {
+            toggleSidebar();
+        }
+    }
+});
+
+
 
 // ... (após a definição de showSection, logout, etc.)
 
@@ -1551,21 +1614,65 @@ window.toggleSidebar = function() {
 }
 
 // A função showSection DEVE chamar toggleSidebar para fechar o menu
+// =============================
+// ✅ CONTROLE DO MENU LATERAL
+// =============================
+function toggleSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const mainContent = document.querySelector("main");
+
+  const isOpen = sidebar.style.left === "0px";
+
+  if (isOpen) {
+    // Fechar menu
+    sidebar.style.left = "-220px";
+    mainContent.style.marginLeft = "20px";
+    sidebar.setAttribute("aria-hidden", "true");
+  } else {
+    // Abrir menu
+    sidebar.style.left = "0px";
+    mainContent.style.marginLeft = "240px";
+    sidebar.setAttribute("aria-hidden", "false");
+  }
+}
+
+// Fecha o menu ao clicar fora dele
+document.addEventListener("click", (event) => {
+  const sidebar = document.getElementById("sidebar");
+  const menuToggle = document.getElementById("menuToggle");
+
+  if (!sidebar || !menuToggle) return;
+
+  const isClickInsideSidebar = sidebar.contains(event.target);
+  const isClickOnToggle = menuToggle.contains(event.target);
+
+  if (!isClickInsideSidebar && !isClickOnToggle && sidebar.style.left === "0px") {
+    toggleSidebar(); // fecha o menu
+  }
+});
+
+// =============================
+// ✅ MOSTRAR SEÇÕES DO SISTEMA
+// =============================
 function showSection(id) {
-    document.querySelectorAll('section').forEach(section => {
-        section.style.display = 'none';
-    });
-    const sectionToShow = document.getElementById(id);
-    if (sectionToShow) {
-        sectionToShow.style.display = 'block';
-    }
-    
-    // 👈 NOVO: Fecha o menu lateral após selecionar uma opção
-    // Ele só fechará se estiver aberto (left: 0px)
-    if (document.getElementById("sidebar").style.left === '0px') {
-        toggleSidebar(); 
-    }
-  // Atualiza o dashboard sempre que a seção for aberta
+  // Esconde todas as seções
+  document.querySelectorAll("section").forEach((section) => {
+    section.style.display = "none";
+  });
+
+  // Mostra apenas a seção selecionada
+  const sectionToShow = document.getElementById(id);
+  if (sectionToShow) {
+    sectionToShow.style.display = "block";
+  }
+
+  // Fecha o menu se ele estiver aberto
+  const sidebar = document.getElementById("sidebar");
+  if (sidebar.style.left === "0px") {
+    toggleSidebar();
+  }
+
+  // Atualiza automaticamente os painéis conforme a seção
   if (id === "dashboard") atualizarDashboard();
   if (id === "estoque") atualizarTabelaEstoque();
   if (id === "limites") atualizarTabelaLimites();
@@ -1575,6 +1682,14 @@ function showSection(id) {
   if (id === "saida") atualizarTabelaSaidas();
   if (id === "usuarios") atualizarTabelaUsuarios();
 }
+
+// =============================
+// ✅ MOSTRAR TELA DE BOAS-VINDAS APÓS LOGIN
+// =============================
+// Dentro do onAuthStateChanged (lá no seu script type="module"),
+// troque qualquer chamada "showSection('dashboard')" por isto:
+showSection('boasVindas');
+
 
 /**
  * 🔹 Exibe uma notificação de "toast" no rodapé
@@ -1840,10 +1955,170 @@ function atualizarTabelaProdutos() {
   });
 }
 
-function editarProduto(i) {
-  // Lógica de edição completa (popup/modal ou preenchimento de campos)
-  mostrarMensagem("Funcionalidade de Edição em construção. Por favor, edite manualmente no console (temporariamente).", "info");
+// =============================
+// ✅ EDIÇÃO DE PRODUTOS COM BOTÃO DE CANCELAR
+// =============================
+
+// Variável global para controle do produto em edição
+let indiceEdicaoProduto = null;
+
+/**
+ * 🔹 Inicia o modo de edição de um produto
+ */
+function editarProduto(index) {
+  const produto = window.produtos[index];
+  if (!produto) return;
+
+  indiceEdicaoProduto = index;
+
+  // Preenche os campos com os dados do produto
+  document.getElementById("produtoNome").value = produto.nome || "";
+  document.getElementById("produtoCategoria").value = produto.categoria || "";
+  document.getElementById("produtoEmbalagem").value = produto.embalagem || "";
+  document.getElementById("produtoQtdEmbalagem").value = produto.qtdEmbalagem || "";
+  document.getElementById("produtoCodigoBarras").value = produto.codigoBarras || "";
+
+  // Destaca visualmente o produto sendo editado
+  document.querySelectorAll("#tabelaProdutos tbody tr").forEach((tr, i) => {
+    tr.style.background = i === index ? "#fff3cd" : ""; // amarelo claro
+  });
+
+  // Mostra o botão "Cancelar Edição"
+  mostrarBotaoCancelar(true);
+
+  mostrarMensagem(`✏️ Editando o produto: ${produto.nome}`, "info");
 }
+
+/**
+ * 🔹 Cancela a edição do produto atual
+ */
+function cancelarEdicaoProduto() {
+  indiceEdicaoProduto = null;
+  limparCampos("cadastro");
+
+  // Remove destaque visual
+  document.querySelectorAll("#tabelaProdutos tbody tr").forEach((tr) => {
+    tr.style.background = "";
+  });
+
+  // Esconde o botão "Cancelar Edição"
+  mostrarBotaoCancelar(false);
+
+  mostrarMensagem("🚫 Edição cancelada.", "info");
+}
+
+/**
+ * 🔹 Salva novo produto ou atualiza um existente
+ */
+function cadastrarProduto() {
+  const nome = document.getElementById("produtoNome").value.trim();
+  const categoria = document.getElementById("produtoCategoria").value.trim();
+  const embalagem = document.getElementById("produtoEmbalagem").value.trim();
+  const qtdEmbalagem = document.getElementById("produtoQtdEmbalagem").value.trim();
+  const codigoBarras = document.getElementById("produtoCodigoBarras").value.trim();
+
+  if (!nome || !categoria) {
+    mostrarMensagem("⚠️ Preencha ao menos nome e categoria do produto.", "erro");
+    return;
+  }
+
+  // Se for edição
+  if (indiceEdicaoProduto !== null) {
+    const produtoAntigo = window.produtos[indiceEdicaoProduto];
+    const nomeAntigo = produtoAntigo.nome;
+
+    // Atualiza dados do produto
+    produtoAntigo.nome = nome;
+    produtoAntigo.categoria = categoria;
+    produtoAntigo.embalagem = embalagem;
+    produtoAntigo.qtdEmbalagem = qtdEmbalagem;
+    produtoAntigo.codigoBarras = codigoBarras;
+
+    // Atualiza referências em outras listas
+    atualizarReferenciasProduto(nomeAntigo, nome);
+
+    mostrarMensagem(`✅ Produto "${nome}" atualizado com sucesso!`, "sucesso");
+
+    // Finaliza modo de edição
+    indiceEdicaoProduto = null;
+    mostrarBotaoCancelar(false);
+  } else {
+    // Novo cadastro
+    const novoProduto = {
+      nome,
+      categoria,
+      embalagem,
+      qtdEmbalagem,
+      codigoBarras,
+      quantidade: 0,
+    };
+    window.produtos.push(novoProduto);
+    mostrarMensagem(`✅ Produto "${nome}" cadastrado!`, "sucesso");
+  }
+
+  // Salva e atualiza tudo
+  salvarTodosLocal();
+  atualizarTabelaProdutos();
+  atualizarTabelaEstoque();
+  atualizarTabelaEntradas();
+  atualizarTabelaSaidas();
+  atualizarTabelaLimites();
+  atualizarDashboard();
+
+  limparCampos("cadastro");
+  document.querySelectorAll("#tabelaProdutos tbody tr").forEach((tr) => {
+    tr.style.background = "";
+  });
+}
+
+/**
+ * 🔹 Atualiza o nome do produto em todas as tabelas e listas relacionadas
+ */
+function atualizarReferenciasProduto(nomeAntigo, nomeNovo) {
+  if (!nomeAntigo || !nomeNovo || nomeAntigo === nomeNovo) return;
+
+  window.entradas.forEach((e) => {
+    if (e.produto === nomeAntigo) e.produto = nomeNovo;
+  });
+  window.saidas.forEach((s) => {
+    if (s.produto === nomeAntigo) s.produto = nomeNovo;
+  });
+  window.produtos.forEach((p) => {
+    if (p.nome === nomeAntigo) p.nome = nomeNovo;
+  });
+
+  salvarTodosLocal();
+  mostrarMensagem("🔄 Referências atualizadas em todo o sistema.", "info");
+}
+
+/**
+ * 🔹 Mostra ou esconde o botão "Cancelar Edição"
+ */
+function mostrarBotaoCancelar(exibir) {
+  let botaoCancelar = document.getElementById("botaoCancelarEdicao");
+
+  if (exibir) {
+    if (!botaoCancelar) {
+      botaoCancelar = document.createElement("button");
+      botaoCancelar.id = "botaoCancelarEdicao";
+      botaoCancelar.textContent = "Cancelar Edição";
+      botaoCancelar.style.background = "#dc3545";
+      botaoCancelar.style.color = "#fff";
+      botaoCancelar.style.marginLeft = "10px";
+      botaoCancelar.style.borderRadius = "5px";
+      botaoCancelar.onclick = cancelarEdicaoProduto;
+
+      // Adiciona ao lado do botão de cadastrar
+      const botaoCadastrar = document.querySelector('#cadastro button[onclick*="cadastrarProduto"]');
+      if (botaoCadastrar) {
+        botaoCadastrar.insertAdjacentElement("afterend", botaoCancelar);
+      }
+    }
+  } else {
+    if (botaoCancelar) botaoCancelar.remove();
+  }
+}
+
 
 function excluirProduto(i) {
   if (!confirm(`Excluir o produto "${produtos[i].nome}"? Todas as entradas e saídas relacionadas serão mantidas, mas o estoque será recontado.`)) return;
@@ -1918,112 +2193,125 @@ function buscarProdutoPorCodigo(contexto) {
   mostrarMensagem(`Produto "${produto.nome}" encontrado.`, "info");
 }
 
-
 function registrarEntrada() {
-  padronizarCamposAntesDeSalvar();
-  limparErros("entrada");
-  
-  const produtoEl = document.getElementById("entradaProduto");
-  const qtdEl = document.getElementById("entradaQuantidade");
-  const valorEl = document.getElementById("entradaValor");
-  const dataEl = document.getElementById("entradaData");
-  const notaEl = document.getElementById("entradaNota");
-  const fornecedorEl = document.getElementById("entradaFornecedor");
-  const cnpjEl = document.getElementById("entradaCNPJ");
-  const loteEl = document.getElementById("entradaLote");
-  const validadeEl = document.getElementById("entradaValidade");
-  const setorEl = document.getElementById("entradaSetor");
-  const codigoBarrasEl = document.getElementById("entradaCodigoBarras");
-  
-  const nomeProduto = produtoEl.value.trim();
+  const produto = document.getElementById("entradaProduto").value.trim();
+  const qtd = parseFloat(document.getElementById("entradaQuantidade").value.trim()) || 0;
+  const valor = parseFloat(document.getElementById("entradaValor").value.trim()) || 0;
+  const data = document.getElementById("entradaData").value.trim();
+  const nota = document.getElementById("entradaNota").value.trim();
+  const fornecedor = document.getElementById("entradaFornecedor").value.trim();
+  const cnpj = document.getElementById("entradaCNPJ").value.trim();
+  const lote = document.getElementById("entradaLote").value.trim();
+  const validade = document.getElementById("entradaValidade").value.trim();
+  const setor = document.getElementById("entradaSetor").value.trim();
+  const codigoBarras = document.getElementById("entradaCodigoBarras").value.trim();
 
-  // 🔹 Validação simples
-  if (!nomeProduto) return destacarErro(produtoEl, "Informe o nome do produto!");
-  if (!qtdEl.value || Number(qtdEl.value) <= 0) return destacarErro(qtdEl, "Informe a quantidade (maior que zero)!");
-  if (!valorEl.value || Number(valorEl.value) <= 0) return destacarErro(valorEl, "Informe o Valor Unitário (maior que zero)!");
-  if (!dataEl.value) return destacarErro(dataEl, "Informe a data da entrada!");
-  if (!notaEl.value.trim()) return destacarErro(notaEl, "Informe a Nota Fiscal!");
-  if (!fornecedorEl.value.trim()) return destacarErro(fornecedorEl, "Informe o Fornecedor!");
-  if (!setorEl.value.trim()) return destacarErro(setorEl, "Selecione o Setor Utilizado!");
-  
-  // Garante que o produto existe (não pode ser uma entrada para um produto não cadastrado)
-  const produtoExiste = produtos.some(p => p.nome.toLowerCase() === nomeProduto.toLowerCase());
-  if (!produtoExiste) {
-      return destacarErro(produtoEl, "Produto não encontrado no Cadastro de Produtos!");
+  if (!produto || !qtd || !valor || !data) {
+    mostrarMensagem("⚠️ Preencha todos os campos obrigatórios!", "erro");
+    return;
   }
 
-  // Tudo ok -> registra a entrada
-  const novaEntrada = {
-    produto: nomeProduto,
-    qtd: Number(qtdEl.value),
-    valor: Number(valorEl.value),
-    data: dataEl.value,
-    nota: notaEl.value.trim(),
-    fornecedor: fornecedorEl.value.trim(),
-    cnpj: cnpjEl.value.trim(),
-    lote: loteEl.value.trim(),
-    validade: validadeEl.value,
-    setor: setorEl.value.trim(),
-    codigoBarras: codigoBarrasEl.value.trim() || buscarCodigoBarrasDoProduto(nomeProduto),
-    usuario: auth.currentUser ? auth.currentUser.email : "desconhecido",
-    timestamp: new Date().toISOString()
-  };
+  if (indiceEdicaoEntrada !== null) {
+    // Atualiza entrada existente
+    const e = window.entradas[indiceEdicaoEntrada];
+    e.produto = produto;
+    e.qtd = qtd;
+    e.valor = valor;
+    e.data = data;
+    e.nota = nota;
+    e.fornecedor = fornecedor;
+    e.cnpj = cnpj;
+    e.lote = lote;
+    e.validade = validade;
+    e.setor = setor;
+    e.codigoBarras = codigoBarras;
 
-  // 🔹 Salva no Firebase
-  entradas.push(novaEntrada);
-  salvarEntradasNoFirebase(entradas); 
+    mostrarMensagem(`✅ Entrada de "${produto}" atualizada com sucesso!`, "sucesso");
 
-  // 🔹 Atualiza produto relacionado no estoque global
-  atualizarEstoque(
-  novaEntrada.produto,
-  novaEntrada.qtd,
-  novaEntrada.valor,
-  novaEntrada.lote,
-  novaEntrada.validade
-);
+    indiceEdicaoEntrada = null;
+    mostrarBotaoCancelarEntrada(false);
+  } else {
+    // Nova entrada
+    const novaEntrada = {
+      produto,
+      qtd,
+      valor,
+      data,
+      nota,
+      fornecedor,
+      cnpj,
+      lote,
+      validade,
+      setor,
+      codigoBarras,
+    };
 
-  
-  // 🔹 Limpa e atualiza
+    window.entradas.push(novaEntrada);
+    mostrarMensagem(`✅ Entrada registrada para "${produto}"`, "sucesso");
+  }
+
+  // 🔹 Atualiza estoque real
+  const produtoRef = window.produtos.find(p => p.nome === produto);
+  if (produtoRef) {
+    produtoRef.quantidade = (produtoRef.quantidade || 0) + qtd;
+    produtoRef.ultimoValor = valor;
+    salvarProdutosNoFirebase(window.produtos);
+  }
+
+  salvarTodosLocal();
   atualizarTabelaEntradas();
+  atualizarTabelaEstoque();
+  atualizarPainelFinanceiro();
+  atualizarDashboard();
+
+  // 🔹 Limpa todos os campos do formulário de entrada
   limparCampos("entrada");
-  mostrarMensagem("Entrada registrada com sucesso!", "sucesso");
-  return true;
+
+  // 🔹 Força a limpeza manual para garantir que tudo apague
+  document.querySelectorAll('#entrada input, #entrada select, #entrada textarea').forEach(el => {
+    if (el.type === "checkbox" || el.type === "radio") el.checked = false;
+    else el.value = "";
+  });
+
+  // 🔹 Remove destaque de linhas
+  document.querySelectorAll("#tabelaEntradas tbody tr").forEach((tr) => {
+    tr.style.background = "";
+  });
+
+  // 🔹 Foca automaticamente no campo de produto para agilizar o próximo lançamento
+  document.getElementById("entradaProduto").focus();
 }
 
-function atualizarTabelaEntradas() {
-  const tbody = document.querySelector("#tabelaEntradas tbody");
-  const filtro = document.getElementById("filtroEntrada").value.toLowerCase();
-  tbody.innerHTML = "";
 
-  entradas.slice().reverse().forEach((e, i) => { // Inverte para mostrar as mais recentes primeiro
-    const idxOriginal = entradas.length - 1 - i;
-    const produto = (e.produto || "").toLowerCase();
-    const fornecedor = (e.fornecedor || "").toLowerCase();
-    const nota = (e.nota || "").toLowerCase();
-    
-    if (filtro && !produto.includes(filtro) && !fornecedor.includes(filtro) && !nota.includes(filtro)) return;
 
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${idxOriginal + 1}</td>
-      <td>${e.produto || "-"}</td>
-      <td style="font-size:12px; color:#555;">${e.codigoBarras || "-"}</td>
-      <td>${e.qtd || 0}</td>
-      <td>${(e.valor || 0).toFixed(2)}</td>
-      <td>${e.data || "-"}</td>
-      <td>${e.nota || "-"}</td>
-      <td>${e.fornecedor || "-"}</td>
-      <td>${e.cnpj || "-"}</td>
-      <td>${e.lote || "-"}</td>
-      <td>${e.validade || "-"}</td>
-      <td>${e.setor || "-"}</td>
-      <td>
-        <button onclick="editarEntrada(${idxOriginal})" title="Editar Entrada"><i class="fa fa-edit"></i></button>
-        <button onclick="excluirEntrada(${idxOriginal})" title="Excluir Entrada"><i class="fa fa-trash"></i></button>
-      </td>
-    `;
-    tbody.appendChild(row);
-  });
+
+/**
+ * 🔹 Cria ou remove o botão "Cancelar Edição" da seção Entrada
+ */
+function mostrarBotaoCancelarEntrada(exibir) {
+  let botaoCancelar = document.getElementById("botaoCancelarEdicaoEntrada");
+
+  if (exibir) {
+    if (!botaoCancelar) {
+      botaoCancelar = document.createElement("button");
+      botaoCancelar.id = "botaoCancelarEdicaoEntrada";
+      botaoCancelar.textContent = "Cancelar Edição";
+      botaoCancelar.style.background = "#dc3545";
+      botaoCancelar.style.color = "#fff";
+      botaoCancelar.style.marginLeft = "10px";
+      botaoCancelar.style.borderRadius = "5px";
+      botaoCancelar.onclick = cancelarEdicaoEntrada;
+
+      const botaoRegistrar = document.querySelector(
+        '#entrada button[onclick*="registrarEntrada"]'
+      );
+      if (botaoRegistrar) {
+        botaoRegistrar.insertAdjacentElement("afterend", botaoCancelar);
+      }
+    }
+  } else {
+    if (botaoCancelar) botaoCancelar.remove();
+  }
 }
 
 function excluirEntrada(i) {
@@ -2073,6 +2361,104 @@ function aplicarMascaraCNPJ(valor) {
 function formatarCNPJ(input) {
     input.value = aplicarMascaraCNPJ(input.value);
 }
+
+function atualizarTabelaEntradas() {
+  const tbody = document.querySelector("#tabelaEntradas tbody");
+  const filtro = document.getElementById("filtroEntrada").value.toLowerCase();
+  tbody.innerHTML = "";
+
+  entradas.slice().reverse().forEach((e, i) => { // Inverte para mostrar as mais recentes primeiro
+    const idxOriginal = entradas.length - 1 - i;
+    const produto = (e.produto || "").toLowerCase();
+    const fornecedor = (e.fornecedor || "").toLowerCase();
+    const nota = (e.nota || "").toLowerCase();
+    
+    if (filtro && !produto.includes(filtro) && !fornecedor.includes(filtro) && !nota.includes(filtro)) return;
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${idxOriginal + 1}</td>
+      <td>${e.produto || "-"}</td>
+      <td style="font-size:12px; color:#555;">${e.codigoBarras || "-"}</td>
+      <td>${e.qtd || 0}</td>
+      <td>${(e.valor || 0).toFixed(2)}</td>
+      <td>${e.data || "-"}</td>
+      <td>${e.nota || "-"}</td>
+      <td>${e.fornecedor || "-"}</td>
+      <td>${e.cnpj || "-"}</td>
+      <td>${e.lote || "-"}</td>
+      <td>${e.validade || "-"}</td>
+      <td>${e.setor || "-"}</td>
+      <td>
+        <button onclick="editarEntrada(${idxOriginal})" title="Editar Entrada"><i class="fa fa-edit"></i></button>
+        <button onclick="excluirEntrada(${idxOriginal})" title="Excluir Entrada"><i class="fa fa-trash"></i></button>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+// =============================
+// ✅ EDIÇÃO DE ENTRADAS DE MATERIAIS
+// =============================
+
+// Índice global para controle da entrada em edição
+let indiceEdicaoEntrada = null;
+
+/**
+ * 🔹 Inicia a edição de uma entrada
+ */
+function editarEntrada(index) {
+  const entrada = window.entradas[index];
+  if (!entrada) return;
+
+  indiceEdicaoEntrada = index;
+
+  // Preenche os campos do formulário com os dados da entrada
+  document.getElementById("entradaProduto").value = entrada.produto || "";
+  document.getElementById("entradaQuantidade").value = entrada.quantidade || "";
+  document.getElementById("entradaValor").value = entrada.valor || "";
+  document.getElementById("entradaData").value = entrada.data || "";
+  document.getElementById("entradaNota").value = entrada.nota || "";
+  document.getElementById("entradaFornecedor").value = entrada.fornecedor || "";
+  document.getElementById("entradaCNPJ").value = entrada.cnpj || "";
+  document.getElementById("entradaLote").value = entrada.lote || "";
+  document.getElementById("entradaValidade").value = entrada.validade || "";
+  document.getElementById("entradaSetor").value = entrada.setor || "";
+  document.getElementById("entradaCodigoBarras").value = entrada.codigoBarras || "";
+
+  // Destaca a linha em edição
+  document.querySelectorAll("#tabelaEntradas tbody tr").forEach((tr, i) => {
+    tr.style.background = i === index ? "#fff3cd" : "";
+  });
+
+  // Mostra botão "Cancelar Edição"
+  mostrarBotaoCancelarEntrada(true);
+
+  mostrarMensagem(`✏️ Editando entrada do produto: ${entrada.produto}`, "info");
+}
+
+/**
+ * 🔹 Cancela a edição da entrada atual
+ */
+function cancelarEdicaoEntrada() {
+  indiceEdicaoEntrada = null;
+  limparCampos("entrada");
+
+  // Remove o destaque da tabela
+  document.querySelectorAll("#tabelaEntradas tbody tr").forEach((tr) => {
+    tr.style.background = "";
+  });
+
+  // Esconde o botão de cancelar
+  mostrarBotaoCancelarEntrada(false);
+
+  mostrarMensagem("🚫 Edição de entrada cancelada.", "info");
+}
+
+/**
+ * 🔹 Registra uma nova entrada ou atualiza uma existente
+ */
+
 // --- SAÍDA DE MATERIAIS ---
 
 function atualizarSetorAutomatico() {
@@ -2300,6 +2686,152 @@ document.addEventListener('DOMContentLoaded', () => {
         inputProduto.addEventListener('input', controlarSelecaoSetor); 
     }
 });
+// =============================
+// ✅ EDIÇÃO DE SAÍDA DE MATERIAIS
+// =============================
+
+// Índice global da saída em edição
+let indiceEdicaoSaida = null;
+
+/**
+ * 🔹 Inicia a edição de uma saída existente
+ */
+function editarSaida(index) {
+  const saida = window.saidas[index];
+  if (!saida) return;
+
+  indiceEdicaoSaida = index;
+
+  // Preenche os campos da saída com os dados existentes
+  document.getElementById("saidaProduto").value = saida.produto || "";
+  document.getElementById("saidaQuantidade").value = saida.quantidade || "";
+  document.getElementById("saidaResponsavel").value = saida.responsavel || "";
+  document.getElementById("saidaObservacao").value = saida.observacao || "";
+  document.getElementById("saidaSetor").value = saida.setor || "";
+  document.getElementById("saidaData").value = saida.data || "";
+  document.getElementById("saidaCodigoBarras").value = saida.codigoBarras || "";
+
+  // Destaca a linha da saída em edição
+  document.querySelectorAll("#tabelaSaidas tbody tr").forEach((tr, i) => {
+    tr.style.background = i === index ? "#fff3cd" : ""; // Amarelo claro
+  });
+
+  // Mostra o botão de "Cancelar Edição"
+  mostrarBotaoCancelarSaida(true);
+
+  mostrarMensagem(`✏️ Editando saída do produto: ${saida.produto}`, "info");
+}
+
+/**
+ * 🔹 Cancela a edição da saída atual
+ */
+function cancelarEdicaoSaida() {
+  indiceEdicaoSaida = null;
+  limparCampos("saida");
+
+  // Remove destaque da tabela
+  document.querySelectorAll("#tabelaSaidas tbody tr").forEach((tr) => {
+    tr.style.background = "";
+  });
+
+  // Esconde o botão de cancelar
+  mostrarBotaoCancelarSaida(false);
+
+  mostrarMensagem("🚫 Edição de saída cancelada.", "info");
+}
+
+/**
+ * 🔹 Registra nova saída ou atualiza uma existente
+ */
+function registrarSaida() {
+  const produto = document.getElementById("saidaProduto").value.trim();
+  const quantidade = parseFloat(document.getElementById("saidaQuantidade").value.trim()) || 0;
+  const responsavel = document.getElementById("saidaResponsavel").value.trim();
+  const observacao = document.getElementById("saidaObservacao").value.trim();
+  const setor = document.getElementById("saidaSetor").value.trim();
+  const data = document.getElementById("saidaData").value.trim();
+  const codigoBarras = document.getElementById("saidaCodigoBarras").value.trim();
+
+  if (!produto || !quantidade || !setor || !data) {
+    mostrarMensagem("⚠️ Preencha todos os campos obrigatórios!", "erro");
+    return;
+  }
+
+  if (indiceEdicaoSaida !== null) {
+    // Atualiza saída existente
+    const s = window.saidas[indiceEdicaoSaida];
+    s.produto = produto;
+    s.quantidade = quantidade;
+    s.responsavel = responsavel;
+    s.observacao = observacao;
+    s.setor = setor;
+    s.data = data;
+    s.codigoBarras = codigoBarras;
+
+    mostrarMensagem(`✅ Saída de "${produto}" atualizada com sucesso!`, "sucesso");
+
+    indiceEdicaoSaida = null;
+    mostrarBotaoCancelarSaida(false);
+  } else {
+    // Nova saída
+    const novaSaida = {
+      produto,
+      quantidade,
+      responsavel,
+      observacao,
+      setor,
+      data,
+      codigoBarras,
+    };
+
+    window.saidas.push(novaSaida);
+    mostrarMensagem(`✅ Saída registrada para "${produto}"`, "sucesso");
+  }
+
+  // Atualiza todas as tabelas e painéis
+  salvarTodosLocal();
+  atualizarTabelaSaidas();
+  atualizarTabelaEstoque();
+  atualizarTabelaLimites();
+  atualizarPainelFinanceiro();
+  atualizarDashboard();
+
+  limparCampos("saida");
+  document.querySelectorAll("#tabelaSaidas tbody tr").forEach((tr) => {
+    tr.style.background = "";
+  });
+}
+
+/**
+ * 🔹 Cria ou remove o botão "Cancelar Edição" da seção Saída
+ */
+function mostrarBotaoCancelarSaida(exibir) {
+  let botaoCancelar = document.getElementById("botaoCancelarEdicaoSaida");
+
+  if (exibir) {
+    if (!botaoCancelar) {
+      botaoCancelar = document.createElement("button");
+      botaoCancelar.id = "botaoCancelarEdicaoSaida";
+      botaoCancelar.textContent = "Cancelar Edição";
+      botaoCancelar.style.background = "#dc3545";
+      botaoCancelar.style.color = "#fff";
+      botaoCancelar.style.marginLeft = "10px";
+      botaoCancelar.style.borderRadius = "5px";
+      botaoCancelar.onclick = cancelarEdicaoSaida;
+
+      const botaoRegistrar = document.querySelector(
+        '#saida button[onclick*="registrarSaida"]'
+      );
+      if (botaoRegistrar) {
+        botaoRegistrar.insertAdjacentElement("afterend", botaoCancelar);
+      }
+    }
+  } else {
+    if (botaoCancelar) botaoCancelar.remove();
+  }
+}
+
+
 function excluirSaida(i) {
   const saida = saidas[i];
   if (!confirm(`Excluir a saída do produto "${saida.produto}" (Qtd: ${saida.qtd})? O estoque será ajustado.`)) return;
@@ -2322,204 +2854,218 @@ function filtrarSaidas() {
     atualizarTabelaSaidas();
 }
 
-// --- ESTOQUE ATUAL ---
+// ====================================================
+// 📦 ESTOQUE ATUAL (somente tabela e filtro)
+// ====================================================
 
-// ====================== 📊 FUNÇÕES DO ESTOQUE ATUAL ======================
-
-// Atualiza a tabela principal do estoque
 function atualizarTabelaEstoque() {
-  const tabela = document.querySelector("#tabelaEstoque tbody");
-  const resumoDiv = document.getElementById("resumoEstoque");
-  if (!tabela || !resumoDiv) return;
+    const tabela = document.querySelector("#tabelaEstoque tbody");
+    if (!tabela) return;
 
-  const filtro = (document.getElementById("filtroEstoque")?.value || "").toLowerCase();
-  tabela.innerHTML = "";
+    const filtro = (document.getElementById("filtroEstoque")?.value || "").toLowerCase();
+    tabela.innerHTML = "";
 
-  if (!Array.isArray(produtos) || produtos.length === 0) {
-    tabela.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#888;">Nenhum produto encontrado no estoque.</td></tr>`;
-    resumoDiv.innerHTML = "🧾 Total de Produtos: 0 | ⚠️ Abaixo do Mínimo: 0 | ✅ Dentro do Limite: 0 | 📦 Acima do Máximo: 0";
-    return;
-  }
+    // 💡 CORREÇÃO 1: Define a variável local 'produtos' usando a global 'window.produtos'.
+    // Isso evita o erro de 'produtos is not defined' e o risco de 'undefined'.
+    const produtos = window.produtos || []; 
 
-  let totalProdutos = 0;
-  let abaixoMinimo = 0;
-  let dentroLimite = 0;
-  let acimaMaximo = 0;
-  let totalQtd = 0;
-  let valorTotal = 0;
-
-  produtos.forEach((p, i) => {
-    const nome = (p.nome || "").toLowerCase();
-    const categoria = (p.categoria || "").toLowerCase();
-
-    if (filtro && !nome.includes(filtro) && !categoria.includes(filtro)) return;
-
-    totalProdutos++;
-    const qtd = Number(p.quantidade || 0);
-    const minimo = Number(p.minimo || 0);
-    const maximo = Number(p.maximo || 0);
-    const valor = Number(p.ultimoValor || 0);
-
-    totalQtd += qtd;
-    valorTotal += valor * qtd;
-
-    // Define o status visual
-    let status = "✅ Normal";
-    if (qtd === 0) {
-      status = "❌ Sem Estoque";
-      abaixoMinimo++;
-    } else if (minimo && qtd < minimo) {
-      status = "⚠️ Abaixo do Mínimo";
-      abaixoMinimo++;
-    } else if (maximo && qtd > maximo) {
-      status = "📦 Acima do Máximo";
-      acimaMaximo++;
-    } else {
-      dentroLimite++;
+    if (!Array.isArray(produtos) || produtos.length === 0) {
+        tabela.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#888;">Nenhum produto encontrado no estoque ou os dados ainda estão sendo carregados.</td></tr>`;
+        return;
     }
 
-    const linha = document.createElement("tr");
-    linha.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${p.nome || "-"}</td>
-      <td>${p.codigoBarras || "-"}</td>
-      <td>${p.categoria || "-"}</td>
-      <td>${qtd}</td>
-      <td>${p.lote || "-"}</td>
-      <td>${valor ? valor.toFixed(2) : "-"}</td>
-      <td>${p.validade || "-"}</td>
-      <td>${status}</td>
-    `;
-    tabela.appendChild(linha);
-  });
+    // 🔹 Calcula quantidades com base nas entradas e saídas (Lógica do mapa está correta!)
+    const mapaEstoque = {};
 
-  // Atualiza resumo inferior
-  resumoDiv.innerHTML = `
-    🧾 Total de Produtos: ${totalProdutos} |
-    ⚠️ Abaixo do Mínimo: ${abaixoMinimo} |
-    ✅ Dentro do Limite: ${dentroLimite} |
-    📦 Acima do Máximo: ${acimaMaximo} |
-    💰 Valor Total do Estoque: <span style="color:#003b88">R$ ${valorTotal.toFixed(2)}</span>
-  `;
+    (window.entradas || []).forEach(e => {
+        // É crucial que o nome do produto aqui (e.produto/e.nomeProduto) 
+        // seja exatamente igual ao p.nome da coleção 'produtos'.
+        const nome = e.produto || e.nomeProduto || "";
+        if (!mapaEstoque[nome]) mapaEstoque[nome] = 0;
+        mapaEstoque[nome] += Number(e.quantidade || 0);
+    });
+
+    (window.saidas || []).forEach(s => {
+        const nome = s.produto || s.nomeProduto || "";
+        if (!mapaEstoque[nome]) mapaEstoque[nome] = 0;
+        mapaEstoque[nome] -= Number(s.quantidade || 0);
+    });
+
+    // 🔸 Gera a tabela
+    produtos.forEach((p, i) => {
+        const nome = (p.nome || "").toLowerCase();
+        const categoria = (p.categoria || "").toLowerCase();
+
+        if (filtro && !nome.includes(filtro) && !categoria.includes(filtro)) return;
+
+        // ✅ CORREÇÃO 2: Usa o saldo calculado no mapa. 
+        // Se o produto nunca teve entrada/saída, mapaEstoque[p.nome] será undefined, 
+        // então usamos 0 (?? 0). Isso resolve o problema da quantidade não aparecer.
+        const qtdReal = mapaEstoque[p.nome] ?? 0;
+        
+        const valor = Number(p.ultimoValor || 0);
+
+        const linha = document.createElement("tr");
+        linha.innerHTML = `
+            <td>${i + 1}</td>
+            <td>${p.nome || "-"}</td>
+            <td>${p.codigoBarras || "-"}</td>
+            <td>${p.categoria || "-"}</td>
+            <td>${qtdReal}</td>
+            <td>${p.lote || "-"}</td>
+            <td>${valor ? valor.toFixed(2) : "-"}</td>
+            <td>${p.validade || "-"}</td>
+            <td>${qtdReal > 0 ? "✅ Em Estoque" : "❌ Zerado"}</td>
+        `;
+        tabela.appendChild(linha);
+    });
 }
 
-// Função chamada ao digitar no filtro
+// 🔍 Filtro rápido
 function filtrarEstoque() {
-  atualizarTabelaEstoque();
+    atualizarTabelaEstoque();
+}
+// Funções que garantem que todos os dados foram carregados antes de atualizar
+let dadosCarregados = { produtos: false, entradas: false, saidas: false };
+
+function verificarEAtualizarTudo() {
+    // Só prossegue se TODOS os marcadores forem true
+    if (dadosCarregados.produtos && dadosCarregados.entradas && dadosCarregados.saidas) {
+        console.log("Todos os dados carregados. Atualizando tabelas...");
+        
+        // Chame todas as suas funções de atualização aqui DENTRO
+        atualizarTabelaEstoque();
+        atualizarTabelaLimites();
+        // ... outras funções que dependem dos dados
+    } else {
+        console.warn("Aguardando carregamento de dados do Firebase...");
+    }
 }
 
+// ====================================================
+// ⚙️ ESTOQUE MÍNIMO E MÁXIMO (com resumo)
+// ====================================================
 
-
-// --- LIMITES E LISTA DE COMPRA ---
 function atualizarTabelaLimites() {
-  const tabela = document.querySelector("#tabelaLimites tbody");
-  const resumoDiv = document.getElementById("resumoEstoque");
-  if (!tabela || !resumoDiv) return;
+    const tabela = document.querySelector("#tabelaLimites tbody");
+    if (!tabela) return;
 
-  const filtro = (document.getElementById("filtroLimite")?.value || "").toLowerCase();
-  const filtroCategoria = document.getElementById("filtroCategoria")?.value || "";
+    // 💡 CORREÇÃO 1: Define a variável local 'produtos' usando a global 'window.produtos'
+    const produtos = window.produtos; 
 
-  tabela.innerHTML = "";
+    const resumoDiv = document.getElementById("resumoLimites");
+    tabela.innerHTML = ""; // Limpa a tabela
 
-  if (!Array.isArray(produtos) || produtos.length === 0) {
-    tabela.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#888;">Nenhum produto cadastrado.</td></tr>`;
-    resumoDiv.innerHTML = `🧾 Total de Produtos: 0 | ⚠️ Abaixo do Mínimo: 0 | ✅ Dentro do Limite: 0 | 📦 Acima do Máximo: 0`;
-    return;
-  }
-
-  // Contadores para resumo
-  let total = 0, abaixo = 0, dentro = 0, acima = 0;
-
-  produtos.forEach((p, i) => {
-    const nome = (p.nome || "").toLowerCase();
-    const categoria = (p.categoria || "").toLowerCase();
-
-    // Filtros
-    if (filtro && !nome.includes(filtro)) return;
-    if (filtroCategoria && p.categoria !== filtroCategoria) return;
-
-    total++;
-    const qtd = Number(p.quantidade || 0);
-    const minimo = Number(p.minimo || 0);
-    const maximo = Number(p.maximo || 0);
-    let status = "✅ Dentro do Limite";
-    let recomendacao = "-";
-
-    if (qtd < minimo) {
-      status = "⚠️ Abaixo do Mínimo";
-      recomendacao = `Comprar ${minimo - qtd}`;
-      abaixo++;
-    } else if (maximo > 0 && qtd > maximo) {
-      status = "📦 Acima do Máximo";
-      recomendacao = `Excedente de ${qtd - maximo}`;
-      acima++;
-    } else {
-      dentro++;
+    // 💡 CORREÇÃO 2: Única verificação de segurança, garantindo que 'produtos' não seja undefined
+    if (!Array.isArray(produtos) || produtos.length === 0) {
+        // Mensagem de segurança caso não haja dados
+        tabela.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#888; padding: 20px;">Nenhum produto cadastrado ou os dados ainda estão sendo carregados.</td></tr>`;
+        
+        // Garante que o resumo também não exiba erro
+        if (resumoDiv) {
+            resumoDiv.innerHTML = `🧾 Total de Produtos: 0 | ⚠️ Abaixo do Mínimo: 0 | ✅ Dentro do Limite: 0 | 📦 Acima do Máximo: 0`;
+        }
+        return; 
     }
 
-    const linha = document.createElement("tr");
-    linha.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${p.nome || "-"}</td>
-      <td>${p.codigoBarras || "-"}</td>
-      <td>${p.categoria || "-"}</td>
-      <td>${qtd}</td>
-      <td><input type="number" id="min_${i}" value="${minimo}" style="width:80px"></td>
-      <td><input type="number" id="max_${i}" value="${maximo}" style="width:80px"></td>
-      <td>${status}</td>
-      <td>${recomendacao}</td>
-      <td>
-        <button onclick="salvarLimites(${i})"><i class="fa fa-save"></i></button>
-      </td>
-    `;
-    tabela.appendChild(linha);
-  });
+    let total = 0, abaixo = 0, dentro = 0, acima = 0;
 
-  // Atualiza o resumo
-  resumoDiv.innerHTML = `
-    🧾 Total de Produtos: ${total} |
-    ⚠️ Abaixo do Mínimo: ${abaixo} |
-    ✅ Dentro do Limite: ${dentro} |
-    📦 Acima do Máximo: ${acima}
-  `;
+    produtos.forEach((p, i) => {
+      // É importante garantir que 'filtro' e 'filtroCategoria' existam, 
+      // se não estiverem definidos globalmente, isso pode ser um problema secundário.
+      const filtro = (window.filtroLimites || "").toLowerCase(); 
+      const filtroCategoria = window.filtroCategoriaLimites || "";
+      
+      const nome = (p.nome || "").toLowerCase();
+      const categoria = (p.categoria || "").toLowerCase();
+
+      if (filtro && !nome.includes(filtro)) return;
+      if (filtroCategoria && p.categoria !== filtroCategoria) return;
+
+      total++;
+
+      // Se você está usando getEstoqueAtual(p.nome) em outras funções,
+      // aqui você precisa garantir que 'qtd' seja o estoque real (Entradas - Saídas).
+      // Se 'p.quantidade' for o campo correto no seu banco, mantenha-o.
+      const qtd = Number(p.quantidade || 0); 
+      const minimo = Number(p.minimo || 0);
+      const maximo = Number(p.maximo || 0);
+
+      let status = "✅ Dentro do Limite";
+      let recomendacao = "-";
+
+      if (qtd < minimo) {
+        status = "⚠️ Abaixo do Mínimo";
+        recomendacao = `Comprar ${minimo - qtd}`;
+        abaixo++;
+      } else if (maximo > 0 && qtd > maximo) {
+        status = "📦 Acima do Máximo";
+        recomendacao = `Excedente de ${qtd - maximo}`;
+        acima++;
+      } else {
+        dentro++;
+      }
+
+      const linha = document.createElement("tr");
+      linha.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${p.nome || "-"}</td>
+        <td>${p.codigoBarras || "-"}</td>
+        <td>${p.categoria || "-"}</td>
+        <td>${qtd}</td>
+        <td><input type="number" id="min_${i}" value="${minimo}" style="width:80px"></td>
+        <td><input type="number" id="max_${i}" value="${maximo}" style="width:80px"></td>
+        <td>${status}</td>
+        <td>${recomendacao}</td>
+        <td><button onclick="salvarLimites(${i})"><i class="fa fa-save"></i></button></td>
+      `;
+      tabela.appendChild(linha);
+    });
+
+    // Atualiza o resumo de limites
+    if (resumoDiv) {
+        resumoDiv.innerHTML = `
+          🧾 Total de Produtos: ${total} |
+          ⚠️ Abaixo do Mínimo: ${abaixo} |
+          ✅ Dentro do Limite: ${dentro} |
+          📦 Acima do Máximo: ${acima}
+        `;
+    }
 }
+
+// O restante das funções (salvarLimites, filtrarEstoque, removerLimites, filtrarLimites) 
+// não precisou de correção no seu corpo, apenas dependia desta função principal estar certa.
 function salvarLimites(i) {
-  const minEl = document.getElementById(`min_${i}`);
-  const maxEl = document.getElementById(`max_${i}`);
+    const minEl = document.getElementById(`min_${i}`);
+    const maxEl = document.getElementById(`max_${i}`);
 
-  if (!produtos[i]) return;
+    if (!window.produtos[i]) return; // Mudado para usar window.produtos diretamente
 
-  produtos[i].minimo = Number(minEl.value) || 0;
-  produtos[i].maximo = Number(maxEl.value) || 0;
+    window.produtos[i].minimo = Number(minEl.value) || 0;
+    window.produtos[i].maximo = Number(maxEl.value) || 0;
 
-  salvarProdutosNoFirebase(produtos);
-  mostrarMensagem(`Limites do produto "${produtos[i].nome}" atualizados com sucesso!`, "sucesso");
-  atualizarTabelaLimites();
+    salvarProdutosNoFirebase(window.produtos); // Mudado para usar window.produtos diretamente
+    mostrarMensagem(`Limites do produto "${window.produtos[i].nome}" atualizados com sucesso!`, "sucesso");
+    atualizarTabelaLimites();
 }
 
 
-function salvarLimite(nome, valor, tipo) {
-  const produtoRef = produtos.find(p => p.nome === nome);
-  if (!produtoRef) return;
-
-  produtoRef[tipo] = Number(valor) || 0;
-  salvarProdutosNoFirebase(produtos);
-  mostrarMensagem(`Limite ${tipo} de ${nome} salvo.`, "sucesso");
-  atualizarTabelaLimites();
+function filtrarEstoque() {
+    atualizarTabelaEstoque();
 }
 
 
 function removerLimites(nome) {
-  const produtoRef = produtos.find(p => p.nome === nome);
-  if (!produtoRef) return;
+    const produtoRef = window.produtos.find(p => p.nome === nome);
+    if (!produtoRef) return;
 
-  if (confirm(`Remover limites (mínimo e máximo) do produto "${nome}"?`)) {
-    produtoRef.minimo = 0;
-    produtoRef.maximo = 0;
-    salvarProdutosNoFirebase(produtos);
-    atualizarTabelaLimites();
-    mostrarMensagem(`Limites de "${nome}" removidos com sucesso.`, "sucesso");
-  }
+    if (confirm(`Remover limites (mínimo e máximo) do produto "${nome}"?`)) {
+      produtoRef.minimo = 0;
+      produtoRef.maximo = 0;
+      salvarProdutosNoFirebase(window.produtos);
+      atualizarTabelaLimites();
+      mostrarMensagem(`Limites de "${nome}" removidos com sucesso.`, "sucesso");
+    }
 }
 
 
@@ -3266,15 +3812,20 @@ document.addEventListener('click', (event) => {
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menuToggle');
     
+    if (!sidebar || !menuToggle) return;
+
+    // Use a mesma lógica robusta: Se a sidebar não estiver completamente escondida
+    const currentLeft = parseFloat(window.getComputedStyle(sidebar).getPropertyValue('left'));
+    
     // Se a sidebar estiver visível (left: 0px)
-    if (sidebar && sidebar.style.left === '0px') {
+    if (currentLeft >= 0) {
         
-        // Verifica se o clique foi fora da sidebar E fora do botão de abrir/fechar
         const isClickInsideSidebar = sidebar.contains(event.target);
         const isClickOnToggle = menuToggle.contains(event.target);
 
         // Se o clique não foi dentro da sidebar e não foi no botão de toggle, fecha
         if (!isClickInsideSidebar && !isClickOnToggle) {
+            // Chamamos toggleSidebar para fechar a sidebar
             toggleSidebar();
         }
     }
@@ -3286,18 +3837,3 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
