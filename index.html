@@ -501,79 +501,68 @@
 
 
       
+     <!-- SEÇÃO: CADASTRO DE PRODUTOS -->
       <section id="cadastro" class="section">
         <h2><i class="fa fa-box"></i> Cadastro de Produtos</h2>
 
         <div class="input-row" style="margin-bottom:10px;gap:8px;">
           <input id="produtoNome" type="text" placeholder="Nome do produto" class="flex" />
-
+		  
           <select id="produtoCategoria">
-            <option value="">Selecione a categoria</option>
-            <option>Material de Uso e Consumo</option>
-            <option>Copa e Cozinha</option>
-            <option>Escritório</option>
-            <option>Implante e Componentes</option>
-            <option>Insumo Dental</option>
-            <option>Insumo Laboratório</option>
-            <option>Medicamentos</option>
-            <option>Material de Limpeza</option>
-          </select>
-
+  <option value="">Selecione a categoria</option>
+  <option>Material de Uso e Consumo</option>
+  <option>Copa e Cozinha</option>
+  <option>Escritório</option>
+  <option>Implante e Componentes</option>
+  <option>Insumo Dental</option>
+  <option>Insumo Laboratório</option>
+  <option>Medicamentos</option>
+  <option>Material de Limpeza</option>
+</select>
           <select id="produtoEmbalagem">
-            <option value="">Selecione o tipo de embalagem</option>
-            <option>Ampola</option>
-            <option>Caixa</option>
-            <option>Fardo</option>
-            <option>Frasco</option>
-            <option>Garrafa</option>
-            <option>Gramas</option>
-            <option>Litro</option>
-            <option>Pacote</option>
-            <option>Peça</option>
-            <option>Quilogramas (KG)</option>
-            <option>Saco</option>
-            <option>Unidade</option>
-          </select>
-          
+  <option value="">Selecione o tipo de embalagem</option>
+  <option>Ampola</option>
+  <option>Caixa</option>
+  <option>Fardo</option>
+  <option>Frasco</option>
+  <option>Garrafa</option>
+  <option>Gramas</option>
+  <option>Litro</option>
+  <option>Pacote</option>
+  <option>Peça</option>
+  <option>Quilogramas (KG)</option>
+  <option>Saco</option>
+  <option>Unidade</option>
+</select>
           <input id="produtoQtdEmbalagem" type="number" placeholder="Qtd por embalagem" style="width:140px" />
-		      <input id="produtoCodigoBarras" type="text" placeholder="📷Código de Barras (opcional)" style="width:220px" />
+		  <input id="produtoCodigoBarras" type="text" placeholder="📷Código de Barras (opcional)" style="width:220px" />
 
           <input id="produtoFoto" type="file" accept="image/*" />
           <button onclick="cadastrarProduto()"><i class="fa fa-save"></i> Cadastrar</button>
-  
         </div>
 
         <div style="margin-bottom:10px;">
           <input id="filtroProduto" type="text" placeholder="🔍 Filtrar por nome ou categoria" style="width:98%" oninput="filtrarProdutos()" />
         </div>
- <div style="margin-bottom:10px;">
-    <input
-      id="filtroEstoque"
-      type="text"
-      placeholder="🔍 Filtrar por produto ou categoria"
-      style="width:98%; padding:6px;"
-      oninput="filtrarEstoque()"
-    />
-  </div>
-       <div class="table-wrap">
-  <table id="tabelaProdutos">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Produto</th>
-        <th>Cód. Barras</th>
-        <th>Categoria</th>
-        <th>Quantidade</th>
-        <th>Lote</th>
-        <th>Último Valor (R$)</th>
-        <th>Validade</th>
-        <th>Status</th> </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
-       
-</section>
+
+        <div class="table-wrap">
+          <table id="tabelaProdutos">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Foto</th>
+                <th>Nome</th>
+                <th>Categoria</th>
+                <th>Embalagem</th>
+                <th>Qtd/Emb.</th>
+				 <th>Cód. Barras</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
 
      <section id="entrada" class="section">
       <h2><i class="fa fa-arrow-down"></i> Entrada de Materiais</h2>
@@ -3242,6 +3231,7 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
 
