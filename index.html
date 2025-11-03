@@ -1004,7 +1004,7 @@ async function salvarDadosNoFirestore(nomeColecao, dados) { // 🚨 ESTA É A FU
             await setDoc(docRefGlobal, { usuarios: dados });
         } else {
             // Salva dados de ESTOQUE no nó isolado do usuário
-            const docRefUser = doc(db, "estoqueData", auth.currentUser.uid);
+            const docRefUser = doc(db, "estoqueGlobal", "estoque");
             await setDoc(docRefUser, { [nomeColecao]: dados }, { merge: true });
         }
     } catch (e) {
@@ -1016,7 +1016,7 @@ async function carregarDadosDoFirestore() {
     if (!auth.currentUser) return;
     try {
         // 1. CARREGA DADOS DE ESTOQUE (ISOLADO por usuário)
-        const docRefUser = doc(db, "estoqueData", auth.currentUser.uid);
+        const docRefUser = doc(db, "estoqueGlobal", "estoque");
         const docSnapUser = await getDoc(docRefUser);
 
         if (docSnapUser.exists()) {
@@ -3253,6 +3253,7 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
 
