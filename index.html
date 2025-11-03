@@ -578,7 +578,14 @@
         <input id="entradaData" type="date" style="width:160px" />
         <input id="entradaNota" type="text" placeholder="Nota Fiscal" />
         <input id="entradaFornecedor" type="text" placeholder="Fornecedor" />
-        <input id="entradaCNPJ" type="text" placeholder="CNPJ" />
+        <input 
+            id="entradaCNPJ" 
+            type="text" 
+            placeholder="CNPJ" 
+            oninput="formatarCNPJ(this)" 
+            maxlength="18"
+            style="min-width: 180px;"
+        />
         <input id="entradaLote" type="text" placeholder="Lote" />
         <input id="entradaValidade" type="date" placeholder="Validade" />
 
@@ -2026,7 +2033,32 @@ function excluirEntrada(i) {
 function filtrarEntradas() {
     atualizarTabelaEntradas();
 }
-
+// ADICIONE ESTA FUNÇÃO AO SEU <script type="module">
+function aplicarMascaraCNPJ(valor) {
+    // Remove tudo que não for dígito
+    let v = valor.replace(/\D/g, "");
+    
+    // Aplica a máscara: XX.XXX.XXX/XXXX-XX
+    if (v.length > 2) {
+        v = v.replace(/^(\d{2})(\d)/, "$1.$2");
+    }
+    if (v.length > 6) {
+        v = v.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
+    }
+    if (v.length > 10) {
+        v = v.replace(/^(\d{2})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3/$4");
+    }
+    if (v.length > 15) {
+        v = v.replace(/^(\d{2})\.(\d{3})\.(\d{3})\/(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+    }
+    
+    // Limita o tamanho máximo (18 caracteres com a máscara)
+    return v.substring(0, 18);
+}
+// ADICIONE ESTA FUNÇÃO AO SEU <script type="module">
+function formatarCNPJ(input) {
+    input.value = aplicarMascaraCNPJ(input.value);
+}
 // --- SAÍDA DE MATERIAIS ---
 
 function atualizarSetorAutomatico() {
@@ -3231,6 +3263,7 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
 
