@@ -3397,46 +3397,51 @@ function mostrarMensagem(texto, tipo = "info") {
 }
 
 
-
-
-
 // ====================================================
 // 💾 SALVAR / LIMPAR / FILTRAR LIMITES
 // ====================================================
 
-function atualizarTabelaLimites() {
-  const tbody = document.querySelector("#tabelaLimites tbody");
-  if (!tbody) return;
-  tbody.innerHTML = "";
+function salvarLimites(i) {
+  const minEl = document.getElementById(`min_${i}`);
+  const maxEl = document.getElementById(`max_${i}`);
 
-  const produtos = window.produtos || [];
-  const termo = window.filtroLimites?.toLowerCase() || "";
+  if (!window.produtos[i]) return;
 
-  produtos.forEach((p, i) => {
-    // 🧭 Filtro de nome, categoria ou código de barras
-    const nome = (p.nome || "").toLowerCase();
-    const categoria = (p.categoria || "").toLowerCase();
-    const codigo = (p.codigoBarras || "").toLowerCase();
+  window.produtos[i].minimo = Number(minEl.value) || 0;
+  window.produtos[i].maximo = Number(maxEl.value) || 0;
 
-    if (termo && !nome.includes(termo) && !categoria.includes(termo) && !codigo.includes(termo)) {
-      return; // ignora produto que não corresponde ao filtro
-    }
+  salvarProdutosNoFirebase(window.produtos);
+  salvarTodosLocal();
+  mostrarMensagem(`Limites do produto "${window.produtos[i].nome}" atualizados com sucesso!`, "sucesso");
+  atualizarTabelaLimites();
+}
 
-    // ... restante da lógica para criar a linha
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${p.nome}</td>
-      <td>${p.codigoBarras || "-"}</td>
-      <td>${p.categoria || "-"}</td>
-      <td>${p.quantidade || 0}</td>
-      <td>${p.minimo || 0}</td>
-      <td>${p.maximo || 0}</td>
-      <td>${p.status || "-"}</td>
-      <td>${p.recomendacao || "-"}</td>
-    `;
-    tbody.appendChild(row);
-  });
+function removerLimites(nome) {
+  const produtoRef = window.produtos.find(p => p.nome === nome);
+  if (!produtoRef) return;
+
+  if (confirm(`Remover limites do produto "${nome}"?`)) {
+    produtoRef.minimo = 0;
+    produtoRef.maximo = 0;
+    salvarProdutosNoFirebase(window.produtos);
+    salvarTodosLocal();
+    atualizarTabelaLimites();
+    mostrarMensagem(`Limites de "${nome}" removidos com sucesso.`, "sucesso");
+  }
+}
+
+function filtrarLimites() {
+  const filtro = document.getElementById("filtroLimites");
+  window.filtroLimites = filtro?.value || "";
+  atualizarTabelaLimites();
+}
+
+function limparFiltroLimites() {
+  const filtro = document.getElementById("filtroLimites");
+  if (filtro) filtro.value = "";
+  window.filtroLimites = "";
+  atualizarTabelaLimites();
+  mostrarMensagem("Filtro de Estoque Mínimo e Máximo limpo.", "info");
 }
 
 // --- PAINEL FINANCEIRO ---
@@ -4105,5 +4110,6 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
