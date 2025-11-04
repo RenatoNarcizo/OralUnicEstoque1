@@ -3404,47 +3404,39 @@ function mostrarMensagem(texto, tipo = "info") {
 // 💾 SALVAR / LIMPAR / FILTRAR LIMITES
 // ====================================================
 
-function salvarLimites(i) {
-  const minEl = document.getElementById(`min_${i}`);
-  const maxEl = document.getElementById(`max_${i}`);
+function atualizarTabelaLimites() {
+  const tbody = document.querySelector("#tabelaLimites tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
 
-  if (!window.produtos[i]) return;
+  const produtos = window.produtos || [];
+  const termo = window.filtroLimites?.toLowerCase() || "";
 
-  window.produtos[i].minimo = Number(minEl.value) || 0;
-  window.produtos[i].maximo = Number(maxEl.value) || 0;
+  produtos.forEach((p, i) => {
+    // 🧭 Filtro de nome, categoria ou código de barras
+    const nome = (p.nome || "").toLowerCase();
+    const categoria = (p.categoria || "").toLowerCase();
+    const codigo = (p.codigoBarras || "").toLowerCase();
 
-  salvarProdutosNoFirebase(window.produtos);
-  salvarTodosLocal();
-  mostrarMensagem(`Limites do produto "${window.produtos[i].nome}" atualizados com sucesso!`, "sucesso");
-  atualizarTabelaLimites();
-}
+    if (termo && !nome.includes(termo) && !categoria.includes(termo) && !codigo.includes(termo)) {
+      return; // ignora produto que não corresponde ao filtro
+    }
 
-function removerLimites(nome) {
-  const produtoRef = window.produtos.find(p => p.nome === nome);
-  if (!produtoRef) return;
-
-  if (confirm(`Remover limites do produto "${nome}"?`)) {
-    produtoRef.minimo = 0;
-    produtoRef.maximo = 0;
-    salvarProdutosNoFirebase(window.produtos);
-    salvarTodosLocal();
-    atualizarTabelaLimites();
-    mostrarMensagem(`Limites de "${nome}" removidos com sucesso.`, "sucesso");
-  }
-}
-
-function filtrarLimites() {
-  const filtro = document.getElementById("filtroLimites");
-  window.filtroLimites = filtro?.value || "";
-  atualizarTabelaLimites();
-}
-
-function limparFiltroLimites() {
-  const filtro = document.getElementById("filtroLimites");
-  if (filtro) filtro.value = "";
-  window.filtroLimites = "";
-  atualizarTabelaLimites();
-  mostrarMensagem("Filtro de Estoque Mínimo e Máximo limpo.", "info");
+    // ... restante da lógica para criar a linha
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${p.nome}</td>
+      <td>${p.codigoBarras || "-"}</td>
+      <td>${p.categoria || "-"}</td>
+      <td>${p.quantidade || 0}</td>
+      <td>${p.minimo || 0}</td>
+      <td>${p.maximo || 0}</td>
+      <td>${p.status || "-"}</td>
+      <td>${p.recomendacao || "-"}</td>
+    `;
+    tbody.appendChild(row);
+  });
 }
 
 // --- PAINEL FINANCEIRO ---
