@@ -3497,7 +3497,7 @@ function atualizarPainelFinanceiro() {
 
   // --- CÁLCULOS GERAIS ---
   const valorTotalEstoqueContabil = valorTotalEntradas - valorTotalSaidas;
-  const valorEstoqueAtualEstimado = (valorTotalCustoMedioGeral + valorTotalUltimaEntradaGeral) / 2;
+  const valorEstoqueAtualEstimado = valorTotalUltimaEntradaGeral;
 
   // --- ATUALIZA OS CARDS ---
   const setText = (id, valor) => {
@@ -4109,3 +4109,4 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
