@@ -2643,21 +2643,25 @@ window.limparCamposEntrada = function () {
 
 
 function excluirEntrada(i) {
-  const entrada = entradas[i];
-  if (!confirm(`Excluir a entrada do produto "${entrada.produto}" (Qtd: ${entrada.qtd})? O estoque será ajustado.`)) return;
+  const e = window.entradas[i];
+  if (!e) return;
 
-  
-  
-  // 🔹 Remove a entrada
-  entradas.splice(i, 1);
-  salvarEntradasNoFirebase(entradas); 
-  
-  // 🔹 Atualiza
-  atualizarTabelaEntradas();
-  atualizarTabelaEstoque();
-  atualizarPainelFinanceiro();
-  mostrarMensagem("Entrada excluída e estoque ajustado.", "sucesso");
+  if (!confirm(`Excluir entrada do produto "${e.produto}" (Qtd: ${e.qtd || e.quantidade})?`)) return;
+
+  window.entradas.splice(i, 1);
+
+  salvarEntradasNoFirebase(window.entradas);
+  salvarTodosLocal();
+
+  mostrarMensagem(`🗑️ Entrada de "${e.produto}" excluída.`, "sucesso");
+
+  // 🔁 Atualiza tudo
+  if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
+  if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
+  if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
+  if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
 }
+
 
 function filtrarEntradas() {
     atualizarTabelaEntradas();
@@ -2945,17 +2949,22 @@ function excluirSaida(i) {
   const s = window.saidas[i];
   if (!s) return;
 
-  if (!confirm(`Excluir saída do produto "${s.produto}" (Qtd: ${s.qtd ?? s.quantidade})?`)) return;
+  if (!confirm(`Excluir saída do produto "${s.produto}" (Qtd: ${s.qtd || s.quantidade})?`)) return;
 
-  atualizarEstoque(s.produto, +((s.qtd ?? s.quantidade) || 0));
   window.saidas.splice(i, 1);
+
   salvarSaidasNoFirebase(window.saidas);
   salvarTodosLocal();
-  atualizarTabelaSaidas();
-  atualizarTabelaEstoque();
+
   mostrarMensagem(`🗑️ Saída de "${s.produto}" excluída.`, "sucesso");
-  salvarTodosLocal();
+
+  // 🔁 Atualiza tudo
+  if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
+  if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
+  if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
+  if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
 }
+
 // 🔹 Função para limpar todos os campos da Saída de Materiais
 function limparCamposSaida() {
   const formElements = document.querySelectorAll('#saida input, #saida select, #saida textarea');
