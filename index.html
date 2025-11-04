@@ -1224,125 +1224,120 @@ window.salvarUsuariosNoFirebase = (dados) => salvarDadosNoFirestore("usuarios", 
     }
   } 
 
+
+
 // =================================================================================
-// === FUNÇÕES DE GERENCIAMENTO DE USUÁRIOS E PERFIS (INTEGRADO AQUI) ===
+// === FUNÇÃO CORRIGIDA: SALVAR / ATUALIZAR USUÁRIO (sem deslogar o admin atual) ===
 // =================================================================================
 
 window.salvarUsuarioLocal = async function() {
+  // 🚨 PASSO 1: Guarda o contexto atual do administrador logado
+  const adminUser = auth.currentUser;
+  const adminEmailLogado = adminUser ? adminUser.email.toLowerCase() : null;
 
-    // 🚨 PASSO 1: ARMAZENA O CONTEXTO ATUAL DO ADMIN
-    const adminEmailLogado = auth.currentUser ? auth.currentUser.email.toLowerCase() : null;
+  // 1️⃣ Coleta e validação dos campos
+  const nomeEl = document.getElementById("usuarioNome");
+  const emailEl = document.getElementById("usuarioEmail");
+  const senhaEl = document.getElementById("usuarioSenha");
+  const perfilEl = document.getElementById("usuarioPerfil");
 
-    // 1. Coleta e validação dos campos do PERFIL
-    const nomeEl = document.getElementById("usuarioNome");
-    const emailEl = document.getElementById("usuarioEmail");
-    const senhaEl = document.getElementById("usuarioSenha");
-    const perfilEl = document.getElementById("usuarioPerfil");
-    
-    // ... (Validações e coleta de dados, Mantidas)
-    if (typeof limparErros === 'function') limparErros("usuarios");
-    emailEl.disabled = false;
-    
-    if (!nomeEl.value.trim()) return typeof destacarErro === 'function' ? destacarErro(nomeEl, "Informe o nome!") : alert("Informe o nome!");
-    if (!emailEl.value.trim().includes("@")) return typeof destacarErro === 'function' ? destacarErro(emailEl, "Informe um e-mail válido!") : alert("Informe um e-mail válido!");
-    if (!perfilEl.value.trim()) return typeof destacarErro === 'function' ? destacarErro(perfilEl, "Selecione o perfil!") : alert("Selecione o perfil!");
+  if (!nomeEl.value.trim()) return mostrarMensagem("Informe o nome completo!", "erro");
+  if (!emailEl.value.trim().includes("@")) return mostrarMensagem("Informe um e-mail válido!", "erro");
+  if (!perfilEl.value.trim()) return mostrarMensagem("Selecione o perfil do usuário!", "erro");
 
-    const email = emailEl.value.trim().toLowerCase();
-    const nome = nomeEl.value.trim(); 
-    const perfil = perfilEl.value.trim();
-    const senha = senhaEl.value.trim();
-    
-    const index = window.usuarios.findIndex(u => u.email.toLowerCase() === email);
-    let isNovoUsuario = index === -1;
+  const nome = nomeEl.value.trim();
+  const email = emailEl.value.trim().toLowerCase();
+  const senha = senhaEl.value.trim();
+  const perfil = perfilEl.value.trim();
 
-    try {
-        if (isNovoUsuario) {
-            
-            if (!senha || senha.length < 6) {
-                return typeof destacarErro === 'function' ? destacarErro(senhaEl, "A senha é obrigatória (mín. 6 caracteres) para um novo usuário.") : alert("A senha é obrigatória (mín. 6 caracteres) para um novo usuário.");
-            }
-            
-            // Cria o usuário no Firebase Auth (Isto dispara o evento de login temporário)
-            const firebaseUser = await window.criarUsuarioNoFirebase(email, senha);
+  const index = window.usuarios.findIndex(u => u.email.toLowerCase() === email);
+  const isNovoUsuario = index === -1;
 
-            if (!firebaseUser) {
-                return; 
-            }
-            
-            const novoUsuarioPerfil = {
-                uid: firebaseUser.uid, 
-                email: email,
-                nome: nome,
-                perfil: perfil,
-                criadoEm: new Date().toISOString()
-            };
-            
-            window.usuarios.push(novoUsuarioPerfil);
-            
-            if (typeof mostrarMensagem === 'function') mostrarMensagem(`✅ Usuário "${nome}" criado no Firebase Auth e perfil salvo!`, "sucesso");
+  try {
+    if (isNovoUsuario) {
+      if (!senha || senha.length < 6) {
+        return mostrarMensagem("A senha é obrigatória (mín. 6 caracteres) para um novo usuário.", "erro");
+      }
 
-        } else {
-            // AÇÃO 2: EDIÇÃO DE PERFIL (Mantida)
-            window.usuarios[index].nome = nome;
-            window.usuarios[index].perfil = perfil;
-            
-            if (senha) {
-                 if (typeof mostrarMensagem === 'function') mostrarMensagem("⚠️ Senha não alterada. Use o painel do Firebase para alterar senhas de outros usuários.", "info");
-            } else {
-                 if (typeof mostrarMensagem === 'function') mostrarMensagem(`✏️ Perfil de "${nome}" atualizado!`, "sucesso");
-            }
-            
-            emailEl.disabled = false;
-        }
-        
-        // Prevenção de Duplicatas (Mantida)
-        const uidsUnicos = new Set();
-        const usuariosSemDuplicatas = [];
-        window.usuarios.forEach(u => {
-            if (!uidsUnicos.has(u.uid)) {
-                uidsUnicos.add(u.uid);
-                usuariosSemDuplicatas.push(u);
-            }
-        });
-        window.usuarios = usuariosSemDuplicatas;
-        
-        // 3. Persiste os dados atualizados no LocalStorage e no Firestore
-        if (typeof salvarTodosLocal === 'function') salvarTodosLocal();
-        await window.salvarUsuariosNoFirebase(window.usuarios); 
-        
-        // 🚨 PASSO 2: RESTAURA O CONTEXTO DO ADMIN MANUALMENTE
-        if (adminEmailLogado) {
-             // 1. Tenta encontrar o PERFIL DO ADMIN na lista ATUALIZADA
-             const adminPerfilNaLista = window.usuarios.find(u => u.email.toLowerCase() === adminEmailLogado);
-             
-             if (adminPerfilNaLista) {
-                 // 2. Cria um contexto de usuário (objeto simples) com o perfil encontrado
-                 const userContextAdmin = { 
-                     email: adminPerfilNaLista.email, 
-                     uid: adminPerfilNaLista.uid
-                 };
-                 // 3. Força a exibição do sistema usando o perfil conhecido do Admin
-                 mostrarSistema(userContextAdmin); 
-             } else {
-                 // Fallback para o método padrão
-                 mostrarSistema(auth.currentUser); 
-             }
-        }
-        
-        // 4. Atualiza a interface da tabela
-        if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
-        
-        // 5. Limpa os campos após o sucesso
-        if (typeof limparCampos === 'function') {
-             limparCampos("usuarioNome", "usuarioEmail", "usuarioSenha", "usuarioPerfil"); 
-        } else {
-            nomeEl.value = ''; emailEl.value = ''; senhaEl.value = ''; perfilEl.value = '';
-        }
-        
-    } catch (e) {
-        console.error("Erro ao salvar usuário:", e);
-        if (typeof mostrarMensagem === 'function') mostrarMensagem("❌ Erro ao salvar o usuário. Verifique o console.", "erro");
+      // ✅ Guarda o admin atual antes da criação
+      const userBefore = auth.currentUser;
+
+      // Cria o novo usuário no Firebase Auth (isso faz login automático)
+      const firebaseUser = await window.criarUsuarioNoFirebase(email, senha);
+
+      if (!firebaseUser) {
+        mostrarMensagem("Falha ao criar o usuário no Firebase.", "erro");
+        return;
+      }
+
+      // 🔁 Reautentica o admin original imediatamente após criar o novo usuário
+      if (userBefore) {
+        await auth.updateCurrentUser(userBefore);
+      }
+
+      // Adiciona o novo usuário à lista local
+      const novoUsuarioPerfil = {
+        uid: firebaseUser.uid,
+        email,
+        nome,
+        perfil,
+        criadoEm: new Date().toISOString(),
+      };
+
+      window.usuarios.push(novoUsuarioPerfil);
+
+      mostrarMensagem(`✅ Usuário "${nome}" criado no Firebase Auth e perfil salvo!`, "sucesso");
+    } else {
+      // ✏️ Atualiza perfil existente
+      window.usuarios[index].nome = nome;
+      window.usuarios[index].perfil = perfil;
+      if (senha) {
+        mostrarMensagem("⚠️ Senha não pode ser alterada aqui. Use o painel do Firebase.", "info");
+      } else {
+        mostrarMensagem(`✏️ Perfil de "${nome}" atualizado com sucesso!`, "sucesso");
+      }
     }
+
+    // 🧹 Remove duplicatas
+    const uidsUnicos = new Set();
+    window.usuarios = window.usuarios.filter(u => {
+      if (uidsUnicos.has(u.uid)) return false;
+      uidsUnicos.add(u.uid);
+      return true;
+    });
+
+    // 💾 Salva local e envia para o Firestore
+    if (typeof salvarTodosLocal === "function") salvarTodosLocal();
+    if (typeof window.salvarUsuariosNoFirebase === "function") {
+      await window.salvarUsuariosNoFirebase(window.usuarios);
+    }
+
+    // 🔄 Mantém o admin original autenticado
+    if (adminUser && auth.currentUser?.uid !== adminUser.uid) {
+      await auth.updateCurrentUser(adminUser);
+    }
+
+    // 🔁 Atualiza tabela e limpa campos
+    if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
+
+    nomeEl.value = "";
+    emailEl.value = "";
+    senhaEl.value = "";
+    perfilEl.value = "";
+
+  } catch (e) {
+    console.error("❌ Erro ao salvar usuário:", e);
+    mostrarMensagem("Erro ao salvar usuário. Veja o console para detalhes.", "erro");
+
+    // Caso ocorra algum erro, reautentica o admin para segurança
+    if (adminUser && auth.currentUser?.uid !== adminUser.uid) {
+      try {
+        await auth.updateCurrentUser(adminUser);
+      } catch (err) {
+        console.error("Falha ao restaurar sessão do admin:", err);
+      }
+    }
+  }
 };
 
 /**
@@ -4109,4 +4104,5 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
