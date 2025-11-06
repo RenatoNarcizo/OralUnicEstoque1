@@ -1532,64 +1532,78 @@ function mostrarSistema(user) {
 }
   
   window.fazerLogin = async function() {
-    // 1. Coleta os valores e garante que os campos vazios sejam tratados
-    const usuarioEl = document.getElementById("usuarioLogin");
-    const senhaEl = document.getElementById("senhaLogin");
+  const usuarioEl = document.getElementById("usuarioLogin");
+  const senhaEl = document.getElementById("senhaLogin");
+  const msgEl = document.getElementById("loginMsg");
 
-    const usuario = usuarioEl.value.trim(); // Limpa espaços
-    const senha = senhaEl.value.trim();     // Limpa espaços
+  const usuario = usuarioEl.value.trim();
+  const senha = senhaEl.value.trim();
 
-    if (!usuario || !senha) {
-        // Usa a função de erro se estiver disponível, senão usa alert
-        if (typeof destacarErro === 'function') {
-            if (!usuario) destacarErro(usuarioEl, "Informe o e-mail!");
-            if (!senha) destacarErro(senhaEl, "Informe a senha!");
-        } else {
-            alert("Preencha e-mail e senha!");
-        }
-        return;
+  // 🔹 Limpa mensagem anterior
+  msgEl.style.display = "none";
+  msgEl.textContent = "";
+
+  if (!usuario || !senha) {
+    msgEl.style.display = "block";
+    msgEl.style.color = "red";
+    msgEl.textContent = "⚠️ Preencha e-mail e senha!";
+    return;
+  }
+
+  const email = usuario.toLowerCase();
+
+  if (!email.includes("@")) {
+    msgEl.style.display = "block";
+    msgEl.style.color = "red";
+    msgEl.textContent = "⚠️ E-mail inválido.";
+    return;
+  }
+
+  try {
+    // 🔹 Tenta logar no Firebase
+    await signInWithEmailAndPassword(auth, email, senha);
+
+    // ✅ Exibe mensagem de sucesso
+    msgEl.style.display = "block";
+    msgEl.style.color = "green";
+    msgEl.textContent = "✅ Login realizado com sucesso!";
+    setTimeout(() => (msgEl.style.display = "none"), 2000);
+
+  } catch (error) {
+    console.error(error.code, error.message);
+    msgEl.style.display = "block";
+    msgEl.style.color = "red";
+
+    if (
+      error.code === "auth/invalid-credential" ||
+      error.code === "auth/wrong-password" ||
+      error.code === "auth/user-not-found"
+    ) {
+      msgEl.textContent = "❌ Usuário ou senha incorretos!";
+    } else if (error.code === "auth/invalid-email") {
+      msgEl.textContent = "⚠️ E-mail inválido.";
+    } else {
+      msgEl.textContent = `Erro: ${error.message}`;
     }
-
-    // 2. Padroniza o e-mail para garantir o formato correto (minúsculas)
-    const email = usuario.toLowerCase(); 
-
-    // 3. Validação de formato de e-mail antes de enviar ao Firebase (boa prática)
-    if (!email.includes("@") || email.length < 5) {
-        if (typeof destacarErro === 'function') {
-            destacarErro(usuarioEl, "O formato do e-mail é inválido.");
-        } else {
-            alert("O formato do e-mail é inválido.");
-        }
-        return;
-    }
-
-    try {
-        // Tenta logar no Firebase Auth
-        await signInWithEmailAndPassword(auth, email, senha);
-        // O onAuthStateChanged cuidará da transição da tela
-    } catch (error) {
-        console.error(error.code, error.message);
-        
-        let mensagemErro = "Erro desconhecido ao tentar logar.";
-        
-        if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
-            mensagemErro = "E-mail ou senha inválidos. Verifique suas credenciais.";
-        } else if (error.code === 'auth/invalid-email') {
-            // Este erro deve ser capturado pela nossa validação antes, mas é bom manter aqui
-            mensagemErro = "O formato do e-mail é inválido.";
-        } else {
-            mensagemErro = `Erro: ${error.message}`;
-        }
-
-        if (typeof mostrarMensagem === 'function') {
-            mostrarMensagem(mensagemErro, "erro");
-        } else {
-            alert(mensagemErro);
-        }
-    }
+  }
 };
+
  
- 
+ // 🔹 Permitir login ao pressionar Enter nos campos de login
+document.addEventListener("DOMContentLoaded", () => {
+  const usuarioEl = document.getElementById("usuarioLogin");
+  const senhaEl = document.getElementById("senhaLogin");
+
+  [usuarioEl, senhaEl].forEach((el) => {
+    el.addEventListener("keypress", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault(); // evita recarregar a página
+        window.fazerLogin();    // chama a função de login existente
+      }
+    });
+  });
+});
+
 // === MONITORAR LOGIN (VERSÃO CORRIGIDA E SINCRONIZADA) ===
 onAuthStateChanged(auth, async (user) => {
   const login = document.getElementById("loginView");
@@ -2384,7 +2398,9 @@ window.limparCamposProduto = function () {
   const codBarrasEl = document.getElementById("produtoCodigoBarras");
   const fotoEl = document.getElementById("produtoFoto");
   const fotoPreview = document.getElementById("fotoPreview");
+  const filtro = document.getElementById("filtroProduto");
 
+  // 🧹 Limpa todos os campos de cadastro
   if (nomeEl) nomeEl.value = "";
   if (categoriaEl) categoriaEl.value = "";
   if (embalagemEl) embalagemEl.value = "";
@@ -2393,23 +2409,37 @@ window.limparCamposProduto = function () {
   if (fotoEl) fotoEl.value = "";
   if (fotoPreview) fotoPreview.innerHTML = "";
 
-  // Remove destaque de produto em edição
+  // 🔹 Remove produto em edição, se existir
   if (typeof indiceEdicaoProduto !== "undefined") {
     indiceEdicaoProduto = null;
   }
 
-  // Restaura visual dos botões e tabela
+  // 🔹 Restaura visual dos botões e tabela
   document.querySelectorAll("#tabelaProdutos tbody tr").forEach((tr) => {
     tr.style.background = "";
   });
 
-  // Esconde botão "Cancelar Edição" se estiver visível
+  // 🔹 Esconde botão "Cancelar Edição", se houver
   if (typeof window.mostrarBotaoCancelar === "function") {
     window.mostrarBotaoCancelar(false);
   }
 
-  mostrarMensagem("🧹 Campos limpos.", "info");
+  // 🔹 Limpa o campo de filtro e recarrega a tabela completa
+  if (filtro) {
+    filtro.value = "";
+    if (typeof window.filtrarProdutos === "function") {
+      window.filtrarProdutos(); // atualiza tabela com todos os produtos
+    }
+  }
+
+  // ✅ Mensagem de feedback
+  if (typeof mostrarMensagem === "function") {
+    mostrarMensagem("🧹 Campos e filtro limpos.", "info");
+  } else {
+    console.log("🧹 Campos e filtro limpos.");
+  }
 };
+
 
 
 // ===============================================
@@ -2436,6 +2466,47 @@ window.mostrarBotaoCancelar = function (exibir) {
     }
   } else {
     if (botaoCancelar) botaoCancelar.remove();
+  }
+};
+// 🔹 Função de filtro de produtos (corrigida e segura)
+window.filtrarProdutos = function() {
+  const filtro = document.getElementById("filtroProduto").value.toLowerCase().trim();
+  const tabela = document.getElementById("tabelaProdutos").querySelector("tbody");
+
+  if (!tabela) return;
+
+  tabela.innerHTML = ""; // limpa tabela antes de preencher
+
+  const lista = Array.isArray(window.produtos) ? window.produtos : [];
+
+  const filtrados = lista.filter(p => {
+    const nome = (p.nome || "").toLowerCase();
+    const categoria = (p.categoria || "").toLowerCase();
+    return nome.includes(filtro) || categoria.includes(filtro);
+  });
+
+  filtrados.forEach((p, i) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${p.foto ? `<img src="${p.foto}" class="thumb">` : "-"}</td>
+      <td>${p.nome || "-"}</td>
+      <td>${p.categoria || "-"}</td>
+      <td>${p.embalagem || "-"}</td>
+      <td>${p.qtdEmbalagem || "-"}</td>
+      <td>${p.codigoBarras || "-"}</td>
+      <td>
+        <button onclick="editarProduto(${i})"><i class="fa fa-edit"></i></button>
+        <button onclick="excluirProduto(${i})"><i class="fa fa-trash"></i></button>
+      </td>
+    `;
+    tabela.appendChild(row);
+  });
+
+  if (filtrados.length === 0) {
+    const row = document.createElement("tr");
+    row.innerHTML = `<td colspan="8" style="text-align:center; color:#888;">Nenhum produto encontrado.</td>`;
+    tabela.appendChild(row);
   }
 };
 
@@ -2617,26 +2688,48 @@ function registrarEntrada() {
 // ✅ LIMPAR CAMPOS DE ENTRADA (função global)
 // ===============================================
 window.limparCamposEntrada = function () {
+  // 🔹 Limpa todos os campos de input, select e textarea dentro da seção de entrada
   const formElements = document.querySelectorAll('#entrada input, #entrada select, #entrada textarea');
   formElements.forEach(el => {
     if (el.type === "checkbox" || el.type === "radio") el.checked = false;
     else el.value = "";
   });
 
-  // Remove destaque visual de edição
+  // 🔹 Remove destaque visual de edição
   document.querySelectorAll("#tabelaEntradas tbody tr").forEach(tr => tr.style.background = "");
 
-  // Reseta modo de edição e oculta botão "Cancelar Edição"
-  indiceEdicaoEntrada = null;
+  // 🔹 Reseta modo de edição e oculta botão "Cancelar Edição"
+  if (typeof indiceEdicaoEntrada !== "undefined") indiceEdicaoEntrada = null;
   if (typeof window.mostrarBotaoCancelarEntrada === "function") {
     window.mostrarBotaoCancelarEntrada(false);
   }
 
-  mostrarMensagem("🧹 Campos de entrada limpos.", "info");
+  // 🔹 Limpa o filtro e recarrega a tabela de entradas
+  const filtroEl = document.getElementById("filtroEntrada");
+  if (filtroEl) filtroEl.value = "";
 
-  // Foco de volta no leitor de código de barras
+  if (typeof window.atualizarTabelaEntradas === "function") {
+    window.atualizarTabelaEntradas(); // mostra novamente todas as entradas
+  } else if (typeof window.filtrarEntradas === "function") {
+    window.filtrarEntradas(); // fallback, caso a função tenha outro nome
+  }
+
+  // 🔹 Atualiza também o painel financeiro, se houver
+  if (typeof window.atualizarPainelFinanceiro === "function") {
+    window.atualizarPainelFinanceiro();
+  }
+
+  // ✅ Feedback visual
+  if (typeof mostrarMensagem === "function") {
+    mostrarMensagem("🧹 Campos e filtro de entrada limpos. Tabela recarregada.", "info");
+  } else {
+    console.log("🧹 Campos e filtro de entrada limpos. Tabela recarregada.");
+  }
+
+  // 🔹 Foco de volta no leitor de código de barras
   document.getElementById("entradaCodigoBarras")?.focus();
 };
+
 
 
 
@@ -2746,7 +2839,8 @@ function editarEntrada(index) {
 
   // Preenche os campos do formulário com os dados da entrada
   document.getElementById("entradaProduto").value = entrada.produto || "";
-  document.getElementById("entradaQuantidade").value = entrada.quantidade || "";
+  document.getElementById("entradaQuantidade").value =
+  entrada.quantidade ?? entrada.qtd ?? entrada.qtdEntrada ?? "";
   document.getElementById("entradaValor").value = entrada.valor || "";
   document.getElementById("entradaData").value = entrada.data || "";
   document.getElementById("entradaNota").value = entrada.nota || "";
@@ -2910,13 +3004,23 @@ function editarSaida(index) {
   document.getElementById("saidaData").value = s.data || "";
   document.getElementById("saidaCodigoBarras").value = s.codigoBarras || "";
 
+   const total = window.saidas.length;
   document.querySelectorAll("#tabelaSaidas tbody tr").forEach((tr, i) => {
-    tr.style.background = i === index ? "#fff3cd" : "";
+    const idxOriginal = total - 1 - i;
+    tr.style.background = idxOriginal === index ? "#fff3cd" : "";
   });
 
   mostrarBotaoCancelarSaida(true);
   mostrarMensagem(`✏️ Editando saída de: ${s.produto}`, "info");
 }
+// 🔹 Alias para permitir que o campo de filtro funcione corretamente
+function filtrarSaidas() {
+  // apenas reaproveita a função existente
+  if (typeof atualizarTabelaSaidas === "function") {
+    atualizarTabelaSaidas();
+  }
+}
+
 
 function cancelarEdicaoSaida() {
   indiceEdicaoSaida = null;
@@ -3097,89 +3201,126 @@ document.addEventListener("DOMContentLoaded", () => {
   setTimeout(configurarAutoCompleteSaida, 1500); // dá tempo da tela carregar
 });
 
-// ====================================================
-// 📦 ESTOQUE ATUAL (corrigido e aprimorado)
-// ====================================================
-function atualizarTabelaEstoque() {
+// ============================================================
+// 📦 ESTOQUE ATUAL — Revisado e Completo
+// ============================================================
+
+function atualizarTabelaEstoque(filtroTexto = "") {
   const tabela = document.querySelector("#tabelaEstoque tbody");
   if (!tabela) return;
 
-  const filtro = (document.getElementById("filtroEstoque")?.value || "").toLowerCase();
+  // Captura o texto de filtro (do parâmetro ou do campo)
+  const filtro = filtroTexto.toLowerCase().trim() || 
+    (document.getElementById("filtroEstoque")?.value || "").toLowerCase().trim();
+
   tabela.innerHTML = "";
 
-  const produtos = window.produtos || [];
-  const entradas = window.entradas || [];
-  const saidas = window.saidas || [];
+  const entradas = Array.isArray(window.entradas) ? window.entradas : [];
+  const saidas = Array.isArray(window.saidas) ? window.saidas : [];
+  let produtos = Array.isArray(window.produtos) ? window.produtos : [];
 
-  if (!Array.isArray(produtos) || produtos.length === 0) {
-    tabela.innerHTML = `
-      <tr><td colspan="9" style="text-align:center; color:#888;">
-        Nenhum produto encontrado no estoque ou os dados ainda estão sendo carregados.
-      </td></tr>`;
-    return;
-  }
-
-  // 🔹 Cria o mapa de movimentações (entradas - saídas)
+  // 🔹 Cria mapa de movimentações (entradas - saídas)
   const mapaEstoque = {};
   entradas.forEach(e => {
-    const nome = e.produto || e.nomeProduto || "";
-    if (!mapaEstoque[nome]) mapaEstoque[nome] = 0;
-    mapaEstoque[nome] += Number(e.qtd || e.quantidade || 0);
+    const nome = (e.produto || e.nomeProduto || "").trim();
+    if (!nome) return;
+    mapaEstoque[nome] = (mapaEstoque[nome] || 0) + Number(e.qtd || e.quantidade || 0);
   });
   saidas.forEach(s => {
-    const nome = s.produto || s.nomeProduto || "";
-    if (!mapaEstoque[nome]) mapaEstoque[nome] = 0;
-    mapaEstoque[nome] -= Number(s.qtd || s.quantidade || 0);
+    const nome = (s.produto || s.nomeProduto || "").trim();
+    if (!nome) return;
+    mapaEstoque[nome] = (mapaEstoque[nome] || 0) - Number(s.qtd || s.quantidade || 0);
   });
 
-  // 🔹 Monta a tabela
-  produtos.forEach((p, i) => {
+  // 🔹 Remove produtos que não existem mais nas movimentações
+  const nomesAtivos = Object.keys(mapaEstoque);
+  produtos = produtos.filter(p => nomesAtivos.includes(p.nome?.trim()));
+
+  // 🔹 Atualiza quantidades reais
+  produtos.forEach(p => {
+    const nome = (p.nome || "").trim();
+    let qtdReal = mapaEstoque[nome] ?? 0;
+    if (qtdReal < 0) qtdReal = 0;
+    p.quantidade = qtdReal;
+  });
+
+  // 🔍 Filtro avançado — produto, categoria, quantidade ou validade
+  const produtosFiltrados = produtos.filter(p => {
     const nome = (p.nome || "").toLowerCase();
     const categoria = (p.categoria || "").toLowerCase();
-    if (filtro && !nome.includes(filtro) && !categoria.includes(filtro)) return;
+    const quantidade = String(p.quantidade ?? 0).toLowerCase();
+    const validade = (p.validade || "").toLowerCase();
 
-    let qtdReal = mapaEstoque[p.nome] ?? p.quantidade ?? 0;
-    if (qtdReal < 0) qtdReal = 0; // nunca negativo
-    p.quantidade = qtdReal; // mantém sincronizado
+    if (!filtro) return true;
 
-    const valor = Number(p.ultimoValor || 0);
-
-    const linha = document.createElement("tr");
-    linha.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${p.nome || "-"}</td>
-      <td>${p.codigoBarras || "-"}</td>
-      <td>${p.categoria || "-"}</td>
-      <td style="text-align:center;">${qtdReal}</td>
-      <td>${p.lote || "-"}</td>
-      <td>${valor ? valor.toFixed(2) : "-"}</td>
-      <td>${p.validade || "-"}</td>
-      <td style="font-weight:bold; color:${qtdReal > 0 ? '#198754' : '#dc3545'};">
-        ${qtdReal > 0 ? "✅ Em Estoque" : "❌ Zerado"}
-      </td>
-    `;
-    tabela.appendChild(linha);
+    return (
+      nome.includes(filtro) ||
+      categoria.includes(filtro) ||
+      quantidade.includes(filtro) ||
+      validade.includes(filtro)
+    );
   });
 
-  // 💾 Salva atualizações
+  // 🧾 Exibição da tabela
+  if (produtosFiltrados.length === 0) {
+    tabela.innerHTML = `
+      <tr><td colspan="9" style="text-align:center; color:#888;">
+        Nenhum produto encontrado no estoque atual.
+      </td></tr>`;
+  } else {
+    produtosFiltrados.forEach((p, i) => {
+      const valor = Number(p.ultimoValor || 0);
+      const linha = document.createElement("tr");
+      linha.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${p.nome || "-"}</td>
+        <td>${p.codigoBarras || "-"}</td>
+        <td>${p.categoria || "-"}</td>
+        <td style="text-align:center;">${p.quantidade}</td>
+        <td>${p.lote || "-"}</td>
+        <td>${valor ? valor.toFixed(2) : "-"}</td>
+        <td>${p.validade || "-"}</td>
+        <td style="font-weight:bold; color:${p.quantidade > 0 ? '#198754' : '#dc3545'};">
+          ${p.quantidade > 0 ? "✅ Em Estoque" : "❌ Zerado"}
+        </td>
+      `;
+      tabela.appendChild(linha);
+    });
+  }
+
+  // 💾 Salva apenas os produtos ativos e sincronizados
+  window.produtos = produtos;
   salvarTodosLocal();
   salvarProdutosNoFirebase(window.produtos);
+
+  // 🕒 Atualiza data/hora da última sincronização (opcional)
+  const lbl = document.getElementById("ultimaAtualizacaoEstoque");
+  if (lbl) lbl.textContent = "Última atualização: " + new Date().toLocaleString();
 }
 
-// 🔍 Filtro rápido
+// ============================================================
+// 🔍 FILTRO DINÂMICO — executa enquanto o usuário digita
+// ============================================================
 function filtrarEstoque() {
-  atualizarTabelaEstoque();
+  const campo = document.getElementById("filtroEstoque");
+  if (!campo) return;
+  const texto = campo.value.toLowerCase().trim();
+  atualizarTabelaEstoque(texto);
 }
 
-// 🧹 Limpar filtro
+// ============================================================
+// 🧹 LIMPAR FILTRO — botão “Limpar”
+// ============================================================
 function limparFiltroEstoque() {
   const campo = document.getElementById("filtroEstoque");
-  campo.value = "";
+  if (campo) campo.value = "";
   atualizarTabelaEstoque();
-  campo.focus();
+  campo?.focus();
 }
 
-// 🔄 Recalcular estoque geral
+// ============================================================
+// 🔄 RE-CALCULAR ESTOQUE (botão manual, opcional)
+// ============================================================
 function recalcularEstoqueGeral() {
   const produtos = window.produtos || [];
   const entradas = window.entradas || [];
@@ -3209,10 +3350,26 @@ function recalcularEstoqueGeral() {
   mostrarMensagem("🔄 Estoque recalculado e atualizado com sucesso!", "sucesso");
 }
 
-/// ====================================================
-// ⚙️ ESTOQUE MÍNIMO E MÁXIMO (corrigido e com resumo ativo)
-// ====================================================
-function atualizarTabelaLimites() {
+// ============================================================
+// ⚡ ATUALIZAÇÃO AUTOMÁTICA APÓS MOVIMENTAÇÕES
+// ============================================================
+["registrarEntrada", "registrarSaida", "excluirEntrada", "excluirSaida"].forEach(nomeFunc => {
+  const original = window[nomeFunc];
+  if (typeof original === "function") {
+    window[nomeFunc] = function(...args) {
+      const resultado = original.apply(this, args);
+      setTimeout(() => atualizarTabelaEstoque(), 300); // pequeno delay para garantir salvamento
+      return resultado;
+    };
+  }
+});
+
+
+// ============================================================
+// 📊 ESTOQUE MÍNIMO E MÁXIMO — Corrigido com regra de recomendação revisada
+// ============================================================
+
+function atualizarTabelaLimites(filtroTexto = "") {
   const tabela = document.querySelector("#tabelaLimites tbody");
   if (!tabela) return;
 
@@ -3220,6 +3377,10 @@ function atualizarTabelaLimites() {
   const entradas = window.entradas || [];
   const saidas = window.saidas || [];
   const resumoDiv = document.getElementById("resumoLimites");
+
+  // Captura o texto do filtro
+  const filtro = filtroTexto.toLowerCase().trim() ||
+    (document.getElementById("filtroLimites")?.value || "").toLowerCase().trim();
 
   tabela.innerHTML = "";
 
@@ -3239,8 +3400,6 @@ function atualizarTabelaLimites() {
     return;
   }
 
-  let total = 0, abaixo = 0, dentro = 0, acima = 0;
-
   // 🔹 Cria o mapa de estoque real (entradas - saídas)
   const mapaEstoque = {};
   entradas.forEach(e => {
@@ -3254,7 +3413,44 @@ function atualizarTabelaLimites() {
     mapaEstoque[nome] -= Number(s.qtd || s.quantidade || 0);
   });
 
-  produtos.forEach((p, i) => {
+  let total = 0, abaixo = 0, dentro = 0, acima = 0;
+
+  // 🔍 Filtro avançado + cálculo de limites e recomendação revisada
+  const produtosFiltrados = produtos.filter(p => {
+    const nome = (p.nome || "").toLowerCase();
+    const categoria = (p.categoria || "").toLowerCase();
+    const qtd = Number(mapaEstoque[p.nome] ?? p.quantidade ?? 0);
+    const minimo = Number(p.minimo || 0);
+    const maximo = Number(p.maximo || 0);
+
+    let status = "✅ Dentro do Limite";
+    let recomendacao = "Estoque ideal";
+
+    if (qtd < minimo) {
+      status = "⚠️ Abaixo do Mínimo";
+      recomendacao = `Comprar ${maximo - qtd}`; // 🟢 corrigido para atingir o máximo
+    } else if (maximo > 0 && qtd > maximo) {
+      status = "📦 Acima do Máximo";
+      recomendacao = `Reduzir novas entradas (${qtd - maximo} excedentes)`;
+    }
+
+    const textoStatus = status.toLowerCase();
+    const textoRecomendacao = recomendacao.toLowerCase();
+    const textoQtd = String(qtd);
+
+    if (!filtro) return true;
+
+    return (
+      nome.includes(filtro) ||
+      categoria.includes(filtro) ||
+      textoQtd.includes(filtro) ||
+      textoStatus.includes(filtro) ||
+      textoRecomendacao.includes(filtro)
+    );
+  });
+
+  // 🔸 Monta a tabela
+  produtosFiltrados.forEach((p, i) => {
     total++;
 
     let qtd = mapaEstoque[p.nome] ?? p.quantidade ?? 0;
@@ -3264,19 +3460,23 @@ function atualizarTabelaLimites() {
     const maximo = Number(p.maximo || 0);
 
     let status = "✅ Dentro do Limite";
-    let recomendacao = "-";
+    let recomendacao = "Estoque ideal";
 
     if (qtd < minimo) {
       status = "⚠️ Abaixo do Mínimo";
-      recomendacao = `Comprar ${minimo - qtd}`;
+      recomendacao = `Comprar ${maximo - qtd}`; // ✅ corrigido
       abaixo++;
     } else if (maximo > 0 && qtd > maximo) {
       status = "📦 Acima do Máximo";
-      recomendacao = `Excedente de ${qtd - maximo}`;
+      recomendacao = `Reduzir novas entradas (${qtd - maximo} excedentes)`;
       acima++;
     } else {
       dentro++;
     }
+
+    const corStatus =
+      status.includes("Abaixo") ? "#dc3545" :
+      status.includes("Acima") ? "#fd7e14" : "#198754";
 
     const linha = document.createElement("tr");
     linha.innerHTML = `
@@ -3287,7 +3487,7 @@ function atualizarTabelaLimites() {
       <td style="text-align:center;">${qtd}</td>
       <td><input type="number" id="min_${i}" value="${minimo}" style="width:80px"></td>
       <td><input type="number" id="max_${i}" value="${maximo}" style="width:80px"></td>
-      <td>${status}</td>
+      <td style="color:${corStatus}; font-weight:bold;">${status}</td>
       <td>${recomendacao}</td>
       <td>
         <button onclick="salvarLimites(${i})" title="Salvar Limites">
@@ -3298,7 +3498,7 @@ function atualizarTabelaLimites() {
     tabela.appendChild(linha);
   });
 
-  // 🔸 Atualiza o resumo (mostrado no painel Estoque Mínimo e Máximo)
+  // 🔸 Atualiza o resumo
   if (resumoDiv) {
     resumoDiv.innerHTML = `
       🧾 Total de Produtos: ${total} |
@@ -3309,10 +3509,31 @@ function atualizarTabelaLimites() {
   }
 }
 
+// ============================================================
+// 🔍 Filtro dinâmico — ao digitar
+// ============================================================
+function filtrarLimites() {
+  const campo = document.getElementById("filtroLimites");
+  if (!campo) return;
+  const texto = campo.value.toLowerCase().trim();
+  atualizarTabelaLimites(texto);
+}
+
+// ============================================================
+// 🧹 Limpar filtro — botão “Limpar”
+// ============================================================
+function limparFiltroLimites() {
+  const campo = document.getElementById("filtroLimites");
+  if (campo) campo.value = "";
+  atualizarTabelaLimites();
+  campo?.focus();
+}
+
+
 
 
 // ====================================================
-// 🛒 GERAR LISTA DE COMPRA (versão final corrigida)
+// 🛒 GERAR LISTA DE COMPRA — sincronizada com Estoque Mín/Máx
 // ====================================================
 function gerarListaCompra() {
   const container = document.getElementById("listaCompraContainer");
@@ -3345,21 +3566,29 @@ function gerarListaCompra() {
     mapaEstoque[nome] = (mapaEstoque[nome] || 0) - Number(s.qtd || s.quantidade || 0);
   });
 
-  // 🔹 2. Identifica produtos abaixo do mínimo
+  // 🔹 2. Identifica produtos abaixo do mínimo (usando a mesma lógica do Estoque Mín/Máx)
   const produtosAbaixo = produtos
     .map(p => {
       const nome = (p.nome || "").trim().toLowerCase();
       const qtdAtual = Number(mapaEstoque[nome] ?? p.quantidade ?? 0);
       const minimo = Number(p.minimo || 0);
+      const maximo = Number(p.maximo || 0);
       const categoria = p.categoria || "-";
-      const diferenca = minimo - qtdAtual;
+
+      let recomendacao = "";
+
+      // 🟢 Mesma regra da tabela de limites
+      if (qtdAtual < minimo) {
+        const qtdComprar = maximo > 0 ? (maximo - qtdAtual) : (minimo - qtdAtual);
+        recomendacao = `Comprar ${qtdComprar}`;
+      }
 
       return {
         nome: p.nome,
         codigoBarras: p.codigoBarras || "-",
         categoria,
         qtd: qtdAtual,
-        recomendacao: diferenca > 0 ? `Comprar ${diferenca}` : ""
+        recomendacao
       };
     })
     .filter(p => p.recomendacao)
@@ -3369,7 +3598,6 @@ function gerarListaCompra() {
   // 🔹 3. Monta a tabela
   tbody.innerHTML = "";
 
-  // Se nenhum produto abaixo do mínimo → mostra aviso
   if (produtosAbaixo.length === 0) {
     const mensagem = filtroCategoria
       ? `Nenhum item abaixo do estoque mínimo na categoria <b>${filtroCategoria}</b>.`
@@ -3384,7 +3612,7 @@ function gerarListaCompra() {
     totalSpan.textContent = "0";
     container.style.display = "block";
     mostrarMensagem("Nenhum produto abaixo do estoque mínimo encontrado.", "info");
-    return; // ✅ termina corretamente a função aqui
+    return;
   }
 
   // 🔹 4. Preenche linhas da tabela
@@ -3407,6 +3635,7 @@ function gerarListaCompra() {
   container.scrollIntoView({ behavior: "smooth" });
   mostrarMensagem(`Lista de compra gerada com ${produtosAbaixo.length} item(ns).`, "sucesso");
 }
+
 
 
 // ====================================================
@@ -4161,6 +4390,7 @@ document.addEventListener('click', (event) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
 
