@@ -1216,7 +1216,7 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-
+  
 
   const estoqueRef = doc(db, "estoqueGlobal", "estoque");
   const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
@@ -1249,19 +1249,20 @@
       console.log("👥 Lista de usuários atualizada em tempo real.");
     }
   });
-
-
-
-
-// ==========================================================
-// ADICIONE ESTE BLOCO NO INÍCIO DO SEU <script type="module">
-// ==========================================================
-  
+ 
 // 🔹 Criação de variáveis globais com proteção
 window.produtos = JSON.parse(localStorage.getItem("produtos") || "[]");
 window.entradas = JSON.parse(localStorage.getItem("entradas") || "[]");
 window.saidas = JSON.parse(localStorage.getItem("saidas") || "[]");
 window.usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
+// ===================================================
+// 🔹 Wrappers globais para salvar dados no Firestore
+// ===================================================
+window.salvarProdutosNoFirebase = (dados) => salvarDadosNoFirestore("produtos", dados);
+window.salvarEntradasNoFirebase = (dados) => salvarDadosNoFirestore("entradas", dados);
+window.salvarSaidasNoFirebase = (dados) => salvarDadosNoFirestore("saidas", dados);
+window.salvarUsuariosNoFirebase = (dados) => salvarDadosNoFirestore("usuarios", dados);
+
 
 // ✅ Garante que as variáveis sejam sempre arrays válidos
 if (!Array.isArray(window.produtos)) window.produtos = [];
@@ -1297,7 +1298,20 @@ console.log("Dados carregados do localStorage:", {
     },
 };
 
- 
+ async function salvarDadosNoFirestore(nomeColecao, dados) {
+  if (!auth.currentUser) return;
+
+  try {
+    const docRef = doc(db, "estoqueGlobal", nomeColecao === "usuarios" ? "usuarios" : "estoque");
+    await setDoc(docRef, nomeColecao === "usuarios"
+      ? { usuarios: dados }
+      : { [nomeColecao]: dados }, { merge: true });
+    console.log(`✅ ${nomeColecao} salvos no Firestore com sucesso.`);
+  } catch (e) {
+    console.error("❌ Erro ao salvar no Firestore:", e);
+  }
+}
+
 // 🔹 Salva dados globais no localStorage com segurança
 function salvarTodosLocal() {
   try {
@@ -4991,3 +5005,4 @@ document
 
 
 
+	
