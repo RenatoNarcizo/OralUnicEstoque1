@@ -1216,10 +1216,7 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  // 🌐 Sincronização em tempo real (estoqueGlobal/estoque)
-  import {
-    salvarDadosNoFirestore
-  } from "./firebase-utils.js"; // se preferir, podemos embutir dentro deste script
+
 
   const estoqueRef = doc(db, "estoqueGlobal", "estoque");
   const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
@@ -4987,6 +4984,7 @@ document
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
 
