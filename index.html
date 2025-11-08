@@ -1181,26 +1181,81 @@
 
 
 
+<!-- === 🔥 FIREBASE SINCRONIZAÇÃO EM TEMPO REAL - INÍCIO === -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-  import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import {
+    initializeApp
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    onAuthStateChanged,
+    signOut,
+    createUserWithEmailAndPassword
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    setDoc,
+    getDoc,
+    onSnapshot
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+  // 🔐 Configuração do Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
+    authDomain: "oralunicestoque.firebaseapp.com",
+    projectId: "oralunicestoque",
+    storageBucket: "oralunicestoque.appspot.com",
+    messagingSenderId: "660233908877",
+    appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
+  };
+
+  // 🚀 Inicializa Firebase e Firestore
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // 🌐 Sincronização em tempo real (estoqueGlobal/estoque)
+  import {
+    salvarDadosNoFirestore
+  } from "./firebase-utils.js"; // se preferir, podemos embutir dentro deste script
+
+  const estoqueRef = doc(db, "estoqueGlobal", "estoque");
+  const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
+
+  // Escuta alterações automáticas do Firestore
+  onSnapshot(estoqueRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      window.produtos = data.produtos || [];
+      window.entradas = data.entradas || [];
+      window.saidas = data.saidas || [];
+
+      // Atualiza interface ao vivo
+      if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+      if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
+      if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
+      if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
+      if (typeof atualizarDashboard === "function") atualizarDashboard();
+      if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
+
+      console.log("🔥 Atualização em tempo real recebida do Firestore.");
+    }
+  });
+
+  // Sincronização em tempo real dos usuários
+  onSnapshot(usuariosRef, (snapshot) => {
+    if (snapshot.exists()) {
+      window.usuarios = snapshot.data().usuarios || [];
+      if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
+      console.log("👥 Lista de usuários atualizada em tempo real.");
+    }
+  });
 
 
-  // Configuração do Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw", // ⚠️ MANTENHA ESTA CHAVE PRIVADA
-    authDomain: "oralunicestoque.firebaseapp.com",
-    projectId: "oralunicestoque",
-    storageBucket: "oralunicestoque.appspot.com",
-    messagingSenderId: "660233908877",
-    appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
-  };
-  
-  // Inicialização
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+
+
 // ==========================================================
 // ADICIONE ESTE BLOCO NO INÍCIO DO SEU <script type="module">
 // ==========================================================
@@ -1249,12 +1304,16 @@ console.log("Dados carregados do localStorage:", {
 // 🔹 Salva dados globais no localStorage com segurança
 function salvarTodosLocal() {
   try {
-    localStorage.setItem("produtos", JSON.stringify(window.produtos || []));
-    localStorage.setItem("entradas", JSON.stringify(window.entradas || []));
-    localStorage.setItem("saidas", JSON.stringify(window.saidas || []));
-    localStorage.setItem("usuarios", JSON.stringify(window.usuarios || []));
-    
-    console.log("Dados salvos localmente:", {
+    const dadosSistema = {
+      produtos: window.produtos || [],
+      entradas: window.entradas || [],
+      saidas: window.saidas || [],
+      usuarios: window.usuarios || []
+    };
+
+    localStorage.setItem("dadosSistema", JSON.stringify(dadosSistema));
+
+    console.log("💾 Dados salvos localmente:", {
       produtos: window.produtos.length,
       entradas: window.entradas.length,
       saidas: window.saidas.length,
@@ -1265,111 +1324,63 @@ function salvarTodosLocal() {
   }
 }
 
+
 // ✅ Torna a função acessível globalmente
 window.salvarTodosLocal = salvarTodosLocal;
-
-// 🔹 Salva/Busca no Firestore (Corrigida a lógica de usuários)
-async function salvarDadosNoFirestore(nomeColecao, dados) {
-  if (!auth.currentUser) return;
-
-  try {
-    if (nomeColecao === "usuarios") {
-      const docRefGlobal = doc(db, "estoqueGlobal", "usuarios");
-      await setDoc(docRefGlobal, { usuarios: dados });
-    } else {
-      const docRefUser = doc(db, "estoqueGlobal", "estoque");
-      await setDoc(docRefUser, { [nomeColecao]: dados }, { merge: true });
-    }
-  } catch (e) {
-    console.error("Erro ao salvar no Firestore:", e);
-  } finally {
-    // 🔸 Garante persistência local mesmo se o Firestore falhar
-    salvarTodosLocal();
-  }
-}
-
-
+// ===================================================
+// 🌐 CARREGAMENTO E SINCRONIZAÇÃO EM TEMPO REAL
+// ===================================================
 async function carregarDadosDoFirestore() {
-  if (!auth.currentUser) return;
-
-  console.log("🔄 Carregando dados do Firestore...");
+  console.log("🔄 Iniciando escuta em tempo real do Firestore...");
 
   try {
-    const docRefUser = doc(db, "estoqueGlobal", "estoque");
-    const docSnapUser = await getDoc(docRefUser);
+    const estoqueRef = doc(db, "estoqueGlobal", "estoque");
 
-    if (docSnapUser.exists()) {
-      const data = docSnapUser.data();
+    // --- Listener em tempo real ---
+    onSnapshot(estoqueRef, (docSnap) => {
+      if (!docSnap.exists()) {
+        console.warn("⚠️ Documento 'estoque' ainda não existe, criando...");
+        setDoc(estoqueRef, {
+          produtos: [],
+          entradas: [],
+          saidas: [],
+          limites: [],
+          usuarios: []
+        });
+        return;
+      }
 
-      // 🔹 Garante que só substitua se o Firestore tiver dados reais
-      window.produtos =
-        Array.isArray(data.produtos) && data.produtos.length > 0
-          ? data.produtos
-          : window.produtos;
+      const data = docSnap.data();
 
-      window.entradas =
-        Array.isArray(data.entradas) && data.entradas.length > 0
-          ? data.entradas
-          : window.entradas;
+      // --- Atualiza variáveis globais ---
+      window.produtos = data.produtos || [];
+      window.entradas = data.entradas || [];
+      window.saidas = data.saidas || [];
+      window.limites = data.limites || [];
+      window.usuarios = data.usuarios || [];
 
-      window.saidas =
-        Array.isArray(data.saidas) && data.saidas.length > 0
-          ? data.saidas
-          : window.saidas;
+      // --- Salva localmente como backup ---
+      salvarTodosLocal();
 
-      console.log("✅ Firestore carregado com sucesso.");
-    } else {
-      console.warn("⚠️ Firestore vazio — salvando dados locais para a nuvem...");
-      // 🔹 Se não existir documento, sobe os dados locais para o Firestore
-      await salvarDadosNoFirestore("produtos", window.produtos || []);
-      await salvarDadosNoFirestore("entradas", window.entradas || []);
-      await salvarDadosNoFirestore("saidas", window.saidas || []);
-    }
+      // --- Atualiza tabelas e dashboards ---
+      atualizarTabelaProdutos?.();
+      atualizarTabelaEstoque?.();
+      atualizarTabelaEntradas?.();
+      atualizarTabelaSaidas?.();
+      atualizarTabelaLimites?.();
+      atualizarDashboard?.();
+      atualizarPainelFinanceiro?.();
 
-    // 🔹 Carrega também os usuários
-    const docRefGlobal = doc(db, "estoqueGlobal", "usuarios");
-    const docSnapGlobal = await getDoc(docRefGlobal);
-
-    if (docSnapGlobal.exists() && docSnapGlobal.data().usuarios) {
-      window.usuarios = docSnapGlobal.data().usuarios;
-    } else {
-      console.warn("⚠️ Firestore sem usuários — mantendo dados locais.");
-      await salvarDadosNoFirestore("usuarios", window.usuarios || []);
-    }
-
-    // 🔹 Salva tudo localmente e atualiza tabelas
-    salvarTodosLocal();
-
-    if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-    if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
-    if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-    if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-    if (typeof atualizarDashboard === "function") atualizarDashboard();
-    if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
-    if (typeof atualizarSelectProdutos === "function") atualizarSelectProdutos();
-    if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-
-    // ✅ ADICIONE AQUI: Atualiza o painel financeiro assim que os dados forem carregados
-    if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
-
-    console.log("✅ Dados carregados com segurança (Firestore + LocalStorage).");
-  } catch (e) {
-    console.error("❌ Erro CRÍTICO ao carregar dados do Firestore:", e);
-    console.warn("⚠️ Mantendo dados locais para evitar perda.");
-    salvarTodosLocal();
+      console.log("✅ Dados sincronizados com sucesso (tempo real).");
+    });
+  } catch (erro) {
+    console.error("❌ Erro ao escutar Firestore:", erro);
+    mostrarMensagem("Erro ao conectar ao Firestore!", "erro");
   }
 }
-document
-  .querySelector("#sidebar button[onclick=\"showSection('financeiro')\"]")
-  ?.addEventListener("click", atualizarPainelFinanceiro);
- 
 
- 
-// 🔹 Wrappers para usar o Firestore
-window.salvarProdutosNoFirebase = (dados) => salvarDadosNoFirestore("produtos", dados);
-window.salvarEntradasNoFirebase = (dados) => salvarDadosNoFirestore("entradas", dados);
-window.salvarSaidasNoFirebase = (dados) => salvarDadosNoFirestore("saidas", dados);
-window.salvarUsuariosNoFirebase = (dados) => salvarDadosNoFirestore("usuarios", dados);
+
+
 
 // === CRIAÇÃO DE USUÁRIO (FIREBASE AUTH) ===
 
@@ -1397,6 +1408,24 @@ window.salvarUsuariosNoFirebase = (dados) => salvarDadosNoFirestore("usuarios", 
     }
   } 
 
+function carregarTodosLocal() {
+  try {
+    const dadosLocais = JSON.parse(localStorage.getItem("dadosSistema")) || {};
+    window.produtos = dadosLocais.produtos || [];
+    window.entradas = dadosLocais.entradas || [];
+    window.saidas = dadosLocais.saidas || [];
+    window.usuarios = dadosLocais.usuarios || [];
+
+    console.log("📦 Dados carregados do localStorage:", {
+      produtos: window.produtos.length,
+      entradas: window.entradas.length,
+      saidas: window.saidas.length,
+      usuarios: window.usuarios.length,
+    });
+  } catch (e) {
+    console.error("Erro ao carregar dados locais:", e);
+  }
+}
 
 
 // =================================================================================
@@ -1735,6 +1764,15 @@ function mostrarSistema(user) {
   try {
     // 🔹 Tenta logar no Firebase
     await signInWithEmailAndPassword(auth, email, senha);
+	await carregarDadosDoFirestore();
+	if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+    if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
+    if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
+    if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
+    if (typeof atualizarDashboard === "function") atualizarDashboard();
+    if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
+    if (typeof atualizarSelectProdutos === "function") atualizarSelectProdutos();
+    if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
 
     // ✅ Exibe mensagem de sucesso
     msgEl.style.display = "block";
@@ -1762,7 +1800,7 @@ function mostrarSistema(user) {
 };
 
  
- // 🔹 Permitir login ao pressionar Enter nos campos de login
+// 🔹 Permitir login ao pressionar Enter nos campos de login
 document.addEventListener("DOMContentLoaded", () => {
   const usuarioEl = document.getElementById("usuarioLogin");
   const senhaEl = document.getElementById("senhaLogin");
@@ -1770,84 +1808,76 @@ document.addEventListener("DOMContentLoaded", () => {
   [usuarioEl, senhaEl].forEach((el) => {
     el.addEventListener("keypress", (event) => {
       if (event.key === "Enter") {
-        event.preventDefault(); // evita recarregar a página
-        window.fazerLogin();    // chama a função de login existente
+        event.preventDefault();
+        if (typeof window.fazerLogin === "function") {
+          window.fazerLogin();
+        }
       }
     });
   });
 });
 
-// === MONITORAR LOGIN (VERSÃO CORRIGIDA E SINCRONIZADA) ===
+
+// ====================================================
+// 🔐 AUTENTICAÇÃO E SINCRONIZAÇÃO EM TEMPO REAL
+// ====================================================
+
+
+
 onAuthStateChanged(auth, async (user) => {
-  const login = document.getElementById("loginView");
-  const appDiv = document.getElementById("mainApp");
+  if (!user) {
+    console.warn("👋 Nenhum usuário logado — aguardando login...");
+    return;
+  }
 
-  if (user) {
-    // Usuário logado
-    login.style.display = "none";
-    appDiv.style.display = "block";
+  console.log(`✅ Usuário logado: ${user.email}`);
+  console.log("🔄 Carregando dados do Firestore, aguarde...");
 
-    const emailLogado = user.email.toLowerCase();
-    const perfilExiste = window.usuarios.find(
-      (u) => u.email.toLowerCase() === emailLogado
-    );
+  // Carrega dados iniciais
+  await carregarDadosDoFirestore();
 
-    // Cria perfil local se ainda não existir
-    if (!perfilExiste) {
-      const novoPerfil = {
-        uid: user.uid,
-        email: emailLogado,
-        nome: emailLogado.split("@")[0],
-        perfil: "USUARIO",
-        criadoEm: new Date().toISOString(),
-      };
-      window.usuarios.push(novoPerfil);
-      // Salva no Firestore também
-      window.salvarUsuariosNoFirebase(window.usuarios);
-    }
+  // === 🔁 INICIA A SINCRONIZAÇÃO EM TEMPO REAL ===
+  const estoqueRef = doc(db, "estoqueGlobal", "estoque");
+  const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
 
-    // 🔹 Aguarda carregar dados do Firestore ANTES de atualizar interface
-    console.log("🔄 Carregando dados do Firestore, aguarde...");
-    await carregarDadosDoFirestore();
-    console.log("✅ Dados do Firestore carregados e sincronizados.");
+  // --- Escuta alterações no estoque ---
+  onSnapshot(estoqueRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      window.produtos = data.produtos || [];
+      window.entradas = data.entradas || [];
+      window.saidas = data.saidas || [];
 
-    // 🔹 Garante que os dados locais não sejam sobrescritos se Firestore estiver vazio
-    salvarTodosLocal();
+      salvarTodosLocal();
 
-    // 🔹 Mostra sistema e atualiza todas as tabelas
-    mostrarSistema(user);
-
-    const usuario = window.usuarios.find(
-      (u) => u.email.toLowerCase() === emailLogado
-    );
-    const nomeUsuario =
-      (usuario && usuario.nome) || user.email.split("@")[0] || "Usuário";
-
-    document.getElementById("nomeUsuarioBemVindo").innerText = nomeUsuario;
-
-    // 🔹 Recarrega tabelas e seções após garantir dados carregados
-    setTimeout(() => {
       if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+      if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
       if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
       if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-      if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
+      if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
       if (typeof atualizarDashboard === "function") atualizarDashboard();
+      if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
+
+      console.log("🔁 Estoque atualizado automaticamente pela nuvem.");
+    }
+  });
+
+  // --- Escuta alterações de usuários ---
+  onSnapshot(usuariosRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      window.usuarios = data.usuarios || [];
+      salvarTodosLocal();
+
       if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
-      if (typeof atualizarSelectProdutos === "function") atualizarSelectProdutos();
-	  if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
+      console.log("👥 Lista de usuários atualizada automaticamente.");
+    }
+  });
 
-      // Mostra a seção de boas-vindas (ou a última usada)
-      showSection("boasVindas");
-    }, 500);
-
-  } else {
-    // Usuário deslogado
-    login.style.display = "flex";
-    appDiv.style.display = "none";
-    document.getElementById("userName").innerText = "Visitante";
-    document.getElementById("perfilBadge").innerText = "PERFIL";
-  }
+  console.log("🌐 Sincronização em tempo real ativada.");
 });
+
+
 
 
 
@@ -2215,11 +2245,9 @@ function padronizarCamposAntesDeSalvar() {
   });
 }
 
-
-
-// ===============================================
-// ✅ CADASTRO E EDIÇÃO DE PRODUTOS (com foto obrigatória)
-// ===============================================
+// ===================================================
+// 🧾 CADASTRAR OU EDITAR PRODUTO (com sincronização)
+// ===================================================
 window.cadastrarProduto = async function () {
   limparErros("cadastro");
 
@@ -2236,54 +2264,47 @@ window.cadastrarProduto = async function () {
   const qtdEmb = parseInt(qtdEmbEl.value.trim()) || 0;
   const codBarras = codBarrasEl.value.trim();
 
-  // === Validações obrigatórias ===
+  // --- validações obrigatórias ---
   if (!nome) return destacarErro(nomeEl, "Informe o nome do produto!");
   if (!categoria) return destacarErro(categoriaEl, "Selecione a categoria!");
   if (!embalagem) return destacarErro(embalagemEl, "Selecione o tipo de embalagem!");
   if (!qtdEmb) return destacarErro(qtdEmbEl, "Informe a quantidade por embalagem!");
-  // === Validação de imagem ===
-let fotoBase64 = "";
-const isEdicao = typeof indiceEdicaoProduto === "number" && indiceEdicaoProduto !== null;
 
-// Se for novo produto, exige foto obrigatória
-if (!isEdicao && !fotoEl.files[0]) {
-  return destacarErro(fotoEl, "A foto do produto é obrigatória!");
-}
+  let fotoBase64 = "";
+  const isEdicao = typeof indiceEdicaoProduto === "number" && indiceEdicaoProduto !== null;
 
-// Se o usuário escolheu uma nova foto, lê o arquivo
-if (fotoEl.files && fotoEl.files[0]) {
-  const file = fotoEl.files[0];
-  fotoBase64 = await new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => resolve(e.target.result);
-    reader.readAsDataURL(file);
-  });
-}
+  if (!isEdicao && !fotoEl.files[0]) {
+    return destacarErro(fotoEl, "A foto do produto é obrigatória!");
+  }
 
+  if (fotoEl.files && fotoEl.files[0]) {
+    const file = fotoEl.files[0];
+    fotoBase64 = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.readAsDataURL(file);
+    });
+  }
 
-  // === Se for modo de edição ===
-  if (typeof indiceEdicaoProduto === "number" && indiceEdicaoProduto !== null) {
+  // === Atualização ou novo cadastro ===
+  if (isEdicao) {
     const produtoAntigo = window.produtos[indiceEdicaoProduto];
     const nomeAntigo = produtoAntigo.nome;
 
-    produtoAntigo.nome = nome;
-    produtoAntigo.categoria = categoria;
-    produtoAntigo.embalagem = embalagem;
-    produtoAntigo.qtdEmbalagem = qtdEmb;
-    produtoAntigo.codBarras = codBarras;
-    if (fotoBase64) {
-  produtoAntigo.foto = fotoBase64;
-}
+    Object.assign(produtoAntigo, {
+      nome,
+      categoria,
+      embalagem,
+      qtdEmbalagem: qtdEmb,
+      codBarras,
+      ...(fotoBase64 && { foto: fotoBase64 }),
+    });
 
-    // Atualiza outras tabelas que dependem do nome
-    atualizarReferenciasProduto(nomeAntigo, nome);
-
+    atualizarReferenciasProduto?.(nomeAntigo, nome);
     mostrarMensagem(`✅ Produto "${nome}" atualizado com sucesso!`, "sucesso");
-
     indiceEdicaoProduto = null;
     mostrarBotaoCancelar(false);
   } else {
-    // === Novo produto ===
     const novoProduto = {
       id: Date.now(),
       nome,
@@ -2294,40 +2315,38 @@ if (fotoEl.files && fotoEl.files[0]) {
       foto: fotoBase64,
       criadoEm: new Date().toISOString(),
     };
-
     window.produtos.push(novoProduto);
     mostrarMensagem(`✅ Produto "${nome}" cadastrado com sucesso!`, "sucesso");
   }
 
-  // === Salvar e atualizar ===
-  salvarTodosLocal();
-  if (typeof window.salvarProdutosNoFirebase === "function") {
-    window.salvarProdutosNoFirebase(window.produtos);
+  // --- Sincroniza com Firestore ---
+  try {
+    const estoqueRef = doc(db, "estoqueGlobal", "estoque");
+    await setDoc(estoqueRef, { produtos: window.produtos }, { merge: true });
+    console.log("☁️ Produtos atualizados na nuvem com sucesso!");
+  } catch (err) {
+    console.error("❌ Erro ao salvar produto na nuvem:", err);
+    mostrarMensagem("Erro ao salvar produto no Firestore!", "erro");
   }
 
-  atualizarTabelaProdutos();
+  // --- Atualiza local e interface ---
+  salvarTodosLocal();
+  atualizarTabelaProdutos?.();
   atualizarTabelaEstoque?.();
   atualizarTabelaEntradas?.();
   atualizarTabelaSaidas?.();
   atualizarTabelaLimites?.();
   atualizarDashboard?.();
 
- // === Limpa campos após cadastrar ou editar ===
-nomeEl.value = "";
-categoriaEl.value = "";
-embalagemEl.value = "";
-qtdEmbEl.value = "";
-codBarrasEl.value = "";
-fotoEl.value = "";
-
-// 🟢 Limpa o preview da foto após salvar
-const fotoPreview = document.getElementById("fotoPreview");
-if (fotoPreview) fotoPreview.innerHTML = "";
-
-document.querySelectorAll("#tabelaProdutos tbody tr").forEach((tr) => {
-  tr.style.background = "";
-});
+  // --- Limpa campos ---
+  nomeEl.value = categoriaEl.value = embalagemEl.value = qtdEmbEl.value = codBarrasEl.value = "";
+  fotoEl.value = "";
+  const fotoPreview = document.getElementById("fotoPreview");
+  if (fotoPreview) fotoPreview.innerHTML = "";
+  document.querySelectorAll("#tabelaProdutos tbody tr").forEach((tr) => (tr.style.background = ""));
 };
+
+
 
 // ===============================================
 // ✅ Torna função de cancelar edição global
@@ -4295,7 +4314,11 @@ function atualizarPainelFinanceiro() {
 
   console.log("✅ Painel Financeiro atualizado com sucesso!");
 }
-
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    console.log("🧩 Teste — produtos atuais:", window.produtos);
+  }, 3000);
+});
 
 // --- DASHBOARD ---
 
@@ -4964,6 +4987,7 @@ document
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 
 
 
