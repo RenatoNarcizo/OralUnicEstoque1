@@ -4212,11 +4212,10 @@ function atualizarPainelFinanceiro() {
   const produtos = Array.isArray(window.produtos) ? window.produtos : [];
 
   // Se não houver dados ainda, tenta novamente após 1s
-  if (entradas.length === 0 && saidas.length === 0 && produtos.length === 0) {
-    console.warn("⏳ Dados ainda não carregados, tentando novamente...");
-    setTimeout(atualizarPainelFinanceiro, 1000);
-    return;
-  }
+ if (!window.dadosGlobais || !window.dadosGlobais.produtos) {
+  console.warn("⚠️ Dados ainda não prontos para atualizar painel financeiro.");
+  return;
+}
 
   let valorTotalEntradas = 0;
   let valorTotalSaidas = 0;
@@ -5006,3 +5005,4 @@ document
 
 
 	
+
