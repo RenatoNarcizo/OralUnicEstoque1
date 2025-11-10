@@ -1422,72 +1422,129 @@ async function carregarDadosDoFirestore() {
   try {
     const estoqueRef = doc(db, "estoqueGlobal", "estoque");
 
-    onSnapshot(estoqueRef, (docSnap) => {
-  if (!docSnap.exists()) {
-    console.warn("⚠️ Documento 'estoque' ainda não existe, criando...");
-    setDoc(estoqueRef, {
-      produtos: [],
-      entradas: [],
-      saidas: [],
-      limites: [],
-      usuarios: [],
-      errosProblemas: [] // ✅ já cria o campo no Firestore se não existir
-    }).catch(e => console.error("Erro ao criar documento inicial:", e));
-    return;
-  }
-
-  // 🚫 Se bloqueio ativo, ignora snapshot temporariamente
-  if (window.bloquearAtualizacaoSnapshot) {
-    console.log("⏸️ Snapshot ignorado (salvando produto)...");
-    return;
-  }
-
-  // 🔹 Dados do Firestore
-  const data = docSnap.data() || {};
-  const produtosFirestore = Array.isArray(data.produtos) ? data.produtos : [];
-  const errosFirestore = Array.isArray(data.errosProblemas) ? data.errosProblemas : [];
-
-  // ✅ Mescla Firestore + localStorage (produtos)
-  const produtosLocais = Array.isArray(window.produtos) ? window.produtos : [];
-  const todosProdutos = [...produtosFirestore];
-  for (const pLocal of produtosLocais) {
-    if (!todosProdutos.some(p => p.id === pLocal.id)) {
-      todosProdutos.push(pLocal);
+    // --- Listener em tempo real (substitua pelo seguinte) ---
+onSnapshot(estoqueRef, (docSnap) => {
+  try {
+    // Se documento não existe, cria com estruturas vazias (inclui errosProblemas).
+    if (!docSnap.exists()) {
+      console.warn("⚠️ Documento 'estoque' ainda não existe — criando estrutura inicial...");
+      setDoc(estoqueRef, {
+        produtos: [],
+        entradas: [],
+        saidas: [],
+        limites: [],
+        usuarios: [],
+        errosProblemas: []
+      }).then(() => {
+        console.log("✅ Documento 'estoque' criado com campos iniciais.");
+      }).catch(e => console.error("❌ Falha ao criar documento inicial:", e));
+      return;
     }
-  }
 
-  // ✅ Mescla Firestore + localStorage (errosProblemas)
-  const errosLocais = Array.isArray(window.errosProblemas) ? window.errosProblemas : [];
-  const todosErros = [...errosFirestore];
-  for (const eLocal of errosLocais) {
-    if (!todosErros.some(e => e.id === eLocal.id)) {
-      todosErros.push(eLocal);
+    // Se um salvamento local está em andamento, ignorar snapshot para evitar sobrescrita.
+    if (window.bloquearAtualizacaoSnapshot) {
+      console.log("⏸️ Snapshot ignorado (bloqueio ativo - salvando localmente)...");
+      return;
     }
+
+    const data = docSnap.data() || {};
+
+    // ----- Função utilitária para mesclar arrays sem duplicar (com chave) -----
+    const mergeUniqueBy = (arrFirestore, arrLocal, keyFn) => {
+      const result = Array.isArray(arrFirestore) ? [...arrFirestore] : [];
+      const exists = (item) => result.some(r => keyFn(r) === keyFn(item));
+      (Array.isArray(arrLocal) ? arrLocal : []).forEach(localItem => {
+        try {
+          if (!exists(localItem)) result.push(localItem);
+        } catch (e) {
+          // fallback: usa stringify se keyFn falhar
+          const keyLocal = JSON.stringify(localItem);
+          if (!result.some(r => JSON.stringify(r) === keyLocal)) result.push(localItem);
+        }
+      });
+      return result;
+    };
+
+    // ----- Mesclagem segura para cada coleção -----
+    // Produtos: usa 'id' como chave (se existir). Se não existir id, usa nome como fallback.
+    const produtosFirestore = Array.isArray(data.produtos) ? data.produtos : [];
+    const produtosLocais = Array.isArray(window.produtos) ? window.produtos : [];
+    const produtosMesclados = mergeUniqueBy(produtosFirestore, produtosLocais, (p) => {
+      return (p && (p.id || p.nome)) ? String(p.id || p.nome).toLowerCase() : JSON.stringify(p);
+    });
+
+    // Entradas: chave composta (produto + nota + data + qtd) — evita duplicatas exatas
+    const entradasFirestore = Array.isArray(data.entradas) ? data.entradas : [];
+    const entradasLocais = Array.isArray(window.entradas) ? window.entradas : [];
+    const entradasMescladas = mergeUniqueBy(entradasFirestore, entradasLocais, (e) =>
+      `${(e.produto||e.nomeProduto||"").toLowerCase()}|${(e.nota||"")}|${(e.data||"")}|${String(e.qtd||e.quantidade||"")}`
+    );
+
+    // Saídas: chave composta (produto + data + qtd + responsavel)
+    const saidasFirestore = Array.isArray(data.saidas) ? data.saidas : [];
+    const saidasLocais = Array.isArray(window.saidas) ? window.saidas : [];
+    const saidasMescladas = mergeUniqueBy(saidasFirestore, saidasLocais, (s) =>
+      `${(s.produto||s.nomeProduto||"").toLowerCase()}|${(s.data||"")}|${String(s.qtd||s.quantidade||"")}|${(s.responsavel||"")}`
+    );
+
+    // Limites: chave por produto
+    const limitesFirestore = Array.isArray(data.limites) ? data.limites : [];
+    const limitesLocais = Array.isArray(window.limites) ? window.limites : [];
+    const limitesMesclados = mergeUniqueBy(limitesFirestore, limitesLocais, (l) =>
+      (l && l.produto) ? String(l.produto).toLowerCase() : JSON.stringify(l)
+    );
+
+    // Usuários: chave por e-mail
+    const usuariosFirestore = Array.isArray(data.usuarios) ? data.usuarios : [];
+    const usuariosLocais = Array.isArray(window.usuarios) ? window.usuarios : [];
+    const usuariosMesclados = mergeUniqueBy(usuariosFirestore, usuariosLocais, (u) =>
+      (u && u.email) ? String(u.email).toLowerCase() : JSON.stringify(u)
+    );
+
+    // Erros / Problemas: chave por título + data (evita perder relatos locais)
+    const errosFirestore = Array.isArray(data.errosProblemas) ? data.errosProblemas : [];
+    const errosLocais = Array.isArray(window.errosProblemas) ? window.errosProblemas : [];
+    const errosMesclados = mergeUniqueBy(errosFirestore, errosLocais, (r) =>
+      `${(r.titulo||r.tituloErro||"").toLowerCase()}|${(r.data||r.dt||"")}`
+    );
+
+    // ----- Atualiza variáveis globais com as versões mescladas -----
+    window.produtos = produtosMesclados;
+    window.entradas = entradasMescladas;
+    window.saidas = saidasMescladas;
+    window.limites = limitesMesclados;
+    window.usuarios = usuariosMesclados;
+    window.errosProblemas = errosMesclados;
+
+    // ----- Atualiza backup no localStorage -----
+    if (typeof salvarTodosLocal === "function") {
+      try {
+        salvarTodosLocal();
+      } catch (e) {
+        console.warn("⚠️ salvarTodosLocal falhou:", e);
+      }
+    }
+
+    // ----- Atualiza UI: tabelas, painéis e seções que dependem desses dados -----
+    try {
+      if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+      if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
+      if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
+      if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
+      if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
+      if (typeof atualizarTabelaErros === "function") atualizarTabelaErros(); // restaura lista de Erros/Problemas
+      if (typeof atualizarDashboard === "function") atualizarDashboard();
+      if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
+    } catch (uiErr) {
+      console.error("❌ Erro ao atualizar UI após snapshot:", uiErr);
+    }
+
+    console.log(`✅ Snapshot aplicado. Produtos: ${window.produtos.length}, Entradas: ${window.entradas.length}, Saídas: ${window.saidas.length}, Erros: ${window.errosProblemas.length}`);
+  } catch (err) {
+    console.error("❌ Erro no processamento do snapshot:", err);
   }
-
-  // 🧩 Atualiza variáveis globais
-  window.produtos = todosProdutos;
-  window.entradas = Array.isArray(data.entradas) ? [...data.entradas] : (window.entradas || []);
-  window.saidas = Array.isArray(data.saidas) ? [...data.saidas] : (window.saidas || []);
-  window.limites = Array.isArray(data.limites) ? [...data.limites] : (window.limites || []);
-  window.usuarios = Array.isArray(data.usuarios) ? [...data.usuarios] : (window.usuarios || []);
-  window.errosProblemas = todosErros;
-
-  // 💾 Atualiza backup local (com erros incluídos)
-  if (typeof salvarTodosLocal === "function") salvarTodosLocal();
-
-  // 🔄 Atualiza TABELAS, PAINÉIS e SEÇÕES automaticamente
-  if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-  if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-  if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
-  if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-  if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-  if (typeof atualizarTabelaErros === "function") atualizarTabelaErros(); // ✅ restaurado com dados
-  if (typeof atualizarDashboard === "function") atualizarDashboard();
-  if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
-
-  console.log(`✅ Dados sincronizados com sucesso! Produtos: ${window.produtos.length}, Erros: ${window.errosProblemas.length}`);
 });
+
 
 
   } catch (erro) {
@@ -5191,6 +5248,7 @@ document
 
 
 	
+
 
 
 
