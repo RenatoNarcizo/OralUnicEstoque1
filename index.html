@@ -2542,9 +2542,6 @@ window.atualizarReferenciasProduto = function (nomeAntigo, nomeNovo) {
 };
 
 
-// ===============================================
-// ✅ CORREÇÃO: Atualiza tabela de produtos
-// ===============================================
 window.atualizarTabelaProdutos = function () {
   const tbody = document.querySelector("#tabelaProdutos tbody");
   if (!tbody) return;
@@ -2554,14 +2551,19 @@ window.atualizarTabelaProdutos = function () {
 
   tbody.innerHTML = "";
 
-  // ✅ Garante que produtos seja um array
+  // ✅ Garante que produtos seja um array e cada um tenha ID único
   if (!Array.isArray(window.produtos)) window.produtos = [];
+  window.produtos = window.produtos.map(p => {
+    if (!p) return null;
+    if (!p.id) p.id = Date.now() + Math.floor(Math.random() * 100000);
+    return p;
+  }).filter(Boolean);
 
   // ✅ Cria uma cópia ordenada (sem alterar o array original)
   const produtosOrdenados = [...window.produtos].sort((a, b) => {
     const nomeA = (a.nome || "").toLowerCase();
     const nomeB = (b.nome || "").toLowerCase();
-    return nomeA.localeCompare(nomeB, 'pt-BR');
+    return nomeA.localeCompare(nomeB, "pt-BR");
   });
 
   if (produtosOrdenados.length === 0) {
@@ -2580,6 +2582,9 @@ window.atualizarTabelaProdutos = function () {
     const foto = produto.foto || "";
     const codigoBarras = produto.codBarras || produto.codigoBarras || "-";
 
+    // 🔹 Identificação fixa da linha
+    row.setAttribute("data-id", produto.id);
+
     const fotoHtml = foto
       ? `<img src="${foto}" class="thumb" onclick="ampliarImagem('${foto}')" alt="Foto do produto">`
       : `<span style="color:red;font-weight:bold;">❌</span>`;
@@ -2593,13 +2598,14 @@ window.atualizarTabelaProdutos = function () {
       <td>${produto.qtdEmbalagem || "-"}</td>
       <td>${codigoBarras}</td>
       <td style="text-align:center;">
-        <button title="Editar" onclick="editarProduto(${i})"><i class="fa fa-edit"></i></button>
-        <button title="Excluir" onclick="excluirProduto(${i})" style="background:#dc3545;"><i class="fa fa-trash"></i></button>
+        <button title="Editar" onclick="editarProduto(${produto.id})"><i class="fa fa-edit"></i></button>
+        <button title="Excluir" onclick="excluirProduto(${produto.id})" style="background:#dc3545;"><i class="fa fa-trash"></i></button>
       </td>
     `;
 
-    if (typeof indiceEdicaoProduto === "number" && indiceEdicaoProduto === i) {
-      row.style.background = "#fff3cd"; // destaque no item em edição
+    // 🔹 Destaca se está em edição
+    if (window.produtoEmEdicaoId === produto.id) {
+      row.style.background = "#fff3cd"; // amarelo claro
     }
 
     tbody.appendChild(row);
@@ -2607,6 +2613,7 @@ window.atualizarTabelaProdutos = function () {
 
   console.log("✅ Produtos listados em ordem alfabética:", produtosOrdenados.map(p => p.nome));
 };
+
 
 
 
@@ -2670,14 +2677,11 @@ window.atualizarTabelaProdutos = function () {
   });
 };
 
-// ===============================================
-// ✅ EDIÇÃO DE PRODUTO (com preview da foto atual)
-// ===============================================
-window.editarProduto = function (index) {
-  const produto = window.produtos[index];
-  if (!produto) return;
+window.editarProduto = function (idProduto) {
+  const produto = window.produtos.find(p => p.id === idProduto);
+  if (!produto) return mostrarMensagem("Produto não encontrado.", "erro");
 
-  indiceEdicaoProduto = index;
+  window.produtoEmEdicaoId = idProduto;
 
   document.getElementById("produtoNome").value = produto.nome || "";
   document.getElementById("produtoCategoria").value = produto.categoria || "";
@@ -2685,58 +2689,46 @@ window.editarProduto = function (index) {
   document.getElementById("produtoQtdEmbalagem").value = produto.qtdEmbalagem || "";
   document.getElementById("produtoCodigoBarras").value = produto.codigoBarras || produto.codBarras || "";
 
-  // 🟡 Exibe foto atual na área de preview
-const fotoPreview = document.getElementById("fotoPreview");
-if (fotoPreview) {
-  if (produto.foto) {
-    fotoPreview.innerHTML = `
-      <div style="display:flex; align-items:center; gap:8px;">
-        <img src="${produto.foto}" alt="Foto atual" style="width:60px; height:60px; object-fit:cover; border:1px solid #ccc; border-radius:5px;">
-        <span>📸 Foto atual — será mantida se você não escolher outra.</span>
-      </div>
-    `;
-  } else {
-    fotoPreview.innerHTML = `
-      <span style="color:#888;">Nenhuma foto cadastrada para este produto.</span>
-    `;
+  // Exibe foto atual
+  const fotoPreview = document.getElementById("fotoPreview");
+  if (fotoPreview) {
+    fotoPreview.innerHTML = produto.foto
+      ? `<div style="display:flex;align-items:center;gap:8px;">
+          <img src="${produto.foto}" style="width:60px;height:60px;object-fit:cover;border:1px solid #ccc;border-radius:5px;">
+          <span>📸 Foto atual — será mantida se não trocar.</span>
+         </div>`
+      : `<span style="color:#888;">Nenhuma foto cadastrada para este produto.</span>`;
   }
-}
 
-
-  // 🔹 Destaca linha na tabela
-  document.querySelectorAll("#tabelaProdutos tbody tr").forEach((tr, i) => {
-    tr.style.background = i === index ? "#fff3cd" : "";
+  // Destaca linha
+  document.querySelectorAll("#tabelaProdutos tbody tr").forEach(tr => {
+    tr.style.background = tr.getAttribute("data-id") == idProduto ? "#fff3cd" : "";
   });
 
-  mostrarBotaoCancelar(true);
+  if (typeof mostrarBotaoCancelar === "function") mostrarBotaoCancelar(true);
   mostrarMensagem(`✏️ Editando o produto: ${produto.nome}`, "info");
 };
 
-// ===============================================
-// ✅ EXCLUSÃO DE PRODUTO
-// ===============================================
-window.excluirProduto = function (i) {
-  if (!confirm(`Excluir o produto "${window.produtos[i].nome}"? Todas as entradas e saídas relacionadas serão mantidas, mas o estoque será recontado.`)) return;
-  
-  const nomeProduto = window.produtos[i].nome;
-  window.produtos.splice(i, 1);
 
-  if (typeof window.salvarProdutosNoFirebase === "function") {
-    window.salvarProdutosNoFirebase(window.produtos);
-  }
+
+// ================================
+// ✅ EXCLUIR PRODUTO (por id, robusto)
+// ================================
+window.excluirProduto = function (idProduto) {
+  const produto = window.produtos.find(p => p.id === idProduto);
+  if (!produto) return mostrarMensagem("Produto não encontrado.", "erro");
+
+  if (!confirm(`Excluir o produto "${produto.nome}"? Esta ação não pode ser desfeita.`)) return;
+
+  window.produtos = window.produtos.filter(p => p.id !== idProduto);
 
   salvarTodosLocal?.();
+  salvarProdutosNoFirebase?.(window.produtos);
+
   atualizarTabelaProdutos?.();
-  atualizarTabelaEstoque?.();
-  atualizarSelectProdutos?.();
-  ordenarListasAlfabeticamente?.();
-
-  mostrarMensagem(`🗑️ Produto "${nomeProduto}" excluído com sucesso.`, "sucesso");
-
-  // 🔹 Limpa preview caso produto excluído estivesse sendo editado
-  const fotoPreview = document.getElementById("fotoPreview");
-  if (fotoPreview) fotoPreview.innerHTML = "";
+  mostrarMensagem(`🗑️ Produto "${produto.nome}" excluído com sucesso.`, "sucesso");
 };
+
 
 // ===============================================
 // ✅ Preview de imagem com visual moderno (redondo e centralizado)
