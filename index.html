@@ -4222,124 +4222,132 @@ function limparFiltroLimites() {
 // 💰 PAINEL FINANCEIRO — Correção completa e automática
 // ====================================================
 function atualizarPainelFinanceiro() {
-  // 🔹 Garante que os dados estejam disponíveis
-  const entradas = Array.isArray(window.entradas) ? window.entradas : [];
-  const saidas = Array.isArray(window.saidas) ? window.saidas : [];
-  const produtos = Array.isArray(window.produtos) ? window.produtos : [];
+  try {
+    // 🔹 Garante que os dados existam e sejam arrays válidos
+    const entradas = Array.isArray(window.entradas) ? window.entradas : [];
+    const saidas = Array.isArray(window.saidas) ? window.saidas : [];
+    const produtos = Array.isArray(window.produtos) ? window.produtos : [];
 
-  // Se não houver dados ainda, tenta novamente após 1s
- if (!window.dadosGlobais || !window.dadosGlobais.produtos) {
-  console.warn("⚠️ Dados ainda não prontos para atualizar painel financeiro.");
-  return;
-}
-
-  let valorTotalEntradas = 0;
-  let valorTotalSaidas = 0;
-  let valorTotalCustoMedioGeral = 0;
-  let valorTotalUltimaEntradaGeral = 0;
-
-  // --- CÁLCULO DE ENTRADAS E CUSTO MÉDIO ---
-  entradas.forEach(e => {
-    valorTotalEntradas += (Number(e.valor) || 0) * (Number(e.qtd) || 0);
-  });
-
-  produtos.forEach(p => {
-    const entradasDoProduto = entradas.filter(e => e.produto === p.nome);
-    const qtdAtual = Number(p.quantidade || 0);
-
-    if (entradasDoProduto.length > 0) {
-      const totalQtdEntradas = entradasDoProduto.reduce((s, e) => s + (Number(e.qtd) || 0), 0);
-      const totalValorEntradas = entradasDoProduto.reduce((s, e) => s + ((Number(e.qtd) || 0) * (Number(e.valor) || 0)), 0);
-      const custoMedio = totalQtdEntradas > 0 ? totalValorEntradas / totalQtdEntradas : 0;
-
-      const valorUltimo = Number(entradasDoProduto.slice(-1)[0].valor || 0);
-
-      valorTotalCustoMedioGeral += qtdAtual * custoMedio;
-      valorTotalUltimaEntradaGeral += qtdAtual * valorUltimo;
+    // ⚠️ Se ainda não há dados, interrompe a atualização
+    if (entradas.length === 0 && saidas.length === 0 && produtos.length === 0) {
+      console.warn("⚠️ Dados ainda não prontos para atualizar painel financeiro.");
+      return;
     }
-  });
 
-  // --- SAÍDAS ---
-  saidas.forEach(s => {
-    const entradaRelacionado = entradas.find(
-      e => e.produto && s.produto && e.produto.toLowerCase() === s.produto.toLowerCase()
-    );
-    const valorUnitario = entradaRelacionado ? (Number(entradaRelacionado.valor) || 0) : 0;
-    valorTotalSaidas += valorUnitario * (Number(s.qtd) || 0);
-  });
+    let valorTotalEntradas = 0;
+    let valorTotalSaidas = 0;
+    let valorTotalCustoMedioGeral = 0;
+    let valorTotalUltimaEntradaGeral = 0;
 
-  // --- CÁLCULOS GERAIS ---
-  const valorTotalEstoqueContabil = valorTotalEntradas - valorTotalSaidas;
-  const valorEstoqueAtualEstimado = valorTotalUltimaEntradaGeral;
-
-  // --- ATUALIZA OS CARDS ---
-  const setText = (id, valor) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = `R$ ${valor.toFixed(2)}`;
-  };
-
-  setText("valorUltimaEntrada", valorTotalUltimaEntradaGeral);
-  setText("valorCustoMedio", valorTotalCustoMedioGeral);
-  setText("valorEstoqueAtualPainel", valorEstoqueAtualEstimado);
-  setText("valorEstoque", valorTotalEstoqueContabil);
-  setText("valorSaidas", valorTotalSaidas);
-
-  // --- ATUALIZA A TABELA FINANCEIRA ---
-  const tbody = document.querySelector("#tabelaFinanceiro tbody");
-  if (tbody) {
-    tbody.innerHTML = "";
-
-    const agrupadas = {};
-
+    // --- CÁLCULO DE ENTRADAS E CUSTO MÉDIO ---
     entradas.forEach(e => {
-      const fornecedor = e.fornecedor || "Fornecedor não informado";
-      const nota = e.nota || "Sem Nota Fiscal";
-      const chave = `${fornecedor}_${nota}`;
-
-      if (!agrupadas[chave]) {
-        agrupadas[chave] = { fornecedor, nota, valorNota: 0, valorSaida: 0 };
-      }
-
-      agrupadas[chave].valorNota += (Number(e.valor) || 0) * (Number(e.qtd) || 0);
+      valorTotalEntradas += (Number(e.valor) || 0) * (Number(e.qtd) || 0);
     });
 
+    produtos.forEach(p => {
+      const entradasDoProduto = entradas.filter(e => e.produto === p.nome);
+      const qtdAtual = Number(p.quantidade || 0);
+
+      if (entradasDoProduto.length > 0) {
+        const totalQtdEntradas = entradasDoProduto.reduce((s, e) => s + (Number(e.qtd) || 0), 0);
+        const totalValorEntradas = entradasDoProduto.reduce(
+          (s, e) => s + ((Number(e.qtd) || 0) * (Number(e.valor) || 0)),
+          0
+        );
+        const custoMedio = totalQtdEntradas > 0 ? totalValorEntradas / totalQtdEntradas : 0;
+
+        const valorUltimo = Number(entradasDoProduto.slice(-1)[0].valor || 0);
+
+        valorTotalCustoMedioGeral += qtdAtual * custoMedio;
+        valorTotalUltimaEntradaGeral += qtdAtual * valorUltimo;
+      }
+    });
+
+    // --- SAÍDAS ---
     saidas.forEach(s => {
-      const entrada = entradas.find(
+      const entradaRelacionado = entradas.find(
         e => e.produto && s.produto && e.produto.toLowerCase() === s.produto.toLowerCase()
       );
-      if (!entrada) return;
-
-      const fornecedor = entrada.fornecedor || "Fornecedor não informado";
-      const nota = entrada.nota || "Sem Nota Fiscal";
-      const chave = `${fornecedor}_${nota}`;
-
-      const valorUnitario = Number(entrada.valor) || 0;
-      const valorSaida = valorUnitario * (Number(s.qtd) || 0);
-
-      if (agrupadas[chave]) agrupadas[chave].valorSaida += valorSaida;
+      const valorUnitario = entradaRelacionado ? (Number(entradaRelacionado.valor) || 0) : 0;
+      valorTotalSaidas += valorUnitario * (Number(s.qtd) || 0);
     });
 
-    const registros = Object.values(agrupadas);
-    if (registros.length === 0) {
-      tbody.innerHTML = `
-        <tr><td colspan="4" style="text-align:center; color:#777;">Nenhum dado financeiro encontrado.</td></tr>`;
-    } else {
-      registros.forEach(a => {
-        const saldo = a.valorNota - a.valorSaida;
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${a.fornecedor}</td>
-          <td>${a.nota}</td>
-          <td>R$ ${a.valorNota.toFixed(2)}</td>
-          <td>R$ ${saldo.toFixed(2)}</td>
-        `;
-        tbody.appendChild(row);
-      });
-    }
-  }
+    // --- CÁLCULOS GERAIS ---
+    const valorTotalEstoqueContabil = valorTotalEntradas - valorTotalSaidas;
+    const valorEstoqueAtualEstimado = valorTotalUltimaEntradaGeral;
 
-  console.log("✅ Painel Financeiro atualizado com sucesso!");
+    // --- ATUALIZA OS CARDS ---
+    const setText = (id, valor) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = `R$ ${valor.toFixed(2)}`;
+    };
+
+    setText("valorUltimaEntrada", valorTotalUltimaEntradaGeral);
+    setText("valorCustoMedio", valorTotalCustoMedioGeral);
+    setText("valorEstoqueAtualPainel", valorEstoqueAtualEstimado);
+    setText("valorEstoque", valorTotalEstoqueContabil);
+    setText("valorSaidas", valorTotalSaidas);
+
+    // --- ATUALIZA A TABELA FINANCEIRA ---
+    const tbody = document.querySelector("#tabelaFinanceiro tbody");
+    if (tbody) {
+      tbody.innerHTML = "";
+
+      const agrupadas = {};
+
+      entradas.forEach(e => {
+        const fornecedor = e.fornecedor || "Fornecedor não informado";
+        const nota = e.nota || "Sem Nota Fiscal";
+        const chave = `${fornecedor}_${nota}`;
+
+        if (!agrupadas[chave]) {
+          agrupadas[chave] = { fornecedor, nota, valorNota: 0, valorSaida: 0 };
+        }
+
+        agrupadas[chave].valorNota += (Number(e.valor) || 0) * (Number(e.qtd) || 0);
+      });
+
+      saidas.forEach(s => {
+        const entrada = entradas.find(
+          e => e.produto && s.produto && e.produto.toLowerCase() === s.produto.toLowerCase()
+        );
+        if (!entrada) return;
+
+        const fornecedor = entrada.fornecedor || "Fornecedor não informado";
+        const nota = entrada.nota || "Sem Nota Fiscal";
+        const chave = `${fornecedor}_${nota}`;
+
+        const valorUnitario = Number(entrada.valor) || 0;
+        const valorSaida = valorUnitario * (Number(s.qtd) || 0);
+
+        if (agrupadas[chave]) agrupadas[chave].valorSaida += valorSaida;
+      });
+
+      const registros = Object.values(agrupadas);
+      if (registros.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="4" style="text-align:center; color:#777;">Nenhum dado financeiro encontrado.</td></tr>`;
+      } else {
+        registros.forEach(a => {
+          const saldo = a.valorNota - a.valorSaida;
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${a.fornecedor}</td>
+            <td>${a.nota}</td>
+            <td>R$ ${a.valorNota.toFixed(2)}</td>
+            <td style="color:${saldo >= 0 ? "green" : "red"}">R$ ${saldo.toFixed(2)}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+    }
+
+    console.log("✅ Painel Financeiro atualizado com sucesso!");
+  } catch (e) {
+    console.error("❌ Erro ao atualizar painel financeiro:", e);
+  }
 }
+
 window.addEventListener("load", () => {
   setTimeout(() => {
     console.log("🧩 Teste — produtos atuais:", window.produtos);
@@ -5021,6 +5029,7 @@ document
 
 
 	
+
 
 
 
