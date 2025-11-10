@@ -1228,8 +1228,12 @@ const estoqueRef = doc(db, "estoqueGlobal", "estoque");
 const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
 
 
-// --- Escuta alterações no estoque (versão final e sincronizada) ---
 onSnapshot(estoqueRef, (snapshot) => {
+  if (window.bloquearAtualizacaoSnapshot) {
+    console.log("⏸️ Snapshot ignorado temporariamente (salvando produto)...");
+    return;
+  }
+
   if (!snapshot.exists()) {
     console.warn("⚠️ Documento 'estoque' ainda não existe no Firestore.");
     return;
@@ -1237,30 +1241,23 @@ onSnapshot(estoqueRef, (snapshot) => {
 
   const data = snapshot.data() || {};
 
-  // 🔹 Atualiza as variáveis globais apenas se houver dados válidos
   window.produtos = Array.isArray(data.produtos) ? [...data.produtos] : [];
   window.entradas = Array.isArray(data.entradas) ? [...data.entradas] : [];
   window.saidas = Array.isArray(data.saidas) ? [...data.saidas] : [];
   window.limites = Array.isArray(data.limites) ? [...data.limites] : [];
 
-  // 💾 Salva no localStorage
-  if (typeof salvarTodosLocal === "function") salvarTodosLocal();
+  salvarTodosLocal?.();
 
-  // 🧩 Atualiza visualização em tempo real
-  if (typeof atualizarTabelaProdutos === "function") {
-    console.log("📦 Atualizando tabela de produtos...");
-    atualizarTabelaProdutos();
-  }
-
+  if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
   atualizarTabelaEstoque?.();
   atualizarTabelaEntradas?.();
   atualizarTabelaSaidas?.();
-  atualizarTabelaLimites?.();
   atualizarDashboard?.();
   atualizarPainelFinanceiro?.();
 
   console.log("✅ Estoque sincronizado e interface atualizada automaticamente!");
 });
+
 
 
 
@@ -2275,9 +2272,6 @@ function padronizarCamposAntesDeSalvar() {
   });
 }
 
-// ===================================================
-// 🧾 CADASTRAR OU EDITAR PRODUTO (com sincronização)
-// ===================================================
 window.cadastrarProduto = async function () {
   limparErros("cadastro");
 
@@ -2294,7 +2288,6 @@ window.cadastrarProduto = async function () {
   const qtdEmb = parseInt(qtdEmbEl.value.trim()) || 0;
   const codBarras = codBarrasEl.value.trim();
 
-  // --- validações obrigatórias ---
   if (!nome) return destacarErro(nomeEl, "Informe o nome do produto!");
   if (!categoria) return destacarErro(categoriaEl, "Selecione a categoria!");
   if (!embalagem) return destacarErro(embalagemEl, "Selecione o tipo de embalagem!");
@@ -2316,7 +2309,6 @@ window.cadastrarProduto = async function () {
     });
   }
 
-  // === Atualização ou novo cadastro ===
   if (isEdicao) {
     const produtoAntigo = window.produtos[indiceEdicaoProduto];
     const nomeAntigo = produtoAntigo.nome;
@@ -2349,35 +2341,36 @@ window.cadastrarProduto = async function () {
     mostrarMensagem(`✅ Produto "${nome}" cadastrado com sucesso!`, "sucesso");
   }
 
-  // --- Sincroniza com Firestore ---
+  // --- 🔒 Bloqueia o snapshot enquanto salva ---
+  window.bloquearAtualizacaoSnapshot = true;
+
   try {
     const estoqueRef = doc(db, "estoqueGlobal", "estoque");
     await setDoc(estoqueRef, { produtos: window.produtos }, { merge: true });
     console.log("☁️ Produtos atualizados na nuvem com sucesso!");
 
-    // ✅ Força atualização local imediata
+    salvarTodosLocal?.();
     if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
     if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
 
-    // 🔄 Aguarda um curto tempo e atualiza de novo após retorno do Firestore
-    await new Promise(r => setTimeout(r, 500));
-    if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-    if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-    console.log("🧩 Teste — produtos atuais (forçado):", window.produtos.length);
+    // 🔄 Aguarda Firestore processar e libera novamente
+    await new Promise(r => setTimeout(r, 800));
+    window.bloquearAtualizacaoSnapshot = false;
+    console.log("🧩 Produtos atuais (após salvamento):", window.produtos.length);
 
   } catch (err) {
     console.error("❌ Erro ao salvar produto na nuvem:", err);
     mostrarMensagem("Erro ao salvar produto no Firestore!", "erro");
+    window.bloquearAtualizacaoSnapshot = false;
   }
 
-  // --- Atualiza local e interface ---
-  salvarTodosLocal?.();
+  // --- Atualiza e limpa ---
   atualizarTabelaEntradas?.();
   atualizarTabelaSaidas?.();
   atualizarTabelaLimites?.();
   atualizarDashboard?.();
+  atualizarPainelFinanceiro?.();
 
-  // --- Limpa campos ---
   nomeEl.value = "";
   categoriaEl.value = "";
   embalagemEl.value = "";
@@ -2387,8 +2380,6 @@ window.cadastrarProduto = async function () {
 
   const fotoPreview = document.getElementById("fotoPreview");
   if (fotoPreview) fotoPreview.innerHTML = "";
-
-  document.querySelectorAll("#tabelaProdutos tbody tr").forEach((tr) => (tr.style.background = ""));
 };
 
 
@@ -5049,6 +5040,7 @@ document
 
 
 	
+
 
 
 
