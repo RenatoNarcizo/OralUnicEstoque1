@@ -1229,48 +1229,45 @@ const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
 // 🔐 LOGIN E AUTENTICAÇÃO (100% COMPATÍVEL COM SEU SCRIPT)
 // ===================================================
 
-// ----------------------------
-// Fazer login — exposto no window (garante compatibilidade com onclick HTML)
-// ----------------------------
-if (typeof window.fazerLogin !== "function") {
-  window.fazerLogin = async function () {
-    const usuarioEl = document.getElementById("usuarioLogin");
-    const senhaEl = document.getElementById("senhaLogin");
-    const msgEl = document.getElementById("loginMsg");
+// === FUNÇÃO DE LOGIN (garante que está sempre definida) ===
+window.fazerLogin = async function () {
+  const usuarioEl = document.getElementById("usuarioLogin");
+  const senhaEl = document.getElementById("senhaLogin");
+  const msgEl = document.getElementById("loginMsg");
 
-    const usuario = usuarioEl?.value.trim() || "";
-    const senha = senhaEl?.value.trim() || "";
+  if (msgEl) { msgEl.style.display = "none"; msgEl.textContent = ""; }
 
-    if (msgEl) { msgEl.style.display = "none"; msgEl.textContent = ""; }
+  const usuario = usuarioEl?.value?.trim() || "";
+  const senha = senhaEl?.value?.trim() || "";
 
-    if (!usuario || !senha) {
-      if (msgEl) { msgEl.style.display = "block"; msgEl.style.color = "red"; msgEl.textContent = "⚠️ Preencha e-mail e senha!"; }
-      return;
+  if (!usuario || !senha) {
+    if (msgEl) { msgEl.style.display = "block"; msgEl.style.color = "red"; msgEl.textContent = "⚠️ Preencha e-mail e senha!"; }
+    return;
+  }
+
+  const email = usuario.toLowerCase();
+
+  try {
+    // signInWithEmailAndPassword deve existir (importado)
+    const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+    const user = userCredential.user;
+    if (msgEl) { msgEl.style.display = "block"; msgEl.style.color = "green"; msgEl.textContent = "✅ Login realizado com sucesso!"; }
+    console.log("✅ Usuário logado:", user.email);
+
+    if (typeof mostrarSistema === "function") mostrarSistema(user);
+  } catch (error) {
+    console.error("❌ Erro ao logar:", error);
+    if (msgEl) { msgEl.style.display = "block"; msgEl.style.color = "red"; }
+    const code = error?.code || "";
+    if (msgEl) {
+      if (code === "auth/wrong-password" || code === "auth/invalid-credential") msgEl.textContent = "❌ Senha incorreta ou inválida!";
+      else if (code === "auth/user-not-found") msgEl.textContent = "❌ Usuário não encontrado!";
+      else if (code === "auth/too-many-requests") msgEl.textContent = "⚠️ Muitas tentativas. Tente mais tarde.";
+      else msgEl.textContent = "❌ Erro ao fazer login.";
     }
+  }
+};
 
-    const email = usuario.toLowerCase();
-
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
-      const user = userCredential.user;
-
-      if (msgEl) { msgEl.style.display = "block"; msgEl.style.color = "green"; msgEl.textContent = "✅ Login realizado com sucesso!"; }
-      console.log("✅ Usuário logado:", user.email);
-
-      // chama o sistema (minha versão unificada deve existir)
-      if (typeof mostrarSistema === "function") mostrarSistema(user);
-      // carrega dados adicionais
-      if (typeof carregarDadosDoFirestore === "function") await carregarDadosDoFirestore();
-    } catch (error) {
-      console.error("❌ Erro ao logar:", error);
-      if (msgEl) {
-        msgEl.style.display = "block";
-        msgEl.style.color = "red";
-        msgEl.textContent = (error?.code === "auth/user-not-found") ? "❌ Usuário não encontrado!" : "❌ Erro ao fazer login.";
-      }
-    }
-  };
-}
 
 
 // 🔹 Permite login com tecla Enter
@@ -1407,12 +1404,12 @@ function carregarTodosLocal() {
 carregarTodosLocal(); // chame uma vez na inicialização
 
 
-
-
-
 // ✅ Torna a função acessível globalmente
 window.salvarTodosLocal = salvarTodosLocal;
 
+// ===================================================
+// 🌐 CARREGAMENTO E SINCRONIZAÇÃO EM TEMPO REAL (VERSÃO CORRIGIDA E COMPLETA)
+// ===================================================
 // ===================================================
 // 🌐 CARREGAMENTO E SINCRONIZAÇÃO EM TEMPO REAL (VERSÃO CORRIGIDA E COMPLETA)
 // ===================================================
@@ -1422,130 +1419,64 @@ async function carregarDadosDoFirestore() {
   try {
     const estoqueRef = doc(db, "estoqueGlobal", "estoque");
 
-    // --- Listener em tempo real (substitua pelo seguinte) ---
-onSnapshot(estoqueRef, (docSnap) => {
-  try {
-    // Se documento não existe, cria com estruturas vazias (inclui errosProblemas).
-    if (!docSnap.exists()) {
-      console.warn("⚠️ Documento 'estoque' ainda não existe — criando estrutura inicial...");
-      setDoc(estoqueRef, {
-        produtos: [],
-        entradas: [],
-        saidas: [],
-        limites: [],
-        usuarios: [],
-        errosProblemas: []
-      }).then(() => {
-        console.log("✅ Documento 'estoque' criado com campos iniciais.");
-      }).catch(e => console.error("❌ Falha ao criar documento inicial:", e));
-      return;
-    }
-
-    // Se um salvamento local está em andamento, ignorar snapshot para evitar sobrescrita.
-    if (window.bloquearAtualizacaoSnapshot) {
-      console.log("⏸️ Snapshot ignorado (bloqueio ativo - salvando localmente)...");
-      return;
-    }
-
-    const data = docSnap.data() || {};
-
-    // ----- Função utilitária para mesclar arrays sem duplicar (com chave) -----
-    const mergeUniqueBy = (arrFirestore, arrLocal, keyFn) => {
-      const result = Array.isArray(arrFirestore) ? [...arrFirestore] : [];
-      const exists = (item) => result.some(r => keyFn(r) === keyFn(item));
-      (Array.isArray(arrLocal) ? arrLocal : []).forEach(localItem => {
-        try {
-          if (!exists(localItem)) result.push(localItem);
-        } catch (e) {
-          // fallback: usa stringify se keyFn falhar
-          const keyLocal = JSON.stringify(localItem);
-          if (!result.some(r => JSON.stringify(r) === keyLocal)) result.push(localItem);
-        }
-      });
-      return result;
-    };
-
-    // ----- Mesclagem segura para cada coleção -----
-    // Produtos: usa 'id' como chave (se existir). Se não existir id, usa nome como fallback.
-    const produtosFirestore = Array.isArray(data.produtos) ? data.produtos : [];
-    const produtosLocais = Array.isArray(window.produtos) ? window.produtos : [];
-    const produtosMesclados = mergeUniqueBy(produtosFirestore, produtosLocais, (p) => {
-      return (p && (p.id || p.nome)) ? String(p.id || p.nome).toLowerCase() : JSON.stringify(p);
-    });
-
-    // Entradas: chave composta (produto + nota + data + qtd) — evita duplicatas exatas
-    const entradasFirestore = Array.isArray(data.entradas) ? data.entradas : [];
-    const entradasLocais = Array.isArray(window.entradas) ? window.entradas : [];
-    const entradasMescladas = mergeUniqueBy(entradasFirestore, entradasLocais, (e) =>
-      `${(e.produto||e.nomeProduto||"").toLowerCase()}|${(e.nota||"")}|${(e.data||"")}|${String(e.qtd||e.quantidade||"")}`
-    );
-
-    // Saídas: chave composta (produto + data + qtd + responsavel)
-    const saidasFirestore = Array.isArray(data.saidas) ? data.saidas : [];
-    const saidasLocais = Array.isArray(window.saidas) ? window.saidas : [];
-    const saidasMescladas = mergeUniqueBy(saidasFirestore, saidasLocais, (s) =>
-      `${(s.produto||s.nomeProduto||"").toLowerCase()}|${(s.data||"")}|${String(s.qtd||s.quantidade||"")}|${(s.responsavel||"")}`
-    );
-
-    // Limites: chave por produto
-    const limitesFirestore = Array.isArray(data.limites) ? data.limites : [];
-    const limitesLocais = Array.isArray(window.limites) ? window.limites : [];
-    const limitesMesclados = mergeUniqueBy(limitesFirestore, limitesLocais, (l) =>
-      (l && l.produto) ? String(l.produto).toLowerCase() : JSON.stringify(l)
-    );
-
-    // Usuários: chave por e-mail
-    const usuariosFirestore = Array.isArray(data.usuarios) ? data.usuarios : [];
-    const usuariosLocais = Array.isArray(window.usuarios) ? window.usuarios : [];
-    const usuariosMesclados = mergeUniqueBy(usuariosFirestore, usuariosLocais, (u) =>
-      (u && u.email) ? String(u.email).toLowerCase() : JSON.stringify(u)
-    );
-
-    // Erros / Problemas: chave por título + data (evita perder relatos locais)
-    const errosFirestore = Array.isArray(data.errosProblemas) ? data.errosProblemas : [];
-    const errosLocais = Array.isArray(window.errosProblemas) ? window.errosProblemas : [];
-    const errosMesclados = mergeUniqueBy(errosFirestore, errosLocais, (r) =>
-      `${(r.titulo||r.tituloErro||"").toLowerCase()}|${(r.data||r.dt||"")}`
-    );
-
-    // ----- Atualiza variáveis globais com as versões mescladas -----
-    window.produtos = produtosMesclados;
-    window.entradas = entradasMescladas;
-    window.saidas = saidasMescladas;
-    window.limites = limitesMesclados;
-    window.usuarios = usuariosMesclados;
-    window.errosProblemas = errosMesclados;
-
-    // ----- Atualiza backup no localStorage -----
-    if (typeof salvarTodosLocal === "function") {
+    // Listener em tempo real robusto (mescla Firestore + local)
+    onSnapshot(estoqueRef, (docSnap) => {
       try {
-        salvarTodosLocal();
-      } catch (e) {
-        console.warn("⚠️ salvarTodosLocal falhou:", e);
+        if (!docSnap.exists()) {
+          setDoc(estoqueRef, {
+            produtos: [], entradas: [], saidas: [], limites: [], usuarios: [], errosProblemas: []
+          }).then(() => console.log("✅ Documento 'estoque' criado com campos iniciais."))
+            .catch(e => console.error("❌ Falha ao criar documento inicial:", e));
+          return;
+        }
+
+        if (window.bloquearAtualizacaoSnapshot) {
+          console.log("⏸️ Snapshot ignorado (bloqueio ativo).");
+          return;
+        }
+
+        const data = docSnap.data() || {};
+
+        const mergeUniqueBy = (arrFirestore, arrLocal, keyFn) => {
+          const result = Array.isArray(arrFirestore) ? [...arrFirestore] : [];
+          const exists = item => result.some(r => keyFn(r) === keyFn(item));
+          (Array.isArray(arrLocal) ? arrLocal : []).forEach(localItem => {
+            try { if (!exists(localItem)) result.push(localItem); }
+            catch (e) {
+              const keyLocal = JSON.stringify(localItem);
+              if (!result.some(r => JSON.stringify(r) === keyLocal)) result.push(localItem);
+            }
+          });
+          return result;
+        };
+
+        window.produtos = mergeUniqueBy(Array.isArray(data.produtos) ? data.produtos : [], window.produtos || [], p => (p && (p.id || p.nome)) ? String(p.id || p.nome).toLowerCase() : JSON.stringify(p));
+        window.entradas = mergeUniqueBy(Array.isArray(data.entradas) ? data.entradas : [], window.entradas || [], e => `${(e.produto||e.nomeProduto||"").toLowerCase()}|${(e.nota||"")}|${(e.data||"")}|${String(e.qtd||e.quantidade||"")}`);
+        window.saidas = mergeUniqueBy(Array.isArray(data.saidas) ? data.saidas : [], window.saidas || [], s => `${(s.produto||s.nomeProduto||"").toLowerCase()}|${(s.data||"")}|${String(s.qtd||s.quantidade||"")}|${(s.responsavel||"")}`);
+        window.limites = mergeUniqueBy(Array.isArray(data.limites) ? data.limites : [], window.limites || [], l => (l && l.produto) ? String(l.produto).toLowerCase() : JSON.stringify(l));
+        window.usuarios = mergeUniqueBy(Array.isArray(data.usuarios) ? data.usuarios : [], window.usuarios || [], u => (u && u.email) ? String(u.email).toLowerCase() : JSON.stringify(u));
+        window.errosProblemas = mergeUniqueBy(Array.isArray(data.errosProblemas) ? data.errosProblemas : [], window.errosProblemas || [], r => `${(r.titulo||r.tituloErro||"").toLowerCase()}|${(r.data||r.dt||"")}`);
+
+        if (typeof salvarTodosLocal === "function") {
+          try { salvarTodosLocal(); } catch(e){ console.warn("⚠️ salvarTodosLocal falhou:", e); }
+        }
+
+        // Atualiza UI
+        if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+        if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
+        if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
+        if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
+        if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
+        if (typeof atualizarTabelaErros === "function") atualizarTabelaErros();
+        if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
+        if (typeof atualizarDashboard === "function") atualizarDashboard();
+        if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
+
+        console.log(`✅ Snapshot aplicado. Produtos:${window.produtos.length} Entradas:${window.entradas.length} Saídas:${window.saidas.length} Erros:${window.errosProblemas.length} Usuários:${window.usuarios.length}`);
+      } catch (err) {
+        console.error("❌ Erro no processamento do snapshot:", err);
       }
-    }
-
-    // ----- Atualiza UI: tabelas, painéis e seções que dependem desses dados -----
-    try {
-      if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-      if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-      if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
-      if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-      if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-      if (typeof atualizarTabelaErros === "function") atualizarTabelaErros(); // restaura lista de Erros/Problemas
-      if (typeof atualizarDashboard === "function") atualizarDashboard();
-      if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
-    } catch (uiErr) {
-      console.error("❌ Erro ao atualizar UI após snapshot:", uiErr);
-    }
-
-    console.log(`✅ Snapshot aplicado. Produtos: ${window.produtos.length}, Entradas: ${window.entradas.length}, Saídas: ${window.saidas.length}, Erros: ${window.errosProblemas.length}`);
-  } catch (err) {
-    console.error("❌ Erro no processamento do snapshot:", err);
-  }
-});
-
-
+    });
 
   } catch (erro) {
     console.error("❌ Erro ao escutar Firestore:", erro);
@@ -1554,6 +1485,8 @@ onSnapshot(estoqueRef, (docSnap) => {
     }
   }
 }
+
+
 
 
 
@@ -1918,90 +1851,38 @@ onAuthStateChanged(auth, async (user) => {
   // === 🔁 INICIA A SINCRONIZAÇÃO EM TEMPO REAL ===
   const estoqueRef = doc(db, "estoqueGlobal", "estoque");
   const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
-
-  // --- Escuta alterações no estoque (AGORA ÚNICO) ---
-  onSnapshot(estoqueRef, (snapshot) => {
-    if (window.bloquearAtualizacaoSnapshot) {
-      console.log("⏸️ Snapshot ignorado temporariamente (salvando produto)...");
-      return;
-    }
-
-    if (!snapshot.exists()) {
-      console.warn("⚠️ Documento 'estoque' ainda não existe no Firestore.");
-      return;
-    }
-
-    // 🧩 Proteção: evita sobrescrever dados locais mais novos
-    if (window.produtos && Array.isArray(window.produtos)) {
-      const dataTemp = snapshot.data() || {};
-      const produtosSnapshot = Array.isArray(dataTemp.produtos) ? dataTemp.produtos : [];
-
-      if (produtosSnapshot.length < window.produtos.length) {
-        console.warn("⏸️ Snapshot ignorado — dados locais mais atualizados.");
-        return;
-      }
-    }
-
-    // 🔹 Atualiza dados locais com o Firestore
-    const data = snapshot.data() || {};
-    window.produtos = Array.isArray(data.produtos) ? [...data.produtos] : [];
-    window.entradas = Array.isArray(data.entradas) ? [...data.entradas] : [];
-    window.saidas = Array.isArray(data.saidas) ? [...data.saidas] : [];
-    window.limites = Array.isArray(data.limites) ? [...data.limites] : [];
-
-    // 💾 Salva tudo localmente
-    salvarTodosLocal?.();
-
-    // 🔄 Atualiza todas as tabelas e painéis
-    if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-    atualizarTabelaEstoque?.();
-    atualizarTabelaEntradas?.();
-    atualizarTabelaSaidas?.();
-    atualizarDashboard?.();
-    atualizarPainelFinanceiro?.();
-
-    console.log("✅ Estoque sincronizado e interface atualizada automaticamente!");
-  });
-
-  // --- Escuta alterações de usuários ---
-  onSnapshot(usuariosRef, (snapshot) => {
-    if (snapshot.exists()) {
-      const data = snapshot.data();
-      window.usuarios = data.usuarios || [];
-      salvarTodosLocal();
-
-      if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
-      console.log("👥 Lista de usuários atualizada automaticamente.");
-    }
-  });
-
-  console.log("🌐 Sincronização em tempo real ativada.");
-});
+}); 
+  
  
   // === LOGOUT ===
 window.logout = async function () {
   try {
     console.log("🚪 Iniciando logout...");
+
+    // Se estiver autenticado no Firebase
     if (typeof signOut === "function" && typeof auth !== "undefined") {
       await signOut(auth);
     }
 
-    // Limpa apenas itens sensíveis de sessão — preserva o backup 'dadosSistema'
+    // Limpa dados locais e globais
+    localStorage.clear();
     sessionStorage.clear();
     window.usuarioAtual = null;
 
-    // Exibe login / oculta app
+    // Retorna para a tela de login
     const mainApp = document.getElementById("mainApp");
     const loginView = document.getElementById("loginView");
+
     if (mainApp) mainApp.style.display = "none";
     if (loginView) loginView.style.display = "block";
 
-    // limpa campos de login
+    // Reseta o campo de login (por segurança)
     const usuarioLogin = document.getElementById("usuarioLogin");
     const senhaLogin = document.getElementById("senhaLogin");
     if (usuarioLogin) usuarioLogin.value = "";
     if (senhaLogin) senhaLogin.value = "";
 
+    // Mensagem visual
     if (typeof mostrarMensagem === "function") {
       mostrarMensagem("Sessão encerrada com sucesso!", "info");
     }
@@ -2014,7 +1895,6 @@ window.logout = async function () {
     }
   }
 };
-
 
 // === Expor Firestore e Auth globalmente ===
 window.db = db;
@@ -2673,13 +2553,81 @@ window.atualizarTabelaProdutos = function () {
 };
 
 
+// ==========================
+// Helper: obter índice por id
+// ==========================
+window.obterIndicePorIdProduto = function(id) {
+  if (!Array.isArray(window.produtos)) window.produtos = [];
+  return window.produtos.findIndex(p => String(p.id) === String(id));
+};
 
+// ==========================
+// EDIÇÃO: por id
+// ==========================
+window.editarProdutoPorId = function(id) {
+  const idx = obterIndicePorIdProduto(id);
+  if (idx === -1) {
+    console.warn("Produto não encontrado para edição:", id);
+    mostrarMensagem && mostrarMensagem("Produto não encontrado para edição.", "erro");
+    return;
+  }
 
+  const produto = window.produtos[idx];
+  indiceEdicaoProduto = idx;
 
+  document.getElementById("produtoNome").value = produto.nome || "";
+  document.getElementById("produtoCategoria").value = produto.categoria || "";
+  document.getElementById("produtoEmbalagem").value = produto.embalagem || "";
+  document.getElementById("produtoQtdEmbalagem").value = produto.qtdEmbalagem || produto.qtd || "";
+  document.getElementById("produtoCodigoBarras").value = produto.codBarras || produto.codigoBarras || produto.codigo || "";
 
-// ===============================================
-// ✅ FUNÇÃO UNIFICADA: Atualizar tabela de produtos
-// ===============================================
+  const fotoPreview = document.getElementById("fotoPreview");
+  if (fotoPreview) {
+    if (produto.foto) {
+      fotoPreview.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px">
+          <img src="${produto.foto}" alt="Foto atual" style="width:60px;height:60px;object-fit:cover;border:1px solid #ccc;border-radius:5px;">
+          <span style="font-size:13px;color:#444">📸 Foto atual — será mantida se não escolher outra.</span>
+        </div>`;
+    } else {
+      fotoPreview.innerHTML = `<span style="color:#888">Nenhuma foto cadastrada para este produto.</span>`;
+    }
+  }
+
+  // Destaca a linha na tabela (usa data-id)
+  document.querySelectorAll("#tabelaProdutos tbody tr").forEach(tr => {
+    tr.style.background = tr.getAttribute("data-id") === String(id) ? "#fff3cd" : "";
+  });
+
+  mostrarBotaoCancelar?.(true);
+  mostrarMensagem && mostrarMensagem(`✏️ Editando: ${produto.nome}`, "info");
+};
+
+// ==========================
+// EXCLUIR: por id
+// ==========================
+window.excluirProdutoPorId = function(id) {
+  const idx = obterIndicePorIdProduto(id);
+  if (idx === -1) {
+    mostrarMensagem && mostrarMensagem("Produto não encontrado.", "erro");
+    return;
+  }
+
+  const produto = window.produtos[idx];
+  if (!confirm(`Excluir o produto "${produto.nome}"? Esta ação removerá também registros dependentes.`)) return;
+
+  window.produtos.splice(idx, 1);
+  salvarTodosLocal?.();
+  if (typeof salvarProdutosNoFirebase === "function") salvarProdutosNoFirebase(window.produtos);
+
+  if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+  if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
+  mostrarMensagem && mostrarMensagem(`Produto "${produto.nome}" excluído.`, "sucesso");
+};
+
+// ==========================
+// ATUALIZAR TABELA: gera data-id e usa ações por id
+// ==========================
 window.atualizarTabelaProdutos = function () {
   const tbody = document.querySelector("#tabelaProdutos tbody");
   if (!tbody) return;
@@ -2688,30 +2636,36 @@ window.atualizarTabelaProdutos = function () {
   const filtro = filtroEl ? filtroEl.value.toLowerCase() : "";
 
   tbody.innerHTML = "";
-
   if (!Array.isArray(window.produtos)) window.produtos = [];
 
-  if (window.produtos.length === 0) {
+  // cria cópia ordenada por nome
+  const produtosOrdenados = [...window.produtos].sort((a, b) => {
+    const nomeA = (a.nome || "").toLowerCase();
+    const nomeB = (b.nome || "").toLowerCase();
+    return nomeA.localeCompare(nomeB, "pt-BR");
+  });
+
+  if (produtosOrdenados.length === 0) {
     const row = document.createElement("tr");
     row.innerHTML = `<td colspan="8" style="text-align:center; color:#777;">Nenhum produto cadastrado.</td>`;
     tbody.appendChild(row);
     return;
   }
 
-  window.produtos.forEach((produto, i) => {
-    const nome = produto.nome?.toLowerCase() || "";
-    const categoria = produto.categoria?.toLowerCase() || "";
-    if (filtro && !nome.includes(filtro) && !categoria.includes(filtro)) return;
+  produtosOrdenados.forEach((produto, i) => {
+    const nomeLower = (produto.nome || "").toLowerCase();
+    const categoriaLower = (produto.categoria || "").toLowerCase();
+    if (filtro && !nomeLower.includes(filtro) && !categoriaLower.includes(filtro)) return;
 
-    const row = document.createElement("tr");
-
-    // 🔹 Corrige nomes de campos (compatível com ambos formatos)
     const foto = produto.foto || "";
-    const codigoBarras = produto.codigoBarras || produto.codBarras || "-";
+    const codigoBarras = produto.codBarras || produto.codigoBarras || produto.codigo || "-";
 
     const fotoHtml = foto
       ? `<img src="${foto}" class="thumb" onclick="ampliarImagem('${foto}')" alt="Foto do produto">`
-      : `<i class="fa fa-box" style="font-size:22px;color:#0d6efd;text-align:center;display:block;"></i>`;
+      : `<span style="color:red;font-weight:bold;">❌</span>`;
+
+    const row = document.createElement("tr");
+    row.setAttribute("data-id", produto.id ?? "");
 
     row.innerHTML = `
       <td>${i + 1}</td>
@@ -2719,89 +2673,58 @@ window.atualizarTabelaProdutos = function () {
       <td style="font-weight:600;">${produto.nome || "-"}</td>
       <td>${produto.categoria || "-"}</td>
       <td>${produto.embalagem || "-"}</td>
-      <td>${produto.qtdEmbalagem || "-"}</td>
+      <td>${produto.qtdEmbalagem || produto.qtd || "-"}</td>
       <td>${codigoBarras}</td>
       <td style="text-align:center;">
-        <button title="Editar" onclick="editarProduto(${i})"><i class="fa fa-edit"></i></button>
-        <button title="Excluir" onclick="excluirProduto(${i})" style="background:#dc3545;"><i class="fa fa-trash"></i></button>
+        <button title="Editar" onclick="editarProdutoPorId('${produto.id}')"><i class="fa fa-edit"></i></button>
+        <button title="Excluir" onclick="excluirProdutoPorId('${produto.id}')" style="background:#dc3545;"><i class="fa fa-trash"></i></button>
       </td>
     `;
 
-    // 🔹 Mantém destaque do produto em edição
-    if (typeof indiceEdicaoProduto === "number" && indiceEdicaoProduto === i) {
-      row.style.background = "#fff3cd"; // amarelo claro
+    // destaque se este produto estiver em edição (compara ids)
+    if (typeof indiceEdicaoProduto === "number") {
+      const prodEmEdicao = window.produtos[indiceEdicaoProduto];
+      if (prodEmEdicao && String(prodEmEdicao.id) === String(produto.id)) {
+        row.style.background = "#fff3cd";
+      }
     }
 
     tbody.appendChild(row);
   });
+
+  console.log("✅ Produtos listados (visual ordenada).");
 };
 
-window.editarProduto = function (idProduto) {
-  const produto = window.produtos.find(p => p.id === idProduto);
-  if (!produto) return mostrarMensagem("Produto não encontrado.", "erro");
+// ==========================
+// Compatibilidade: funções index-based (opcionais)
+// Se você tiver código que chama editarProduto(index) ou excluirProduto(index),
+// mantenha estas wrappers que convertem índice/valor para id.
+// ==========================
+window.editarProdutoPorIndice = function(indexNaLista) {
+  const p = window.produtos[indexNaLista];
+  if (!p) return mostrarMensagem("Produto não encontrado (índice).", "erro");
+  return editarProdutoPorId(p.id);
+};
+// ==========================
+// Compatibilidade: funções index-based (opcionais)
+// ==========================
+window.editarProdutoPorIndice = function(indexNaLista) {
+  const p = window.produtos[indexNaLista];
+  if (!p) return mostrarMensagem("Produto não encontrado (índice).", "erro");
+  return editarProdutoPorId(p.id);
+};
 
-  window.produtoEmEdicaoId = idProduto;
-
-  document.getElementById("produtoNome").value = produto.nome || "";
-  document.getElementById("produtoCategoria").value = produto.categoria || "";
-  document.getElementById("produtoEmbalagem").value = produto.embalagem || "";
-  document.getElementById("produtoQtdEmbalagem").value = produto.qtdEmbalagem || "";
-  document.getElementById("produtoCodigoBarras").value = produto.codigoBarras || produto.codBarras || "";
-
-  // Exibe foto atual
-  const fotoPreview = document.getElementById("fotoPreview");
-  if (fotoPreview) {
-    fotoPreview.innerHTML = produto.foto
-      ? `<div style="display:flex;align-items:center;gap:8px;">
-          <img src="${produto.foto}" style="width:60px;height:60px;object-fit:cover;border:1px solid #ccc;border-radius:5px;">
-          <span>📸 Foto atual — será mantida se não trocar.</span>
-         </div>`
-      : `<span style="color:#888;">Nenhuma foto cadastrada para este produto.</span>`;
-  }
-
-  // Destaca linha
-  document.querySelectorAll("#tabelaProdutos tbody tr").forEach(tr => {
-    tr.style.background = tr.getAttribute("data-id") == idProduto ? "#fff3cd" : "";
-  });
-
-  if (typeof mostrarBotaoCancelar === "function") mostrarBotaoCancelar(true);
-  mostrarMensagem(`✏️ Editando o produto: ${produto.nome}`, "info");
+window.excluirProdutoPorIndice = function(indexNaLista) {
+  const p = window.produtos[indexNaLista];
+  if (!p) return mostrarMensagem("Produto não encontrado (índice).", "erro");
+  return excluirProdutoPorId(p.id);
 };
 
 
-window.excluirProduto = function(index) {
-  // tenta localizar por índice; se inválido, tenta encontrar por alguma chave
-  let produto = window.produtos[index];
-  if (!produto) {
-    // tenta localizar por id passado (caso index seja NaN) ou pelo nome
-    produto = window.produtos.find(p => p && (p.id === index || p.nome === index || p.codigoBarras === index));
-    if (!produto) {
-      mostrarMensagem("Produto não encontrado para exclusão.", "erro");
-      return;
-    }
-    index = window.produtos.indexOf(produto);
-  }
 
-  if (!confirm(`Deseja excluir o produto "${produto.nome}"? Esta ação é irreversível.`)) return;
 
-  window.produtos.splice(index, 1);
-  salvarTodosLocal?.();
-  if (typeof salvarProdutosNoFirebase === "function") salvarProdutosNoFirebase(window.produtos);
-  if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-  mostrarMensagem(`Produto "${produto.nome}" excluído.`, "sucesso");
-};
 
-window.editarProduto = function(index) {
-  const produto = window.produtos[index];
-  if (!produto) {
-    mostrarMensagem("Produto não encontrado para edição.", "erro");
-    return;
-  }
-  // seu código existente de edição (preencher campos etc.)
-  indiceEdicaoProduto = index;
-  document.getElementById("produtoNome").value = produto.nome || "";
-  // ... restante do seu bloco de edição ...
-};
+
 
 
 // ===============================================
@@ -3027,6 +2950,9 @@ document.getElementById("entradaCodigoBarras")?.addEventListener("blur", () => b
 // ===============================================
 // ✅ REGISTRO E EDIÇÃO DE ENTRADAS DE MATERIAIS (versão final unificada + correção de estoque e limites)
 // ===============================================
+// ===============================================
+// ✅ REGISTRO E EDIÇÃO DE ENTRADAS DE MATERIAIS (corrigida)
+// ===============================================
 function registrarEntrada() {
   const produto = document.getElementById("entradaProduto").value.trim();
   const qtd = parseFloat(document.getElementById("entradaQuantidade").value.trim()) || 0;
@@ -3040,10 +2966,10 @@ function registrarEntrada() {
   const setor = document.getElementById("entradaSetor").value.trim();
   const codigoBarras = document.getElementById("entradaCodigoBarras").value.trim();
 
-  // === Validação dos campos obrigatórios ===
+  // validações
   if (!produto) return mostrarMensagem("⚠️ O campo 'Nome do produto' é obrigatório!", "erro");
   if (!qtd) return mostrarMensagem("⚠️ Informe a quantidade!", "erro");
-  if (!valor) return mostrarMensagem("⚠️ Informe o valor unitário!", "erro");
+  if (!valor && valor !== 0) return mostrarMensagem("⚠️ Informe o valor unitário!", "erro");
   if (!data) return mostrarMensagem("⚠️ Informe a data de entrada!", "erro");
   if (!nota) return mostrarMensagem("⚠️ Informe o número da nota fiscal!", "erro");
   if (!fornecedor) return mostrarMensagem("⚠️ Informe o nome do fornecedor!", "erro");
@@ -3051,131 +2977,64 @@ function registrarEntrada() {
   if (!validade) return mostrarMensagem("⚠️ Informe a data de vencimento do material!", "erro");
   if (!setor) return mostrarMensagem("⚠️ Selecione o setor utilizado!", "erro");
 
-  // === Edição de entrada existente ===
+  // se edição
   if (typeof indiceEdicaoEntrada === "number" && indiceEdicaoEntrada !== null) {
     const e = window.entradas[indiceEdicaoEntrada];
     if (!e) return;
-
-    e.produto = produto;
-    e.qtd = qtd;
-    e.valor = valor;
-    e.data = data;
-    e.nota = nota;
-    e.fornecedor = fornecedor;
-    e.cnpj = cnpj;
-    e.lote = lote;
-    e.validade = validade;
-    e.setor = setor;
-    e.codigoBarras = codigoBarras;
-
+    e.produto = produto; e.qtd = qtd; e.valor = valor; e.data = data; e.nota = nota;
+    e.fornecedor = fornecedor; e.cnpj = cnpj; e.lote = lote; e.validade = validade;
+    e.setor = setor; e.codigoBarras = codigoBarras;
     mostrarMensagem(`✅ Entrada de "${produto}" atualizada com sucesso!`, "sucesso");
-
     indiceEdicaoEntrada = null;
-    if (typeof window.mostrarBotaoCancelarEntrada === "function") {
-      window.mostrarBotaoCancelarEntrada(false);
-    }
+    if (typeof window.mostrarBotaoCancelarEntrada === "function") window.mostrarBotaoCancelarEntrada(false);
   } else {
-    // === Nova entrada ===
-    const novaEntrada = {
-      produto,
-      qtd,
-      valor,
-      data,
-      nota,
-      fornecedor,
-      cnpj,
-      lote,
-      validade,
-      setor,
-      codigoBarras,
-      criadoEm: new Date().toISOString(),
-    };
-
+    const novaEntrada = { produto, qtd, valor, data, nota, fornecedor, cnpj, lote, validade, setor, codigoBarras };
     window.entradas.push(novaEntrada);
     mostrarMensagem(`✅ Entrada registrada para "${produto}"`, "sucesso");
   }
 
-  // === Atualiza estoque real ===
-  const produtoRef = window.produtos.find(p => p.nome === produto);
-  if (produtoRef) {
-    produtoRef.quantidade = (produtoRef.quantidade || 0) + qtd;
-    produtoRef.ultimoValor = valor;
-    if (typeof salvarProdutosNoFirebase === "function") {
-      salvarProdutosNoFirebase(window.produtos);
-    }
+  // === Atualiza produto no catálogo ===
+  // procura produto por nome (recomendo usar id se tiver)
+  let produtoRef = window.produtos.find(p => (p.nome || "").toLowerCase() === produto.toLowerCase() || String(p.codBarras || p.codigoBarras || "") === String(codigoBarras));
+  if (!produtoRef) {
+    // se não existir, cria um produto mínimo (evita dados faltando)
+    produtoRef = {
+      id: Date.now(),
+      nome: produto,
+      categoria: "Não especificada",
+      embalagem: "",
+      qtdEmbalagem: "",
+      quantidade: 0
+    };
+    window.produtos.push(produtoRef);
   }
 
-  // ======================================================
-  // 🧮 🔹 REFORÇO: Atualiza o Estoque Atual (todas entradas e saídas)
-  // ======================================================
-  const mapaEstoque = {};
+  // atualiza valores essenciais no produto
+  produtoRef.quantidade = (produtoRef.quantidade || 0) + qtd;
+  produtoRef.ultimoValor = valor;           // campo padronizado: ultimoValor
+  produtoRef.lote = lote || produtoRef.lote;         // atualiza lote
+  produtoRef.validade = validade || produtoRef.validade; // atualiza validade
+  produtoRef.codigoBarras = produtoRef.codigoBarras || codigoBarras;
 
-  // Soma todas as entradas
-  (window.entradas || []).forEach(e => {
-    mapaEstoque[e.produto] = (mapaEstoque[e.produto] || 0) + e.qtd;
-  });
-
-  // Subtrai todas as saídas (se existirem)
-  (window.saidas || []).forEach(s => {
-    mapaEstoque[s.produto] = (mapaEstoque[s.produto] || 0) - (s.qtd || 0);
-  });
-
-  window.estoqueAtual = mapaEstoque;
-
-  // ======================================================
-  // 🔹 REFORÇO: Atualiza Estoque Mínimo e Máximo automaticamente
-  // ======================================================
-  window.limites = Object.keys(mapaEstoque).map(nomeProduto => {
-    const atual = mapaEstoque[nomeProduto];
-    const minimo = Math.max(1, Math.floor(atual * 0.2));  // 20% do estoque atual
-    const maximo = Math.ceil(atual * 1.5);                // 150% do estoque atual
-    return { produto: nomeProduto, minimo, maximo };
-  });
-
-  // === Salva localmente ===
+  // salva local e na nuvem
   salvarTodosLocal?.();
+  if (typeof salvarProdutosNoFirebase === "function") salvarProdutosNoFirebase(window.produtos);
+  if (typeof window.salvarEntradasNoFirebase === "function") window.salvarEntradasNoFirebase(window.entradas);
 
-  // === 🔹 Sincroniza com o Firestore ===
-  if (typeof window.salvarEntradasNoFirebase === "function") {
-    window.salvarEntradasNoFirebase(window.entradas);
-    console.log(`☁️ Entradas sincronizadas com Firestore (${window.entradas.length} registros).`);
-  }
-
-  // 🔹 Atualiza também produtos, estoque e limites no Firestore
-  if (typeof window.salvarProdutosNoFirebase === "function") {
-    window.salvarProdutosNoFirebase(window.produtos);
-  }
-
-  const estoqueRef = doc(db, "estoqueGlobal", "estoque");
-  setDoc(estoqueRef, { limites: window.limites, produtos: window.produtos }, { merge: true });
-
-  // === Atualiza tabelas e painéis ===
+  // atualiza tabelas e limpa campos
   atualizarTabelaEntradas?.();
   atualizarTabelaEstoque?.();
-  atualizarTabelaLimites?.();
   atualizarPainelFinanceiro?.();
   atualizarDashboard?.();
 
-  // === LIMPA TODOS OS CAMPOS ===
   document.querySelectorAll('#entrada input, #entrada select, #entrada textarea').forEach(el => {
     if (el.type === "checkbox" || el.type === "radio") el.checked = false;
     else el.value = "";
   });
 
-  // === Remove destaque da linha editada ===
-  document.querySelectorAll("#tabelaEntradas tbody tr").forEach(tr => tr.style.background = "");
-
-  // === Restaura estado de edição ===
-  indiceEdicaoEntrada = null;
-  if (typeof window.mostrarBotaoCancelarEntrada === "function") {
-    window.mostrarBotaoCancelarEntrada(false);
-  }
-
-  // === Foco automático no leitor de código ===
+  // foco
   document.getElementById("entradaCodigoBarras")?.focus();
-
-  // === Feedback final ===
-  mostrarMensagem("✅ Entrada salva, estoque e limites atualizados.", "sucesso");
+  mostrarMensagem("✅ Entrada salva, sincronizada e campos limpos.", "sucesso");
 }
 
 
@@ -3700,74 +3559,139 @@ document.addEventListener("DOMContentLoaded", () => {
 // ============================================================
 // 📦 ESTOQUE ATUAL — Revisado e Completo
 // ============================================================
-
-function atualizarTabelaEstoque(filtroTexto = "") {
+// ============================================================
+// 📦 ESTOQUE ATUAL — Versão corrigida (não sobrescreve dados)
+// ============================================================
+window.atualizarTabelaEstoque = function (filtroTexto = "") {
   const tabela = document.querySelector("#tabelaEstoque tbody");
   if (!tabela) return;
 
-  // Captura o texto de filtro (do parâmetro ou do campo)
-  const filtro = filtroTexto.toLowerCase().trim() || 
-    (document.getElementById("filtroEstoque")?.value || "").toLowerCase().trim();
-
+  const filtro = (filtroTexto || (document.getElementById("filtroEstoque")?.value || "")).toLowerCase().trim();
   tabela.innerHTML = "";
 
   const entradas = Array.isArray(window.entradas) ? window.entradas : [];
   const saidas = Array.isArray(window.saidas) ? window.saidas : [];
-  let produtos = Array.isArray(window.produtos) ? window.produtos : [];
+  const produtosCatalogo = Array.isArray(window.produtos) ? [...window.produtos] : [];
 
-  // 🔹 Cria mapa de movimentações (entradas - saídas)
-  const mapaEstoque = {};
+  // Mapa por nome normalizado para somar entradas/saídas e guardar última entrada
+  const mapa = {}; // { chaveNome: { quantidade: number, ultimaEntrada: entryObject } }
+  const norm = s => (String(s || "").toLowerCase().trim());
+
+  // Agrega entradas
   entradas.forEach(e => {
-    const nome = (e.produto || e.nomeProduto || "").trim();
-    if (!nome) return;
-    mapaEstoque[nome] = (mapaEstoque[nome] || 0) + Number(e.qtd || e.quantidade || 0);
+    const chave = norm(e.produto || e.nomeProduto);
+    if (!chave) return;
+    mapa[chave] = mapa[chave] || { quantidade: 0, ultimaEntrada: null };
+    mapa[chave].quantidade += Number(e.qtd || e.quantidade || 0);
+    // considera como "última" a mais recente por data (se existir)
+    if (!mapa[chave].ultimaEntrada) mapa[chave].ultimaEntrada = e;
+    else {
+      const atual = mapa[chave].ultimaEntrada;
+      // compara datas se existirem no formato YYYY-MM-DD
+      const dataAtual = new Date(atual.data || atual.dataEntrada || 0);
+      const dataNovo = new Date(e.data || e.dataEntrada || 0);
+      if (dataNovo > dataAtual) mapa[chave].ultimaEntrada = e;
+    }
   });
+
+  // Subtrai saídas
   saidas.forEach(s => {
-    const nome = (s.produto || s.nomeProduto || "").trim();
-    if (!nome) return;
-    mapaEstoque[nome] = (mapaEstoque[nome] || 0) - Number(s.qtd || s.quantidade || 0);
+    const chave = norm(s.produto || s.nomeProduto);
+    if (!chave) return;
+    mapa[chave] = mapa[chave] || { quantidade: 0, ultimaEntrada: null };
+    mapa[chave].quantidade -= Number(s.qtd || s.quantidade || 0);
   });
 
-  // 🔹 Remove produtos que não existem mais nas movimentações
-  const nomesAtivos = Object.keys(mapaEstoque);
-  produtos = produtos.filter(p => nomesAtivos.includes(p.nome?.trim()));
-
-  // 🔹 Atualiza quantidades reais
-  produtos.forEach(p => {
-    const nome = (p.nome || "").trim();
-    let qtdReal = mapaEstoque[nome] ?? 0;
-    if (qtdReal < 0) qtdReal = 0;
-    p.quantidade = qtdReal;
+  // Garante que não haja negativos
+  Object.keys(mapa).forEach(k => {
+    if (mapa[k].quantidade < 0) mapa[k].quantidade = 0;
   });
 
-  // 🔍 Filtro avançado — produto, categoria, quantidade ou validade
-  const produtosFiltrados = produtos.filter(p => {
-    const nome = (p.nome || "").toLowerCase();
-    const categoria = (p.categoria || "").toLowerCase();
-    const quantidade = String(p.quantidade ?? 0).toLowerCase();
-    const validade = (p.validade || "").toLowerCase();
+  // Prepara lista final de exibição: TODOS os produtos do catálogo (mantendo metadados)
+  const produtosParaExibir = produtosCatalogo.map(p => {
+    const chave = norm(p.nome || p.id || p.codigoBarras);
+    const infoMov = mapa[chave] || { quantidade: 0, ultimaEntrada: null };
 
+    // Se não houver correspondência por nome, tenta por código de barras
+    if (infoMov.quantidade === 0 && (p.codigoBarras || p.codBarras)) {
+      const cb = String(p.codigoBarras || p.codBarras);
+      // procura entradas por código
+      const entradasPorCB = entradas.filter(en => String(en.codigoBarras || en.codBarras || "") === cb);
+      if (entradasPorCB.length > 0) {
+        // calcula quantidade e pega ultima entrada por data
+        let qtd = 0;
+        let ultima = null;
+        entradasPorCB.forEach(en => {
+          qtd += Number(en.qtd || 0);
+          if (!ultima) ultima = en;
+          else if (new Date(en.data || 0) > new Date(ultima.data || 0)) ultima = en;
+        });
+        // subtrai saidas por codigo de barras
+        const saidasPorCB = saidas.filter(s => String(s.codigoBarras || s.codBarras || "") === cb);
+        saidasPorCB.forEach(s => qtd -= Number(s.qtd || 0));
+        if (qtd < 0) qtd = 0;
+        infoMov.quantidade = qtd;
+        infoMov.ultimaEntrada = ultima;
+      }
+    }
+
+    // monta objeto final sem sobrescrever propriedades importantes
+    return {
+      _orig: p,
+      nome: p.nome || "-",
+      codigoBarras: p.codigoBarras || p.codBarras || "-",
+      categoria: p.categoria || "-",
+      quantidade: typeof infoMov.quantidade === "number" ? infoMov.quantidade : (p.quantidade || 0),
+      lote: (infoMov.ultimaEntrada && infoMov.ultimaEntrada.lote) || p.lote || "-",
+      ultimoValor: (infoMov.ultimaEntrada && (Number(infoMov.ultimaEntrada.valor || infoMov.ultimaEntrada.valorUnitario || 0))) || (p.ultimoValor || 0),
+      validade: (infoMov.ultimaEntrada && infoMov.ultimaEntrada.validade) || p.validade || "-",
+      statusOk: ( (typeof infoMov.quantidade === "number" ? infoMov.quantidade : (p.quantidade || 0)) > 0 ),
+      foto: p.foto || p.imagem || "",
+    };
+  });
+
+  // Se quiser incluir produtos que estão somente nas movimentações (sem cadastro), adicione-os:
+  Object.keys(mapa).forEach(chaveMov => {
+    const existe = produtosParaExibir.some(pp => norm(pp.nome) === chaveMov);
+    if (!existe) {
+      const inf = mapa[chaveMov];
+      produtosParaExibir.push({
+        _orig: null,
+        nome: chaveMov,
+        codigoBarras: "-",
+        categoria: "-",
+        quantidade: inf.quantidade,
+        lote: inf.ultimaEntrada?.lote || "-",
+        ultimoValor: Number(inf.ultimaEntrada?.valor || 0),
+        validade: inf.ultimaEntrada?.validade || "-",
+        statusOk: inf.quantidade > 0,
+        foto: ""
+      });
+    }
+  });
+
+  // Ordena alfabeticamente pelo nome (pt-BR)
+  produtosParaExibir.sort((a, b) => (String(a.nome || "").toLowerCase()).localeCompare(String(b.nome || "").toLowerCase(), 'pt-BR'));
+
+  // Filtra para UI
+  const filtrados = produtosParaExibir.filter(p => {
     if (!filtro) return true;
-
     return (
-      nome.includes(filtro) ||
-      categoria.includes(filtro) ||
-      quantidade.includes(filtro) ||
-      validade.includes(filtro)
+      String(p.nome || "").toLowerCase().includes(filtro) ||
+      String(p.categoria || "").toLowerCase().includes(filtro) ||
+      String(p.quantidade || "").toLowerCase().includes(filtro) ||
+      String(p.validade || "").toLowerCase().includes(filtro)
     );
   });
 
-  // 🧾 Exibição da tabela
-  if (produtosFiltrados.length === 0) {
-    tabela.innerHTML = `
-      <tr><td colspan="9" style="text-align:center; color:#888;">
-        Nenhum produto encontrado no estoque atual.
-      </td></tr>`;
+  // Renderiza
+  if (filtrados.length === 0) {
+    tabela.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#888;">Nenhum produto encontrado no estoque atual.</td></tr>`;
   } else {
-    produtosFiltrados.forEach((p, i) => {
+    filtrados.forEach((p, i) => {
       const valor = Number(p.ultimoValor || 0);
-      const linha = document.createElement("tr");
-      linha.innerHTML = `
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
         <td>${i + 1}</td>
         <td>${p.nome || "-"}</td>
         <td>${p.codigoBarras || "-"}</td>
@@ -3776,23 +3700,19 @@ function atualizarTabelaEstoque(filtroTexto = "") {
         <td>${p.lote || "-"}</td>
         <td>${valor ? valor.toFixed(2) : "-"}</td>
         <td>${p.validade || "-"}</td>
-        <td style="font-weight:bold; color:${p.quantidade > 0 ? '#198754' : '#dc3545'};">
-          ${p.quantidade > 0 ? "✅ Em Estoque" : "❌ Zerado"}
+        <td style="font-weight:bold; color:${p.statusOk ? '#198754' : '#dc3545'};">
+          ${p.statusOk ? "✅ Em Estoque" : "❌ Zerado"}
         </td>
       `;
-      tabela.appendChild(linha);
+      tabela.appendChild(tr);
     });
   }
 
-  // 💾 Salva apenas os produtos ativos e sincronizados
-  window.produtos = produtos;
-  salvarTodosLocal();
-  salvarProdutosNoFirebase(window.produtos);
-
-  // 🕒 Atualiza data/hora da última sincronização (opcional)
+  // Atualiza label de hora (não salva dados aqui)
   const lbl = document.getElementById("ultimaAtualizacaoEstoque");
   if (lbl) lbl.textContent = "Última atualização: " + new Date().toLocaleString();
-}
+};
+
 
 // ============================================================
 // 🔍 FILTRO DINÂMICO — executa enquanto o usuário digita
@@ -3817,34 +3737,59 @@ function limparFiltroEstoque() {
 // ============================================================
 // 🔄 RE-CALCULAR ESTOQUE (botão manual, opcional)
 // ============================================================
+// Recalcula quantidades e último valor a partir de entradas/saidas
 function recalcularEstoqueGeral() {
-  const produtos = window.produtos || [];
-  const entradas = window.entradas || [];
-  const saidas = window.saidas || [];
-
-  const mapaEstoque = {};
-  entradas.forEach(e => {
-    const nome = e.produto || e.nomeProduto || "";
-    if (!mapaEstoque[nome]) mapaEstoque[nome] = 0;
-    mapaEstoque[nome] += Number(e.qtd || e.quantidade || 0);
-  });
-  saidas.forEach(s => {
-    const nome = s.produto || s.nomeProduto || "";
-    if (!mapaEstoque[nome]) mapaEstoque[nome] = 0;
-    mapaEstoque[nome] -= Number(s.qtd || s.quantidade || 0);
+  // zera quantidades
+  if (!Array.isArray(window.produtos)) window.produtos = [];
+  const mapa = {};
+  window.produtos.forEach(p => {
+    mapa[p.nome?.toLowerCase() || p.id] = { quantidade: 0, ultimoValor: p.ultimoValor || 0, lote: p.lote || "", validade: p.validade || "" , pRef: p };
   });
 
-  produtos.forEach(p => {
-    let qtdReal = mapaEstoque[p.nome] ?? 0;
-    if (qtdReal < 0) qtdReal = 0;
-    p.quantidade = qtdReal;
+  // agrega entradas
+  (window.entradas || []).forEach(en => {
+    const chave = (en.produto || "").toLowerCase();
+    const m = mapa[chave] || mapById(en.codigoBarras) || null;
+    if (m) {
+      m.quantidade += Number(en.qtd || 0);
+      if (en.valor || en.valor === 0) m.ultimoValor = Number(en.valor);
+      if (en.lote) m.lote = en.lote;
+      if (en.validade) m.validade = en.validade;
+    }
   });
 
-  salvarTodosLocal();
-  salvarProdutosNoFirebase(produtos);
-  atualizarTabelaEstoque();
-  mostrarMensagem("🔄 Estoque recalculado e atualizado com sucesso!", "sucesso");
+  // subtrai saidas
+  (window.saidas || []).forEach(s => {
+    const chave = (s.produto || "").toLowerCase();
+    const m = mapa[chave] || mapById(s.codigoBarras) || null;
+    if (m) {
+      m.quantidade -= Number(s.qtd || 0);
+    }
+  });
+
+  // aplica de volta
+  Object.values(mapa).forEach(entry => {
+    if (!entry.pRef) return;
+    entry.pRef.quantidade = entry.quantidade;
+    entry.pRef.ultimoValor = entry.ultimoValor;
+    entry.pRef.lote = entry.lote;
+    entry.pRef.validade = entry.validade;
+  });
+
+  salvarTodosLocal?.();
+  if (typeof salvarProdutosNoFirebase === "function") salvarProdutosNoFirebase(window.produtos);
+
+  // helper para localizar por código (caso use)
+  function mapById(cod) {
+    if (!cod) return null;
+    const p = window.produtos.find(p => String(p.codigoBarras || p.codBarras || p.id) === String(cod));
+    return p ? { ...p, pRef: p } : null;
+  }
+
+  mostrarMensagem && mostrarMensagem("🔁 Estoque recalculado a partir de entradas/saídas.", "info");
+  atualizarTabelaEstoque?.();
 }
+
 
 // ============================================================
 // ⚡ ATUALIZAÇÃO AUTOMÁTICA APÓS MOVIMENTAÇÕES
@@ -5244,8 +5189,6 @@ document
 
 
 	
-
-
 
 
 
