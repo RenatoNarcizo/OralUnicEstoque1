@@ -1250,11 +1250,6 @@
     }
   });
  
-// 🔹 Criação de variáveis globais com proteção
-window.produtos = JSON.parse(localStorage.getItem("produtos") || "[]");
-window.entradas = JSON.parse(localStorage.getItem("entradas") || "[]");
-window.saidas = JSON.parse(localStorage.getItem("saidas") || "[]");
-window.usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
 // ===================================================
 // 🔹 Wrappers globais para salvar dados no Firestore
 // ===================================================
@@ -1419,6 +1414,7 @@ async function carregarDadosDoFirestore() {
     }
   } 
 
+// 🔹 Carrega tudo corretamente do localStorage
 function carregarTodosLocal() {
   try {
     const dadosLocais = JSON.parse(localStorage.getItem("dadosSistema")) || {};
@@ -1434,9 +1430,13 @@ function carregarTodosLocal() {
       usuarios: window.usuarios.length,
     });
   } catch (e) {
-    console.error("Erro ao carregar dados locais:", e);
+    console.error("❌ Erro ao carregar dados locais:", e);
   }
 }
+
+// ✅ Chame isso logo ao iniciar o sistema:
+carregarTodosLocal();
+
 
 
 // =================================================================================
@@ -5015,5 +5015,6 @@ document
 
 
 	
+
 
 
