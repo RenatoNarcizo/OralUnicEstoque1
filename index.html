@@ -1211,15 +1211,21 @@
     appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
   };
 
-  // 🚀 Inicializa Firebase e Firestore
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+ // 🚀 Inicializa Firebase e Firestore
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-  
+// 🔹 Torna acessível globalmente para funções fora do módulo
+window.db = db;
+window.auth = auth;
+window.doc = doc;
+window.setDoc = setDoc;
+window.getDoc = getDoc;
+window.onSnapshot = onSnapshot;
 
-  const estoqueRef = doc(db, "estoqueGlobal", "estoque");
-  const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
+const estoqueRef = doc(db, "estoqueGlobal", "estoque");
+const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
 
   // Escuta alterações automáticas do Firestore
   onSnapshot(estoqueRef, (snapshot) => {
@@ -5015,6 +5021,7 @@ document
 
 
 	
+
 
 
 
