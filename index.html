@@ -1393,6 +1393,7 @@ async function carregarDadosDoFirestore() {
 
 
 
+
 // === CRIAÇÃO DE USUÁRIO (FIREBASE AUTH) ===
 
   window.criarUsuarioNoFirebase = async function(email, senha) {
@@ -1674,174 +1675,98 @@ window.limparFiltroUsuarios = function() {
   }
 };
 
-
-// =================================================================================
-// === FIM DAS FUNÇÕES DE GERENCIAMENTO DE USUÁRIOS ===
-// =================================================================================
-
 // === LOGIN E SESSÃO ===
-  
 function mostrarSistema(user) {
-    // ... (Seu código inicial, Mantido)
-    const loginView = document.getElementById("loginView");
-    const mainApp = document.getElementById("mainApp");
-    const userNameEl = document.getElementById("userName");
-    const perfilBadgeEl = document.getElementById("perfilBadge");
-    const nomeBemVindoEl = document.getElementById("nomeUsuarioBemVindo");
+  const loginView = document.getElementById("loginView");
+  const mainApp = document.getElementById("mainApp");
+  const userNameEl = document.getElementById("userName");
+  const perfilBadgeEl = document.getElementById("perfilBadge");
+  const nomeBemVindoEl = document.getElementById("nomeUsuarioBemVindo");
 
-    if (loginView && mainApp) {
-        loginView.style.display = "none";
-        mainApp.style.display = "block";
-    }
+  if (loginView && mainApp) {
+    loginView.style.display = "none";
+    mainApp.style.display = "block";
+  }
 
-    const usuarioLogado = window.usuarios.find(u => u.email.toLowerCase() === user.email.toLowerCase());
-    const nomeFallback = user.email.split('@')[0];
-    
-    // 🚨 GARANTINDO O PERFIL CORRETO
-    const nome = usuarioLogado ? usuarioLogado.nome : nomeFallback;
-    const perfil = usuarioLogado ? usuarioLogado.perfil.toUpperCase() : "USUARIO";
-    
-    if (userNameEl) userNameEl.textContent = nome;
-    if (perfilBadgeEl) perfilBadgeEl.textContent = "Perfil: " + perfil;
-    if (nomeBemVindoEl) nomeBemVindoEl.textContent = nome;
+  // 🔹 Verifica se há lista de usuários carregada
+  const usuarioLogado = (window.usuarios || []).find(
+    u => u.email?.toLowerCase() === user.email?.toLowerCase()
+  );
 
-    // ==========================================================
-    // APLICAÇÃO DAS PERMISSÕES: Agora usa a variável global window.PERMISSOES
-    // ==========================================================
-    const permissoesDoUsuario = window.PERMISSOES[perfil] || window.PERMISSOES['USUARIO'];
-    
-    // 1. Oculta ou exibe os itens de menu
-    const menuLinks = document.querySelectorAll('#sidebar a[data-section]');
-    menuLinks.forEach(link => {
-        const sectionName = link.getAttribute('data-section');
-        // Usa a lista canView para determinar o que mostrar
-        if (permissoesDoUsuario.canView.includes(sectionName)) { 
-            link.style.display = ''; 
-        } else {
-            link.style.display = 'none'; 
-        }
-    });
+  const nomeFallback = user.email.split("@")[0];
+  const nome = usuarioLogado?.nome || nomeFallback;
+  const perfil = usuarioLogado?.perfil?.toUpperCase() || "USUÁRIO";
 
-    // 2. Redireciona para a primeira seção permitida
-    let initialSection = permissoesDoUsuario.canView.includes('dashboard') ? 'dashboard' : permissoesDoUsuario.canView[0];
-    
-    if (typeof showSection === "function") {
-         showSection(initialSection);
-    }
-    // ==========================================================
+  // 🔹 Atualiza nome e perfil
+  if (userNameEl) userNameEl.textContent = nome;
+  if (perfilBadgeEl) perfilBadgeEl.textContent = "Perfil: " + perfil;
 
-    // Seções de Cadastro e Movimentação devem ser desabilitadas para Estoquista
-    // O GERENTE tem permissão de edição nas seções.
-    const podeEditar = permissoesDoUsuario.canEdit === true || (Array.isArray(permissoesDoUsuario.canEdit) && (permissoesDoUsuario.canEdit.includes('produtos') || permissoesDoUsuario.canEdit.includes('entradas') || permissoesDoUsuario.canEdit.includes('saidas')));
-    
-    const entradaBtn = document.getElementById('adicionarEntradaBtn');
-    const saidaBtn = document.getElementById('adicionarSaidaBtn');
-    const addProdutoBtn = document.getElementById('adicionarProdutoBtn'); 
-    
-    if (!podeEditar) {
-         if (entradaBtn) entradaBtn.style.display = 'none';
-         if (saidaBtn) saidaBtn.style.display = 'none';
-         if (addProdutoBtn) addProdutoBtn.style.display = 'none';
+  // 👋 Mensagem de boas-vindas
+  if (nomeBemVindoEl) {
+    nomeBemVindoEl.textContent = nome;
+    console.log("👋 Bem-vindo(a):", nome);
+  }
+
+  // 🔹 Salva usuário atual
+  window.usuarioAtual = { nome, email: user.email, perfil };
+
+  // 🔹 Exibe mensagem
+  if (typeof mostrarMensagem === "function") {
+    mostrarMensagem(`👋 Bem-vindo(a), ${nome}!`, "sucesso");
+  }
+
+  // 🔹 Atualiza automaticamente
+  if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+  if (typeof atualizarDashboard === "function") atualizarDashboard();
+  if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
+
+  // ==========================================================
+  // 🔒 APLICAÇÃO DAS PERMISSÕES
+  // ==========================================================
+  const permissoesDoUsuario = window.PERMISSOES[perfil] || window.PERMISSOES['USUARIO'];
+
+  // 1️⃣ Oculta ou exibe os itens de menu
+  const menuLinks = document.querySelectorAll('#sidebar a[data-section]');
+  menuLinks.forEach(link => {
+    const sectionName = link.getAttribute('data-section');
+    if (permissoesDoUsuario.canView.includes(sectionName)) { 
+      link.style.display = ''; 
     } else {
-         if (entradaBtn) entradaBtn.style.display = '';
-         if (saidaBtn) saidaBtn.style.display = '';
-         if (addProdutoBtn) addProdutoBtn.style.display = '';
+      link.style.display = 'none'; 
     }
-}
-  
- // === LOGIN E SESSÃO ===
-window.fazerLogin = async function() {
-  const usuarioEl = document.getElementById("usuarioLogin");
-  const senhaEl = document.getElementById("senhaLogin");
-  const msgEl = document.getElementById("loginMsg");
-
-  const usuario = usuarioEl.value.trim();
-  const senha = senhaEl.value.trim();
-
-  // 🔹 Limpa mensagem anterior
-  msgEl.style.display = "none";
-  msgEl.textContent = "";
-
-  if (!usuario || !senha) {
-    msgEl.style.display = "block";
-    msgEl.style.color = "red";
-    msgEl.textContent = "⚠️ Preencha e-mail e senha!";
-    return;
-  }
-
-  const email = usuario.toLowerCase();
-
-  if (!email.includes("@")) {
-    msgEl.style.display = "block";
-    msgEl.style.color = "red";
-    msgEl.textContent = "⚠️ E-mail inválido.";
-    return;
-  }
-
-  try {
-    // 🔹 Tenta logar no Firebase
-    const userCredential = await signInWithEmailAndPassword(auth, email, senha);
-    const user = userCredential.user;
-
-    console.log("✅ Usuário logado:", user.email);
-    msgEl.style.display = "block";
-    msgEl.style.color = "green";
-    msgEl.textContent = "✅ Login realizado com sucesso! Carregando dados...";
-
-    // 🔄 Carrega dados do Firestore
-    await carregarDadosDoFirestore();
-
-    // 🔁 Atualiza as tabelas e painéis
-    if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-    if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
-    if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-    if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-    if (typeof atualizarDashboard === "function") atualizarDashboard();
-    if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
-
-    // ✅ Exibe a interface principal após login bem-sucedido
-    mostrarSistema(user);
-
-  } catch (error) {
-    console.error("❌ Erro ao logar:", error);
-    msgEl.style.display = "block";
-    msgEl.style.color = "red";
-
-    switch (error.code) {
-      case "auth/invalid-credential":
-      case "auth/wrong-password":
-        msgEl.textContent = "❌ Senha incorreta ou credenciais inválidas!";
-        break;
-      case "auth/user-not-found":
-        msgEl.textContent = "❌ Usuário não encontrado!";
-        break;
-      case "auth/too-many-requests":
-        msgEl.textContent = "⚠️ Muitas tentativas. Tente novamente mais tarde.";
-        break;
-      default:
-        msgEl.textContent = "❌ Erro ao fazer login. Verifique suas credenciais.";
-    }
-  }
-};
-
-
- 
-// 🔹 Permitir login ao pressionar Enter nos campos de login
-document.addEventListener("DOMContentLoaded", () => {
-  const usuarioEl = document.getElementById("usuarioLogin");
-  const senhaEl = document.getElementById("senhaLogin");
-
-  [usuarioEl, senhaEl].forEach((el) => {
-    el.addEventListener("keypress", (event) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        if (typeof window.fazerLogin === "function") {
-          window.fazerLogin();
-        }
-      }
-    });
   });
-});
+
+  // 2️⃣ Redireciona para a primeira seção permitida
+  let initialSection = permissoesDoUsuario.canView.includes('dashboard')
+    ? 'dashboard'
+    : permissoesDoUsuario.canView[0];
+
+  if (typeof showSection === "function") {
+    showSection(initialSection);
+  }
+
+  // 3️⃣ Controle de botões
+  const podeEditar =
+    permissoesDoUsuario.canEdit === true ||
+    (Array.isArray(permissoesDoUsuario.canEdit) &&
+      (permissoesDoUsuario.canEdit.includes('produtos') ||
+       permissoesDoUsuario.canEdit.includes('entradas') ||
+       permissoesDoUsuario.canEdit.includes('saidas')));
+
+  const entradaBtn = document.getElementById('adicionarEntradaBtn');
+  const saidaBtn = document.getElementById('adicionarSaidaBtn');
+  const addProdutoBtn = document.getElementById('adicionarProdutoBtn'); 
+
+  if (!podeEditar) {
+    if (entradaBtn) entradaBtn.style.display = 'none';
+    if (saidaBtn) saidaBtn.style.display = 'none';
+    if (addProdutoBtn) addProdutoBtn.style.display = 'none';
+  } else {
+    if (entradaBtn) entradaBtn.style.display = '';
+    if (saidaBtn) saidaBtn.style.display = '';
+    if (addProdutoBtn) addProdutoBtn.style.display = '';
+  }
+}
 
 
 // ====================================================
@@ -1931,18 +1856,56 @@ onAuthStateChanged(auth, async (user) => {
  
 
  
+ 
   // === LOGOUT ===
-  window.logout = async function() {
-    await signOut(auth);
-    mostrarMensagem("Sessão encerrada!", "info");
-  };
-  
-  // Expor Firestore para uso em outras funções, se necessário
-  window.db = db;
-  window.auth = auth;
-// 🔹 Funções utilitárias globais simples (caso não estejam definidas em outro lugar)
-window.showSection = function(sectionId) {
-  document.querySelectorAll("section").forEach(sec => sec.style.display = "none");
+window.logout = async function () {
+  try {
+    console.log("🚪 Iniciando logout...");
+
+    // Se estiver autenticado no Firebase
+    if (typeof signOut === "function" && typeof auth !== "undefined") {
+      await signOut(auth);
+    }
+
+    // Limpa dados locais e globais
+    localStorage.clear();
+    sessionStorage.clear();
+    window.usuarioAtual = null;
+
+    // Retorna para a tela de login
+    const mainApp = document.getElementById("mainApp");
+    const loginView = document.getElementById("loginView");
+
+    if (mainApp) mainApp.style.display = "none";
+    if (loginView) loginView.style.display = "block";
+
+    // Reseta o campo de login (por segurança)
+    const usuarioLogin = document.getElementById("usuarioLogin");
+    const senhaLogin = document.getElementById("senhaLogin");
+    if (usuarioLogin) usuarioLogin.value = "";
+    if (senhaLogin) senhaLogin.value = "";
+
+    // Mensagem visual
+    if (typeof mostrarMensagem === "function") {
+      mostrarMensagem("Sessão encerrada com sucesso!", "info");
+    }
+
+    console.log("✅ Logout concluído com sucesso.");
+  } catch (err) {
+    console.error("❌ Erro ao sair:", err);
+    if (typeof mostrarMensagem === "function") {
+      mostrarMensagem("Erro ao sair da conta!", "erro");
+    }
+  }
+};
+
+// === Expor Firestore e Auth globalmente ===
+window.db = db;
+window.auth = auth;
+
+// === Controle de seções (mantido) ===
+window.showSection = function (sectionId) {
+  document.querySelectorAll("section").forEach(sec => (sec.style.display = "none"));
   const section = document.getElementById(sectionId);
   if (section) section.style.display = "block";
 };
@@ -1973,16 +1936,18 @@ window.toggleSidebar = function () {
 // ✅ Fecha o menu automaticamente ao clicar fora dele
 document.addEventListener("click", (event) => {
   const sidebar = document.getElementById("sidebar");
-  const menuToggle = document.getElementById("menuToggle");
-  if (!sidebar || !menuToggle) return;
+  const mainContent = document.querySelector("main");
+  if (!sidebar || !mainContent) return;
 
-  const clickDentroSidebar = sidebar.contains(event.target);
-  const clickNoToggle = menuToggle.contains(event.target);
-
-  if (!clickDentroSidebar && !clickNoToggle && sidebar.style.left === "0px") {
-    window.toggleSidebar(); // fecha o menu
+  // Verifica se o clique foi em um item do menu (ou algo dentro dele)
+  const itemMenu = event.target.closest("#sidebar a, #sidebar button, #sidebar li");
+  if (itemMenu) {
+    sidebar.style.left = "-220px";
+    mainContent.style.marginLeft = "20px";
+    sidebar.setAttribute("aria-hidden", "true");
   }
 });
+
 
 // ✅ NOVO: Fecha o menu automaticamente ao clicar em QUALQUER item do menu
 document.addEventListener("click", (event) => {
@@ -5100,7 +5065,6 @@ document
 
 
 	
-
 
 
 
