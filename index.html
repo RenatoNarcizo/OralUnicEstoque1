@@ -1744,7 +1744,8 @@ function mostrarSistema(user) {
     }
 }
   
-  window.fazerLogin = async function() {
+ // === LOGIN E SESSÃO ===
+window.fazerLogin = async function() {
   const usuarioEl = document.getElementById("usuarioLogin");
   const senhaEl = document.getElementById("senhaLogin");
   const msgEl = document.getElementById("loginMsg");
@@ -1774,41 +1775,50 @@ function mostrarSistema(user) {
 
   try {
     // 🔹 Tenta logar no Firebase
-    await signInWithEmailAndPassword(auth, email, senha);
-	await carregarDadosDoFirestore();
-	if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+    const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+    const user = userCredential.user;
+
+    console.log("✅ Usuário logado:", user.email);
+    msgEl.style.display = "block";
+    msgEl.style.color = "green";
+    msgEl.textContent = "✅ Login realizado com sucesso! Carregando dados...";
+
+    // 🔄 Carrega dados do Firestore
+    await carregarDadosDoFirestore();
+
+    // 🔁 Atualiza as tabelas e painéis
+    if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
     if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
     if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
     if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
     if (typeof atualizarDashboard === "function") atualizarDashboard();
-    if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
-    if (typeof atualizarSelectProdutos === "function") atualizarSelectProdutos();
-    if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
+    if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
 
-    // ✅ Exibe mensagem de sucesso
-    msgEl.style.display = "block";
-    msgEl.style.color = "green";
-    msgEl.textContent = "✅ Login realizado com sucesso!";
-    setTimeout(() => (msgEl.style.display = "none"), 2000);
+    // ✅ Exibe a interface principal após login bem-sucedido
+    mostrarSistema(user);
 
   } catch (error) {
-    console.error(error.code, error.message);
+    console.error("❌ Erro ao logar:", error);
     msgEl.style.display = "block";
     msgEl.style.color = "red";
 
-    if (
-      error.code === "auth/invalid-credential" ||
-      error.code === "auth/wrong-password" ||
-      error.code === "auth/user-not-found"
-    ) {
-      msgEl.textContent = "❌ Usuário ou senha incorretos!";
-    } else if (error.code === "auth/invalid-email") {
-      msgEl.textContent = "⚠️ E-mail inválido.";
-    } else {
-      msgEl.textContent = `Erro: ${error.message}`;
+    switch (error.code) {
+      case "auth/invalid-credential":
+      case "auth/wrong-password":
+        msgEl.textContent = "❌ Senha incorreta ou credenciais inválidas!";
+        break;
+      case "auth/user-not-found":
+        msgEl.textContent = "❌ Usuário não encontrado!";
+        break;
+      case "auth/too-many-requests":
+        msgEl.textContent = "⚠️ Muitas tentativas. Tente novamente mais tarde.";
+        break;
+      default:
+        msgEl.textContent = "❌ Erro ao fazer login. Verifique suas credenciais.";
     }
   }
 };
+
 
  
 // 🔹 Permitir login ao pressionar Enter nos campos de login
@@ -5005,4 +5015,5 @@ document
 
 
 	
+
 
