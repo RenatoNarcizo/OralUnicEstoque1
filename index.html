@@ -1857,12 +1857,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-
 // ====================================================
 // 🔐 AUTENTICAÇÃO E SINCRONIZAÇÃO EM TEMPO REAL
 // ====================================================
-
-
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
@@ -1880,11 +1877,50 @@ onAuthStateChanged(auth, async (user) => {
   const estoqueRef = doc(db, "estoqueGlobal", "estoque");
   const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
 
- 
+  // --- Escuta alterações no estoque ---
+  onSnapshot(estoqueRef, (snapshot) => {
+    if (window.bloquearAtualizacaoSnapshot) {
+      console.log("⏸️ Snapshot ignorado temporariamente (salvando produto)...");
+      return;
+    }
 
+    if (!snapshot.exists()) {
+      console.warn("⚠️ Documento 'estoque' ainda não existe no Firestore.");
+      return;
+    }
 
+    const data = snapshot.data() || {};
+    window.produtos = Array.isArray(data.produtos) ? [...data.produtos] : [];
+    window.entradas = Array.isArray(data.entradas) ? [...data.entradas] : [];
+    window.saidas = Array.isArray(data.saidas) ? [...data.saidas] : [];
+    window.limites = Array.isArray(data.limites) ? [...data.limites] : [];
 
+    salvarTodosLocal?.();
 
+    if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+    atualizarTabelaEstoque?.();
+    atualizarTabelaEntradas?.();
+    atualizarTabelaSaidas?.();
+    atualizarDashboard?.();
+    atualizarPainelFinanceiro?.();
+
+    console.log("✅ Estoque sincronizado e interface atualizada automaticamente!");
+  });
+
+  // --- Escuta alterações de usuários ---
+  onSnapshot(usuariosRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      window.usuarios = data.usuarios || [];
+      salvarTodosLocal();
+
+      if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
+      console.log("👥 Lista de usuários atualizada automaticamente.");
+    }
+  });
+
+  console.log("🌐 Sincronização em tempo real ativada.");
+}); // ✅ FECHAMENTO CORRETO DO onAuthStateChanged
 
 
 
@@ -5019,6 +5055,7 @@ document
 
 
 	
+
 
 
 
