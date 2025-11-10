@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">f
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -2290,6 +2290,7 @@ function padronizarCamposAntesDeSalvar() {
 window.cadastrarProduto = async function () {
   limparErros("cadastro");
 
+  // ----- Elementos do formulário -----
   const nomeEl = document.getElementById("produtoNome");
   const categoriaEl = document.getElementById("produtoCategoria");
   const embalagemEl = document.getElementById("produtoEmbalagem");
@@ -2297,51 +2298,74 @@ window.cadastrarProduto = async function () {
   const codBarrasEl = document.getElementById("produtoCodigoBarras");
   const fotoEl = document.getElementById("produtoFoto");
 
-  const nome = nomeEl.value.trim();
-  const categoria = categoriaEl.value.trim();
-  const embalagem = embalagemEl.value.trim();
-  const qtdEmb = parseInt(qtdEmbEl.value.trim()) || 0;
-  const codBarras = codBarrasEl.value.trim();
+  const nome = nomeEl?.value.trim() || "";
+  const categoria = categoriaEl?.value.trim() || "";
+  const embalagem = embalagemEl?.value.trim() || "";
+  const qtdEmb = parseInt(qtdEmbEl?.value.trim()) || 0;
+  const codBarras = codBarrasEl?.value.trim() || "";
 
+  // ----- Validações -----
   if (!nome) return destacarErro(nomeEl, "Informe o nome do produto!");
   if (!categoria) return destacarErro(categoriaEl, "Selecione a categoria!");
   if (!embalagem) return destacarErro(embalagemEl, "Selecione o tipo de embalagem!");
   if (!qtdEmb) return destacarErro(qtdEmbEl, "Informe a quantidade por embalagem!");
 
+  // ----- Tratamento da foto (base64) -----
   let fotoBase64 = "";
   const isEdicao = typeof indiceEdicaoProduto === "number" && indiceEdicaoProduto !== null;
 
-  if (!isEdicao && !fotoEl.files[0]) {
+  if (!isEdicao && !(fotoEl && fotoEl.files && fotoEl.files[0])) {
     return destacarErro(fotoEl, "A foto do produto é obrigatória!");
   }
 
-  if (fotoEl.files && fotoEl.files[0]) {
-    const file = fotoEl.files[0];
-    fotoBase64 = await new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target.result);
-      reader.readAsDataURL(file);
-    });
+  if (fotoEl && fotoEl.files && fotoEl.files[0]) {
+    try {
+      const file = fotoEl.files[0];
+      fotoBase64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("Erro ao ler imagem"));
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsDataURL(file);
+      });
+    } catch (e) {
+      console.error("Erro ao converter foto:", e);
+      // continua sem foto em caso de falha, ou opcional: return destacarErro(...)
+    }
   }
 
+  // ----- Garante array global -----
+  window.produtos = Array.isArray(window.produtos) ? window.produtos : [];
+
+  // ----- Edição ou novo -----
   if (isEdicao) {
-    const produtoAntigo = window.produtos[indiceEdicaoProduto];
-    const nomeAntigo = produtoAntigo.nome;
+    if (typeof indiceEdicaoProduto !== "number" || !window.produtos[indiceEdicaoProduto]) {
+      console.warn("Índice de edição inválido:", indiceEdicaoProduto);
+      mostrarMensagem("Índice de edição inválido.", "erro");
+    } else {
+      const produtoAntigo = window.produtos[indiceEdicaoProduto];
+      const nomeAntigo = produtoAntigo.nome;
 
-    Object.assign(produtoAntigo, {
-      nome,
-      categoria,
-      embalagem,
-      qtdEmbalagem: qtdEmb,
-      codBarras,
-      ...(fotoBase64 && { foto: fotoBase64 }),
-    });
+      // atualiza o objeto existente
+      Object.assign(produtoAntigo, {
+        nome,
+        categoria,
+        embalagem,
+        qtdEmbalagem: qtdEmb,
+        codBarras,
+        ...(fotoBase64 && { foto: fotoBase64 })
+      });
 
-    atualizarReferenciasProduto?.(nomeAntigo, nome);
-    mostrarMensagem(`✅ Produto "${nome}" atualizado com sucesso!`, "sucesso");
-    indiceEdicaoProduto = null;
-    mostrarBotaoCancelar(false);
+      atualizarReferenciasProduto?.(nomeAntigo, nome);
+      mostrarMensagem(`✅ Produto "${nome}" atualizado com sucesso!`, "sucesso");
+      indiceEdicaoProduto = null;
+      mostrarBotaoCancelar(false);
+
+      // salva local e atualiza UI imediatamente
+      salvarTodosLocal?.();
+      if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+    }
   } else {
+    // cria novo produto
     const novoProduto = {
       id: Date.now(),
       nome,
@@ -2352,49 +2376,63 @@ window.cadastrarProduto = async function () {
       foto: fotoBase64,
       criadoEm: new Date().toISOString(),
     };
-    window.produtos.push(novoProduto);
+
+    // adiciona ao array local (cópia, para evitar referências)
+    window.produtos = [...window.produtos, novoProduto];
+
     mostrarMensagem(`✅ Produto "${nome}" cadastrado com sucesso!`, "sucesso");
+
+    // salva local e atualiza UI imediatamente (antes do setDoc)
+    salvarTodosLocal?.();
+    if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+
+    console.log("🧩 Produtos locais após push:", window.produtos.length, window.produtos);
   }
 
-  // --- 🔒 Bloqueia o snapshot enquanto salva ---
+  // ----- Proteção contra sobrescrita por snapshot -----
   window.bloquearAtualizacaoSnapshot = true;
 
   try {
     const estoqueRef = doc(db, "estoqueGlobal", "estoque");
+
+    // envia para Firestore (merge)
     await setDoc(estoqueRef, { produtos: window.produtos }, { merge: true });
     console.log("☁️ Produtos atualizados na nuvem com sucesso!");
 
-    salvarTodosLocal?.();
-    if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-    if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-
-    // 🔄 Aguarda Firestore processar e libera novamente
-    await new Promise(r => setTimeout(r, 800));
-    window.bloquearAtualizacaoSnapshot = false;
-    console.log("🧩 Produtos atuais (após salvamento):", window.produtos.length);
+    // garante desbloqueio (seguro): libera após curto delay
+    setTimeout(() => {
+      window.bloquearAtualizacaoSnapshot = false;
+      console.log("🔓 Snapshot desbloqueado automaticamente após salvamento.");
+    }, 1000);
 
   } catch (err) {
     console.error("❌ Erro ao salvar produto na nuvem:", err);
     mostrarMensagem("Erro ao salvar produto no Firestore!", "erro");
+    // libera imediatamente em caso de erro
     window.bloquearAtualizacaoSnapshot = false;
   }
 
-  // --- Atualiza e limpa ---
+  // ----- Atualizações complementares -----
   atualizarTabelaEntradas?.();
   atualizarTabelaSaidas?.();
   atualizarTabelaLimites?.();
   atualizarDashboard?.();
   atualizarPainelFinanceiro?.();
 
-  nomeEl.value = "";
-  categoriaEl.value = "";
-  embalagemEl.value = "";
-  qtdEmbEl.value = "";
-  codBarrasEl.value = "";
-  fotoEl.value = "";
-
-  const fotoPreview = document.getElementById("fotoPreview");
-  if (fotoPreview) fotoPreview.innerHTML = "";
+  // ----- Limpa formulário -----
+  try {
+    nomeEl.value = "";
+    categoriaEl.value = "";
+    embalagemEl.value = "";
+    qtdEmbEl.value = "";
+    codBarrasEl.value = "";
+    if (fotoEl) fotoEl.value = "";
+    const fotoPreview = document.getElementById("fotoPreview");
+    if (fotoPreview) fotoPreview.innerHTML = "";
+  } catch (e) {
+    // evita quebrar caso algum elemento não exista
+    console.warn("Limpeza do formulário falhou:", e);
+  }
 };
 
 
@@ -5055,6 +5093,7 @@ document
 
 
 	
+
 
 
 
