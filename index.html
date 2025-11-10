@@ -1382,31 +1382,37 @@ async function carregarDadosDoFirestore() {
       const data = docSnap.data();
 
       // --- Atualiza variáveis globais ---
-      window.produtos = data.produtos || [];
-      window.entradas = data.entradas || [];
-      window.saidas = data.saidas || [];
-      window.limites = data.limites || [];
-      window.usuarios = data.usuarios || [];
+      window.produtos = Array.isArray(data.produtos) ? [...data.produtos] : [];
+      window.entradas = Array.isArray(data.entradas) ? [...data.entradas] : [];
+      window.saidas = Array.isArray(data.saidas) ? [...data.saidas] : [];
+      window.limites = Array.isArray(data.limites) ? [...data.limites] : [];
+      window.usuarios = Array.isArray(data.usuarios) ? [...data.usuarios] : [];
 
       // --- Salva localmente como backup ---
-      salvarTodosLocal();
+      if (typeof salvarTodosLocal === "function") salvarTodosLocal();
+
+      // 🧩 Log de verificação (ajuda a confirmar se o Firestore trouxe todos os produtos)
+      console.log("🧩 Teste — produtos carregados:", window.produtos.length);
 
       // --- Atualiza tabelas e dashboards ---
-      atualizarTabelaProdutos?.();
-      atualizarTabelaEstoque?.();
-      atualizarTabelaEntradas?.();
-      atualizarTabelaSaidas?.();
-      atualizarTabelaLimites?.();
-      atualizarDashboard?.();
-      atualizarPainelFinanceiro?.();
+      if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+      if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
+      if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
+      if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
+      if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
+      if (typeof atualizarDashboard === "function") atualizarDashboard();
+      if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
 
       console.log("✅ Dados sincronizados com sucesso (tempo real).");
     });
   } catch (erro) {
     console.error("❌ Erro ao escutar Firestore:", erro);
-    mostrarMensagem("Erro ao conectar ao Firestore!", "erro");
+    if (typeof mostrarMensagem === "function") {
+      mostrarMensagem("Erro ao conectar ao Firestore!", "erro");
+    }
   }
 }
+
 
 
 
@@ -2339,29 +2345,33 @@ window.cadastrarProduto = async function () {
       foto: fotoBase64,
       criadoEm: new Date().toISOString(),
     };
-
-    // 🔹 Adiciona ao array local
-    window.produtos = Array.isArray(window.produtos) ? window.produtos : [];
     window.produtos.push(novoProduto);
-
     mostrarMensagem(`✅ Produto "${nome}" cadastrado com sucesso!`, "sucesso");
   }
 
-  // --- Sincroniza com Firestore e localStorage ---
+  // --- Sincroniza com Firestore ---
   try {
     const estoqueRef = doc(db, "estoqueGlobal", "estoque");
     await setDoc(estoqueRef, { produtos: window.produtos }, { merge: true });
-console.log("☁️ Produtos atualizados na nuvem com sucesso!");
-if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+    console.log("☁️ Produtos atualizados na nuvem com sucesso!");
 
+    // ✅ Força atualização local imediata
+    if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+    if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
+
+    // 🔄 Aguarda um curto tempo e atualiza de novo após retorno do Firestore
+    await new Promise(r => setTimeout(r, 500));
+    if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+    if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
+    console.log("🧩 Teste — produtos atuais (forçado):", window.produtos.length);
 
   } catch (err) {
     console.error("❌ Erro ao salvar produto na nuvem:", err);
     mostrarMensagem("Erro ao salvar produto no Firestore!", "erro");
   }
 
-  // --- Atualiza outras tabelas relacionadas ---
-  atualizarTabelaEstoque?.();
+  // --- Atualiza local e interface ---
+  salvarTodosLocal?.();
   atualizarTabelaEntradas?.();
   atualizarTabelaSaidas?.();
   atualizarTabelaLimites?.();
@@ -2377,8 +2387,10 @@ if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
 
   const fotoPreview = document.getElementById("fotoPreview");
   if (fotoPreview) fotoPreview.innerHTML = "";
+
   document.querySelectorAll("#tabelaProdutos tbody tr").forEach((tr) => (tr.style.background = ""));
 };
+
 
 
 
@@ -5037,6 +5049,7 @@ document
 
 
 	
+
 
 
 
