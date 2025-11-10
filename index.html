@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR">f
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -1261,14 +1261,7 @@ onSnapshot(estoqueRef, (snapshot) => {
 
 
 
-  // Sincronização em tempo real dos usuários
-  onSnapshot(usuariosRef, (snapshot) => {
-    if (snapshot.exists()) {
-      window.usuarios = snapshot.data().usuarios || [];
-      if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
-      console.log("👥 Lista de usuários atualizada em tempo real.");
-    }
-  });
+
  
 // ===================================================
 // 🔹 Wrappers globais para salvar dados no Firestore
@@ -1889,20 +1882,6 @@ onAuthStateChanged(auth, async (user) => {
 
  
 
-  // --- Escuta alterações de usuários ---
-  onSnapshot(usuariosRef, (snapshot) => {
-    if (snapshot.exists()) {
-      const data = snapshot.data();
-      window.usuarios = data.usuarios || [];
-      salvarTodosLocal();
-
-      if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
-      console.log("👥 Lista de usuários atualizada automaticamente.");
-    }
-  });
-
-  console.log("🌐 Sincronização em tempo real ativada.");
-});
 
 
 
@@ -5040,6 +5019,7 @@ document
 
 
 	
+
 
 
 
