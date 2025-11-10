@@ -571,21 +571,25 @@
   <div class="input-row" style="margin-bottom:10px;gap:8px;">
     <input id="produtoNome" type="text" placeholder="Nome do produto" class="flex" />
 
-    <select id="produtoCategoria">
+     <select id="produtoCategoria">
       <option value="">Selecione a categoria</option>
-      <option>Material de Uso e Consumo</option>
+      <option>Centro Cirúrgico</option>
+      <option>Cesta paciente</option>
+      <option>Componentes</option>
       <option>Copa e Cozinha</option>
       <option>Escritório</option>
-      <option>Implante e Componentes</option>
+      <option>Implante </option>
       <option>Insumo Dental</option>
       <option>Insumo Laboratório</option>
+      <option>Material de Uso e Consumo</option>
       <option>Medicamentos</option>
       <option>Material de Limpeza</option>
+
+
     </select>
 
     <select id="produtoEmbalagem">
       <option value="">Selecione o tipo de embalagem</option>
-      <option>Ampola</option>
       <option>Caixa</option>
       <option>Fardo</option>
       <option>Frasco</option>
@@ -597,6 +601,8 @@
       <option>Quilogramas (KG)</option>
       <option>Saco</option>
       <option>Unidade</option>
+      <option>Ampola</option>
+
     </select>
 
     <input id="produtoQtdEmbalagem" type="number" placeholder="Qtd por embalagem" style="width:140px" />
@@ -676,12 +682,18 @@
 
         <select id="entradaSetor">
           <option value="">Selecione o Setor Utilizado</option>
-          <option>Limpeza da Clínica</option>
-          <option>Laboratório</option>
-          <option>Escritório</option>
-          <option>Copa e Cozinha</option>
-          <option>Clínico Geral</option>
-          <option>Centro Cirúrgico</option>
+      <option>Centro Cirúrgico</option>
+      <option>Cesta paciente</option>
+      <option>Componentes</option>
+      <option>Copa e Cozinha</option>
+      <option>Escritório</option>
+      <option>Implante </option>
+      <option>Insumo Dental</option>
+      <option>Insumo Laboratório</option>
+      <option>Material de Uso e Consumo</option>
+      <option>Medicamentos</option>
+      <option>Material de Limpeza</option>
+
         </select>
 
         <button onclick="registrarEntrada()"><i class="fa fa-save"></i> Registrar Entrada</button>
@@ -836,14 +848,18 @@
 
     <select id="filtroCategoria" onchange="atualizarTabelaLimites()" style="min-width:220px;">
       <option value="">Todas as Categorias</option>
-      <option>Material de Uso e Consumo</option>
+      <option>Centro Cirúrgico</option>
+      <option>Cesta paciente</option>
+      <option>Componentes</option>
       <option>Copa e Cozinha</option>
       <option>Escritório</option>
-      <option>Implante e Componentes</option>
+      <option>Implante </option>
       <option>Insumo Dental</option>
       <option>Insumo Laboratório</option>
+      <option>Material de Uso e Consumo</option>
       <option>Medicamentos</option>
       <option>Material de Limpeza</option>
+
     </select>
 
     <button onclick="gerarListaCompra()">
@@ -5189,6 +5205,7 @@ document
 
 
 	
+
 
 
 
