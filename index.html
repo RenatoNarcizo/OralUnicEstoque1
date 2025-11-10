@@ -1352,50 +1352,60 @@ console.log("Dados carregados do localStorage:", {
   }
 }
 
-// ---- UNIFICAR LOCALSTORAGE (cole isso onde você tem salvarTodosLocal / carregarTodosLocal) ----
+
+// -----------------------------
+// Salvar tudo no localStorage (idempotente)
+// -----------------------------
 function salvarTodosLocal() {
   try {
-    const dados = {
+    const dadosSistema = {
       produtos: window.produtos || [],
       entradas: window.entradas || [],
       saidas: window.saidas || [],
-      limites: window.limites || [],
       usuarios: window.usuarios || [],
+      limites: window.limites || [],
       errosProblemas: window.errosProblemas || []
     };
-    localStorage.setItem("oralUnicEstoque", JSON.stringify(dados));
-    console.log("💾 Dados salvos localmente (oralUnicEstoque).");
+    localStorage.setItem("dadosSistema", JSON.stringify(dadosSistema));
+    console.log("💾 Dados salvos localmente:", {
+      produtos: (window.produtos||[]).length,
+      entradas: (window.entradas||[]).length,
+      saidas: (window.saidas||[]).length,
+      usuarios: (window.usuarios||[]).length,
+      errosProblemas: (window.errosProblemas||[]).length
+    });
   } catch (e) {
-    console.error("❌ Erro ao salvar localmente:", e);
+    console.error("⚠️ Erro ao salvar no localStorage:", e);
   }
 }
+window.salvarTodosLocal = salvarTodosLocal;
 
-// ----------------------------
-// Carregar e salvar local (único, idempotente)
-// ----------------------------
-if (typeof window.carregarTodosLocal !== "function") {
-  window.carregarTodosLocal = function () {
-    try {
-      const dadosLocais = JSON.parse(localStorage.getItem("oralUnicEstoque") || "{}");
-      window.produtos = Array.isArray(dadosLocais.produtos) ? dadosLocais.produtos : window.produtos || [];
-      window.entradas = Array.isArray(dadosLocais.entradas) ? dadosLocais.entradas : window.entradas || [];
-      window.saidas = Array.isArray(dadosLocais.saidas) ? dadosLocais.saidas : window.saidas || [];
-      window.limites = Array.isArray(dadosLocais.limites) ? dadosLocais.limites : window.limites || [];
-      window.usuarios = Array.isArray(dadosLocais.usuarios) ? dadosLocais.usuarios : window.usuarios || [];
-      window.errosProblemas = Array.isArray(dadosLocais.errosProblemas) ? dadosLocais.errosProblemas : window.errosProblemas || [];
+// -----------------------------
+// Carregar dados do localStorage (único, idempotente)
+// -----------------------------
+function carregarTodosLocal() {
+  try {
+    const dadosLocais = JSON.parse(localStorage.getItem("dadosSistema") || "{}");
+    window.produtos = Array.isArray(dadosLocais.produtos) ? dadosLocais.produtos : (window.produtos || []);
+    window.entradas = Array.isArray(dadosLocais.entradas) ? dadosLocais.entradas : (window.entradas || []);
+    window.saidas = Array.isArray(dadosLocais.saidas) ? dadosLocais.saidas : (window.saidas || []);
+    window.limites = Array.isArray(dadosLocais.limites) ? dadosLocais.limites : (window.limites || []);
+    window.usuarios = Array.isArray(dadosLocais.usuarios) ? dadosLocais.usuarios : (window.usuarios || []);
+    window.errosProblemas = Array.isArray(dadosLocais.errosProblemas) ? dadosLocais.errosProblemas : (window.errosProblemas || []);
 
-      console.log("📦 Dados locais restaurados. Produtos:", window.produtos.length, "Erros:", (window.errosProblemas || []).length);
-    } catch (e) {
-      console.error("❌ Erro ao carregar dados locais:", e);
-      window.produtos = window.produtos || [];
-      window.entradas = window.entradas || [];
-      window.saidas = window.saidas || [];
-      window.limites = window.limites || [];
-      window.usuarios = window.usuarios || [];
-      window.errosProblemas = window.errosProblemas || [];
-    }
-  };
+    console.log("📦 Dados locais restaurados. Produtos:", window.produtos.length, "Erros:", window.errosProblemas.length);
+  } catch (e) {
+    console.error("❌ Erro ao carregar dados locais:", e);
+    window.produtos = window.produtos || [];
+    window.entradas = window.entradas || [];
+    window.saidas = window.saidas || [];
+    window.limites = window.limites || [];
+    window.usuarios = window.usuarios || [];
+    window.errosProblemas = window.errosProblemas || [];
+  }
 }
+carregarTodosLocal(); // chame uma vez na inicialização
+
 
 
 
@@ -1413,63 +1423,72 @@ async function carregarDadosDoFirestore() {
     const estoqueRef = doc(db, "estoqueGlobal", "estoque");
 
     onSnapshot(estoqueRef, (docSnap) => {
-      if (!docSnap.exists()) {
-        console.warn("⚠️ Documento 'estoque' ainda não existe, criando...");
-        setDoc(estoqueRef, {
-          produtos: [],
-          entradas: [],
-          saidas: [],
-          limites: [],
-          usuarios: [],
-          errosProblemas: [] // ✅ já cria o campo no Firestore se não existir
-        });
-        return;
-      }
+  if (!docSnap.exists()) {
+    console.warn("⚠️ Documento 'estoque' ainda não existe, criando...");
+    setDoc(estoqueRef, {
+      produtos: [],
+      entradas: [],
+      saidas: [],
+      limites: [],
+      usuarios: [],
+      errosProblemas: [] // ✅ já cria o campo no Firestore se não existir
+    }).catch(e => console.error("Erro ao criar documento inicial:", e));
+    return;
+  }
 
-      // 🚫 Se bloqueio ativo, ignora snapshot temporariamente
-      if (window.bloquearAtualizacaoSnapshot) {
-        console.log("⏸️ Snapshot ignorado (salvando produto)...");
-        return;
-      }
+  // 🚫 Se bloqueio ativo, ignora snapshot temporariamente
+  if (window.bloquearAtualizacaoSnapshot) {
+    console.log("⏸️ Snapshot ignorado (salvando produto)...");
+    return;
+  }
 
-      // 🔹 Dados do Firestore
-      const data = docSnap.data() || {};
-      const produtosFirestore = Array.isArray(data.produtos) ? data.produtos : [];
+  // 🔹 Dados do Firestore
+  const data = docSnap.data() || {};
+  const produtosFirestore = Array.isArray(data.produtos) ? data.produtos : [];
+  const errosFirestore = Array.isArray(data.errosProblemas) ? data.errosProblemas : [];
 
-      // ✅ Mescla Firestore + localStorage
-      const produtosLocais = Array.isArray(window.produtos) ? window.produtos : [];
-      const todosProdutos = [...produtosFirestore];
+  // ✅ Mescla Firestore + localStorage (produtos)
+  const produtosLocais = Array.isArray(window.produtos) ? window.produtos : [];
+  const todosProdutos = [...produtosFirestore];
+  for (const pLocal of produtosLocais) {
+    if (!todosProdutos.some(p => p.id === pLocal.id)) {
+      todosProdutos.push(pLocal);
+    }
+  }
 
-      // 🔍 Adiciona produtos locais ausentes no Firestore
-      for (const pLocal of produtosLocais) {
-        if (!todosProdutos.some(p => p.id === pLocal.id)) {
-          todosProdutos.push(pLocal);
-        }
-      }
+  // ✅ Mescla Firestore + localStorage (errosProblemas)
+  const errosLocais = Array.isArray(window.errosProblemas) ? window.errosProblemas : [];
+  const todosErros = [...errosFirestore];
+  for (const eLocal of errosLocais) {
+    if (!todosErros.some(e => e.id === eLocal.id)) {
+      todosErros.push(eLocal);
+    }
+  }
 
-      // 🧩 Atualiza variáveis globais
-      window.produtos = todosProdutos;
-      window.entradas = Array.isArray(data.entradas) ? [...data.entradas] : [];
-      window.saidas = Array.isArray(data.saidas) ? [...data.saidas] : [];
-      window.limites = Array.isArray(data.limites) ? [...data.limites] : [];
-      window.usuarios = Array.isArray(data.usuarios) ? [...data.usuarios] : [];
-      window.errosProblemas = Array.isArray(data.errosProblemas) ? [...data.errosProblemas] : []; // ✅ incluído
+  // 🧩 Atualiza variáveis globais
+  window.produtos = todosProdutos;
+  window.entradas = Array.isArray(data.entradas) ? [...data.entradas] : (window.entradas || []);
+  window.saidas = Array.isArray(data.saidas) ? [...data.saidas] : (window.saidas || []);
+  window.limites = Array.isArray(data.limites) ? [...data.limites] : (window.limites || []);
+  window.usuarios = Array.isArray(data.usuarios) ? [...data.usuarios] : (window.usuarios || []);
+  window.errosProblemas = todosErros;
 
-      // 💾 Atualiza backup local
-      if (typeof salvarTodosLocal === "function") salvarTodosLocal();
+  // 💾 Atualiza backup local (com erros incluídos)
+  if (typeof salvarTodosLocal === "function") salvarTodosLocal();
 
-      // 🔄 Atualiza TABELAS, PAINÉIS e SEÇÕES automaticamente
-      if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-      if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-      if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
-      if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-      if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-      if (typeof atualizarTabelaErros === "function") atualizarTabelaErros(); // ✅ restaurado com dados
-      if (typeof atualizarDashboard === "function") atualizarDashboard();
-      if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
+  // 🔄 Atualiza TABELAS, PAINÉIS e SEÇÕES automaticamente
+  if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+  if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
+  if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
+  if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
+  if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
+  if (typeof atualizarTabelaErros === "function") atualizarTabelaErros(); // ✅ restaurado com dados
+  if (typeof atualizarDashboard === "function") atualizarDashboard();
+  if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
 
-      console.log(`✅ Dados sincronizados com sucesso! Produtos: ${window.produtos.length}, Erros: ${window.errosProblemas.length}`);
-    });
+  console.log(`✅ Dados sincronizados com sucesso! Produtos: ${window.produtos.length}, Erros: ${window.errosProblemas.length}`);
+});
+
 
   } catch (erro) {
     console.error("❌ Erro ao escutar Firestore:", erro);
@@ -4064,99 +4083,86 @@ function gerarListaCompra() {
 /* ============================================================
    🧩 FUNÇÕES UNIFICADAS: REGISTRO DE ERROS E PROBLEMAS
    ============================================================ */
-window.errosProblemas = JSON.parse(localStorage.getItem("errosProblemas") || "[]");
+window.registrarErro = function() {
+  const titulo = document.getElementById("erroTitulo")?.value?.trim() || "";
+  const situacao = document.getElementById("erroSituacao")?.value?.trim() || "";
+  const previsao = document.getElementById("erroPrevisao")?.value?.trim() || "";
+  const descricao = document.getElementById("erroDescricao")?.value?.trim() || "";
+  const data = new Date().toISOString();
 
-// ✅ Registrar novo erro
-window.registrarErro = function () {
-  const titulo = erroTitulo.value.trim();
-  const situacao = erroSituacao.value.trim();
-  const descricao = erroDescricao.value.trim();
-  const previsao = erroPrevisao.value.trim();
-  const dataHoje = document.getElementById("erroData").value || new Date().toLocaleDateString("pt-BR");
+  if (!titulo) { mostrarMensagem("Informe o título do erro!", "erro"); return; }
+  if (!situacao) { mostrarMensagem("Selecione a situação!", "erro"); return; }
 
-
-  if (!titulo || !situacao) {
-    mostrarMensagem("⚠️ Preencha o título e a situação!", "erro");
-    return;
-  }
+  window.errosProblemas = Array.isArray(window.errosProblemas) ? window.errosProblemas : [];
 
   const novo = {
-    data: dataHoje,
+    id: Date.now(),
+    data,
     titulo,
     situacao,
-    descricao,
     previsao,
-    parecer: "",
-    concluidoEm: "",
+    descricao,
+    status: "aberto"
   };
 
   window.errosProblemas.push(novo);
-  localStorage.setItem("errosProblemas", JSON.stringify(window.errosProblemas));
-  atualizarTabelaErros();
+  salvarTodosLocal?.();
 
-  erroTitulo.value = "";
-  erroSituacao.value = "";
-  erroDescricao.value = "";
-  erroPrevisao.value = "";
+  // salva no Firestore (mantendo merge)
+  if (typeof salvarDadosNoFirestore === "function") {
+    // se sua função for salvarDadosNoFirestore("errosProblemas", dados)
+    salvarDadosNoFirestore("errosProblemas", window.errosProblemas);
+  } else if (typeof window.salvarProdutosNoFirebase === "function") {
+    // fallback para setDoc no documento "estoque"
+    const estoqueRef = doc(db, "estoqueGlobal", "estoque");
+    setDoc(estoqueRef, { errosProblemas: window.errosProblemas }, { merge: true }).catch(e => console.error(e));
+  }
 
-  mostrarMensagem("✅ Erro registrado com sucesso!", "sucesso");
+  if (typeof atualizarTabelaErros === "function") atualizarTabelaErros();
+
+  // limpa campos do formulário
+  document.getElementById("erroTitulo").value = "";
+  document.getElementById("erroSituacao").value = "";
+  document.getElementById("erroPrevisao").value = "";
+  document.getElementById("erroDescricao").value = "";
+
+  mostrarMensagem("✅ Erro/Problema registrado com sucesso!", "sucesso");
 };
 
+
 // ✅ Atualiza a tabela
-window.atualizarTabelaErros = function () {
+window.atualizarTabelaErros = function() {
   const tbody = document.querySelector("#tabelaErros tbody");
   if (!tbody) return;
   tbody.innerHTML = "";
 
-  const filtro = (filtroErros.value || "").toLowerCase();
+  window.errosProblemas = Array.isArray(window.errosProblemas) ? window.errosProblemas : [];
 
-  window.errosProblemas.forEach((erro, i) => {
-    if (
-      filtro &&
-      !erro.titulo.toLowerCase().includes(filtro) &&
-      !erro.situacao.toLowerCase().includes(filtro) &&
-      !erro.parecer.toLowerCase().includes(filtro)
-    ) {
-      return;
-    }
+  if (window.errosProblemas.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#777;">Nenhum registro encontrado.</td></tr>`;
+    return;
+  }
 
+  window.errosProblemas.forEach((e, i) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${erro.data || "-"}</td>
-      <td>${erro.titulo || "-"}</td>
-      <td>${erro.situacao || "-"}</td>
-      <td>${erro.descricao || "-"}</td>
-      <td>${erro.previsao || "-"}</td>
-      <td>
-  <textarea
-    placeholder="Adicionar parecer..."
-    onblur="salvarParecer(${i}, this.value)"
-    style="
-      width: 100%;
-      min-height: 40px;
-      max-height: 200px;
-      resize: vertical;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      padding: 6px;
-      font-family: 'Segoe UI', sans-serif;
-      font-size: 13px;
-    "
-    oninput="this.style.height='auto'; this.style.height=(this.scrollHeight)+'px';"
-  >${erro.parecer || ""}</textarea>
-</td>
-
-      <td>${erro.concluidoEm || "-"}</td>
-      <td>
-        <button onclick="concluirErro(${i})" title="Concluir erro" style="background:#198754;color:white;">
-          <i class="fa fa-check"></i>
-        </button>
+      <td>${i+1}</td>
+      <td>${e.data ? new Date(e.data).toLocaleDateString('pt-BR') : "-"}</td>
+      <td>${e.titulo || "-"}</td>
+      <td>${e.situacao || "-"}</td>
+      <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${e.descricao || "-"}</td>
+      <td>${e.previsao ? new Date(e.previsao).toLocaleDateString('pt-BR') : "-"}</td>
+      <td>${e.parecer || "-"}</td>
+      <td>${e.dtConclusao ? (new Date(e.dtConclusao).toLocaleDateString('pt-BR')) : "-"}</td>
+      <td style="text-align:center;">
+        <button onclick="editarErro(${i})" title="Editar"><i class="fa fa-edit"></i></button>
+        <button onclick="excluirErro(${i})" title="Excluir" style="background:#dc3545;"><i class="fa fa-trash"></i></button>
       </td>
     `;
     tbody.appendChild(row);
   });
 };
+
 
 // ✅ Salvar parecer ao sair do campo
 window.salvarParecer = function (index, texto) {
