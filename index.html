@@ -1391,11 +1391,10 @@ function salvarTodosLocal() {
 
 // ✅ Torna a função acessível globalmente
 window.salvarTodosLocal = salvarTodosLocal;
+
+
 // ===================================================
-// 🌐 CARREGAMENTO E SINCRONIZAÇÃO EM TEMPO REAL
-// ===================================================
-// ===================================================
-// 🌐 CARREGAMENTO E SINCRONIZAÇÃO EM TEMPO REAL (VERSÃO DEFINITIVA)
+// 🌐 CARREGAMENTO E SINCRONIZAÇÃO EM TEMPO REAL (VERSÃO CORRIGIDA E COMPLETA)
 // ===================================================
 async function carregarDadosDoFirestore() {
   console.log("🔄 Iniciando escuta em tempo real do Firestore...");
@@ -1416,46 +1415,48 @@ async function carregarDadosDoFirestore() {
         return;
       }
 
-      // 🚫 Se bloqueio ativo, não atualiza os dados locais
+      // 🚫 Se bloqueio ativo, ignora snapshot temporariamente
       if (window.bloquearAtualizacaoSnapshot) {
         console.log("⏸️ Snapshot ignorado (salvando produto)...");
         return;
       }
 
+      // 🔹 Dados do Firestore
       const data = docSnap.data() || {};
       const produtosFirestore = Array.isArray(data.produtos) ? data.produtos : [];
 
-      // ✅ Correção definitiva: mescla Firestore + localStorage
+      // ✅ Mescla Firestore + localStorage
       const produtosLocais = Array.isArray(window.produtos) ? window.produtos : [];
       const todosProdutos = [...produtosFirestore];
 
-      // 🔍 Adiciona produtos locais que ainda não estão no Firestore
+      // 🔍 Adiciona produtos locais ausentes no Firestore
       for (const pLocal of produtosLocais) {
         if (!todosProdutos.some(p => p.id === pLocal.id)) {
           todosProdutos.push(pLocal);
         }
       }
 
-      // 🧩 Atualiza globais
+      // 🧩 Atualiza variáveis globais
       window.produtos = todosProdutos;
       window.entradas = Array.isArray(data.entradas) ? [...data.entradas] : [];
       window.saidas = Array.isArray(data.saidas) ? [...data.saidas] : [];
       window.limites = Array.isArray(data.limites) ? [...data.limites] : [];
       window.usuarios = Array.isArray(data.usuarios) ? [...data.usuarios] : [];
 
-      // 💾 Atualiza localStorage
+      // 💾 Atualiza backup local
       if (typeof salvarTodosLocal === "function") salvarTodosLocal();
 
-      // 🔄 Atualiza tabelas e painéis
+      // 🔄 Atualiza TABELAS, PAINÉIS e SEÇÕES automaticamente
       if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-      atualizarTabelaEstoque?.();
-      atualizarTabelaEntradas?.();
-      atualizarTabelaSaidas?.();
-      atualizarTabelaLimites?.();
-      atualizarDashboard?.();
-      atualizarPainelFinanceiro?.();
+      if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
+      if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
+      if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
+      if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
+      if (typeof atualizarTabelaErros === "function") atualizarTabelaErros(); // ✅ restaura “Registro de Problemas”
+      if (typeof atualizarDashboard === "function") atualizarDashboard();
+      if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
 
-      console.log(`✅ Dados sincronizados: ${window.produtos.length} produtos carregados (Firestore + local).`);
+      console.log(`✅ Dados sincronizados com sucesso! Produtos: ${window.produtos.length}`);
     });
 
   } catch (erro) {
@@ -1753,7 +1754,9 @@ window.limparFiltroUsuarios = function() {
 };
 
 
-// === LOGIN E SESSÃO ===
+// ==========================================================
+// ✅ MOSTRAR SISTEMA (versão final, unificada e sem erros)
+// ==========================================================
 function mostrarSistema(user) {
   const loginView = document.getElementById("loginView");
   const mainApp = document.getElementById("mainApp");
@@ -1761,65 +1764,55 @@ function mostrarSistema(user) {
   const perfilBadgeEl = document.getElementById("perfilBadge");
   const nomeBemVindoEl = document.getElementById("nomeUsuarioBemVindo");
 
+  // 🔹 Alterna telas
   if (loginView && mainApp) {
     loginView.style.display = "none";
     mainApp.style.display = "block";
   }
 
-  // 🔹 Verifica se há lista de usuários carregada
+  // 🔹 Identifica usuário logado
   const usuarioLogado = (window.usuarios || []).find(
     u => u.email?.toLowerCase() === user.email?.toLowerCase()
   );
-
   const nomeFallback = user.email.split("@")[0];
   const nome = usuarioLogado?.nome || nomeFallback;
   const perfil = usuarioLogado?.perfil?.toUpperCase() || "USUÁRIO";
 
-  // 🔹 Atualiza nome e perfil
+  // 🔹 Atualiza interface
   if (userNameEl) userNameEl.textContent = nome;
   if (perfilBadgeEl) perfilBadgeEl.textContent = "Perfil: " + perfil;
+  if (nomeBemVindoEl) nomeBemVindoEl.textContent = nome;
 
-  // 👋 Mensagem de boas-vindas
-  if (nomeBemVindoEl) {
-    nomeBemVindoEl.textContent = nome;
-    console.log("👋 Bem-vindo(a):", nome);
-  }
-
-  // 🔹 Salva usuário atual
+  // 🔹 Salva global
   window.usuarioAtual = { nome, email: user.email, perfil };
 
-  // 🔹 Exibe mensagem na tela (toast)
+  // 🔹 Mensagem de boas-vindas
   if (typeof mostrarMensagem === "function") {
     mostrarMensagem(`👋 Bem-vindo(a), ${nome}!`, "sucesso");
   }
 
-  // 🔹 Atualiza automaticamente as tabelas e dashboards
-  if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-  if (typeof atualizarDashboard === "function") atualizarDashboard();
-  if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
+  // ==========================================================
+  // 🚀 MOSTRA APENAS A TELA DE BOAS-VINDAS
+  // ==========================================================
+  document.querySelectorAll("main section").forEach(sec => (sec.style.display = "none"));
+  const boasVindas = document.getElementById("boasVindas");
+  if (boasVindas) boasVindas.style.display = "block";
 
   // ==========================================================
-  // 🔒 APLICAÇÃO DAS PERMISSÕES
+  // 🔒 APLICA PERMISSÕES E BOTÕES
   // ==========================================================
-  const permissoesDoUsuario = window.PERMISSOES[perfil] || window.PERMISSOES["USUARIO"];
+  const permissoesDoUsuario = window.PERMISSOES?.[perfil] || window.PERMISSOES?.["USUÁRIO"] || {};
 
-  // 1️⃣ Oculta ou exibe os itens de menu conforme o perfil
   const menuLinks = document.querySelectorAll("#sidebar a[data-section]");
   menuLinks.forEach(link => {
     const sectionName = link.getAttribute("data-section");
-    if (permissoesDoUsuario.canView.includes(sectionName)) {
+    if (permissoesDoUsuario.canView?.includes(sectionName)) {
       link.style.display = "";
     } else {
       link.style.display = "none";
     }
   });
 
-  // 👋 Exibe apenas a tela de boas-vindas (não muda automaticamente)
-  document.querySelectorAll("section").forEach(sec => (sec.style.display = "none"));
-  const boasVindas = document.getElementById("boasVindas");
-  if (boasVindas) boasVindas.style.display = "block";
-
-  // 3️⃣ Controle de botões (edição)
   const podeEditar =
     permissoesDoUsuario.canEdit === true ||
     (Array.isArray(permissoesDoUsuario.canEdit) &&
@@ -1840,7 +1833,23 @@ function mostrarSistema(user) {
     if (saidaBtn) saidaBtn.style.display = "";
     if (addProdutoBtn) addProdutoBtn.style.display = "";
   }
+
+  // ==========================================================
+  // ⚙️ RECARREGA TABELAS E DASHBOARDS
+  // ==========================================================
+  if (typeof carregarDadosDoFirestore === "function") {
+    carregarDadosDoFirestore().then(() => {
+      if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+      if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
+      if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
+      if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
+      if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
+      if (typeof atualizarDashboard === "function") atualizarDashboard();
+      if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
+    });
+  }
 }
+
 
 
 
@@ -2950,7 +2959,7 @@ document.getElementById("entradaCodigoBarras")?.addEventListener("blur", () => b
 
 
 // ===============================================
-// ✅ REGISTRO E EDIÇÃO DE ENTRADAS DE MATERIAIS (versão final unificada)
+// ✅ REGISTRO E EDIÇÃO DE ENTRADAS DE MATERIAIS (versão final unificada + correção de estoque e limites)
 // ===============================================
 function registrarEntrada() {
   const produto = document.getElementById("entradaProduto").value.trim();
@@ -3013,6 +3022,7 @@ function registrarEntrada() {
       validade,
       setor,
       codigoBarras,
+      criadoEm: new Date().toISOString(),
     };
 
     window.entradas.push(novaEntrada);
@@ -3029,6 +3039,33 @@ function registrarEntrada() {
     }
   }
 
+  // ======================================================
+  // 🧮 🔹 REFORÇO: Atualiza o Estoque Atual (todas entradas e saídas)
+  // ======================================================
+  const mapaEstoque = {};
+
+  // Soma todas as entradas
+  (window.entradas || []).forEach(e => {
+    mapaEstoque[e.produto] = (mapaEstoque[e.produto] || 0) + e.qtd;
+  });
+
+  // Subtrai todas as saídas (se existirem)
+  (window.saidas || []).forEach(s => {
+    mapaEstoque[s.produto] = (mapaEstoque[s.produto] || 0) - (s.qtd || 0);
+  });
+
+  window.estoqueAtual = mapaEstoque;
+
+  // ======================================================
+  // 🔹 REFORÇO: Atualiza Estoque Mínimo e Máximo automaticamente
+  // ======================================================
+  window.limites = Object.keys(mapaEstoque).map(nomeProduto => {
+    const atual = mapaEstoque[nomeProduto];
+    const minimo = Math.max(1, Math.floor(atual * 0.2));  // 20% do estoque atual
+    const maximo = Math.ceil(atual * 1.5);                // 150% do estoque atual
+    return { produto: nomeProduto, minimo, maximo };
+  });
+
   // === Salva localmente ===
   salvarTodosLocal?.();
 
@@ -3038,9 +3075,18 @@ function registrarEntrada() {
     console.log(`☁️ Entradas sincronizadas com Firestore (${window.entradas.length} registros).`);
   }
 
+  // 🔹 Atualiza também produtos, estoque e limites no Firestore
+  if (typeof window.salvarProdutosNoFirebase === "function") {
+    window.salvarProdutosNoFirebase(window.produtos);
+  }
+
+  const estoqueRef = doc(db, "estoqueGlobal", "estoque");
+  setDoc(estoqueRef, { limites: window.limites, produtos: window.produtos }, { merge: true });
+
   // === Atualiza tabelas e painéis ===
   atualizarTabelaEntradas?.();
   atualizarTabelaEstoque?.();
+  atualizarTabelaLimites?.();
   atualizarPainelFinanceiro?.();
   atualizarDashboard?.();
 
@@ -3063,8 +3109,9 @@ function registrarEntrada() {
   document.getElementById("entradaCodigoBarras")?.focus();
 
   // === Feedback final ===
-  mostrarMensagem("✅ Entrada salva, sincronizada e campos limpos.", "sucesso");
+  mostrarMensagem("✅ Entrada salva, estoque e limites atualizados.", "sucesso");
 }
+
 
 
 // ===============================================
@@ -5144,7 +5191,6 @@ document
 
 
 	
-
 
 
 
