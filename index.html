@@ -1752,6 +1752,7 @@ window.limparFiltroUsuarios = function() {
   }
 };
 
+
 // === LOGIN E SESSÃO ===
 function mostrarSistema(user) {
   const loginView = document.getElementById("loginView");
@@ -1787,12 +1788,12 @@ function mostrarSistema(user) {
   // 🔹 Salva usuário atual
   window.usuarioAtual = { nome, email: user.email, perfil };
 
-  // 🔹 Exibe mensagem
+  // 🔹 Exibe mensagem na tela (toast)
   if (typeof mostrarMensagem === "function") {
     mostrarMensagem(`👋 Bem-vindo(a), ${nome}!`, "sucesso");
   }
 
-  // 🔹 Atualiza automaticamente
+  // 🔹 Atualiza automaticamente as tabelas e dashboards
   if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
   if (typeof atualizarDashboard === "function") atualizarDashboard();
   if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
@@ -1800,50 +1801,48 @@ function mostrarSistema(user) {
   // ==========================================================
   // 🔒 APLICAÇÃO DAS PERMISSÕES
   // ==========================================================
-  const permissoesDoUsuario = window.PERMISSOES[perfil] || window.PERMISSOES['USUARIO'];
+  const permissoesDoUsuario = window.PERMISSOES[perfil] || window.PERMISSOES["USUARIO"];
 
-  // 1️⃣ Oculta ou exibe os itens de menu
-  const menuLinks = document.querySelectorAll('#sidebar a[data-section]');
+  // 1️⃣ Oculta ou exibe os itens de menu conforme o perfil
+  const menuLinks = document.querySelectorAll("#sidebar a[data-section]");
   menuLinks.forEach(link => {
-    const sectionName = link.getAttribute('data-section');
-    if (permissoesDoUsuario.canView.includes(sectionName)) { 
-      link.style.display = ''; 
+    const sectionName = link.getAttribute("data-section");
+    if (permissoesDoUsuario.canView.includes(sectionName)) {
+      link.style.display = "";
     } else {
-      link.style.display = 'none'; 
+      link.style.display = "none";
     }
   });
 
-  // 2️⃣ Redireciona para a primeira seção permitida
-  let initialSection = permissoesDoUsuario.canView.includes('dashboard')
-    ? 'dashboard'
-    : permissoesDoUsuario.canView[0];
+  // 👋 Exibe apenas a tela de boas-vindas (não muda automaticamente)
+  document.querySelectorAll("section").forEach(sec => (sec.style.display = "none"));
+  const boasVindas = document.getElementById("boasVindas");
+  if (boasVindas) boasVindas.style.display = "block";
 
-  if (typeof showSection === "function") {
-    showSection(initialSection);
-  }
-
-  // 3️⃣ Controle de botões
+  // 3️⃣ Controle de botões (edição)
   const podeEditar =
     permissoesDoUsuario.canEdit === true ||
     (Array.isArray(permissoesDoUsuario.canEdit) &&
-      (permissoesDoUsuario.canEdit.includes('produtos') ||
-       permissoesDoUsuario.canEdit.includes('entradas') ||
-       permissoesDoUsuario.canEdit.includes('saidas')));
+      (permissoesDoUsuario.canEdit.includes("produtos") ||
+        permissoesDoUsuario.canEdit.includes("entradas") ||
+        permissoesDoUsuario.canEdit.includes("saidas")));
 
-  const entradaBtn = document.getElementById('adicionarEntradaBtn');
-  const saidaBtn = document.getElementById('adicionarSaidaBtn');
-  const addProdutoBtn = document.getElementById('adicionarProdutoBtn'); 
+  const entradaBtn = document.getElementById("adicionarEntradaBtn");
+  const saidaBtn = document.getElementById("adicionarSaidaBtn");
+  const addProdutoBtn = document.getElementById("adicionarProdutoBtn");
 
   if (!podeEditar) {
-    if (entradaBtn) entradaBtn.style.display = 'none';
-    if (saidaBtn) saidaBtn.style.display = 'none';
-    if (addProdutoBtn) addProdutoBtn.style.display = 'none';
+    if (entradaBtn) entradaBtn.style.display = "none";
+    if (saidaBtn) saidaBtn.style.display = "none";
+    if (addProdutoBtn) addProdutoBtn.style.display = "none";
   } else {
-    if (entradaBtn) entradaBtn.style.display = '';
-    if (saidaBtn) saidaBtn.style.display = '';
-    if (addProdutoBtn) addProdutoBtn.style.display = '';
+    if (entradaBtn) entradaBtn.style.display = "";
+    if (saidaBtn) saidaBtn.style.display = "";
+    if (addProdutoBtn) addProdutoBtn.style.display = "";
   }
 }
+
+
 
 
 // ====================================================
@@ -2555,6 +2554,13 @@ window.atualizarTabelaProdutos = function () {
     return;
   }
 
+  // ✅ Ordena produtos em ordem alfabética (A → Z)
+  window.produtos.sort((a, b) => {
+    const nomeA = (a.nome || "").toLowerCase();
+    const nomeB = (b.nome || "").toLowerCase();
+    return nomeA.localeCompare(nomeB, 'pt-BR');
+  });
+
   window.produtos.forEach((produto, i) => {
     const nome = produto.nome?.toLowerCase() || "";
     const categoria = produto.categoria?.toLowerCase() || "";
@@ -2583,12 +2589,13 @@ window.atualizarTabelaProdutos = function () {
     `;
 
     if (typeof indiceEdicaoProduto === "number" && indiceEdicaoProduto === i) {
-      row.style.background = "#fff3cd"; // amarelo
+      row.style.background = "#fff3cd"; // amarelo para item em edição
     }
 
     tbody.appendChild(row);
   });
 };
+
 
 
 // ===============================================
