@@ -1982,31 +1982,26 @@ onAuthStateChanged(auth, async (user) => {
 window.logout = async function () {
   try {
     console.log("🚪 Iniciando logout...");
-
-    // Se estiver autenticado no Firebase
     if (typeof signOut === "function" && typeof auth !== "undefined") {
       await signOut(auth);
     }
 
-    // Limpa dados locais e globais
-    localStorage.clear();
+    // Limpa apenas itens sensíveis de sessão — preserva o backup 'dadosSistema'
     sessionStorage.clear();
     window.usuarioAtual = null;
 
-    // Retorna para a tela de login
+    // Exibe login / oculta app
     const mainApp = document.getElementById("mainApp");
     const loginView = document.getElementById("loginView");
-
     if (mainApp) mainApp.style.display = "none";
     if (loginView) loginView.style.display = "block";
 
-    // Reseta o campo de login (por segurança)
+    // limpa campos de login
     const usuarioLogin = document.getElementById("usuarioLogin");
     const senhaLogin = document.getElementById("senhaLogin");
     if (usuarioLogin) usuarioLogin.value = "";
     if (senhaLogin) senhaLogin.value = "";
 
-    // Mensagem visual
     if (typeof mostrarMensagem === "function") {
       mostrarMensagem("Sessão encerrada com sucesso!", "info");
     }
@@ -2019,6 +2014,7 @@ window.logout = async function () {
     }
   }
 };
+
 
 // === Expor Firestore e Auth globalmente ===
 window.db = db;
@@ -5248,6 +5244,7 @@ document
 
 
 	
+
 
 
 
