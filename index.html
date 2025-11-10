@@ -1228,41 +1228,7 @@ const estoqueRef = doc(db, "estoqueGlobal", "estoque");
 const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
 
 
-onSnapshot(estoqueRef, (snapshot) => {
-  if (window.bloquearAtualizacaoSnapshot) {
-    console.log("⏸️ Snapshot ignorado temporariamente (salvando produto)...");
-    return;
-  }
-
-  if (!snapshot.exists()) {
-    console.warn("⚠️ Documento 'estoque' ainda não existe no Firestore.");
-    return;
-  }
-
-  const data = snapshot.data() || {};
-
-  window.produtos = Array.isArray(data.produtos) ? [...data.produtos] : [];
-  window.entradas = Array.isArray(data.entradas) ? [...data.entradas] : [];
-  window.saidas = Array.isArray(data.saidas) ? [...data.saidas] : [];
-  window.limites = Array.isArray(data.limites) ? [...data.limites] : [];
-
-  salvarTodosLocal?.();
-
-  if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-  atualizarTabelaEstoque?.();
-  atualizarTabelaEntradas?.();
-  atualizarTabelaSaidas?.();
-  atualizarDashboard?.();
-  atualizarPainelFinanceiro?.();
-
-  console.log("✅ Estoque sincronizado e interface atualizada automaticamente!");
-});
-
-
-
-
-
- 
+	
 // ===================================================
 // 🔹 Wrappers globais para salvar dados no Firestore
 // ===================================================
@@ -1878,6 +1844,27 @@ onAuthStateChanged(auth, async (user) => {
   const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
 
   // --- Escuta alterações no estoque ---
+ // ====================================================
+// 🔐 AUTENTICAÇÃO E SINCRONIZAÇÃO EM TEMPO REAL (CORRIGIDA)
+// ====================================================
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    console.warn("👋 Nenhum usuário logado — aguardando login...");
+    return;
+  }
+
+  console.log(`✅ Usuário logado: ${user.email}`);
+  console.log("🔄 Carregando dados do Firestore, aguarde...");
+
+  // Carrega dados iniciais
+  await carregarDadosDoFirestore();
+
+  // === 🔁 INICIA A SINCRONIZAÇÃO EM TEMPO REAL ===
+  const estoqueRef = doc(db, "estoqueGlobal", "estoque");
+  const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
+
+  // --- Escuta alterações no estoque (AGORA ÚNICO) ---
   onSnapshot(estoqueRef, (snapshot) => {
     if (window.bloquearAtualizacaoSnapshot) {
       console.log("⏸️ Snapshot ignorado temporariamente (salvando produto)...");
@@ -1889,14 +1876,28 @@ onAuthStateChanged(auth, async (user) => {
       return;
     }
 
+    // 🧩 Proteção: evita sobrescrever dados locais mais novos
+    if (window.produtos && Array.isArray(window.produtos)) {
+      const dataTemp = snapshot.data() || {};
+      const produtosSnapshot = Array.isArray(dataTemp.produtos) ? dataTemp.produtos : [];
+
+      if (produtosSnapshot.length < window.produtos.length) {
+        console.warn("⏸️ Snapshot ignorado — dados locais mais atualizados.");
+        return;
+      }
+    }
+
+    // 🔹 Atualiza dados locais com o Firestore
     const data = snapshot.data() || {};
     window.produtos = Array.isArray(data.produtos) ? [...data.produtos] : [];
     window.entradas = Array.isArray(data.entradas) ? [...data.entradas] : [];
     window.saidas = Array.isArray(data.saidas) ? [...data.saidas] : [];
     window.limites = Array.isArray(data.limites) ? [...data.limites] : [];
 
+    // 💾 Salva tudo localmente
     salvarTodosLocal?.();
 
+    // 🔄 Atualiza todas as tabelas e painéis
     if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
     atualizarTabelaEstoque?.();
     atualizarTabelaEntradas?.();
@@ -1920,7 +1921,8 @@ onAuthStateChanged(auth, async (user) => {
   });
 
   console.log("🌐 Sincronização em tempo real ativada.");
-}); // ✅ FECHAMENTO CORRETO DO onAuthStateChanged
+});
+
 
 
 
@@ -5093,6 +5095,7 @@ document
 
 
 	
+
 
 
 
