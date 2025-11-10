@@ -1227,25 +1227,37 @@ window.onSnapshot = onSnapshot;
 const estoqueRef = doc(db, "estoqueGlobal", "estoque");
 const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
 
-  // Escuta alterações automáticas do Firestore
-  onSnapshot(estoqueRef, (snapshot) => {
-    if (snapshot.exists()) {
-      const data = snapshot.data();
-      window.produtos = data.produtos || [];
-      window.entradas = data.entradas || [];
-      window.saidas = data.saidas || [];
 
-      // Atualiza interface ao vivo
-      if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-      if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
-      if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-      if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-      if (typeof atualizarDashboard === "function") atualizarDashboard();
-      if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
+// --- Escuta alterações no estoque (versão segura e otimizada) ---
+onSnapshot(estoqueRef, (snapshot) => {
+  if (!snapshot.exists()) {
+    console.warn("⚠️ Documento 'estoque' ainda não existe no Firestore.");
+    return;
+  }
 
-      console.log("🔥 Atualização em tempo real recebida do Firestore.");
-    }
-  });
+  const data = snapshot.data();
+
+  // ✅ Atualiza apenas se houver dados válidos
+  if (data.produtos && Array.isArray(data.produtos)) window.produtos = data.produtos;
+  if (data.entradas && Array.isArray(data.entradas)) window.entradas = data.entradas;
+  if (data.saidas && Array.isArray(data.saidas)) window.saidas = data.saidas;
+  if (data.limites && Array.isArray(data.limites)) window.limites = data.limites;
+
+  // 💾 Salva localmente para backup
+  if (typeof salvarTodosLocal === "function") salvarTodosLocal();
+
+  // 🔁 Atualiza todas as interfaces se as funções existirem
+  atualizarTabelaProdutos?.();
+  atualizarTabelaEstoque?.();
+  atualizarTabelaEntradas?.();
+  atualizarTabelaSaidas?.();
+  atualizarTabelaLimites?.();
+  atualizarDashboard?.();
+  atualizarPainelFinanceiro?.();
+
+  console.log("✅ Estoque sincronizado automaticamente com a nuvem.");
+});
+
 
   // Sincronização em tempo real dos usuários
   onSnapshot(usuariosRef, (snapshot) => {
@@ -1867,27 +1879,7 @@ onAuthStateChanged(auth, async (user) => {
   const estoqueRef = doc(db, "estoqueGlobal", "estoque");
   const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
 
-  // --- Escuta alterações no estoque ---
-  onSnapshot(estoqueRef, (snapshot) => {
-    if (snapshot.exists()) {
-      const data = snapshot.data();
-      window.produtos = data.produtos || [];
-      window.entradas = data.entradas || [];
-      window.saidas = data.saidas || [];
-
-      salvarTodosLocal();
-
-      if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-      if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-      if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
-      if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-      if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-      if (typeof atualizarDashboard === "function") atualizarDashboard();
-      if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
-
-      console.log("🔁 Estoque atualizado automaticamente pela nuvem.");
-    }
-  });
+ 
 
   // --- Escuta alterações de usuários ---
   onSnapshot(usuariosRef, (snapshot) => {
@@ -5042,6 +5034,7 @@ document
 
 
 	
+
 
 
 
