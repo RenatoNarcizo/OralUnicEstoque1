@@ -1317,52 +1317,72 @@ window.salvarTodosLocal = salvarTodosLocal;
 // ===================================================
 // 🌐 CARREGAMENTO E SINCRONIZAÇÃO EM TEMPO REAL
 // ===================================================
+// ===================================================
+// 🌐 CARREGAMENTO E SINCRONIZAÇÃO EM TEMPO REAL (VERSÃO DEFINITIVA)
+// ===================================================
 async function carregarDadosDoFirestore() {
-  console.log("🔄 Iniciando carregamento inicial do Firestore...");
+  console.log("🔄 Iniciando escuta em tempo real do Firestore...");
 
   try {
     const estoqueRef = doc(db, "estoqueGlobal", "estoque");
-    const docSnap = await getDoc(estoqueRef);
 
-    if (docSnap.exists()) {
-      const data = docSnap.data();
+    onSnapshot(estoqueRef, (docSnap) => {
+      if (!docSnap.exists()) {
+        console.warn("⚠️ Documento 'estoque' ainda não existe, criando...");
+        setDoc(estoqueRef, {
+          produtos: [],
+          entradas: [],
+          saidas: [],
+          limites: [],
+          usuarios: []
+        });
+        return;
+      }
 
-      // --- Atualiza variáveis globais ---
-      window.produtos = Array.isArray(data.produtos) ? [...data.produtos] : [];
+      // 🚫 Se bloqueio ativo, não atualiza os dados locais
+      if (window.bloquearAtualizacaoSnapshot) {
+        console.log("⏸️ Snapshot ignorado (salvando produto)...");
+        return;
+      }
+
+      const data = docSnap.data() || {};
+      const produtosFirestore = Array.isArray(data.produtos) ? data.produtos : [];
+
+      // ✅ Correção definitiva: mescla Firestore + localStorage
+      const produtosLocais = Array.isArray(window.produtos) ? window.produtos : [];
+      const todosProdutos = [...produtosFirestore];
+
+      // 🔍 Adiciona produtos locais que ainda não estão no Firestore
+      for (const pLocal of produtosLocais) {
+        if (!todosProdutos.some(p => p.id === pLocal.id)) {
+          todosProdutos.push(pLocal);
+        }
+      }
+
+      // 🧩 Atualiza globais
+      window.produtos = todosProdutos;
       window.entradas = Array.isArray(data.entradas) ? [...data.entradas] : [];
       window.saidas = Array.isArray(data.saidas) ? [...data.saidas] : [];
       window.limites = Array.isArray(data.limites) ? [...data.limites] : [];
       window.usuarios = Array.isArray(data.usuarios) ? [...data.usuarios] : [];
 
-      // --- Salva localmente como backup ---
+      // 💾 Atualiza localStorage
       if (typeof salvarTodosLocal === "function") salvarTodosLocal();
 
-      // 🧩 Log de verificação (confirma se o Firestore trouxe todos os produtos)
-      console.log("🧩 Produtos carregados do Firestore:", window.produtos.length);
-
-      // --- Atualiza tabelas e dashboards ---
+      // 🔄 Atualiza tabelas e painéis
       if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-      if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-      if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
-      if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-      if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-      if (typeof atualizarDashboard === "function") atualizarDashboard();
-      if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
+      atualizarTabelaEstoque?.();
+      atualizarTabelaEntradas?.();
+      atualizarTabelaSaidas?.();
+      atualizarTabelaLimites?.();
+      atualizarDashboard?.();
+      atualizarPainelFinanceiro?.();
 
-      console.log("✅ Dados carregados inicialmente do Firestore.");
-    } else {
-      console.warn("⚠️ Documento 'estoque' ainda não existe, criando...");
-      await setDoc(estoqueRef, {
-        produtos: [],
-        entradas: [],
-        saidas: [],
-        limites: [],
-        usuarios: []
-      });
-    }
+      console.log(`✅ Dados sincronizados: ${window.produtos.length} produtos carregados (Firestore + local).`);
+    });
 
   } catch (erro) {
-    console.error("❌ Erro ao carregar Firestore:", erro);
+    console.error("❌ Erro ao escutar Firestore:", erro);
     if (typeof mostrarMensagem === "function") {
       mostrarMensagem("Erro ao conectar ao Firestore!", "erro");
     }
@@ -5080,6 +5100,7 @@ document
 
 
 	
+
 
 
 
