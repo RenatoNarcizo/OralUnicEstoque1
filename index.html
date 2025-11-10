@@ -1229,62 +1229,49 @@ const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
 // 🔐 LOGIN E AUTENTICAÇÃO (100% COMPATÍVEL COM SEU SCRIPT)
 // ===================================================
 
-window.fazerLogin = async function () {
-  const usuarioEl = document.getElementById("usuarioLogin");
-  const senhaEl = document.getElementById("senhaLogin");
-  const msgEl = document.getElementById("loginMsg");
+// ----------------------------
+// Fazer login — exposto no window (garante compatibilidade com onclick HTML)
+// ----------------------------
+if (typeof window.fazerLogin !== "function") {
+  window.fazerLogin = async function () {
+    const usuarioEl = document.getElementById("usuarioLogin");
+    const senhaEl = document.getElementById("senhaLogin");
+    const msgEl = document.getElementById("loginMsg");
 
-  const usuario = usuarioEl?.value.trim() || "";
-  const senha = senhaEl?.value.trim() || "";
+    const usuario = usuarioEl?.value.trim() || "";
+    const senha = senhaEl?.value.trim() || "";
 
-  msgEl.style.display = "none";
-  msgEl.textContent = "";
+    if (msgEl) { msgEl.style.display = "none"; msgEl.textContent = ""; }
 
-  if (!usuario || !senha) {
-    msgEl.style.display = "block";
-    msgEl.style.color = "red";
-    msgEl.textContent = "⚠️ Preencha e-mail e senha!";
-    return;
-  }
-
-  const email = usuario.toLowerCase();
-
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, senha);
-    const user = userCredential.user;
-
-    msgEl.style.display = "block";
-    msgEl.style.color = "green";
-    msgEl.textContent = "✅ Login realizado com sucesso!";
-
-    console.log("✅ Usuário logado:", user.email);
-
-    // 🔹 Chama o sistema principal com boas-vindas
-    if (typeof mostrarSistema === "function") {
-      mostrarSistema(user);
+    if (!usuario || !senha) {
+      if (msgEl) { msgEl.style.display = "block"; msgEl.style.color = "red"; msgEl.textContent = "⚠️ Preencha e-mail e senha!"; }
+      return;
     }
 
-  } catch (error) {
-    console.error("❌ Erro ao logar:", error);
-    msgEl.style.display = "block";
-    msgEl.style.color = "red";
+    const email = usuario.toLowerCase();
 
-    switch (error.code) {
-      case "auth/wrong-password":
-      case "auth/invalid-credential":
-        msgEl.textContent = "❌ Senha incorreta ou inválida!";
-        break;
-      case "auth/user-not-found":
-        msgEl.textContent = "❌ Usuário não encontrado!";
-        break;
-      case "auth/too-many-requests":
-        msgEl.textContent = "⚠️ Muitas tentativas. Tente mais tarde.";
-        break;
-      default:
-        msgEl.textContent = "❌ Erro ao fazer login.";
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+      const user = userCredential.user;
+
+      if (msgEl) { msgEl.style.display = "block"; msgEl.style.color = "green"; msgEl.textContent = "✅ Login realizado com sucesso!"; }
+      console.log("✅ Usuário logado:", user.email);
+
+      // chama o sistema (minha versão unificada deve existir)
+      if (typeof mostrarSistema === "function") mostrarSistema(user);
+      // carrega dados adicionais
+      if (typeof carregarDadosDoFirestore === "function") await carregarDadosDoFirestore();
+    } catch (error) {
+      console.error("❌ Erro ao logar:", error);
+      if (msgEl) {
+        msgEl.style.display = "block";
+        msgEl.style.color = "red";
+        msgEl.textContent = (error?.code === "auth/user-not-found") ? "❌ Usuário não encontrado!" : "❌ Erro ao fazer login.";
+      }
     }
-  }
-};
+  };
+}
+
 
 // 🔹 Permite login com tecla Enter
 document.addEventListener("DOMContentLoaded", () => {
@@ -1365,28 +1352,52 @@ console.log("Dados carregados do localStorage:", {
   }
 }
 
-// 🔹 Salva dados globais no localStorage com segurança
+// ---- UNIFICAR LOCALSTORAGE (cole isso onde você tem salvarTodosLocal / carregarTodosLocal) ----
 function salvarTodosLocal() {
   try {
-    const dadosSistema = {
+    const dados = {
       produtos: window.produtos || [],
       entradas: window.entradas || [],
       saidas: window.saidas || [],
-      usuarios: window.usuarios || []
+      limites: window.limites || [],
+      usuarios: window.usuarios || [],
+      errosProblemas: window.errosProblemas || []
     };
-
-    localStorage.setItem("dadosSistema", JSON.stringify(dadosSistema));
-
-    console.log("💾 Dados salvos localmente:", {
-      produtos: window.produtos.length,
-      entradas: window.entradas.length,
-      saidas: window.saidas.length,
-      usuarios: window.usuarios.length
-    });
+    localStorage.setItem("oralUnicEstoque", JSON.stringify(dados));
+    console.log("💾 Dados salvos localmente (oralUnicEstoque).");
   } catch (e) {
-    console.error("⚠️ Erro ao salvar no localStorage:", e);
+    console.error("❌ Erro ao salvar localmente:", e);
   }
 }
+
+// ----------------------------
+// Carregar e salvar local (único, idempotente)
+// ----------------------------
+if (typeof window.carregarTodosLocal !== "function") {
+  window.carregarTodosLocal = function () {
+    try {
+      const dadosLocais = JSON.parse(localStorage.getItem("oralUnicEstoque") || "{}");
+      window.produtos = Array.isArray(dadosLocais.produtos) ? dadosLocais.produtos : window.produtos || [];
+      window.entradas = Array.isArray(dadosLocais.entradas) ? dadosLocais.entradas : window.entradas || [];
+      window.saidas = Array.isArray(dadosLocais.saidas) ? dadosLocais.saidas : window.saidas || [];
+      window.limites = Array.isArray(dadosLocais.limites) ? dadosLocais.limites : window.limites || [];
+      window.usuarios = Array.isArray(dadosLocais.usuarios) ? dadosLocais.usuarios : window.usuarios || [];
+      window.errosProblemas = Array.isArray(dadosLocais.errosProblemas) ? dadosLocais.errosProblemas : window.errosProblemas || [];
+
+      console.log("📦 Dados locais restaurados. Produtos:", window.produtos.length, "Erros:", (window.errosProblemas || []).length);
+    } catch (e) {
+      console.error("❌ Erro ao carregar dados locais:", e);
+      window.produtos = window.produtos || [];
+      window.entradas = window.entradas || [];
+      window.saidas = window.saidas || [];
+      window.limites = window.limites || [];
+      window.usuarios = window.usuarios || [];
+      window.errosProblemas = window.errosProblemas || [];
+    }
+  };
+}
+
+
 
 
 // ✅ Torna a função acessível globalmente
@@ -1474,7 +1485,6 @@ async function carregarDadosDoFirestore() {
 
 
 
-
 // === CRIAÇÃO DE USUÁRIO (FIREBASE AUTH) ===
 
   window.criarUsuarioNoFirebase = async function(email, senha) {
@@ -1501,28 +1511,6 @@ async function carregarDadosDoFirestore() {
     }
   } 
 
-// 🔹 Carrega tudo corretamente do localStorage
-function carregarTodosLocal() {
-  try {
-    const dadosLocais = JSON.parse(localStorage.getItem("dadosSistema")) || {};
-    window.produtos = dadosLocais.produtos || [];
-    window.entradas = dadosLocais.entradas || [];
-    window.saidas = dadosLocais.saidas || [];
-    window.usuarios = dadosLocais.usuarios || [];
-
-    console.log("📦 Dados carregados do localStorage:", {
-      produtos: window.produtos.length,
-      entradas: window.entradas.length,
-      saidas: window.saidas.length,
-      usuarios: window.usuarios.length,
-    });
-  } catch (e) {
-    console.error("❌ Erro ao carregar dados locais:", e);
-  }
-}
-
-// ✅ Chame isso logo ao iniciar o sistema:
-carregarTodosLocal();
 
 
 
@@ -1757,9 +1745,7 @@ window.limparFiltroUsuarios = function() {
 };
 
 
-// ==========================================================
-// ✅ MOSTRAR SISTEMA (versão final, unificada e sem erros)
-// ==========================================================
+// === MOSTRAR SISTEMA (unificado — mostra apenas boas-vindas e não redireciona) ===
 function mostrarSistema(user) {
   const loginView = document.getElementById("loginView");
   const mainApp = document.getElementById("mainApp");
@@ -1767,75 +1753,55 @@ function mostrarSistema(user) {
   const perfilBadgeEl = document.getElementById("perfilBadge");
   const nomeBemVindoEl = document.getElementById("nomeUsuarioBemVindo");
 
-  // 🔹 Alterna telas
   if (loginView && mainApp) {
     loginView.style.display = "none";
     mainApp.style.display = "block";
   }
 
-  // 🔹 Identifica usuário logado
-  const usuarioLogado = (window.usuarios || []).find(
-    u => u.email?.toLowerCase() === user.email?.toLowerCase()
-  );
-  const nomeFallback = user.email.split("@")[0];
+  const usuarioLogado = (window.usuarios || []).find(u => u.email?.toLowerCase() === user.email?.toLowerCase());
+  const nomeFallback = (user.email || "").split("@")[0] || "Usuário";
   const nome = usuarioLogado?.nome || nomeFallback;
-  const perfil = usuarioLogado?.perfil?.toUpperCase() || "USUÁRIO";
+  const perfil = (usuarioLogado?.perfil || "USUÁRIO").toUpperCase();
 
-  // 🔹 Atualiza interface
   if (userNameEl) userNameEl.textContent = nome;
   if (perfilBadgeEl) perfilBadgeEl.textContent = "Perfil: " + perfil;
   if (nomeBemVindoEl) nomeBemVindoEl.textContent = nome;
 
-  // 🔹 Salva global
   window.usuarioAtual = { nome, email: user.email, perfil };
 
-  // 🔹 Mensagem de boas-vindas
-  if (typeof mostrarMensagem === "function") {
-    mostrarMensagem(`👋 Bem-vindo(a), ${nome}!`, "sucesso");
-  }
+  if (typeof mostrarMensagem === "function") mostrarMensagem(`👋 Bem-vindo(a), ${nome}!`, "sucesso");
 
-  // ==========================================================
-  // 🚀 MOSTRA APENAS A TELA DE BOAS-VINDAS
-  // ==========================================================
-  document.querySelectorAll("main section").forEach(sec => (sec.style.display = "none"));
-  const boasVindas = document.getElementById("boasVindas");
-  if (boasVindas) boasVindas.style.display = "block";
+  // garante que somente a tela de boas-vindas fique visível (não redireciona para dashboard)
+  document.querySelectorAll("main section").forEach(sec => sec.style.display = "none");
+  const boas = document.getElementById("boasVindas");
+  if (boas) boas.style.display = "block";
 
-  // ==========================================================
-  // 🔒 APLICA PERMISSÕES E BOTÕES
-  // ==========================================================
+  // aplica permissões no menu (sem redirecionamento)
   const permissoesDoUsuario = window.PERMISSOES?.[perfil] || window.PERMISSOES?.["USUÁRIO"] || {};
-
-  const menuLinks = document.querySelectorAll("#sidebar a[data-section]");
-  menuLinks.forEach(link => {
-    const sectionName = link.getAttribute("data-section");
-    if (permissoesDoUsuario.canView?.includes(sectionName)) {
-      link.style.display = "";
-    } else {
-      link.style.display = "none";
-    }
+  document.querySelectorAll("#sidebar a[data-section]").forEach(link => {
+    const sectionName = link.getAttribute('data-section');
+    if (permissoesDoUsuario.canView?.includes(sectionName)) link.style.display = "";
+    else link.style.display = "none";
   });
 
-  const podeEditar =
-    permissoesDoUsuario.canEdit === true ||
-    (Array.isArray(permissoesDoUsuario.canEdit) &&
-      (permissoesDoUsuario.canEdit.includes("produtos") ||
-        permissoesDoUsuario.canEdit.includes("entradas") ||
-        permissoesDoUsuario.canEdit.includes("saidas")));
-
-  const entradaBtn = document.getElementById("adicionarEntradaBtn");
-  const saidaBtn = document.getElementById("adicionarSaidaBtn");
-  const addProdutoBtn = document.getElementById("adicionarProdutoBtn");
-
-  if (!podeEditar) {
-    if (entradaBtn) entradaBtn.style.display = "none";
-    if (saidaBtn) saidaBtn.style.display = "none";
-    if (addProdutoBtn) addProdutoBtn.style.display = "none";
+  // atualiza dados / tabelas em background (se necessário)
+  if (typeof carregarDadosDoFirestore === "function") {
+    carregarDadosDoFirestore().then(() => {
+      atualizarTabelaProdutos?.();
+      atualizarTabelaEntradas?.();
+      atualizarTabelaSaidas?.();
+      atualizarTabelaEstoque?.();
+      atualizarTabelaLimites?.();
+      atualizarDashboard?.();
+      atualizarPainelFinanceiro?.();
+      atualizarTabelaErros?.(); // garante que os erros apareçam
+    });
   } else {
-    if (entradaBtn) entradaBtn.style.display = "";
-    if (saidaBtn) saidaBtn.style.display = "";
-    if (addProdutoBtn) addProdutoBtn.style.display = "";
+    atualizarTabelaProdutos?.();
+    atualizarTabelaErros?.();
   }
+}
+
 
   // ==========================================================
   // ⚙️ RECARREGA TABELAS E DASHBOARDS
@@ -1851,7 +1817,7 @@ function mostrarSistema(user) {
       if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
     });
   }
-}
+
 
 
 
@@ -2337,6 +2303,31 @@ function padronizarCamposAntesDeSalvar() {
     el.value = formatarTextoPadrao(el.value);
   });
 }
+// ============================================================
+// 🔄 CARREGA DADOS SALVOS LOCALMENTE (INCLUSIVE REGISTRO DE ERROS)
+// ============================================================
+(function restaurarDadosLocais() {
+  try {
+    const dadosLocais = JSON.parse(localStorage.getItem("oralUnicEstoque")) || {};
+
+    window.produtos = Array.isArray(dadosLocais.produtos) ? dadosLocais.produtos : [];
+    window.entradas = Array.isArray(dadosLocais.entradas) ? dadosLocais.entradas : [];
+    window.saidas = Array.isArray(dadosLocais.saidas) ? dadosLocais.saidas : [];
+    window.limites = Array.isArray(dadosLocais.limites) ? dadosLocais.limites : [];
+    window.usuarios = Array.isArray(dadosLocais.usuarios) ? dadosLocais.usuarios : [];
+    window.errosProblemas = Array.isArray(dadosLocais.errosProblemas) ? dadosLocais.errosProblemas : []; // ✅ restaura o histórico
+
+    console.log(`📦 Dados locais restaurados. Produtos: ${window.produtos.length}, Erros: ${window.errosProblemas.length}`);
+  } catch (e) {
+    console.error("⚠️ Falha ao carregar dados locais:", e);
+    window.produtos = [];
+    window.entradas = [];
+    window.saidas = [];
+    window.limites = [];
+    window.usuarios = [];
+    window.errosProblemas = [];
+  }
+})();
 
 window.cadastrarProduto = async function () {
   limparErros("cadastro");
@@ -2553,20 +2544,13 @@ window.atualizarTabelaProdutos = function () {
   const filtro = filtroEl ? filtroEl.value.toLowerCase() : "";
 
   tbody.innerHTML = "";
-
-  // ✅ Garante que produtos seja um array e cada um tenha ID único
   if (!Array.isArray(window.produtos)) window.produtos = [];
-  window.produtos = window.produtos.map(p => {
-    if (!p) return null;
-    if (!p.id) p.id = Date.now() + Math.floor(Math.random() * 100000);
-    return p;
-  }).filter(Boolean);
 
-  // ✅ Cria uma cópia ordenada (sem alterar o array original)
+  // cria cópia ordenada para exibição
   const produtosOrdenados = [...window.produtos].sort((a, b) => {
     const nomeA = (a.nome || "").toLowerCase();
     const nomeB = (b.nome || "").toLowerCase();
-    return nomeA.localeCompare(nomeB, "pt-BR");
+    return nomeA.localeCompare(nomeB, 'pt-BR');
   });
 
   if (produtosOrdenados.length === 0) {
@@ -2576,24 +2560,24 @@ window.atualizarTabelaProdutos = function () {
     return;
   }
 
-  produtosOrdenados.forEach((produto, i) => {
-    const nome = produto.nome?.toLowerCase() || "";
-    const categoria = produto.categoria?.toLowerCase() || "";
+  produtosOrdenados.forEach((produto, displayIndex) => {
+    const nome = (produto.nome || "").toLowerCase();
+    const categoria = (produto.categoria || "").toLowerCase();
     if (filtro && !nome.includes(filtro) && !categoria.includes(filtro)) return;
+
+    // encontra índice ORIGINAL no window.produtos (para editar/excluir corretamente)
+    const originalIndex = window.produtos.findIndex(p =>
+      (p.id && produto.id && p.id === produto.id) ||
+      (p.nome === produto.nome && (p.codigoBarras || p.codBarras) === (produto.codigoBarras || produto.codBarras))
+    );
 
     const row = document.createElement("tr");
     const foto = produto.foto || "";
     const codigoBarras = produto.codBarras || produto.codigoBarras || "-";
-
-    // 🔹 Identificação fixa da linha
-    row.setAttribute("data-id", produto.id);
-
-    const fotoHtml = foto
-      ? `<img src="${foto}" class="thumb" onclick="ampliarImagem('${foto}')" alt="Foto do produto">`
-      : `<span style="color:red;font-weight:bold;">❌</span>`;
+    const fotoHtml = foto ? `<img src="${foto}" class="thumb" onclick="ampliarImagem('${foto}')" alt="Foto do produto">` : `<span style="color:red;font-weight:bold;">❌</span>`;
 
     row.innerHTML = `
-      <td>${i + 1}</td>
+      <td>${displayIndex + 1}</td>
       <td style="text-align:center;">${fotoHtml}</td>
       <td style="font-weight:600;">${produto.nome || "-"}</td>
       <td>${produto.categoria || "-"}</td>
@@ -2601,21 +2585,21 @@ window.atualizarTabelaProdutos = function () {
       <td>${produto.qtdEmbalagem || "-"}</td>
       <td>${codigoBarras}</td>
       <td style="text-align:center;">
-        <button title="Editar" onclick="editarProduto(${produto.id})"><i class="fa fa-edit"></i></button>
-        <button title="Excluir" onclick="excluirProduto(${produto.id})" style="background:#dc3545;"><i class="fa fa-trash"></i></button>
+        <button title="Editar" onclick="editarProduto(${originalIndex})"><i class="fa fa-edit"></i></button>
+        <button title="Excluir" onclick="excluirProduto(${originalIndex})" style="background:#dc3545;"><i class="fa fa-trash"></i></button>
       </td>
     `;
 
-    // 🔹 Destaca se está em edição
-    if (window.produtoEmEdicaoId === produto.id) {
-      row.style.background = "#fff3cd"; // amarelo claro
+    if (typeof indiceEdicaoProduto === "number" && indiceEdicaoProduto === originalIndex) {
+      row.style.background = "#fff3cd";
     }
 
     tbody.appendChild(row);
   });
 
-  console.log("✅ Produtos listados em ordem alfabética:", produtosOrdenados.map(p => p.nome));
+  console.log("✅ Produtos listados (apresentação ordenada).");
 };
+
 
 
 
@@ -2713,23 +2697,38 @@ window.editarProduto = function (idProduto) {
 };
 
 
+window.excluirProduto = function(index) {
+  // tenta localizar por índice; se inválido, tenta encontrar por alguma chave
+  let produto = window.produtos[index];
+  if (!produto) {
+    // tenta localizar por id passado (caso index seja NaN) ou pelo nome
+    produto = window.produtos.find(p => p && (p.id === index || p.nome === index || p.codigoBarras === index));
+    if (!produto) {
+      mostrarMensagem("Produto não encontrado para exclusão.", "erro");
+      return;
+    }
+    index = window.produtos.indexOf(produto);
+  }
 
-// ================================
-// ✅ EXCLUIR PRODUTO (por id, robusto)
-// ================================
-window.excluirProduto = function (idProduto) {
-  const produto = window.produtos.find(p => p.id === idProduto);
-  if (!produto) return mostrarMensagem("Produto não encontrado.", "erro");
+  if (!confirm(`Deseja excluir o produto "${produto.nome}"? Esta ação é irreversível.`)) return;
 
-  if (!confirm(`Excluir o produto "${produto.nome}"? Esta ação não pode ser desfeita.`)) return;
-
-  window.produtos = window.produtos.filter(p => p.id !== idProduto);
-
+  window.produtos.splice(index, 1);
   salvarTodosLocal?.();
-  salvarProdutosNoFirebase?.(window.produtos);
+  if (typeof salvarProdutosNoFirebase === "function") salvarProdutosNoFirebase(window.produtos);
+  if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+  mostrarMensagem(`Produto "${produto.nome}" excluído.`, "sucesso");
+};
 
-  atualizarTabelaProdutos?.();
-  mostrarMensagem(`🗑️ Produto "${produto.nome}" excluído com sucesso.`, "sucesso");
+window.editarProduto = function(index) {
+  const produto = window.produtos[index];
+  if (!produto) {
+    mostrarMensagem("Produto não encontrado para edição.", "erro");
+    return;
+  }
+  // seu código existente de edição (preencher campos etc.)
+  indiceEdicaoProduto = index;
+  document.getElementById("produtoNome").value = produto.nome || "";
+  // ... restante do seu bloco de edição ...
 };
 
 
@@ -5186,7 +5185,6 @@ document
 
 
 	
-
 
 
 
