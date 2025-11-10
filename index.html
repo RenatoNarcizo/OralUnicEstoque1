@@ -1228,7 +1228,9 @@ const estoqueRef = doc(db, "estoqueGlobal", "estoque");
 const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
 
 
-	
+
+
+ 
 // ===================================================
 // 🔹 Wrappers globais para salvar dados no Firestore
 // ===================================================
@@ -1366,9 +1368,6 @@ async function carregarDadosDoFirestore() {
     }
   }
 }
-
-
-  
 
 
 
@@ -1824,28 +1823,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+
 // ====================================================
-// 🔐 AUTENTICAÇÃO E SINCRONIZAÇÃO EM TEMPO REAL
-// ====================================================
-
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    console.warn("👋 Nenhum usuário logado — aguardando login...");
-    return;
-  }
-
-  console.log(`✅ Usuário logado: ${user.email}`);
-  console.log("🔄 Carregando dados do Firestore, aguarde...");
-
-  // Carrega dados iniciais
-  await carregarDadosDoFirestore();
-
-  // === 🔁 INICIA A SINCRONIZAÇÃO EM TEMPO REAL ===
-  const estoqueRef = doc(db, "estoqueGlobal", "estoque");
-  const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
-
-  // --- Escuta alterações no estoque ---
- // ====================================================
 // 🔐 AUTENTICAÇÃO E SINCRONIZAÇÃO EM TEMPO REAL (CORRIGIDA)
 // ====================================================
 
@@ -1927,6 +1906,11 @@ onAuthStateChanged(auth, async (user) => {
 
 
 
+
+
+ 
+
+ 
   // === LOGOUT ===
   window.logout = async function() {
     await signOut(auth);
@@ -2289,6 +2273,7 @@ function padronizarCamposAntesDeSalvar() {
     el.value = formatarTextoPadrao(el.value);
   });
 }
+
 window.cadastrarProduto = async function () {
   limparErros("cadastro");
 
@@ -5095,10 +5080,6 @@ document
 
 
 	
-
-
-
-
 
 
 
