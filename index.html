@@ -1392,7 +1392,6 @@ function salvarTodosLocal() {
 // ✅ Torna a função acessível globalmente
 window.salvarTodosLocal = salvarTodosLocal;
 
-
 // ===================================================
 // 🌐 CARREGAMENTO E SINCRONIZAÇÃO EM TEMPO REAL (VERSÃO CORRIGIDA E COMPLETA)
 // ===================================================
@@ -1410,7 +1409,8 @@ async function carregarDadosDoFirestore() {
           entradas: [],
           saidas: [],
           limites: [],
-          usuarios: []
+          usuarios: [],
+          errosProblemas: [] // ✅ já cria o campo no Firestore se não existir
         });
         return;
       }
@@ -1442,6 +1442,7 @@ async function carregarDadosDoFirestore() {
       window.saidas = Array.isArray(data.saidas) ? [...data.saidas] : [];
       window.limites = Array.isArray(data.limites) ? [...data.limites] : [];
       window.usuarios = Array.isArray(data.usuarios) ? [...data.usuarios] : [];
+      window.errosProblemas = Array.isArray(data.errosProblemas) ? [...data.errosProblemas] : []; // ✅ incluído
 
       // 💾 Atualiza backup local
       if (typeof salvarTodosLocal === "function") salvarTodosLocal();
@@ -1452,11 +1453,11 @@ async function carregarDadosDoFirestore() {
       if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
       if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
       if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-      if (typeof atualizarTabelaErros === "function") atualizarTabelaErros(); // ✅ restaura “Registro de Problemas”
+      if (typeof atualizarTabelaErros === "function") atualizarTabelaErros(); // ✅ restaurado com dados
       if (typeof atualizarDashboard === "function") atualizarDashboard();
       if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
 
-      console.log(`✅ Dados sincronizados com sucesso! Produtos: ${window.produtos.length}`);
+      console.log(`✅ Dados sincronizados com sucesso! Produtos: ${window.produtos.length}, Erros: ${window.errosProblemas.length}`);
     });
 
   } catch (erro) {
@@ -1466,6 +1467,8 @@ async function carregarDadosDoFirestore() {
     }
   }
 }
+
+
 
 
 
@@ -5183,6 +5186,7 @@ document
 
 
 	
+
 
 
 
