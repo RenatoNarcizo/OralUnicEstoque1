@@ -2342,23 +2342,30 @@ window.cadastrarProduto = async function () {
       foto: fotoBase64,
       criadoEm: new Date().toISOString(),
     };
+
+    // 🔹 Adiciona ao array local
+    window.produtos = Array.isArray(window.produtos) ? window.produtos : [];
     window.produtos.push(novoProduto);
+
     mostrarMensagem(`✅ Produto "${nome}" cadastrado com sucesso!`, "sucesso");
   }
 
-  // --- Sincroniza com Firestore ---
+  // --- Sincroniza com Firestore e localStorage ---
   try {
     const estoqueRef = doc(db, "estoqueGlobal", "estoque");
     await setDoc(estoqueRef, { produtos: window.produtos }, { merge: true });
-    console.log("☁️ Produtos atualizados na nuvem com sucesso!");
+    salvarTodosLocal();
+    console.log("☁️ Produtos atualizados na nuvem e localmente com sucesso!");
+
+    // ✅ Atualiza tabela após salvar (garante visibilidade imediata)
+    if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+
   } catch (err) {
     console.error("❌ Erro ao salvar produto na nuvem:", err);
     mostrarMensagem("Erro ao salvar produto no Firestore!", "erro");
   }
 
-  // --- Atualiza local e interface ---
-  salvarTodosLocal();
-  atualizarTabelaProdutos?.();
+  // --- Atualiza outras tabelas relacionadas ---
   atualizarTabelaEstoque?.();
   atualizarTabelaEntradas?.();
   atualizarTabelaSaidas?.();
@@ -2366,12 +2373,18 @@ window.cadastrarProduto = async function () {
   atualizarDashboard?.();
 
   // --- Limpa campos ---
-  nomeEl.value = categoriaEl.value = embalagemEl.value = qtdEmbEl.value = codBarrasEl.value = "";
+  nomeEl.value = "";
+  categoriaEl.value = "";
+  embalagemEl.value = "";
+  qtdEmbEl.value = "";
+  codBarrasEl.value = "";
   fotoEl.value = "";
+
   const fotoPreview = document.getElementById("fotoPreview");
   if (fotoPreview) fotoPreview.innerHTML = "";
   document.querySelectorAll("#tabelaProdutos tbody tr").forEach((tr) => (tr.style.background = ""));
 };
+
 
 
 
@@ -5029,6 +5042,7 @@ document
 
 
 	
+
 
 
 
