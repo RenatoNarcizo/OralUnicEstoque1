@@ -1181,8 +1181,8 @@
 
 
 
-<!-- === 🔥 FIREBASE SINCRONIZAÇÃO EM TEMPO REAL - INÍCIO === -->
-<script type="module">
+<!-- === 🔥 FIREBASE LOGIN E SINCRONIZAÇÃO === -->
+<script type="module" defer>
   import {
     initializeApp
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -1190,8 +1190,7 @@
     getAuth,
     signInWithEmailAndPassword,
     onAuthStateChanged,
-    signOut,
-    createUserWithEmailAndPassword
+    signOut
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
   import {
     getFirestore,
@@ -1226,6 +1225,84 @@ window.onSnapshot = onSnapshot;
 
 const estoqueRef = doc(db, "estoqueGlobal", "estoque");
 const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
+// ===================================================
+// 🔐 LOGIN E AUTENTICAÇÃO (100% COMPATÍVEL COM SEU SCRIPT)
+// ===================================================
+
+window.fazerLogin = async function () {
+  const usuarioEl = document.getElementById("usuarioLogin");
+  const senhaEl = document.getElementById("senhaLogin");
+  const msgEl = document.getElementById("loginMsg");
+
+  const usuario = usuarioEl?.value.trim() || "";
+  const senha = senhaEl?.value.trim() || "";
+
+  msgEl.style.display = "none";
+  msgEl.textContent = "";
+
+  if (!usuario || !senha) {
+    msgEl.style.display = "block";
+    msgEl.style.color = "red";
+    msgEl.textContent = "⚠️ Preencha e-mail e senha!";
+    return;
+  }
+
+  const email = usuario.toLowerCase();
+
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+    const user = userCredential.user;
+
+    msgEl.style.display = "block";
+    msgEl.style.color = "green";
+    msgEl.textContent = "✅ Login realizado com sucesso!";
+
+    console.log("✅ Usuário logado:", user.email);
+
+    // 🔹 Chama o sistema principal com boas-vindas
+    if (typeof mostrarSistema === "function") {
+      mostrarSistema(user);
+    }
+
+  } catch (error) {
+    console.error("❌ Erro ao logar:", error);
+    msgEl.style.display = "block";
+    msgEl.style.color = "red";
+
+    switch (error.code) {
+      case "auth/wrong-password":
+      case "auth/invalid-credential":
+        msgEl.textContent = "❌ Senha incorreta ou inválida!";
+        break;
+      case "auth/user-not-found":
+        msgEl.textContent = "❌ Usuário não encontrado!";
+        break;
+      case "auth/too-many-requests":
+        msgEl.textContent = "⚠️ Muitas tentativas. Tente mais tarde.";
+        break;
+      default:
+        msgEl.textContent = "❌ Erro ao fazer login.";
+    }
+  }
+};
+
+// 🔹 Permite login com tecla Enter
+document.addEventListener("DOMContentLoaded", () => {
+  const usuarioEl = document.getElementById("usuarioLogin");
+  const senhaEl = document.getElementById("senhaLogin");
+
+  [usuarioEl, senhaEl].forEach(el => {
+    if (!el) return;
+    el.addEventListener("keypress", event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        if (typeof window.fazerLogin === "function") {
+          window.fazerLogin();
+        }
+      }
+    });
+  });
+});
 
 
 
@@ -1847,15 +1924,6 @@ onAuthStateChanged(auth, async (user) => {
 
   console.log("🌐 Sincronização em tempo real ativada.");
 });
-
-
-
-
-
-
- 
-
- 
  
   // === LOGOUT ===
 window.logout = async function () {
