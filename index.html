@@ -1790,7 +1790,6 @@ window.filtrarUsuarios = function() {
  * 🔹 Limpa o filtro de busca E os campos do formulário de usuário
  */
 window.limparFiltroUsuarios = function() {
-  // 🧹 Campos do formulário
   const nome = document.getElementById("usuarioNome");
   const email = document.getElementById("usuarioEmail");
   const senha = document.getElementById("usuarioSenha");
@@ -1800,22 +1799,22 @@ window.limparFiltroUsuarios = function() {
   if (nome) nome.value = "";
   if (email) {
     email.value = "";
-    email.disabled = false; // Garante que o campo volte a ser editável
+    email.disabled = false; // ✅ Desbloqueia o campo SEMPRE
   }
   if (senha) senha.value = "";
   if (perfil) perfil.value = "";
   if (filtro) filtro.value = "";
 
-  // Atualiza a tabela de usuários
   if (typeof window.atualizarTabelaUsuarios === "function") {
     window.atualizarTabelaUsuarios();
   }
 
-  // Mensagem de feedback
+  // 💬 Muda apenas a mensagem para clareza
   if (typeof mostrarMensagem === "function") {
-    mostrarMensagem("Campos e filtro de usuários limpos.", "info");
+    mostrarMensagem("Campos limpos. Pronto para cadastrar novo usuário.", "info");
   }
 };
+
 
 
 // === MOSTRAR SISTEMA (unificado — mostra apenas boas-vindas e não redireciona) ===
@@ -5428,6 +5427,7 @@ document
 
 
 	
+
 
 
 
