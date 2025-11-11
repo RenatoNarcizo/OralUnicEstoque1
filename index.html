@@ -1423,9 +1423,7 @@ carregarTodosLocal(); // chame uma vez na inicialização
 // ✅ Torna a função acessível globalmente
 window.salvarTodosLocal = salvarTodosLocal;
 
-// ===================================================
-// 🌐 CARREGAMENTO E SINCRONIZAÇÃO EM TEMPO REAL (VERSÃO CORRIGIDA E COMPLETA)
-// ===================================================
+
 // ===================================================
 // 🌐 CARREGAMENTO E SINCRONIZAÇÃO EM TEMPO REAL (VERSÃO CORRIGIDA E COMPLETA)
 // ===================================================
@@ -1499,6 +1497,56 @@ async function carregarDadosDoFirestore() {
     if (typeof mostrarMensagem === "function") {
       mostrarMensagem("Erro ao conectar ao Firestore!", "erro");
     }
+  }
+}
+
+// ============================================================
+// 🔁 SINCRONIZAÇÃO AUTOMÁTICA ENTRE FIREBASE AUTH E FIRESTORE
+// ============================================================
+async function sincronizarUsuariosDoAuth() {
+  try {
+    if (!auth || !db) {
+      console.warn("⚠️ Firebase não inicializado corretamente.");
+      return;
+    }
+
+    const userAtual = auth.currentUser;
+    if (!userAtual) {
+      console.log("⏸️ Nenhum usuário autenticado — ignorando sincronização.");
+      return;
+    }
+
+    // 🔍 Garante que window.usuarios é um array
+    if (!Array.isArray(window.usuarios)) window.usuarios = [];
+
+    // Verifica se o usuário logado já está listado
+    const existe = window.usuarios.some(u => u.email?.toLowerCase() === userAtual.email?.toLowerCase());
+    if (existe) {
+      console.log("✅ Usuário já registrado em window.usuarios:", userAtual.email);
+      return;
+    }
+
+    // Cria um novo registro local com dados do Auth
+    const novoUsuario = {
+      uid: userAtual.uid,
+      nome: userAtual.displayName || userAtual.email.split("@")[0],
+      email: userAtual.email,
+      perfil: "USUARIO",
+      criadoEm: new Date().toISOString()
+    };
+
+    window.usuarios.push(novoUsuario);
+
+    // 💾 Salva local e no Firestore
+    if (typeof salvarTodosLocal === "function") salvarTodosLocal();
+    if (typeof window.salvarUsuariosNoFirebase === "function") {
+      await window.salvarUsuariosNoFirebase(window.usuarios);
+    }
+
+    if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
+    console.log("👥 Usuário sincronizado no Firestore:", novoUsuario.email);
+  } catch (e) {
+    console.error("❌ Falha ao sincronizar usuários do Auth:", e);
   }
 }
 
@@ -1846,12 +1894,9 @@ function mostrarSistema(user) {
 
 
 
-
-
 // ====================================================
-// 🔐 AUTENTICAÇÃO E SINCRONIZAÇÃO EM TEMPO REAL (CORRIGIDA)
+// 🔐 AUTENTICAÇÃO E SINCRONIZAÇÃO EM TEMPO REAL (FINAL)
 // ====================================================
-
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     console.warn("👋 Nenhum usuário logado — aguardando login...");
@@ -1861,14 +1906,70 @@ onAuthStateChanged(auth, async (user) => {
   console.log(`✅ Usuário logado: ${user.email}`);
   console.log("🔄 Carregando dados do Firestore, aguarde...");
 
-  // Carrega dados iniciais
+  // 🔹 Carrega dados iniciais
   await carregarDadosDoFirestore();
 
-  // === 🔁 INICIA A SINCRONIZAÇÃO EM TEMPO REAL ===
+  // 🔁 Sincroniza o usuário autenticado com Firestore
+  await sincronizarUsuariosDoAuth();
+
+  // === 🔁 SINCRONIZAÇÃO EM TEMPO REAL ===
   const estoqueRef = doc(db, "estoqueGlobal", "estoque");
   const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
+
+  // --- Escuta o estoque ---
+  onSnapshot(estoqueRef, (snapshot) => {
+    if (window.bloquearAtualizacaoSnapshot) {
+      console.log("⏸️ Snapshot ignorado (bloqueio ativo - salvando produto)");
+      return;
+    }
+
+    if (!snapshot.exists()) {
+      console.warn("⚠️ Documento 'estoque' ainda não existe no Firestore.");
+      return;
+    }
+
+    const data = snapshot.data() || {};
+    window.produtos = data.produtos || [];
+    window.entradas = data.entradas || [];
+    window.saidas = data.saidas || [];
+    window.limites = data.limites || [];
+
+    salvarTodosLocal?.();
+    atualizarTabelaProdutos?.();
+    atualizarTabelaEstoque?.();
+    atualizarTabelaEntradas?.();
+    atualizarTabelaSaidas?.();
+    atualizarDashboard?.();
+    atualizarPainelFinanceiro?.();
+
+    console.log("✅ Estoque sincronizado com sucesso.");
+  });
+
+ // ✅ SINCRONIZAÇÃO DE USUÁRIOS (correção definitiva)
+onSnapshot(usuariosRef, (snapshot) => {
+  try {
+    if (!snapshot.exists()) {
+      console.warn("⚠️ Documento 'usuarios' não existe no Firestore.");
+      return;
+    }
+
+    const data = snapshot.data() || {};
+    window.usuarios = Array.isArray(data.usuarios) ? [...data.usuarios] : [];
+
+    // 💾 Atualiza localStorage
+    if (typeof salvarTodosLocal === "function") salvarTodosLocal();
+
+    // 🔄 Atualiza tabela de usuários na tela (se existir)
+    if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
+
+    console.log(`👥 Lista de usuários carregada: ${window.usuarios.length} usuários encontrados.`);
+  } catch (erro) {
+    console.error("❌ Erro ao sincronizar usuários:", erro);
+ }
+  });
+
 }); 
-  
+
  
   // === LOGOUT ===
 window.logout = async function () {
@@ -5205,6 +5306,7 @@ document
 
 
 	
+
 
 
 
