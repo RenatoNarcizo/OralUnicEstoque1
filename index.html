@@ -2296,6 +2296,99 @@ function buscarCodigoBarrasDoProduto(nome) {
     const p = produtos.find(p => p.nome === nome);
     return p ? p.codigoBarras : "-";
 }
+/**
+ * 🔹 Leitor de QR Code integrado ao campo de código de barras
+ * Compatível com leitor físico (USB) e câmera (QR)
+ */
+function iniciarLeitorQRCode() {
+  const video = document.createElement("video");
+  const canvasElement = document.createElement("canvas");
+  const canvas = canvasElement.getContext("2d");
+  let scanning = false;
+
+  const modal = document.createElement("div");
+  modal.id = "qrModal";
+  modal.style.cssText = `
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; z-index: 9999;
+  `;
+  modal.innerHTML = `
+    <video id="qrVideo" style="width: 300px; height: 300px; border: 3px solid #00ff88; border-radius: 10px;"></video>
+    <button id="fecharQR" style="margin-top: 15px; background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer;">Fechar</button>
+  `;
+  document.body.appendChild(modal);
+
+  const fecharBtn = modal.querySelector("#fecharQR");
+  fecharBtn.addEventListener("click", () => {
+    scanning = false;
+    video.srcObject?.getTracks().forEach(track => track.stop());
+    modal.remove();
+  });
+
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+    .then(stream => {
+      scanning = true;
+      video.setAttribute("playsinline", true);
+      video.srcObject = stream;
+      video.play();
+      tick();
+      scan();
+    });
+
+  function tick() {
+    if (!scanning) return;
+    canvasElement.height = video.videoHeight;
+    canvasElement.width = video.videoWidth;
+    canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
+    requestAnimationFrame(tick);
+  }
+
+  function scan() {
+    try {
+      const imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
+      const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
+      if (code) {
+        scanning = false;
+        video.srcObject?.getTracks().forEach(track => track.stop());
+        modal.remove();
+
+        const codigoLido = code.data.trim();
+        const campoCodigo = document.getElementById("produtoCodigoBarras") || document.getElementById("saidaCodigoBarras");
+
+        if (campoCodigo) {
+          campoCodigo.value = codigoLido;
+          campoCodigo.dispatchEvent(new Event("input")); // dispara mudança
+        }
+
+        // 🔹 NOVO: preenche automaticamente o nome, se existir no catálogo
+        const produto = window.produtos?.find(p =>
+          String(p.codBarras || p.codigoBarras || "").trim() === codigoLido
+        );
+
+        if (produto) {
+          const campoNome =
+            document.getElementById("produtoNome") ||
+            document.getElementById("saidaProduto");
+
+          if (campoNome) campoNome.value = produto.nome || "";
+          mostrarMensagem(`✅ Produto identificado: ${produto.nome}`, "sucesso");
+        } else {
+          mostrarMensagem("⚠️ Código não encontrado no catálogo de produtos!", "erro");
+        }
+
+      } else if (scanning) {
+        setTimeout(scan, 200);
+      }
+    } catch (e) {
+      console.warn("Erro na leitura do QR:", e);
+      if (scanning) setTimeout(scan, 200);
+    }
+  }
+}
+
 
 /**
  * 🔹 Atualiza o campo 'quantidade' no estoque global
@@ -3063,58 +3156,78 @@ function buscarProdutoPorCodigo(contexto) {
 document.getElementById("entradaCodigoBarras")?.addEventListener("change", () => buscarProdutoPorCodigo("entrada"));
 document.getElementById("entradaCodigoBarras")?.addEventListener("blur", () => buscarProdutoPorCodigo("entrada"));
 
-
-// ===============================================
-// ✅ REGISTRO E EDIÇÃO DE ENTRADAS DE MATERIAIS (versão final unificada + correção de estoque e limites)
-// ===============================================
-// ===============================================
-// ✅ REGISTRO E EDIÇÃO DE ENTRADAS DE MATERIAIS (corrigida)
-// ===============================================
+// =============================================================
+// ✅ REGISTRAR ENTRADA — versão aprimorada com validações visuais
+// =============================================================
 function registrarEntrada() {
-  const produto = document.getElementById("entradaProduto").value.trim();
-  const qtd = parseFloat(document.getElementById("entradaQuantidade").value.trim()) || 0;
-  const valor = parseFloat(document.getElementById("entradaValor").value.trim()) || 0;
-  const data = document.getElementById("entradaData").value.trim();
-  const nota = document.getElementById("entradaNota").value.trim();
-  const fornecedor = document.getElementById("entradaFornecedor").value.trim();
-  const cnpj = document.getElementById("entradaCNPJ").value.trim();
-  const lote = document.getElementById("entradaLote").value.trim();
-  const validade = document.getElementById("entradaValidade").value.trim();
-  const setor = document.getElementById("entradaSetor").value.trim();
-  const codigoBarras = document.getElementById("entradaCodigoBarras").value.trim();
+  limparErros("entrada"); // remove possíveis destaques anteriores
 
-  // validações
-  if (!produto) return mostrarMensagem("⚠️ O campo 'Nome do produto' é obrigatório!", "erro");
-  if (!qtd) return mostrarMensagem("⚠️ Informe a quantidade!", "erro");
-  if (!valor && valor !== 0) return mostrarMensagem("⚠️ Informe o valor unitário!", "erro");
-  if (!data) return mostrarMensagem("⚠️ Informe a data de entrada!", "erro");
-  if (!nota) return mostrarMensagem("⚠️ Informe o número da nota fiscal!", "erro");
-  if (!fornecedor) return mostrarMensagem("⚠️ Informe o nome do fornecedor!", "erro");
-  if (!cnpj) return mostrarMensagem("⚠️ Informe o CNPJ do fornecedor!", "erro");
-  if (!validade) return mostrarMensagem("⚠️ Informe a data de vencimento do material!", "erro");
-  if (!setor) return mostrarMensagem("⚠️ Selecione o setor utilizado!", "erro");
+  const produtoEl = document.getElementById("entradaProduto");
+  const qtdEl = document.getElementById("entradaQuantidade");
+  const valorEl = document.getElementById("entradaValor");
+  const dataEl = document.getElementById("entradaData");
+  const notaEl = document.getElementById("entradaNota");
+  const fornecedorEl = document.getElementById("entradaFornecedor");
+  const cnpjEl = document.getElementById("entradaCNPJ");
+  const loteEl = document.getElementById("entradaLote");
+  const validadeEl = document.getElementById("entradaValidade");
+  const setorEl = document.getElementById("entradaSetor");
+  const codigoEl = document.getElementById("entradaCodigoBarras");
 
-  // se edição
+  const produto = produtoEl?.value?.trim() || "";
+  const qtd = parseFloat(qtdEl?.value?.trim()) || 0;
+  const valor = parseFloat(valorEl?.value?.trim()) || 0;
+  const data = dataEl?.value?.trim() || "";
+  const nota = notaEl?.value?.trim() || "";
+  const fornecedor = fornecedorEl?.value?.trim() || "";
+  const cnpj = cnpjEl?.value?.trim() || "";
+  const lote = loteEl?.value?.trim() || "";
+  const validade = validadeEl?.value?.trim() || "";
+  const setor = setorEl?.value?.trim() || "";
+  const codigoBarras = codigoEl?.value?.trim() || "";
+
+  // ==============================
+  // 🧠 Validação dos campos obrigatórios
+  // ==============================
+  if (!produto) return destacarErro(produtoEl, "O campo 'Nome do produto' é obrigatório!");
+  if (!qtd || qtd <= 0) return destacarErro(qtdEl, "Informe a quantidade válida!");
+  if (!valor || valor <= 0) return destacarErro(valorEl, "Informe o valor unitário!");
+  if (!data) return destacarErro(dataEl, "Informe a data de entrada!");
+  if (!nota) return destacarErro(notaEl, "Informe o número da nota fiscal!");
+  if (!fornecedor) return destacarErro(fornecedorEl, "Informe o nome do fornecedor!");
+  if (!cnpj) return destacarErro(cnpjEl, "Informe o CNPJ do fornecedor!");
+  if (!validade) return destacarErro(validadeEl, "Informe a data de vencimento do material!");
+  if (!setor) return destacarErro(setorEl, "Selecione o setor utilizado!");
+
+  // ==============================
+  // ✏️ Edição de registro existente
+  // ==============================
   if (typeof indiceEdicaoEntrada === "number" && indiceEdicaoEntrada !== null) {
     const e = window.entradas[indiceEdicaoEntrada];
     if (!e) return;
-    e.produto = produto; e.qtd = qtd; e.valor = valor; e.data = data; e.nota = nota;
-    e.fornecedor = fornecedor; e.cnpj = cnpj; e.lote = lote; e.validade = validade;
-    e.setor = setor; e.codigoBarras = codigoBarras;
+    Object.assign(e, { produto, qtd, valor, data, nota, fornecedor, cnpj, lote, validade, setor, codigoBarras });
     mostrarMensagem(`✅ Entrada de "${produto}" atualizada com sucesso!`, "sucesso");
     indiceEdicaoEntrada = null;
     if (typeof window.mostrarBotaoCancelarEntrada === "function") window.mostrarBotaoCancelarEntrada(false);
   } else {
-    const novaEntrada = { produto, qtd, valor, data, nota, fornecedor, cnpj, lote, validade, setor, codigoBarras };
+    // ==============================
+    // 🆕 Nova entrada
+    // ==============================
+    const novaEntrada = { produto, qtd, valor, data, nota, fornecedor, cnpj, lote, validade, setor, codigoBarras, id: Date.now() };
+    if (!Array.isArray(window.entradas)) window.entradas = [];
     window.entradas.push(novaEntrada);
     mostrarMensagem(`✅ Entrada registrada para "${produto}"`, "sucesso");
   }
 
-  // === Atualiza produto no catálogo ===
-  // procura produto por nome (recomendo usar id se tiver)
-  let produtoRef = window.produtos.find(p => (p.nome || "").toLowerCase() === produto.toLowerCase() || String(p.codBarras || p.codigoBarras || "") === String(codigoBarras));
+  // ==============================
+  // 🔄 Atualiza produto no catálogo
+  // ==============================
+  let produtoRef = window.produtos.find(p =>
+    (p.nome || "").toLowerCase() === produto.toLowerCase() ||
+    String(p.codBarras || p.codigoBarras || "") === String(codigoBarras)
+  );
+
   if (!produtoRef) {
-    // se não existir, cria um produto mínimo (evita dados faltando)
     produtoRef = {
       id: Date.now(),
       nome: produto,
@@ -3126,33 +3239,42 @@ function registrarEntrada() {
     window.produtos.push(produtoRef);
   }
 
-  // atualiza valores essenciais no produto
+  // Atualiza estoque e informações do produto
   produtoRef.quantidade = (produtoRef.quantidade || 0) + qtd;
-  produtoRef.ultimoValor = valor;           // campo padronizado: ultimoValor
-  produtoRef.lote = lote || produtoRef.lote;         // atualiza lote
-  produtoRef.validade = validade || produtoRef.validade; // atualiza validade
+  produtoRef.ultimoValor = valor;
+  produtoRef.lote = lote || produtoRef.lote;
+  produtoRef.validade = validade || produtoRef.validade;
   produtoRef.codigoBarras = produtoRef.codigoBarras || codigoBarras;
 
-  // salva local e na nuvem
+  // ==============================
+  // 💾 Salva localmente e na nuvem
+  // ==============================
   salvarTodosLocal?.();
-  if (typeof salvarProdutosNoFirebase === "function") salvarProdutosNoFirebase(window.produtos);
-  if (typeof window.salvarEntradasNoFirebase === "function") window.salvarEntradasNoFirebase(window.entradas);
+  salvarProdutosNoFirebase?.(window.produtos);
+  window.salvarEntradasNoFirebase?.(window.entradas);
 
-  // atualiza tabelas e limpa campos
+  // ==============================
+  // 📊 Atualiza a interface
+  // ==============================
   atualizarTabelaEntradas?.();
   atualizarTabelaEstoque?.();
   atualizarPainelFinanceiro?.();
   atualizarDashboard?.();
 
+  // ==============================
+  // 🧹 Limpa os campos após salvar
+  // ==============================
   document.querySelectorAll('#entrada input, #entrada select, #entrada textarea').forEach(el => {
     if (el.type === "checkbox" || el.type === "radio") el.checked = false;
     else el.value = "";
   });
 
-  // foco
   document.getElementById("entradaCodigoBarras")?.focus();
   mostrarMensagem("✅ Entrada salva, sincronizada e campos limpos.", "sucesso");
 }
+
+
+
 
 
 
@@ -5293,7 +5415,7 @@ document
 
 
 </script>
-
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
@@ -5306,6 +5428,7 @@ document
 
 
 	
+
 
 
 
