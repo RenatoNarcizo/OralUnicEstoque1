@@ -2514,10 +2514,26 @@ window.cadastrarProduto = async function () {
   if (!embalagem) return destacarErro(embalagemEl, "Selecione o tipo de embalagem!");
   if (!qtdEmb) return destacarErro(qtdEmbEl, "Informe a quantidade por embalagem!");
 
+  // ----- Garante array global -----
+  window.produtos = Array.isArray(window.produtos) ? window.produtos : [];
+
+  // =====================================================
+  // 🚫 Verificação de duplicidade (apenas em cadastro novo)
+  // =====================================================
+  const isEdicao = typeof indiceEdicaoProduto === "number" && indiceEdicaoProduto !== null;
+  if (!isEdicao) {
+    const duplicado = window.produtos.some(p =>
+      p.nome?.trim().toLowerCase() === nome.toLowerCase() ||
+      (codBarras && (p.codBarras === codBarras || p.codigoBarras === codBarras))
+    );
+    if (duplicado) {
+      mostrarMensagem("❌ Já existe um produto com este nome ou código de barras!", "erro");
+      return;
+    }
+  }
+
   // ----- Tratamento da foto (base64) -----
   let fotoBase64 = "";
-  const isEdicao = typeof indiceEdicaoProduto === "number" && indiceEdicaoProduto !== null;
-
   if (!isEdicao && !(fotoEl && fotoEl.files && fotoEl.files[0])) {
     return destacarErro(fotoEl, "A foto do produto é obrigatória!");
   }
@@ -2535,9 +2551,6 @@ window.cadastrarProduto = async function () {
       console.error("Erro ao converter foto:", e);
     }
   }
-
-  // ----- Garante array global -----
-  window.produtos = Array.isArray(window.produtos) ? window.produtos : [];
 
   // ----- Edição ou novo -----
   if (isEdicao) {
@@ -2637,6 +2650,7 @@ window.cadastrarProduto = async function () {
     console.warn("Falha ao limpar o formulário:", e);
   }
 };
+
 
 
 
@@ -5428,6 +5442,7 @@ document
 
 
 	
+
 
 
 
