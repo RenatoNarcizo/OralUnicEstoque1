@@ -2722,11 +2722,11 @@ window.atualizarTabelaProdutos = function () {
   tbody.innerHTML = "";
   if (!Array.isArray(window.produtos)) window.produtos = [];
 
-  // cria cópia ordenada para exibição
+  // cria cópia ordenada por nome (sem modificar array original)
   const produtosOrdenados = [...window.produtos].sort((a, b) => {
     const nomeA = (a.nome || "").toLowerCase();
     const nomeB = (b.nome || "").toLowerCase();
-    return nomeA.localeCompare(nomeB, 'pt-BR');
+    return nomeA.localeCompare(nomeB, "pt-BR");
   });
 
   if (produtosOrdenados.length === 0) {
@@ -2736,45 +2736,49 @@ window.atualizarTabelaProdutos = function () {
     return;
   }
 
-  produtosOrdenados.forEach((produto, displayIndex) => {
-    const nome = (produto.nome || "").toLowerCase();
-    const categoria = (produto.categoria || "").toLowerCase();
-    if (filtro && !nome.includes(filtro) && !categoria.includes(filtro)) return;
+  produtosOrdenados.forEach((produto, i) => {
+    const nomeLower = (produto.nome || "").toLowerCase();
+    const categoriaLower = (produto.categoria || "").toLowerCase();
+    if (filtro && !nomeLower.includes(filtro) && !categoriaLower.includes(filtro)) return;
 
-    // encontra índice ORIGINAL no window.produtos (para editar/excluir corretamente)
-    const originalIndex = window.produtos.findIndex(p =>
-      (p.id && produto.id && p.id === produto.id) ||
-      (p.nome === produto.nome && (p.codigoBarras || p.codBarras) === (produto.codigoBarras || produto.codBarras))
-    );
+    const foto = produto.foto || "";
+    const codigoBarras = produto.codBarras || produto.codigoBarras || produto.codigo || "-";
+
+    const fotoHtml = foto
+      ? `<img src="${foto}" class="thumb" onclick="ampliarImagem('${foto}')" alt="Foto do produto">`
+      : `<span style="color:red;font-weight:bold;">❌</span>`;
 
     const row = document.createElement("tr");
-    const foto = produto.foto || "";
-    const codigoBarras = produto.codBarras || produto.codigoBarras || "-";
-    const fotoHtml = foto ? `<img src="${foto}" class="thumb" onclick="ampliarImagem('${foto}')" alt="Foto do produto">` : `<span style="color:red;font-weight:bold;">❌</span>`;
+    row.setAttribute("data-id", produto.id ?? "");
 
     row.innerHTML = `
-      <td>${displayIndex + 1}</td>
+      <td>${i + 1}</td>
       <td style="text-align:center;">${fotoHtml}</td>
       <td style="font-weight:600;">${produto.nome || "-"}</td>
       <td>${produto.categoria || "-"}</td>
       <td>${produto.embalagem || "-"}</td>
-      <td>${produto.qtdEmbalagem || "-"}</td>
+      <td>${produto.qtdEmbalagem || produto.qtd || "-"}</td>
       <td>${codigoBarras}</td>
       <td style="text-align:center;">
-        <button title="Editar" onclick="editarProduto(${originalIndex})"><i class="fa fa-edit"></i></button>
-        <button title="Excluir" onclick="excluirProduto(${originalIndex})" style="background:#dc3545;"><i class="fa fa-trash"></i></button>
+        <button title="Editar" onclick="editarProdutoPorId('${produto.id}')"><i class="fa fa-edit"></i></button>
+        <button title="Excluir" onclick="excluirProdutoPorId('${produto.id}')" style="background:#dc3545;"><i class="fa fa-trash"></i></button>
       </td>
     `;
 
-    if (typeof indiceEdicaoProduto === "number" && indiceEdicaoProduto === originalIndex) {
-      row.style.background = "#fff3cd";
+    // 🔸 Destaque visual se o item atual estiver em edição
+    if (typeof indiceEdicaoProduto === "number") {
+      const prodEmEdicao = window.produtos[indiceEdicaoProduto];
+      if (prodEmEdicao && String(prodEmEdicao.id) === String(produto.id)) {
+        row.style.background = "#fff3cd";
+      }
     }
 
     tbody.appendChild(row);
   });
 
-  console.log("✅ Produtos listados (apresentação ordenada).");
+  console.log("✅ Produtos listados (visual ordenada).");
 };
+
 
 
 // ==========================
@@ -5442,6 +5446,7 @@ document
 
 
 	
+
 
 
 
