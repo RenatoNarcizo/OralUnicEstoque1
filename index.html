@@ -3542,6 +3542,83 @@ function cancelarEdicaoEntrada() {
 
   mostrarMensagem("🚫 Edição de entrada cancelada.", "info");
 }
+/* =====================================================
+   🔹 AUTO-COMPLETE DINÂMICO — ENTRADA DE MATERIAIS
+   ===================================================== */
+function iniciarAutoCompleteEntrada() {
+  const produtoInput = document.getElementById("entradaProduto");
+  const fornecedorInput = document.getElementById("entradaFornecedor");
+  const cnpjInput = document.getElementById("entradaCNPJ");
+
+  // 🟢 Cria os contêineres de sugestão se não existirem
+  if (!document.getElementById("sugestoesProduto")) {
+    const sug = document.createElement("div");
+    sug.id = "sugestoesProduto";
+    sug.className = "autocomplete-sugestoes";
+    produtoInput.parentNode.style.position = "relative";
+    produtoInput.parentNode.appendChild(sug);
+  }
+
+  if (!document.getElementById("sugestoesFornecedor")) {
+    const sug = document.createElement("div");
+    sug.id = "sugestoesFornecedor";
+    sug.className = "autocomplete-sugestoes";
+    fornecedorInput.parentNode.style.position = "relative";
+    fornecedorInput.parentNode.appendChild(sug);
+  }
+
+  if (!document.getElementById("sugestoesCNPJ")) {
+    const sug = document.createElement("div");
+    sug.id = "sugestoesCNPJ";
+    sug.className = "autocomplete-sugestoes";
+    cnpjInput.parentNode.style.position = "relative";
+    cnpjInput.parentNode.appendChild(sug);
+  }
+
+  // 🧠 Função genérica de autocompletar
+  function configurarCampo(inputEl, lista, sugestoesId) {
+    inputEl.addEventListener("input", () => {
+      const texto = inputEl.value.trim().toLowerCase();
+      const container = document.getElementById(sugestoesId);
+      container.innerHTML = "";
+      if (!texto) return;
+
+      const filtrados = lista
+        .filter((v) => v && v.toLowerCase().includes(texto))
+        .slice(0, 10); // mostra no máximo 10 sugestões
+
+      filtrados.forEach((item) => {
+        const div = document.createElement("div");
+        div.textContent = item;
+        div.className = "sugestao-item";
+        div.onclick = () => {
+          inputEl.value = item;
+          container.innerHTML = "";
+        };
+        container.appendChild(div);
+      });
+    });
+
+    // Fecha sugestões ao clicar fora
+    document.addEventListener("click", (e) => {
+      if (!inputEl.contains(e.target)) {
+        document.getElementById(sugestoesId).innerHTML = "";
+      }
+    });
+  }
+
+  // 🔹 Captura dados únicos
+  const nomesProdutos = [...new Set((window.produtos || []).map(p => p.nome).filter(Boolean))];
+  const fornecedores = [...new Set((window.entradas || []).map(e => e.fornecedor).filter(Boolean))];
+  const cnpjs = [...new Set((window.entradas || []).map(e => e.cnpj).filter(Boolean))];
+
+  // 🔧 Aplica o autocompletar
+  configurarCampo(produtoInput, nomesProdutos, "sugestoesProduto");
+  configurarCampo(fornecedorInput, fornecedores, "sugestoesFornecedor");
+  configurarCampo(cnpjInput, cnpjs, "sugestoesCNPJ");
+
+  console.log("✨ AutoComplete dinâmico iniciado com sucesso.");
+}
 
 
 
@@ -3809,62 +3886,101 @@ function atualizarSetoresPorProduto() {
     .map(s => `<option value="${s}">${s}</option>`)
     .join("");
 }
+/* =====================================================
+   🔹 AUTO-COMPLETE DINÂMICO — SAÍDA DE MATERIAIS
+   ===================================================== */
+function iniciarAutoCompleteSaida() {
+  const saidaProdutoInput = document.getElementById("saidaProduto");
 
-// ==========================================================
-// 🧠 AUTO-COMPLETE NO CAMPO "Saída de Materiais" (corrigido)
-// ==========================================================
-function configurarAutoCompleteSaida() {
-  // tenta obter o campo
-  const saidaInput = document.getElementById("saidaProduto");
-
-  // Se ainda não existir (ex: login não carregou interface), tenta de novo depois
-  if (!saidaInput) {
-    setTimeout(configurarAutoCompleteSaida, 1000);
+  if (!saidaProdutoInput) {
+    console.warn("⚠️ Campo de produto da saída não encontrado.");
     return;
   }
 
-  // Cria ou obtém datalist para sugestões
-  let dataList = document.getElementById("listaProdutosSaida");
-  if (!dataList) {
-    dataList = document.createElement("datalist");
-    dataList.id = "listaProdutosSaida";
-    document.body.appendChild(dataList);
-    saidaInput.setAttribute("list", "listaProdutosSaida");
+  // 🟢 Cria o container de sugestões se não existir
+  if (!document.getElementById("sugestoesSaidaProduto")) {
+    const sug = document.createElement("div");
+    sug.id = "sugestoesSaidaProduto";
+    sug.className = "autocomplete-sugestoes";
+    saidaProdutoInput.parentNode.style.position = "relative";
+    saidaProdutoInput.parentNode.appendChild(sug);
   }
 
-  // Preenche o datalist inicialmente
-  atualizarListaSugestoesSaida();
+  // 🔹 Dados únicos de produtos
+  const nomesProdutos = [...new Set((window.produtos || []).map(p => p.nome).filter(Boolean))];
 
-  // Atualiza sugestões sempre que o usuário focar o campo
-  saidaInput.addEventListener("focus", atualizarListaSugestoesSaida);
-  saidaInput.addEventListener("input", atualizarListaSugestoesSaida);
+  // 🧠 Evento de digitação
+  saidaProdutoInput.addEventListener("input", () => {
+    const texto = saidaProdutoInput.value.trim().toLowerCase();
+    const container = document.getElementById("sugestoesSaidaProduto");
+    container.innerHTML = "";
+    if (!texto) return;
+
+    const filtrados = nomesProdutos
+      .filter((v) => v && v.toLowerCase().includes(texto))
+      .slice(0, 10); // limita a 10 resultados
+
+    filtrados.forEach((item) => {
+      const div = document.createElement("div");
+      div.textContent = item;
+      div.className = "sugestao-item";
+      div.onclick = () => {
+        saidaProdutoInput.value = item;
+        container.innerHTML = "";
+      };
+      container.appendChild(div);
+    });
+  });
+
+  // 🔹 Fecha sugestões ao clicar fora
+  document.addEventListener("click", (e) => {
+    if (!saidaProdutoInput.contains(e.target)) {
+      const sug = document.getElementById("sugestoesSaidaProduto");
+      if (sug) sug.innerHTML = "";
+    }
+  });
+
+  console.log("✨ AutoComplete dinâmico de Saída iniciado com sucesso.");
+}
+/* =====================================================
+   🔹 ESTILO DO AUTO-COMPLETE (caso ainda não exista)
+   ===================================================== */
+if (!document.getElementById("estiloAutoCompleteSaida")) {
+  const estiloAuto = document.createElement("style");
+  estiloAuto.id = "estiloAutoCompleteSaida";
+  estiloAuto.textContent = `
+.autocomplete-sugestoes {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ccc;
+  border-top: none;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 9999;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.sugestao-item {
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.sugestao-item:hover {
+  background: #0d6efd;
+  color: white;
+}
+`;
+  document.head.appendChild(estiloAuto);
 }
 
-// 🔄 Atualiza sugestões conforme os produtos no estoque
-function atualizarListaSugestoesSaida() {
-  const dataList = document.getElementById("listaProdutosSaida");
-  if (!dataList) return;
+// 🔁 Inicializa o autocompletar após 1 segundo (garante que os produtos já foram carregados)
+setTimeout(iniciarAutoCompleteSaida, 1000);
 
-  // Garante que window.produtos está disponível
-  if (!Array.isArray(window.produtos)) window.produtos = [];
 
-  const nomesProdutos = [...new Set(window.produtos.map(p => p.nome).filter(Boolean))];
-
-  if (nomesProdutos.length === 0) {
-    dataList.innerHTML = "<option value='Nenhum produto encontrado'></option>";
-  } else {
-    dataList.innerHTML = nomesProdutos.map(nome => `<option value="${nome}"></option>`).join("");
-  }
-}
-
-// ⚙️ Inicializa após o carregamento da página
-document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(configurarAutoCompleteSaida, 1500); // dá tempo da tela carregar
-});
-
-// ============================================================
-// 📦 ESTOQUE ATUAL — Revisado e Completo
-// ============================================================
+	
 // ============================================================
 // 📦 ESTOQUE ATUAL — Versão corrigida (não sobrescreve dados)
 // ============================================================
@@ -5458,6 +5574,51 @@ html += `<td style="text-align:center;">R$ ${valor.toFixed(2)} ${seta}</td>`;
     tabela.appendChild(row);
   });
 };
+* =====================================================
+   ✨ CORREÇÃO ORTOGRÁFICA AUTOMÁTICA — RELATOS DE ERROS
+   ===================================================== */
+function habilitarCorrecaoOrtografica() {
+  const campoRelato = document.getElementById("erroDescricao");
+  if (!campoRelato) {
+    console.warn("⚠️ Campo de relato não encontrado.");
+    return;
+  }
+
+  // 🔹 Ativa correção nativa do navegador
+  campoRelato.setAttribute("spellcheck", "true");
+  campoRelato.setAttribute("autocomplete", "on");
+  campoRelato.setAttribute("autocorrect", "on");
+  campoRelato.setAttribute("autocapitalize", "sentences");
+
+  // 🔹 Correções simples automáticas (acentos e pontuação básica)
+  campoRelato.addEventListener("input", () => {
+    let texto = campoRelato.value;
+
+    // Pequenas substituições comuns de digitação
+    texto = texto
+      .replace(/\bnao\b/gi, "não")
+      .replace(/\bestao\b/gi, "estão")
+      .replace(/\bvoce\b/gi, "você")
+      .replace(/\bta\b/gi, "tá")
+      .replace(/\bpor que\b/gi, "por quê")
+      .replace(/\btd\b/gi, "tudo")
+      .replace(/\bpq\b/gi, "porque")
+      .replace(/\bq\b/gi, "que")
+      .replace(/\bvc\b/gi, "você")
+      .replace(/\bnem sei\b/gi, "nem sei 😅");
+
+    // Corrige espaços duplos e capitaliza o início da frase
+    texto = texto.replace(/\s{2,}/g, " ");
+    texto = texto.replace(/(^|[\.\!\?]\s+)([a-z])/g, (m, p1, p2) => p1 + p2.toUpperCase());
+
+    campoRelato.value = texto;
+  });
+
+  console.log("📝 Correção ortográfica leve ativada para relatos de erros.");
+}
+
+// 🔁 Ativa após 1 segundo (garantindo que o campo já existe no DOM)
+setTimeout(habilitarCorrecaoOrtografica, 1000);
 
 // 🔍 Filtro de busca (mantém)
 window.filtrarValorHistorico = function() {
@@ -5495,6 +5656,7 @@ document
 
 
 	
+
 
 
 
