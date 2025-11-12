@@ -465,25 +465,7 @@
 #filtroValorHistorico:focus {
   outline: 2px solid #0d6efd;
 }
-#logoLogin:hover,
-#logoBoasVindas:hover {
-  opacity: 1;
-}
 
-.login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
-.login-card {
-  background: rgba(255, 255, 255, 0.95);
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  text-align: center;
-}
   </style>
 </head>
 <body>
@@ -501,19 +483,26 @@
       <input id="senhaLogin" type="password" placeholder="Senha" />
       <button onclick="fazerLogin()"><i class="fa fa-right-to-bracket"></i> Entrar</button>
 	  <p id="loginMsg" style="display:none; color:red; font-weight:bold; text-align:center;"></p>
-    </div>
-	  <img src="logo-atendetudo.png" alt="AtendeTudo Suprimentos & Serviços"
-      id="logoLogin"
-      style="
-        position: fixed;
-        bottom: 15px;
-        right: 20px;
-        width: 130px;
-        opacity: 0.7;
-        transition: opacity 0.3s ease;
-        pointer-events: none;
-      ">
+    <!-- ✅ Marca AtendeTudo no canto inferior direito (Login) -->
+<div id="marcaLogin"
+     style="
+       position: fixed;
+       bottom: 25px;
+       right: 30px;
+       text-align: center;
+       font-family: 'Segoe UI', sans-serif;
+       color: white;
+       opacity: 0.95;
+       line-height: 1.1;
+       user-select: none;
+       z-index: 9999;
+     ">
+  <div style="display:flex; flex-direction:column; align-items:center;">
+    <div style="font-size: 18px; font-weight: 700;">AtendeTudo</div>
+    <div style="font-size: 12px; color: rgba(255,255,255,0.85);">Suprimentos & Serviços</div>
   </div>
+</div>
+
 
   <div id="mainApp" style="display:none;">
 
@@ -5504,6 +5493,7 @@ document
 
 
 	
+
 
 
 
