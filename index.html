@@ -465,7 +465,25 @@
 #filtroValorHistorico:focus {
   outline: 2px solid #0d6efd;
 }
+#logoLogin:hover,
+#logoBoasVindas:hover {
+  opacity: 1;
+}
 
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.login-card {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
   </style>
 </head>
 <body>
@@ -483,7 +501,8 @@
       <input id="senhaLogin" type="password" placeholder="Senha" />
       <button onclick="fazerLogin()"><i class="fa fa-right-to-bracket"></i> Entrar</button>
 	  <p id="loginMsg" style="display:none; color:red; font-weight:bold; text-align:center;"></p>
-		 </div> <!-- Fecha .login-card -->
+    <!-- ✅ Marca AtendeTudo no canto inferior direito (Login) -->
+    </div> <!-- Fecha .login-card -->
   </div> <!-- Fecha #loginView -->
 
   <!-- ✅ Marca AtendeTudo no canto inferior direito (Login) -->
@@ -507,6 +526,7 @@
   </div>
 
   <div id="mainApp" style="display:none;">
+
 
     <header>
       <div style="display:flex;align-items:center;gap:12px;">
@@ -3542,6 +3562,9 @@ function cancelarEdicaoEntrada() {
 
   mostrarMensagem("🚫 Edição de entrada cancelada.", "info");
 }
+
+
+
 /* =====================================================
    🔹 AUTO-COMPLETE DINÂMICO — ENTRADA DE MATERIAIS
    ===================================================== */
@@ -3619,6 +3642,42 @@ function iniciarAutoCompleteEntrada() {
 
   console.log("✨ AutoComplete dinâmico iniciado com sucesso.");
 }
+
+/* =====================================================
+   🔹 ESTILO DO AUTO-COMPLETE
+   ===================================================== */
+const estiloAuto = document.createElement("style");
+estiloAuto.textContent = `
+.autocomplete-sugestoes {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ccc;
+  border-top: none;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 9999;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.sugestao-item {
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.sugestao-item:hover {
+  background: #0d6efd;
+  color: white;
+}
+`;
+document.head.appendChild(estiloAuto);
+
+// 🔁 Inicializa após 1 segundo (garantindo que os dados já estão carregados)
+setTimeout(iniciarAutoCompleteEntrada, 1000);
+
+
 
 
 
@@ -3980,8 +4039,6 @@ if (!document.getElementById("estiloAutoCompleteSaida")) {
 setTimeout(iniciarAutoCompleteSaida, 1000);
 
 
-
-	
 // ============================================================
 // 📦 ESTOQUE ATUAL — Versão corrigida (não sobrescreve dados)
 // ============================================================
@@ -5575,7 +5632,8 @@ html += `<td style="text-align:center;">R$ ${valor.toFixed(2)} ${seta}</td>`;
     tabela.appendChild(row);
   });
 };
-* =====================================================
+
+/* =====================================================
    ✨ CORREÇÃO ORTOGRÁFICA AUTOMÁTICA — RELATOS DE ERROS
    ===================================================== */
 function habilitarCorrecaoOrtografica() {
@@ -5621,6 +5679,7 @@ function habilitarCorrecaoOrtografica() {
 // 🔁 Ativa após 1 segundo (garantindo que o campo já existe no DOM)
 setTimeout(habilitarCorrecaoOrtografica, 1000);
 
+
 // 🔍 Filtro de busca (mantém)
 window.filtrarValorHistorico = function() {
   const filtro = document.getElementById("filtroValorHistorico").value.toLowerCase();
@@ -5657,10 +5716,6 @@ document
 
 
 	
-
-
-
-
 
 
 
