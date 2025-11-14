@@ -2605,9 +2605,17 @@ window.cadastrarProduto = async function () {
   window.produtos = Array.isArray(window.produtos) ? window.produtos : [];
 
   // ----- Verifica duplicados -----
-  const produtoDuplicado = window.produtos.find(
-    p => p.nome.toLowerCase() === nome.toLowerCase() || p.codBarras === codBarras
+  const produtoDuplicado = window.produtos.find(p => {
+  if (!p) return false;
+
+  const mesmoNome = p.nome && p.nome.toLowerCase() === nome.toLowerCase();
+  const mesmoCodigo = codBarras && (
+    p.codBarras === codBarras ||
+    p.codigoBarras === codBarras
   );
+
+  return mesmoNome || mesmoCodigo;
+});
   if (!isEdicao && produtoDuplicado) {
     mostrarMensagem("⚠️ Já existe um produto com este nome ou código de barras!", "erro");
     return;
@@ -2682,10 +2690,15 @@ window.cadastrarProduto = async function () {
     const tempoExecucao = Date.now() - tempoInicio;
     const tempoMinimo = 1000; // mínimo de 1s de bloqueio para estabilidade
 
-    setTimeout(() => {
-      window.bloquearAtualizacaoSnapshot = false;
-      console.log("🔓 Snapshot desbloqueado automaticamente após salvamento.");
-    }, Math.max(tempoMinimo - tempoExecucao, 300));
+   setTimeout(() => {
+  console.log("🔓 Snapshot desbloqueado COM SEGURANÇA.");
+  window.bloquearAtualizacaoSnapshot = false;
+
+  // Recarregar o snapshot garantidamente
+  if (typeof atualizarTabelaProdutos === "function") {
+    atualizarTabelaProdutos();
+  }
+}, 1000); Math.max(tempoMinimo - tempoExecucao, 300));
 
   } catch (err) {
     console.error("❌ Erro ao salvar produto no Firestore:", err);
@@ -5716,6 +5729,7 @@ document
 
 
 	
+
 
 
 
