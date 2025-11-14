@@ -2605,7 +2605,7 @@ window.cadastrarProduto = async function () {
   window.produtos = Array.isArray(window.produtos) ? window.produtos : [];
 
   // ----- Verifica duplicados -----
-  const produtoDuplicado = window.produtos.find(p => {
+ const produtoDuplicado = window.produtos.find(p => {
   if (!p) return false;
 
   const mesmoNome = p.nome && p.nome.toLowerCase() === nome.toLowerCase();
@@ -2690,7 +2690,7 @@ window.cadastrarProduto = async function () {
     const tempoExecucao = Date.now() - tempoInicio;
     const tempoMinimo = 1000; // mínimo de 1s de bloqueio para estabilidade
 
-   setTimeout(() => {
+    setTimeout(() => {
   console.log("🔓 Snapshot desbloqueado COM SEGURANÇA.");
   window.bloquearAtualizacaoSnapshot = false;
 
@@ -2698,7 +2698,7 @@ window.cadastrarProduto = async function () {
   if (typeof atualizarTabelaProdutos === "function") {
     atualizarTabelaProdutos();
   }
-}, 1000); Math.max(tempoMinimo - tempoExecucao, 300));
+}, 1000);
 
   } catch (err) {
     console.error("❌ Erro ao salvar produto no Firestore:", err);
