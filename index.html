@@ -3187,8 +3187,8 @@ window.filtrarProdutos = function() {
       <td>${p.qtdEmbalagem || "-"}</td>
       <td>${p.codigoBarras || "-"}</td>
       <td>
-        <button onclick="editarProduto(${i})"><i class="fa fa-edit"></i></button>
-        <button onclick="excluirProduto(${i})"><i class="fa fa-trash"></i></button>
+        <button onclick="editarProdutoPorIndice(${i})"><i class="fa fa-edit"></i></button>
+        <button onclick="excluirProdutoPorIndice(${i})"><i class="fa fa-trash"></i></button>
       </td>
     `;
     tabela.appendChild(row);
@@ -5729,6 +5729,7 @@ document
 
 
 	
+
 
 
 
