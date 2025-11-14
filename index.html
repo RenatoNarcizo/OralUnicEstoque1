@@ -3160,15 +3160,16 @@ window.mostrarBotaoCancelar = function (exibir) {
   }
 };
 // 🔹 Função de filtro de produtos (corrigida e segura)
-window.filtrarProdutos = function() {
+window.filtrarProdutos = function () {
   const filtro = document.getElementById("filtroProduto").value.toLowerCase().trim();
   const tabela = document.getElementById("tabelaProdutos").querySelector("tbody");
 
   if (!tabela) return;
 
-  tabela.innerHTML = ""; // limpa tabela antes de preencher
+  tabela.innerHTML = "";
 
-  const lista = Array.isArray(window.produtos) ? window.produtos : [];
+  // Sempre usar a lista REAL de produtos
+  const lista = Array.isArray(window.produtos) ? [...window.produtos] : [];
 
   const filtrados = lista.filter(p => {
     const nome = (p.nome || "").toLowerCase();
@@ -3177,20 +3178,29 @@ window.filtrarProdutos = function() {
   });
 
   filtrados.forEach((p, i) => {
+    const foto = p.foto
+      ? `<img src="${p.foto}" class="thumb">`
+      : `<span style="color:red;font-weight:bold;">❌</span>`;
+
+    const codigo = p.codBarras || p.codigoBarras || p.codigo || "-";
+
     const row = document.createElement("tr");
+
     row.innerHTML = `
       <td>${i + 1}</td>
-      <td>${p.foto ? `<img src="${p.foto}" class="thumb">` : "-"}</td>
+      <td>${foto}</td>
       <td>${p.nome || "-"}</td>
       <td>${p.categoria || "-"}</td>
       <td>${p.embalagem || "-"}</td>
       <td>${p.qtdEmbalagem || "-"}</td>
-      <td>${p.codigoBarras || "-"}</td>
+      <td>${codigo}</td>
       <td>
-        <button onclick="editarProdutoPorIndice(${i})"><i class="fa fa-edit"></i></button>
-        <button onclick="excluirProdutoPorIndice(${i})"><i class="fa fa-trash"></i></button>
+        <!-- Agora com ID correto -->
+        <button onclick="editarProdutoPorId('${p.id}')"><i class="fa fa-edit"></i></button>
+        <button onclick="excluirProdutoPorId('${p.id}')"><i class="fa fa-trash"></i></button>
       </td>
     `;
+
     tabela.appendChild(row);
   });
 
@@ -5729,6 +5739,7 @@ document
 
 
 	
+
 
 
 
