@@ -4721,7 +4721,7 @@ window.editarErro = function (i) {
 
 
 // 🔹 Salvar edição (parecer + data)
-window.salvarEdicaoErro = function (i) {
+window.salvarEdicaoErro = async function (i) {
   const item = window.errosProblemas[i];
   if (!item) return;
 
@@ -4730,24 +4730,21 @@ window.salvarEdicaoErro = function (i) {
 
   item.parecer = campo.value.trim();
   item.dtConclusao = new Date().toISOString();
-
-  // 🔒 TRAVA DE VEZ — não pode editar ou excluir
-  item.bloqueado = true;
-
+  item.bloqueado = true;  // trava edição
   window.indiceErroEditando = null;
 
   // Salva local
-  localStorage.setItem("errosProblemas", JSON.stringify(window.errosProblemas));
+  salvarTodosLocal();
 
-  // Salva no Firestore
+  // ⭐ SALVA NO FIRESTORE (A PARTE MAIS IMPORTANTE)
   if (typeof salvarDadosNoFirestore === "function") {
-    salvarDadosNoFirestore("errosProblemas", window.errosProblemas);
+    await salvarDadosNoFirestore("errosProblemas", window.errosProblemas);
   }
 
   mostrarMensagem("✔️ Parecer salvo e registro concluído!", "sucesso");
-
   atualizarTabelaErros();
 };
+
 
 
 
