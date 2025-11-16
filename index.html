@@ -484,6 +484,33 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   text-align: center;
 }
+
+/* Evita quebra de linha em TODAS as células */
+#tabelaEntradas td {
+    white-space: nowrap;
+    padding: 6px 10px;
+}
+
+/* Ajuste de largura para não quebrar o layout */
+#tabelaEntradas td:nth-child(3),  /* Código de Barras */
+#tabelaEntradas td:nth-child(6),  /* Data */
+#tabelaEntradas td:nth-child(8),  /* Fornecedor */
+#tabelaEntradas td:nth-child(9),  /* CNPJ */
+#tabelaEntradas td:nth-child(11), /* Validade */
+#tabelaEntradas td:nth-child(12)  /* Setor */
+{
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Código de barras menor ainda */
+#tabelaEntradas td:nth-child(3) {
+    max-width: 80px;
+}
+
+
+
   </style>
 </head>
 <body>
@@ -777,7 +804,7 @@
   <h2><i class="fa fa-arrow-up"></i> Saída de Materiais</h2>
 
  <div class="input-row" style="margin-bottom:10px;gap:8px;">
-        <input id="saidaCodigoBarras" type="text" placeholder="📷 Ler código de barras" oninput="atualizarSetorAutomatico()" />
+        <input id="saidaCodigoBarras" type="text" placeholder="📷 Ler código de barras" oninput="buscarProdutoPorCodigoSaida()" />
 
            
     <input id="saidaProduto" type="text" placeholder="Nome do produto" style="min-width:220px" oninput="atualizarSetorAutomatico()" />
@@ -2732,13 +2759,6 @@ window.cadastrarProduto = async function () {
   }
 };
 
-
-
-
-
-
-
-
 // ===============================================
 // ✅ Torna função de cancelar edição global
 // ===============================================
@@ -2793,6 +2813,25 @@ window.atualizarReferenciasProduto = function (nomeAntigo, nomeNovo) {
   mostrarMensagem("🔄 Referências atualizadas em todo o sistema.", "info");
 };
 
+// ===============================================
+// 📋 COPIAR CÓDIGO DE BARRAS (Entrada de Materiais)
+// ===============================================
+window.copiarCodigoBarras = function (codigo) {
+  if (!codigo || codigo === "-") return;
+
+  navigator.clipboard.writeText(codigo)
+    .then(() => {
+      mostrarMensagem
+        ? mostrarMensagem("📋 Código copiado!", "sucesso")
+        : alert("Código copiado!");
+    })
+    .catch(() => {
+      mostrarMensagem
+        ? mostrarMensagem("❌ Não foi possível copiar.", "erro")
+        : alert("Erro ao copiar.");
+    });
+};
+
 
 window.atualizarTabelaProdutos = function () {
   const tbody = document.querySelector("#tabelaProdutos tbody");
@@ -2804,7 +2843,6 @@ window.atualizarTabelaProdutos = function () {
   tbody.innerHTML = "";
   if (!Array.isArray(window.produtos)) window.produtos = [];
 
-  // cria cópia ordenada por nome (sem modificar array original)
   const produtosOrdenados = [...window.produtos].sort((a, b) => {
     const nomeA = (a.nome || "").toLowerCase();
     const nomeB = (b.nome || "").toLowerCase();
@@ -2840,14 +2878,31 @@ window.atualizarTabelaProdutos = function () {
       <td>${produto.categoria || "-"}</td>
       <td>${produto.embalagem || "-"}</td>
       <td>${produto.qtdEmbalagem || produto.qtd || "-"}</td>
-      <td>${codigoBarras}</td>
-      <td style="text-align:center;">
-        <button title="Editar" onclick="editarProdutoPorId('${produto.id}')"><i class="fa fa-edit"></i></button>
-        <button title="Excluir" onclick="excluirProdutoPorId('${produto.id}')" style="background:#dc3545;"><i class="fa fa-trash"></i></button>
+
+      <!-- Código de barras reduzido + tooltip -->
+      <td style="max-width:90px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;"
+    title="${codigoBarras}"
+    onclick="copiarCodigoBarras('${codigoBarras}')">
+    ${codigoBarras}
+</td>
+
+
+      <!-- Ações com largura maior -->
+      <td style="text-align:center; width:140px;">
+        <button title="Editar"
+                style="margin-right:6px;"
+                onclick="editarProdutoPorId('${produto.id}')">
+            <i class="fa fa-edit"></i>
+        </button>
+
+        <button title="Excluir"
+                onclick="excluirProdutoPorId('${produto.id}')"
+                style="background:#dc3545; color:white;">
+            <i class="fa fa-trash"></i>
+        </button>
       </td>
     `;
 
-    // 🔸 Destaque visual se o item atual estiver em edição
     if (typeof indiceEdicaoProduto === "number") {
       const prodEmEdicao = window.produtos[indiceEdicaoProduto];
       if (prodEmEdicao && String(prodEmEdicao.id) === String(produto.id)) {
@@ -2860,6 +2915,21 @@ window.atualizarTabelaProdutos = function () {
 
   console.log("✅ Produtos listados (visual ordenada).");
 };
+
+window.copiarCodigoBarras = function (codigo) {
+  if (!codigo || codigo === "-") return;
+
+  navigator.clipboard.writeText(codigo)
+    .then(() => {
+      mostrarMensagem
+        ? mostrarMensagem("📋 Código copiado!", "sucesso")
+        : alert("Código copiado!");
+    })
+    .catch(() => {
+      alert("Não foi possível copiar o código.");
+    });
+};
+
 
 
 
@@ -2935,75 +3005,7 @@ window.excluirProdutoPorId = function(id) {
   mostrarMensagem && mostrarMensagem(`Produto "${produto.nome}" excluído.`, "sucesso");
 };
 
-// ==========================
-// ATUALIZAR TABELA: gera data-id e usa ações por id
-// ==========================
-window.atualizarTabelaProdutos = function () {
-  const tbody = document.querySelector("#tabelaProdutos tbody");
-  if (!tbody) return;
 
-  const filtroEl = document.getElementById("filtroProduto");
-  const filtro = filtroEl ? filtroEl.value.toLowerCase() : "";
-
-  tbody.innerHTML = "";
-  if (!Array.isArray(window.produtos)) window.produtos = [];
-
-  // cria cópia ordenada por nome
-  const produtosOrdenados = [...window.produtos].sort((a, b) => {
-    const nomeA = (a.nome || "").toLowerCase();
-    const nomeB = (b.nome || "").toLowerCase();
-    return nomeA.localeCompare(nomeB, "pt-BR");
-  });
-
-  if (produtosOrdenados.length === 0) {
-    const row = document.createElement("tr");
-    row.innerHTML = `<td colspan="8" style="text-align:center; color:#777;">Nenhum produto cadastrado.</td>`;
-    tbody.appendChild(row);
-    return;
-  }
-
-  produtosOrdenados.forEach((produto, i) => {
-    const nomeLower = (produto.nome || "").toLowerCase();
-    const categoriaLower = (produto.categoria || "").toLowerCase();
-    if (filtro && !nomeLower.includes(filtro) && !categoriaLower.includes(filtro)) return;
-
-    const foto = produto.foto || "";
-    const codigoBarras = produto.codBarras || produto.codigoBarras || produto.codigo || "-";
-
-    const fotoHtml = foto
-      ? `<img src="${foto}" class="thumb" onclick="ampliarImagem('${foto}')" alt="Foto do produto">`
-      : `<span style="color:red;font-weight:bold;">❌</span>`;
-
-    const row = document.createElement("tr");
-    row.setAttribute("data-id", produto.id ?? "");
-
-    row.innerHTML = `
-      <td>${i + 1}</td>
-      <td style="text-align:center;">${fotoHtml}</td>
-      <td style="font-weight:600;">${produto.nome || "-"}</td>
-      <td>${produto.categoria || "-"}</td>
-      <td>${produto.embalagem || "-"}</td>
-      <td>${produto.qtdEmbalagem || produto.qtd || "-"}</td>
-      <td>${codigoBarras}</td>
-      <td style="text-align:center;">
-        <button title="Editar" onclick="editarProdutoPorId('${produto.id}')"><i class="fa fa-edit"></i></button>
-        <button title="Excluir" onclick="excluirProdutoPorId('${produto.id}')" style="background:#dc3545;"><i class="fa fa-trash"></i></button>
-      </td>
-    `;
-
-    // destaque se este produto estiver em edição (compara ids)
-    if (typeof indiceEdicaoProduto === "number") {
-      const prodEmEdicao = window.produtos[indiceEdicaoProduto];
-      if (prodEmEdicao && String(prodEmEdicao.id) === String(produto.id)) {
-        row.style.background = "#fff3cd";
-      }
-    }
-
-    tbody.appendChild(row);
-  });
-
-  console.log("✅ Produtos listados (visual ordenada).");
-};
 
 // ==========================
 // Compatibilidade: funções index-based (opcionais)
@@ -3029,12 +3031,6 @@ window.excluirProdutoPorIndice = function(indexNaLista) {
   if (!p) return mostrarMensagem("Produto não encontrado (índice).", "erro");
   return excluirProdutoPorId(p.id);
 };
-
-
-
-
-
-
 
 
 // ===============================================
@@ -3495,8 +3491,9 @@ function atualizarTabelaEntradas() {
   const filtro = document.getElementById("filtroEntrada").value.toLowerCase();
   tbody.innerHTML = "";
 
-  entradas.slice().reverse().forEach((e, i) => { // Inverte para mostrar as mais recentes primeiro
+  entradas.slice().reverse().forEach((e, i) => { 
     const idxOriginal = entradas.length - 1 - i;
+
     const produto = (e.produto || "").toLowerCase();
     const fornecedor = (e.fornecedor || "").toLowerCase();
     const nota = (e.nota || "").toLowerCase();
@@ -3504,27 +3501,55 @@ function atualizarTabelaEntradas() {
     if (filtro && !produto.includes(filtro) && !fornecedor.includes(filtro) && !nota.includes(filtro)) return;
 
     const row = document.createElement("tr");
+
     row.innerHTML = `
       <td>${idxOriginal + 1}</td>
-      <td>${e.produto || "-"}</td>
-      <td style="font-size:12px; color:#555;">${e.codigoBarras || "-"}</td>
+      <td title="${e.produto || '-'}">${e.produto || "-"}</td>
+
+      <!-- Código de barras reduzido + tooltip + copiar ao clicar -->
+      <td 
+        title="${e.codigoBarras || '-'}"
+        onclick="copiarCodigoBarras('${e.codigoBarras || ''}')"
+        style="cursor:pointer; color:#444;"
+      >
+        ${e.codigoBarras || "-"}
+      </td>
+
       <td>${e.qtd || 0}</td>
       <td>${(e.valor || 0).toFixed(2)}</td>
-      <td>${e.data || "-"}</td>
-      <td>${e.nota || "-"}</td>
-      <td>${e.fornecedor || "-"}</td>
-      <td>${e.cnpj || "-"}</td>
-      <td>${e.lote || "-"}</td>
-      <td>${e.validade || "-"}</td>
-      <td>${e.setor || "-"}</td>
+
+      <!-- Data com tooltip -->
+      <td title="${e.data || '-'}">${e.data || "-"}</td>
+
+      <td title="${e.nota || '-'}">${e.nota || "-"}</td>
+
+      <td title="${e.fornecedor || '-'}">${e.fornecedor || "-"}</td>
+
+      <!-- CNPJ com tooltip -->
+      <td title="${e.cnpj || '-'}">${e.cnpj || "-"}</td>
+
+      <td title="${e.lote || '-'}">${e.lote || "-"}</td>
+
+      <!-- Validade com tooltip -->
+      <td title="${e.validade || '-'}">${e.validade || "-"}</td>
+
+      <!-- Setor com tooltip -->
+      <td title="${e.setor || '-'}">${e.setor || "-"}</td>
+
       <td>
-        <button onclick="editarEntrada(${idxOriginal})" title="Editar Entrada"><i class="fa fa-edit"></i></button>
-        <button onclick="excluirEntrada(${idxOriginal})" title="Excluir Entrada"><i class="fa fa-trash"></i></button>
+        <button onclick="editarEntrada(${idxOriginal})" title="Editar Entrada">
+          <i class="fa fa-edit"></i>
+        </button>
+        <button onclick="excluirEntrada(${idxOriginal})" title="Excluir Entrada">
+          <i class="fa fa-trash"></i>
+        </button>
       </td>
     `;
+
     tbody.appendChild(row);
   });
 }
+
 // =============================
 // ✅ EDIÇÃO DE ENTRADAS DE MATERIAIS
 // =============================
@@ -4057,6 +4082,27 @@ if (!document.getElementById("estiloAutoCompleteSaida")) {
 `;
   document.head.appendChild(estiloAuto);
 }
+function buscarProdutoPorCodigoSaida() {
+  const campoCodigo = document.getElementById("saidaCodigoBarras");
+  const campoProduto = document.getElementById("saidaProduto");
+
+  if (!campoCodigo || !campoProduto) return;
+
+  const codigo = campoCodigo.value.trim();
+  if (!codigo) return;
+
+  // Procurar produto cadastrado
+  const produto = window.produtos.find(p => p.codigoBarras === codigo);
+
+  if (produto) {
+    campoProduto.value = produto.nome;
+
+    // Atualiza setor automaticamente (caso você já use isso)
+    if (typeof atualizarSetorAutomatico === "function") {
+      atualizarSetorAutomatico();
+    }
+  }
+}
 
 // 🔁 Inicializa o autocompletar após 1 segundo (garante que os produtos já foram carregados)
 setTimeout(iniciarAutoCompleteSaida, 1000);
@@ -4581,129 +4627,143 @@ function gerarListaCompra() {
 }
 
 
+
 /* ============================================================
-   🧩 FUNÇÕES UNIFICADAS: REGISTRO DE ERROS E PROBLEMAS
+   🧩 REGISTRO DE ERROS E PROBLEMAS — VERSÃO CORRIGIDA
    ============================================================ */
-window.registrarErro = function() {
-  const titulo = document.getElementById("erroTitulo")?.value?.trim() || "";
-  const situacao = document.getElementById("erroSituacao")?.value?.trim() || "";
-  const previsao = document.getElementById("erroPrevisao")?.value?.trim() || "";
-  const descricao = document.getElementById("erroDescricao")?.value?.trim() || "";
-  const data = new Date().toISOString();
 
-  if (!titulo) { mostrarMensagem("Informe o título do erro!", "erro"); return; }
-  if (!situacao) { mostrarMensagem("Selecione a situação!", "erro"); return; }
-
-  window.errosProblemas = Array.isArray(window.errosProblemas) ? window.errosProblemas : [];
-
-  const novo = {
-    id: Date.now(),
-    data,
-    titulo,
-    situacao,
-    previsao,
-    descricao,
-    status: "aberto"
-  };
-
-  window.errosProblemas.push(novo);
-  salvarTodosLocal?.();
-
-  // salva no Firestore (mantendo merge)
-  if (typeof salvarDadosNoFirestore === "function") {
-    // se sua função for salvarDadosNoFirestore("errosProblemas", dados)
-    salvarDadosNoFirestore("errosProblemas", window.errosProblemas);
-  } else if (typeof window.salvarProdutosNoFirebase === "function") {
-    // fallback para setDoc no documento "estoque"
-    const estoqueRef = doc(db, "estoqueGlobal", "estoque");
-    setDoc(estoqueRef, { errosProblemas: window.errosProblemas }, { merge: true }).catch(e => console.error(e));
-  }
-
-  if (typeof atualizarTabelaErros === "function") atualizarTabelaErros();
-
-  // limpa campos do formulário
-  document.getElementById("erroTitulo").value = "";
-  document.getElementById("erroSituacao").value = "";
-  document.getElementById("erroPrevisao").value = "";
-  document.getElementById("erroDescricao").value = "";
-
-  mostrarMensagem("✅ Erro/Problema registrado com sucesso!", "sucesso");
-};
+// Linha em edição
+window.indiceErroEditando = null;
 
 
-// ✅ Atualiza a tabela
-window.atualizarTabelaErros = function() {
+// 🔹 Atualiza a tabela
+window.atualizarTabelaErros = function () {
   const tbody = document.querySelector("#tabelaErros tbody");
   if (!tbody) return;
+
   tbody.innerHTML = "";
 
-  window.errosProblemas = Array.isArray(window.errosProblemas) ? window.errosProblemas : [];
+  window.errosProblemas = Array.isArray(window.errosProblemas)
+    ? window.errosProblemas
+    : [];
 
   if (window.errosProblemas.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#777;">Nenhum registro encontrado.</td></tr>`;
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" style="text-align:center;color:#777;">
+          Nenhum registro encontrado.
+        </td>
+      </tr>`;
     return;
   }
 
   window.errosProblemas.forEach((e, i) => {
+    const editando = window.indiceErroEditando === i;
+    const bloqueado = e.bloqueado === true;
+
+    const parecerHTML = editando
+      ? `<textarea id="campoParecer" style="width:100%;height:70px;">${e.parecer || ""}</textarea>`
+      : (e.parecer || "-");
+
+    let botoes = "";
+
+    if (editando) {
+      botoes = `
+        <button onclick="salvarEdicaoErro(${i})"
+                style="background:green;color:white;padding:6px 12px;border-radius:5px;">
+          <i class="fa fa-check"></i> Salvar
+        </button>`;
+    } else if (!bloqueado) {
+      botoes = `
+        <button onclick="editarErro(${i})"
+                style="background:#0d6efd;color:white;padding:6px 12px;border-radius:5px;">
+          <i class="fa fa-edit"></i> Editar
+        </button>`;
+    } else {
+      botoes = `<span style="color:green;font-weight:bold;">Concluído</span>`;
+    }
+
     const row = document.createElement("tr");
+
     row.innerHTML = `
-      <td>${i+1}</td>
-      <td>${e.data ? new Date(e.data).toLocaleDateString('pt-BR') : "-"}</td>
-      <td>${e.titulo || "-"}</td>
-      <td>${e.situacao || "-"}</td>
-      <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${e.descricao || "-"}</td>
-      <td>${e.previsao ? new Date(e.previsao).toLocaleDateString('pt-BR') : "-"}</td>
-      <td>${e.parecer || "-"}</td>
-      <td>${e.dtConclusao ? (new Date(e.dtConclusao).toLocaleDateString('pt-BR')) : "-"}</td>
-      <td style="text-align:center;">
-        <button onclick="editarErro(${i})" title="Editar"><i class="fa fa-edit"></i></button>
-        <button onclick="excluirErro(${i})" title="Excluir" style="background:#dc3545;"><i class="fa fa-trash"></i></button>
-      </td>
+      <td>${i + 1}</td>
+      <td>${new Date(e.data).toLocaleDateString("pt-BR")}</td>
+      <td>${e.titulo}</td>
+      <td>${e.situacao}</td>
+      <td onclick="mostrarDescricaoCompleta('${e.descricao.replace(/'/g, "\\'")}')" 
+    style="cursor:pointer; max-width:270px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+    title="Clique para ver completo">
+    ${e.descricao}
+</td>
+
+      <td>${e.previsao ? new Date(e.previsao).toLocaleDateString("pt-BR") : "-"}</td>
+      <td>${parecerHTML}</td>
+      <td>${e.dtConclusao ? new Date(e.dtConclusao).toLocaleDateString("pt-BR") : "-"}</td>
+      <td style="text-align:center;">${botoes}</td>
     `;
+
     tbody.appendChild(row);
   });
 };
-
-
-// ✅ Salvar parecer ao sair do campo
-window.salvarParecer = function (index, texto) {
-  if (!window.errosProblemas[index]) return;
-  window.errosProblemas[index].parecer = texto.trim();
-  localStorage.setItem("errosProblemas", JSON.stringify(window.errosProblemas));
+window.mostrarDescricaoCompleta = function(texto) {
+  alert("Descrição Completa:\n\n" + texto);
 };
 
-// ✅ Concluir erro (define data de conclusão)
-window.concluirErro = function (index) {
-  if (!window.errosProblemas[index]) return;
-  window.errosProblemas[index].concluidoEm = new Date().toLocaleDateString("pt-BR");
-  localStorage.setItem("errosProblemas", JSON.stringify(window.errosProblemas));
+
+
+// 🔹 Entrar no modo edição
+window.editarErro = function (i) {
+  window.indiceErroEditando = i;
   atualizarTabelaErros();
-  mostrarMensagem("✅ Erro concluído com sucesso!", "sucesso");
 };
 
-// ✅ Filtrar e limpar filtro
+
+// 🔹 Salvar edição (parecer + data)
+window.salvarEdicaoErro = function (i) {
+  const item = window.errosProblemas[i];
+  if (!item) return;
+
+  const campo = document.getElementById("campoParecer");
+  if (!campo) return mostrarMensagem("Campo de parecer não encontrado!", "erro");
+
+  item.parecer = campo.value.trim();
+  item.dtConclusao = new Date().toISOString();
+
+  // 🔒 TRAVA DE VEZ — não pode editar ou excluir
+  item.bloqueado = true;
+
+  window.indiceErroEditando = null;
+
+  // Salva local
+  localStorage.setItem("errosProblemas", JSON.stringify(window.errosProblemas));
+
+  // Salva no Firestore
+  if (typeof salvarDadosNoFirestore === "function") {
+    salvarDadosNoFirestore("errosProblemas", window.errosProblemas);
+  }
+
+  mostrarMensagem("✔️ Parecer salvo e registro concluído!", "sucesso");
+
+  atualizarTabelaErros();
+};
+
+
+
+// 🔹 Filtros — mantém como estava
 window.filtrarErros = () => atualizarTabelaErros();
 window.limparFiltroErros = () => {
   filtroErros.value = "";
   atualizarTabelaErros();
 };
-document.addEventListener("DOMContentLoaded", atualizarTabelaErros);
 
-// 🗓️ Define automaticamente a data atual no campo #erroData
-function atualizarDataErro() {
-  const hoje = new Date();
-  const yyyy = hoje.getFullYear();
-  const mm = String(hoje.getMonth() + 1).padStart(2, "0");
-  const dd = String(hoje.getDate()).padStart(2, "0");
-  const dataFormatada = `${yyyy}-${mm}-${dd}`;
 
-  const campoData = document.getElementById("erroData");
-  if (campoData) campoData.value = dataFormatada;
-}
+// 🔹 CARREGAR OS DADOS AO ABRIR A TELA
+document.addEventListener("DOMContentLoaded", () => {
+  const salvos = JSON.parse(localStorage.getItem("errosProblemas") || "[]");
+  window.errosProblemas = Array.isArray(salvos) ? salvos : [];
+  atualizarTabelaErros();
+});
 
-// Atualiza automaticamente ao carregar e a cada 24h
-document.addEventListener("DOMContentLoaded", atualizarDataErro);
-setInterval(atualizarDataErro, 1000 * 60 * 60 * 24); // 1 vez por dia
 
 
 
@@ -5739,6 +5799,7 @@ document
 
 
 	
+
 
 
 
