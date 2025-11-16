@@ -1383,6 +1383,8 @@ window.salvarProdutosNoFirebase = (dados) => salvarDadosNoFirestore("produtos", 
 window.salvarEntradasNoFirebase = (dados) => salvarDadosNoFirestore("entradas", dados);
 window.salvarSaidasNoFirebase = (dados) => salvarDadosNoFirestore("saidas", dados);
 window.salvarUsuariosNoFirebase = (dados) => salvarDadosNoFirestore("usuarios", dados);
+window.salvarErrosProblemasNoFirebase = (dados) => salvarDadosNoFirestore("errosProblemas", dados);
+
 
 
 // ✅ Garante que as variáveis sejam sempre arrays válidos
@@ -4843,7 +4845,7 @@ function atualizarTabelaErros() {
   });
 }
 
-function salvarParecer(index) {
+async function salvarParecer(index) {
   const parecerInput = document.getElementById(`parecer_${index}`);
   const dataConclusaoInput = document.getElementById(`dataConclusao_${index}`);
   if (!parecerInput || !dataConclusaoInput) return;
@@ -4851,15 +4853,24 @@ function salvarParecer(index) {
   const parecer = parecerInput.value.trim() || "-";
   const dataConclusao = dataConclusaoInput.value || "-";
 
+  // Atualiza memória local
   window.errosProblemas[index].parecer = parecer;
   window.errosProblemas[index].concluidoEm = dataConclusao;
 
-  // 💾 salva imediatamente no localStorage
-  localStorage.setItem("errosProblemas", JSON.stringify(window.errosProblemas));
+  // 💾 Salva no localStorage unificado
+  salvarTodosLocal();
+  
+   window.salvarErrosProblemasNoFirebase(window.errosProblemas);
+
+  // ☁ Salva NO FIRESTORE (NÃO EXISTIA ANTES!)
+  if (typeof salvarDadosNoFirestore === "function") {
+    await salvarDadosNoFirestore("errosProblemas", window.errosProblemas);
+  }
 
   mostrarMensagem("✅ Parecer e data de conclusão salvos com sucesso!", "sucesso");
   atualizarTabelaErros();
 }
+
 
 
 
