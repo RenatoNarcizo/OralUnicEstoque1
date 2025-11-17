@@ -1613,7 +1613,6 @@ async function carregarDadosDoFirestore() {
 
 // ============================================================
 // 🔁 SINCRONIZAÇÃO AUTOMÁTICA ENTRE FIREBASE AUTH E FIRESTORE
-// 🚀 Versão CORRIGIDA — não cria mais perfil USUARIO sozinho
 // ============================================================
 async function sincronizarUsuariosDoAuth() {
   try {
@@ -1631,75 +1630,37 @@ async function sincronizarUsuariosDoAuth() {
     // 🔍 Garante que window.usuarios é um array
     if (!Array.isArray(window.usuarios)) window.usuarios = [];
 
-    // 🔎 Procura o usuário no array local
-    let usuarioExistente = window.usuarios.find(
-      u => u.email?.toLowerCase() === userAtual.email?.toLowerCase()
-    );
-
-    // =======================================================
-    // 🟩 CASO 1 — Usuário já existe → NÃO sobrescreve perfil
-    // =======================================================
-    if (usuarioExistente) {
-      console.log("✔ Usuário já existe localmente:", usuarioExistente.email);
+    // Verifica se o usuário logado já está listado
+    const existe = window.usuarios.some(u => u.email?.toLowerCase() === userAtual.email?.toLowerCase());
+    if (existe) {
+      console.log("✅ Usuário já registrado em window.usuarios:", userAtual.email);
       return;
     }
 
-    // =======================================================
-    // 🟧 CASO 2 — Usuário NÃO existe → buscar no Firestore
-    // =======================================================
-    let usuariosFS = [];
-    try {
-      const snap = await getDocs(collection(db, "usuarios"));
-      usuariosFS = snap.docs.map(doc => doc.data());
-    } catch (e) {
-      console.warn("⚠️ Não foi possível carregar usuários do Firestore:", e);
-    }
-
-    // Procurar no Firestore
-    const usuarioFS = usuariosFS.find(
-      u => u.email?.toLowerCase() === userAtual.email?.toLowerCase()
-    );
-
-    // =======================================================
-    // 🟥 CASO 3 — Usuário existe no Firestore → usa o perfil correto
-    // =======================================================
-    if (usuarioFS) {
-      console.log("✔ Encontrado no Firestore:", usuarioFS.email);
-
-      window.usuarios.push(usuarioFS);
-
-      salvarTodosLocal?.();
-      window.salvarUsuariosNoFirebase?.(window.usuarios);
-      atualizarTabelaUsuarios?.();
-      return;
-    }
-
-    // =======================================================
-    // 🟦 CASO 4 — Usuário totalmente novo → criar registro SEM perfil errado
-    // =======================================================
-
-    // 🛑 NÃO DEFINIMOS MAIS "USUARIO" AUTOMATICAMENTE
-    // Somente cria sem perfil até você definir manualmente
+    // Cria um novo registro local com dados do Auth
     const novoUsuario = {
       uid: userAtual.uid,
       nome: userAtual.displayName || userAtual.email.split("@")[0],
       email: userAtual.email,
-      perfil: "ADMIN",   // 🔥 OPCIONAL: transforme o primeiro login em ADMIN
+      perfil: "USUARIO",
       criadoEm: new Date().toISOString()
     };
 
-    console.warn("⚠️ Usuário não encontrado. Criando novo:", novoUsuario);
-
     window.usuarios.push(novoUsuario);
 
-    salvarTodosLocal?.();
-    window.salvarUsuariosNoFirebase?.(window.usuarios);
-    atualizarTabelaUsuarios?.();
+    // 💾 Salva local e no Firestore
+    if (typeof salvarTodosLocal === "function") salvarTodosLocal();
+    if (typeof window.salvarUsuariosNoFirebase === "function") {
+      await window.salvarUsuariosNoFirebase(window.usuarios);
+    }
 
+    if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
+    console.log("👥 Usuário sincronizado no Firestore:", novoUsuario.email);
   } catch (e) {
     console.error("❌ Falha ao sincronizar usuários do Auth:", e);
   }
 }
+
 
 
 
@@ -5945,6 +5906,7 @@ document
 
 
 	
+
 
 
 
