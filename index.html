@@ -575,20 +575,29 @@
 
     </header>
 
-    <aside id="sidebar" aria-hidden="true">
-	  
-	  <button onclick="showSection('dashboard')"><i class="fa fa-chart-pie"></i> Dashboard</button>
-      <button onclick="showSection('cadastro')"><i class="fa fa-box"></i> Cadastro de Produtos</button>
-      <button onclick="showSection('entrada')"><i class="fa fa-arrow-down"></i> Entrada de Materiais</button>
-      <button onclick="showSection('saida')"><i class="fa fa-arrow-up"></i> Saída de Materiais</button>
-      <button onclick="showSection('estoque')"><i class="fa fa-warehouse"></i> Estoque Atual</button>
-      <button onclick="showSection('limites')"><i class="fa fa-sliders-h"></i> Estoque Mín/Máx</button>
-	  <button onclick="showSection('valorHistorico')"><i class="fa fa-chart-line"></i> Valor Histórico</button>
-      <button onclick="showSection('financeiro')"><i class="fa fa-coins"></i> Financeiro</button>
-      <button onclick="showSection('relatorios')"><i class="fa fa-file-excel"></i> Relatórios</button>
-      <button onclick="showSection('usuarios')"><i class="fa fa-users"></i> Usuários e Perfis</button>
+  <aside id="sidebar" aria-hidden="true">
 
-    </aside>
+  <button data-section="dashboard" onclick="showSection('dashboard')"><i class="fa fa-chart-pie"></i> Dashboard</button>
+
+  <button data-section="cadastro" onclick="showSection('cadastro')"><i class="fa fa-box"></i> Cadastro de Produtos</button>
+
+  <button data-section="entrada" onclick="showSection('entrada')"><i class="fa fa-arrow-down"></i> Entrada de Materiais</button>
+
+  <button data-section="saida" onclick="showSection('saida')"><i class="fa fa-arrow-up"></i> Saída de Materiais</button>
+
+  <button data-section="estoque" onclick="showSection('estoque')"><i class="fa fa-warehouse"></i> Estoque Atual</button>
+
+  <button data-section="limites" onclick="showSection('limites')"><i class="fa fa-sliders-h"></i> Estoque Mín/Máx</button>
+
+  <button data-section="valorHistorico" onclick="showSection('valorHistorico')"><i class="fa fa-chart-line"></i> Valor Histórico</button>
+
+  <button data-section="financeiro" onclick="showSection('financeiro')"><i class="fa fa-coins"></i> Financeiro</button>
+
+  <button data-section="relatorios" onclick="showSection('relatorios')"><i class="fa fa-file-excel"></i> Relatórios</button>
+
+  <button data-section="usuarios" onclick="showSection('usuarios')"><i class="fa fa-users"></i> Usuários e Perfis</button>
+
+</aside>
 
     <main>
 		<section id="boasVindas" class="section active" style="text-align:center; padding:100px 20px;">
@@ -1152,7 +1161,7 @@
     <select id="usuarioPerfil" style="width:200px;">
       <option value="">Selecione o Perfil</option>
       <option>ADMIN</option>
-      <option>GERENTE</option>
+      <option>GERENCIA</option>
       <option>ESTOQUISTA</option>
     </select>
 
