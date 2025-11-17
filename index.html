@@ -4790,6 +4790,64 @@ function gerarListaCompra() {
 
 
 
+// ============================================================
+// 🟩 REGISTRAR NOVO ERRO / PROBLEMA
+// ============================================================
+window.registrarErro = async function () {
+  try {
+    const dataEl = document.getElementById("erroData");
+    const tituloEl = document.getElementById("erroTitulo");
+    const situacaoEl = document.getElementById("erroSituacao");
+    const previsaoEl = document.getElementById("erroPrevisao");
+    const descricaoEl = document.getElementById("erroDescricao");
+
+    const titulo = tituloEl.value.trim();
+    const descricao = descricaoEl.value.trim();
+    const dataOriginal = dataEl.value; // deve estar YYYY-MM-DD
+
+    if (!titulo) return mostrarMensagem("Informe o título!", "erro");
+    if (!descricao) return mostrarMensagem("Descreva o erro ou problema!", "erro");
+
+    // usa data válida: usa data do campo se estiver ok, senão gera local
+    const data = (dataOriginal && !isNaN(new Date(dataOriginal))) 
+      ? dataOriginal 
+      : dataLocalYYYYMMDD();
+
+    if (!Array.isArray(window.errosProblemas)) window.errosProblemas = [];
+
+    const novo = {
+      id: "err_" + Date.now(),
+      data, // YYYY-MM-DD (LOCAL)
+      titulo,
+      situacao: situacaoEl.value || "",
+      descricao,
+      previsao: previsaoEl.value || "",
+      parecer: "",
+      dtConclusao: "",
+      bloqueado: false
+    };
+
+    window.errosProblemas.unshift(novo);
+    salvarTodosLocal?.();
+    await window.salvarErrosProblemasNoFirebase?.(window.errosProblemas);
+
+    atualizarTabelaErros?.();
+
+    tituloEl.value = "";
+    descricaoEl.value = "";
+    if (situacaoEl) situacaoEl.value = "";
+    if (previsaoEl) previsaoEl.value = "";
+    if (dataEl) dataEl.value = dataLocalYYYYMMDD();
+
+    mostrarMensagem("✔️ Registro criado com sucesso!", "sucesso");
+  } catch (e) {
+    console.error("❌ Erro ao registrar erro:", e);
+    mostrarMensagem("Erro ao registrar. Veja o console.", "erro");
+  }
+};
+
+
+
 /* ============================================================
    🧩 REGISTRO DE ERROS E PROBLEMAS — VERSÃO CORRIGIDA
    ============================================================ */
@@ -4849,7 +4907,7 @@ window.atualizarTabelaErros = function () {
 
     row.innerHTML = `
       <td>${i + 1}</td>
-      <td>${new Date(e.data).toLocaleDateString("pt-BR")}</td>
+      <td>${formatarDataParaPtBR(e.data)}</td>
       <td>${e.titulo}</td>
       <td>${e.situacao}</td>
       <td onclick="mostrarDescricaoCompleta('${e.descricao.replace(/'/g, "\\'")}')" 
@@ -4867,6 +4925,21 @@ window.atualizarTabelaErros = function () {
     tbody.appendChild(row);
   });
 };
+
+function formatarDataParaPtBR(dateStr) {
+  if (!dateStr) return "-";
+  // se já estiver no formato YYYY-MM-DD
+  const m = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) {
+    return `${m[3]}/${m[2]}/${m[1]}`; // dd/mm/yyyy
+  }
+  // fallback: tenta Date e toLocale
+  const dt = new Date(dateStr);
+  if (!isNaN(dt)) return dt.toLocaleDateString("pt-BR");
+  return "-";
+}
+
+
 window.mostrarDescricaoCompleta = function(texto) {
   alert("Descrição Completa:\n\n" + texto);
 };
@@ -4908,6 +4981,35 @@ window.salvarEdicaoErro = async function (i) {
   mostrarMensagem("✔️ Parecer salvo e registro concluído!", "sucesso");
   atualizarTabelaErros();
 };
+
+// === Sempre preencher a data do formulário com a data atual ===
+function dataHojeInput() {
+  const hoje = new Date();
+  const yyyy = hoje.getFullYear();
+  const mm = String(hoje.getMonth() + 1).padStart(2, "0");
+  const dd = String(hoje.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+// Preenche quando a página carrega
+document.addEventListener("DOMContentLoaded", () => {
+  const campoData = document.getElementById("erroData");
+  if (campoData) campoData.value = dataHojeInput();
+});
+
+// Preenche sempre que entrar na seção de erros
+window.abrirErrosProblemas = function () {
+  document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
+
+  const secErros = document.getElementById("errosProblemas");
+  if (secErros) secErros.style.display = "block";
+
+  const campoData = document.getElementById("erroData");
+  if (campoData && !campoData.value) campoData.value = dataHojeInput();
+
+  atualizarTabelaErros?.();
+};
+
 
 
 
@@ -5969,6 +6071,7 @@ document
 
 
 	
+
 
 
 
