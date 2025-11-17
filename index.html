@@ -4730,38 +4730,25 @@ window.salvarEdicaoErro = async function (i) {
 
   item.parecer = campo.value.trim();
   item.dtConclusao = new Date().toISOString();
-  item.bloqueado = true;  // trava edição
+  item.bloqueado = true;
   window.indiceErroEditando = null;
 
-  // Salva local
+  // 🔒 BLOQUEIA O SNAPSHOT
+  window.bloquearAtualizacaoSnapshot = true;
+
+  // 💾 SALVAR LOCAL
   salvarTodosLocal();
 
-  // ⭐ SALVA NO FIRESTORE (A PARTE MAIS IMPORTANTE)
-  if (typeof salvarDadosNoFirestore === "function") {
-    await salvarDadosNoFirestore("errosProblemas", window.errosProblemas);
-  }
+  // ☁️ SALVAR FIRESTORE
+  await window.salvarErrosProblemasNoFirebase(window.errosProblemas);
+
+  // ⏳ LIBERA SNAPSHOT APÓS O SALVAMENTO
+  setTimeout(() => window.bloquearAtualizacaoSnapshot = false, 800);
 
   mostrarMensagem("✔️ Parecer salvo e registro concluído!", "sucesso");
   atualizarTabelaErros();
 };
 
-
-
-
-// 🔹 Filtros — mantém como estava
-window.filtrarErros = () => atualizarTabelaErros();
-window.limparFiltroErros = () => {
-  filtroErros.value = "";
-  atualizarTabelaErros();
-};
-
-
-// 🔹 CARREGAR OS DADOS AO ABRIR A TELA
-document.addEventListener("DOMContentLoaded", () => {
-  const salvos = JSON.parse(localStorage.getItem("errosProblemas") || "[]");
-  window.errosProblemas = Array.isArray(salvos) ? salvos : [];
-  atualizarTabelaErros();
-});
 
 
 
@@ -5606,14 +5593,15 @@ function ordenarListasAlfabeticamente() {
 // --- EXECUÇÃO INICIAL ---
 
 document.addEventListener("DOMContentLoaded", () => {
-  // 🔹 Carrega erros salvos do localStorage
-  const salvos = JSON.parse(localStorage.getItem("errosProblemas") || "[]");
-  window.errosProblemas = Array.isArray(salvos) ? salvos : [];
-  atualizarTabelaErros(); // Mostra imediatamente os registros
+  const dadosLocais = JSON.parse(localStorage.getItem("dadosSistema") || "{}");
 
-  // 🔹 Atualiza setor automático na tela de saída
-  if (typeof atualizarSetorAutomatico === "function") atualizarSetorAutomatico();
+  window.errosProblemas = Array.isArray(dadosLocais.errosProblemas)
+    ? dadosLocais.errosProblemas
+    : [];
+
+  atualizarTabelaErros();
 });
+
 
 document.addEventListener('click', (event) => {
     const sidebar = document.getElementById('sidebar');
@@ -5821,6 +5809,7 @@ document
 
 
 	
+
 
 
 
