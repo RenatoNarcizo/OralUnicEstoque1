@@ -4854,17 +4854,31 @@ async function salvarParecer(index) {
   window.errosProblemas[index].parecer = parecer;
   window.errosProblemas[index].concluidoEm = dataConclusao;
 
-  // 💾 Salva no localStorage unificado
-  salvarTodosLocal();
-  
-   window.salvarErrosProblemasNoFirebase(window.errosProblemas);
+  // 🔒 BLOQUEIA SNAPSHOT PARA NÃO SOBRESCREVER OS DADOS ENVIADOS
+  window.bloquearAtualizacaoSnapshot = true;
 
-  // ☁ Salva NO FIRESTORE (NÃO EXISTIA ANTES!)
-  if (typeof salvarDadosNoFirestore === "function") {
-    await salvarDadosNoFirestore("errosProblemas", window.errosProblemas);
+  // 💾 SALVA EM LOCALSTORAGE
+  try {
+    salvarTodosLocal();
+  } catch (e) {
+    console.error("Erro ao salvar localmente:", e);
   }
 
-  mostrarMensagem("✅ Parecer e data de conclusão salvos com sucesso!", "sucesso");
+  // ☁️ SALVA NO FIRESTORE APENAS UMA VEZ
+  try {
+    await window.salvarErrosProblemasNoFirebase(window.errosProblemas);
+    mostrarMensagem("✅ Parecer e data de conclusão salvos com sucesso!", "sucesso");
+  } catch (e) {
+    mostrarMensagem("❌ Erro ao salvar no servidor!", "erro");
+    console.error("Erro ao salvar no Firestore:", e);
+  }
+
+  // ⏳ LIBERA SNAPSHOT (pequeno delay garante sincronização)
+  setTimeout(() => {
+    window.bloquearAtualizacaoSnapshot = false;
+  }, 800);
+
+  // 🔄 Atualiza tabela
   atualizarTabelaErros();
 }
 
@@ -5807,6 +5821,7 @@ document
 
 
 	
+
 
 
 
