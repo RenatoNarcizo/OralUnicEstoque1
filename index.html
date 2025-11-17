@@ -577,25 +577,18 @@
 
   <aside id="sidebar" aria-hidden="true">
 
-  <button data-section="dashboard" onclick="showSection('dashboard')"><i class="fa fa-chart-pie"></i> Dashboard</button>
+<button data-section="dashboard" onclick="showSection('dashboard')">Dashboard</button>
+<button data-section="cadastro" onclick="showSection('cadastro')">Cadastro de Produtos</button>
+<button data-section="entrada" onclick="showSection('entrada')">Entrada</button>
+<button data-section="saida" onclick="showSection('saida')">Saída</button>
+<button data-section="estoque" onclick="showSection('estoque')">Estoque Atual</button>
+<button data-section="limites" onclick="showSection('limites')">Limites</button>
+<button data-section="valorHistorico" onclick="showSection('valorHistorico')">Valor Histórico</button>
+<button data-section="financeiro" onclick="showSection('financeiro')">Financeiro</button>
+<button data-section="relatorios" onclick="showSection('relatorios')">Relatórios</button>
+<button data-section="usuarios" onclick="showSection('usuarios')">Usuários</button>
+<button data-section="errosProblemas" onclick="abrirErrosProblemas()">Erros</button>
 
-  <button data-section="cadastro" onclick="showSection('cadastro')"><i class="fa fa-box"></i> Cadastro de Produtos</button>
-
-  <button data-section="entrada" onclick="showSection('entrada')"><i class="fa fa-arrow-down"></i> Entrada de Materiais</button>
-
-  <button data-section="saida" onclick="showSection('saida')"><i class="fa fa-arrow-up"></i> Saída de Materiais</button>
-
-  <button data-section="estoque" onclick="showSection('estoque')"><i class="fa fa-warehouse"></i> Estoque Atual</button>
-
-  <button data-section="limites" onclick="showSection('limites')"><i class="fa fa-sliders-h"></i> Estoque Mín/Máx</button>
-
-  <button data-section="valorHistorico" onclick="showSection('valorHistorico')"><i class="fa fa-chart-line"></i> Valor Histórico</button>
-
-  <button data-section="financeiro" onclick="showSection('financeiro')"><i class="fa fa-coins"></i> Financeiro</button>
-
-  <button data-section="relatorios" onclick="showSection('relatorios')"><i class="fa fa-file-excel"></i> Relatórios</button>
-
-  <button data-section="usuarios" onclick="showSection('usuarios')"><i class="fa fa-users"></i> Usuários e Perfis</button>
 
 </aside>
 
@@ -1612,54 +1605,64 @@ async function carregarDadosDoFirestore() {
 }
 
 // ============================================================
-// 🔁 SINCRONIZAÇÃO AUTOMÁTICA ENTRE FIREBASE AUTH E FIRESTORE
+// 🔁 SINCRONIZAÇÃO SEM PERMITIR PERFIL “USUARIO”
 // ============================================================
 async function sincronizarUsuariosDoAuth() {
   try {
-    if (!auth || !db) {
-      console.warn("⚠️ Firebase não inicializado corretamente.");
-      return;
-    }
+    if (!auth || !db) return;
 
     const userAtual = auth.currentUser;
-    if (!userAtual) {
-      console.log("⏸️ Nenhum usuário autenticado — ignorando sincronização.");
-      return;
-    }
+    if (!userAtual) return;
 
-    // 🔍 Garante que window.usuarios é um array
     if (!Array.isArray(window.usuarios)) window.usuarios = [];
 
-    // Verifica se o usuário logado já está listado
-    const existe = window.usuarios.some(u => u.email?.toLowerCase() === userAtual.email?.toLowerCase());
-    if (existe) {
-      console.log("✅ Usuário já registrado em window.usuarios:", userAtual.email);
+    // 1) PROCURA LOCAL
+    let usuarioLocal = window.usuarios.find(
+      u => u.email?.toLowerCase() === userAtual.email?.toLowerCase()
+    );
+
+    if (usuarioLocal) {
+      console.log("✔ Usuário encontrado localmente com perfil:", usuarioLocal.perfil);
+      return; // NÃO ALTERA PERFIL
+    }
+
+    // 2) PROCURA NO FIRESTORE
+    let usuariosFS = [];
+    try {
+      const docSnap = await getDoc(doc(db, "estoqueGlobal", "usuarios"));
+      if (docSnap.exists()) usuariosFS = docSnap.data().usuarios || [];
+    } catch (e) {}
+
+    let usuarioFS = usuariosFS.find(
+      u => u.email?.toLowerCase() === userAtual.email?.toLowerCase()
+    );
+
+    if (usuarioFS) {
+      console.log("✔ Encontrado no Firestore com perfil:", usuarioFS.perfil);
+      window.usuarios.push(usuarioFS);
+      salvarTodosLocal?.();
       return;
     }
 
-    // Cria um novo registro local com dados do Auth
-    const novoUsuario = {
+    // 3) SE NÃO EXISTE EM NENHUM LUGAR → CRIAR SEM PERFIL
+    const novo = {
       uid: userAtual.uid,
       nome: userAtual.displayName || userAtual.email.split("@")[0],
       email: userAtual.email,
-      perfil: "USUARIO",
+      perfil: "", // 🔥 nunca colocar "USUARIO"
       criadoEm: new Date().toISOString()
     };
 
-    window.usuarios.push(novoUsuario);
+    console.warn("⚠ Usuário criado sem perfil. Defina no Gerenciar Usuários:", novo.email);
 
-    // 💾 Salva local e no Firestore
-    if (typeof salvarTodosLocal === "function") salvarTodosLocal();
-    if (typeof window.salvarUsuariosNoFirebase === "function") {
-      await window.salvarUsuariosNoFirebase(window.usuarios);
-    }
+    window.usuarios.push(novo);
+    salvarTodosLocal?.();
 
-    if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
-    console.log("👥 Usuário sincronizado no Firestore:", novoUsuario.email);
   } catch (e) {
-    console.error("❌ Falha ao sincronizar usuários do Auth:", e);
+    console.error("Erro na sincronização:", e);
   }
 }
+
 
 
 
@@ -1929,7 +1932,8 @@ window.limparFiltroUsuarios = function() {
 };
 
 
-// === MOSTRAR SISTEMA (versão final corrigida com perfil normalizado) ===
+
+// === MOSTRAR SISTEMA (versão final corrigida com perfis fixos) ===
 function mostrarSistema(user) {
   const loginView = document.getElementById("loginView");
   const mainApp = document.getElementById("mainApp");
@@ -1944,23 +1948,32 @@ function mostrarSistema(user) {
 
   const nomeFallback = (user.email || "").split("@")[0] || "Usuário";
   const nome = usuarioLogado?.nome || nomeFallback;
-  const perfil = normalizarPerfil(usuarioLogado?.perfil || "USUARIO");
+
+  // Normaliza perfil
+  let perfil = normalizarPerfil(usuarioLogado?.perfil || "");
+
+  // 🔥 Perfis válidos DEFINITIVOS
+  const perfisValidos = ["ADMIN", "GERENCIA", "ESTOQUISTA"];
+
+  if (!perfisValidos.includes(perfil)) {
+    console.warn("⚠ Perfil inválido ou vazio para:", user.email);
+    perfil = ""; // sem acesso até você definir
+  }
 
   window.usuarioAtual = { nome, email: user.email, perfil };
 
   document.getElementById("userName").textContent = nome;
-  document.getElementById("perfilBadge").textContent = "Perfil: " + perfil;
+  document.getElementById("perfilBadge").textContent = "Perfil: " + (perfil || "SEM PERFIL");
   document.getElementById("nomeUsuarioBemVindo").textContent = nome;
 
-  // Oculta tudo e mostra bem-vindo
+  // Só boas-vindas
   document.querySelectorAll("main section").forEach(sec => sec.style.display = "none");
   document.getElementById("boasVindas").style.display = "block";
 
-  // 🟦 APLICA PERMISSÕES NO MENU AQUI!
+  // Aplica permissões agora
   aplicarPermissoesNoMenu();
-
-  console.log("usuarioAtual:", window.usuarioAtual);
 }
+
 
 
 
@@ -2241,28 +2254,30 @@ document.addEventListener("click", (event) => {
   }
 });
 
+// === PERMISSÕES DO MENU (versão final) ===
 window.aplicarPermissoesNoMenu = function () {
   const user = window.usuarioAtual;
-  if (!user || !user.perfil) return;
+  if (!user || !user.perfil) {
+    // Oculta tudo se perfil inválido
+    document.querySelectorAll("#sidebar button").forEach(b => b.style.display = "none");
+    return;
+  }
 
   const perfil = normalizarPerfil(user.perfil);
   const regras = window.PERMISSOES[perfil];
 
   if (!regras) return;
 
-  console.log("🔐 Aplicando permissões para:", perfil, regras);
+  // Oculta todos
+  document.querySelectorAll("#sidebar button").forEach(btn => btn.style.display = "none");
 
-  // Oculta todos os botões do menu
-  document.querySelectorAll("#sidebar button").forEach(btn => {
-    btn.style.display = "none";
-  });
-
-  // Mostra apenas as seções permitidas
+  // Mostra somente permitidos
   regras.canView.forEach(secao => {
-    const btn = document.querySelector(`#sidebar button[onclick="showSection('${secao}')"]`);
+    const btn = document.querySelector(`#sidebar button[data-section="${secao}"]`);
     if (btn) btn.style.display = "block";
   });
 };
+
 
 
 
@@ -5906,6 +5921,7 @@ document
 
 
 	
+
 
 
 
