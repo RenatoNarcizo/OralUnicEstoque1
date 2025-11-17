@@ -1402,24 +1402,56 @@ console.log("Dados carregados do localStorage:", {
 });
 
 
-  window.PERMISSOES = {
-    'ADMIN': {
-        canView: ['dashboard', 'produtos', 'entradas', 'saidas', 'estoque', 'limites', 'usuarios', 'relatorios'],
-        canEdit: true
-    },
-    'GERENTE': {
-        canView: ['dashboard', 'produtos', 'entradas', 'saidas', 'estoque', 'limites', 'relatorios'],
-        canEdit: ['produtos', 'entradas', 'saidas']
-    },
-    'ESTOQUISTA': {
-        canView: ['estoque', 'relatorios'],
-        canEdit: false
-    },
-    'USUARIO': { 
-        canView: ['estoque'],
-        canEdit: false
-    },
+window.PERMISSOES = {
+  "ADMIN": {
+    canView: [
+      "boasVindas",
+      "dashboard",
+      "cadastro",
+      "entrada",
+      "saida",
+      "estoque",
+      "limites",
+      "valorHistorico",
+      "financeiro",
+      "relatorios",
+      "usuarios",
+      "errosProblemas"
+    ]
+  },
+
+  "GERENTE": {
+    canView: [
+      "boasVindas",
+      "dashboard",
+      "cadastro",
+      "entrada",
+      "saida",
+      "estoque",
+      "limites",
+      "valorHistorico",
+      "financeiro",
+      "relatorios",
+      "errosProblemas"
+      // ❌ não pode acessar "usuarios"
+    ]
+  },
+
+  "ESTOQUISTA": {
+    canView: [
+      "boasVindas",
+      "cadastro",
+      "entrada",
+      "saida",
+      "estoque",
+      "limites",
+      "valorHistorico",
+      "relatorios"
+      // ❌ não pode acessar dashboard, financeiro, usuários
+    ]
+  }
 };
+
 
  async function salvarDadosNoFirestore(nomeColecao, dados) {
   if (!auth.currentUser) return;
@@ -1886,63 +1918,39 @@ window.limparFiltroUsuarios = function() {
 };
 
 
-
-// === MOSTRAR SISTEMA (unificado — mostra apenas boas-vindas e não redireciona) ===
+// === MOSTRAR SISTEMA (versão final corrigida com perfil normalizado) ===
 function mostrarSistema(user) {
   const loginView = document.getElementById("loginView");
   const mainApp = document.getElementById("mainApp");
-  const userNameEl = document.getElementById("userName");
-  const perfilBadgeEl = document.getElementById("perfilBadge");
-  const nomeBemVindoEl = document.getElementById("nomeUsuarioBemVindo");
 
   if (loginView && mainApp) {
     loginView.style.display = "none";
     mainApp.style.display = "block";
   }
 
-  const usuarioLogado = (window.usuarios || []).find(u => u.email?.toLowerCase() === user.email?.toLowerCase());
+  const usuarioLogado = (window.usuarios || [])
+    .find(u => u.email?.toLowerCase() === user.email?.toLowerCase());
+
   const nomeFallback = (user.email || "").split("@")[0] || "Usuário";
   const nome = usuarioLogado?.nome || nomeFallback;
-  const perfil = (usuarioLogado?.perfil || "USUÁRIO").toUpperCase();
-
-  if (userNameEl) userNameEl.textContent = nome;
-  if (perfilBadgeEl) perfilBadgeEl.textContent = "Perfil: " + perfil;
-  if (nomeBemVindoEl) nomeBemVindoEl.textContent = nome;
+  const perfil = normalizarPerfil(usuarioLogado?.perfil || "USUARIO");
 
   window.usuarioAtual = { nome, email: user.email, perfil };
 
-  if (typeof mostrarMensagem === "function") mostrarMensagem(`👋 Bem-vindo(a), ${nome}!`, "sucesso");
+  document.getElementById("userName").textContent = nome;
+  document.getElementById("perfilBadge").textContent = "Perfil: " + perfil;
+  document.getElementById("nomeUsuarioBemVindo").textContent = nome;
 
-  // garante que somente a tela de boas-vindas fique visível (não redireciona para dashboard)
+  // Oculta tudo e mostra bem-vindo
   document.querySelectorAll("main section").forEach(sec => sec.style.display = "none");
-  const boas = document.getElementById("boasVindas");
-  if (boas) boas.style.display = "block";
+  document.getElementById("boasVindas").style.display = "block";
 
-  // aplica permissões no menu (sem redirecionamento)
-  const permissoesDoUsuario = window.PERMISSOES?.[perfil] || window.PERMISSOES?.["USUÁRIO"] || {};
-  document.querySelectorAll("#sidebar a[data-section]").forEach(link => {
-    const sectionName = link.getAttribute('data-section');
-    if (permissoesDoUsuario.canView?.includes(sectionName)) link.style.display = "";
-    else link.style.display = "none";
-  });
+  // 🟦 APLICA PERMISSÕES NO MENU AQUI!
+  aplicarPermissoesNoMenu();
 
-  // atualiza dados / tabelas em background (se necessário)
-  if (typeof carregarDadosDoFirestore === "function") {
-    carregarDadosDoFirestore().then(() => {
-      atualizarTabelaProdutos?.();
-      atualizarTabelaEntradas?.();
-      atualizarTabelaSaidas?.();
-      atualizarTabelaEstoque?.();
-      atualizarTabelaLimites?.();
-      atualizarDashboard?.();
-      atualizarPainelFinanceiro?.();
-      atualizarTabelaErros?.(); // garante que os erros apareçam
-    });
-  } else {
-    atualizarTabelaProdutos?.();
-    atualizarTabelaErros?.();
-  }
+  console.log("usuarioAtual:", window.usuarioAtual);
 }
+
 
 
   // ==========================================================
@@ -2112,11 +2120,78 @@ window.db = db;
 window.auth = auth;
 
 // === Controle de seções (mantido) ===
-window.showSection = function (sectionId) {
-  document.querySelectorAll("section").forEach(sec => (sec.style.display = "none"));
-  const section = document.getElementById(sectionId);
+window.showSection = function (id) {
+
+  if (!window.validarPermissao(id)) {
+    mostrarMensagem("❌ Você não tem permissão para acessar esta seção!", "erro");
+    return;
+  }
+
+  // Oculta tudo
+  document.querySelectorAll("section").forEach(s => s.style.display = "none");
+
+  // Mostra a seção correta
+  const section = document.getElementById(id);
   if (section) section.style.display = "block";
+
+  // Atualizações automáticas:
+  if (id === "dashboard") atualizarDashboard?.();
+  if (id === "estoque") atualizarTabelaEstoque?.();
+  if (id === "limites") atualizarTabelaLimites?.();
+  if (id === "cadastro") atualizarTabelaProdutos?.();
+  if (id === "entrada") atualizarTabelaEntradas?.();
+  if (id === "saida") atualizarTabelaSaidas?.();
+  if (id === "usuarios") atualizarTabelaUsuarios?.();
+  if (id === "financeiro") atualizarPainelFinanceiro?.();
 };
+
+
+function normalizarPerfil(str) {
+  return String(str || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toUpperCase();
+}
+// === VALIDAR PERMISSÃO (VERSÃO FINAL CORRIGIDA) ===
+window.validarPermissao = function (secao) {
+  const user = window.usuarioAtual;
+  if (!user || !user.perfil) return false;
+
+  // Normaliza perfil do usuário
+  const perfil = String(user.perfil || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .trim();
+
+  // Busca regras pelo nome normalizado
+  let regras = window.PERMISSOES[perfil];
+
+  if (!regras) {
+    // tenta localizar chave equivalente
+    for (const key in window.PERMISSOES) {
+      const keyNorm = key.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+      if (keyNorm === perfil) {
+        regras = window.PERMISSOES[key];
+        break;
+      }
+    }
+  }
+
+  if (!regras || !Array.isArray(regras.canView)) return false;
+
+  // Normaliza nome da seção também
+  const secaoNorm = String(secao || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+
+  return regras.canView.includes(secaoNorm);
+};
+
+
+
 
 // =============================
 // ✅ CONTROLE DO MENU LATERAL (VERSÃO FINAL FUNCIONAL)
@@ -2126,52 +2201,63 @@ window.toggleSidebar = function () {
   const mainContent = document.querySelector("main");
   if (!sidebar || !mainContent) return;
 
-  const isOpen = sidebar.style.left === "0px";
+  const aberto = sidebar.style.left === "0px";
 
-  if (isOpen) {
-    // Fechar menu
+  if (aberto) {
     sidebar.style.left = "-220px";
     mainContent.style.marginLeft = "20px";
-    sidebar.setAttribute("aria-hidden", "true");
   } else {
-    // Abrir menu
     sidebar.style.left = "0px";
     mainContent.style.marginLeft = "240px";
-    sidebar.setAttribute("aria-hidden", "false");
   }
 };
 
-// ✅ Fecha o menu automaticamente ao clicar fora dele
+
+// -----------------------------
+// Listener único para cliques (fecha sidebar quando clicar em itens do menu)
+// -----------------------------
 document.addEventListener("click", (event) => {
   const sidebar = document.getElementById("sidebar");
   const mainContent = document.querySelector("main");
   if (!sidebar || !mainContent) return;
 
-  // Verifica se o clique foi em um item do menu (ou algo dentro dele)
-  const itemMenu = event.target.closest("#sidebar a, #sidebar button, #sidebar li");
-  if (itemMenu) {
+  // Fechar quando clicar em item do menu (button, a, li dentro do #sidebar)
+  const clicouItem = event.target.closest("#sidebar button, #sidebar a, #sidebar li");
+  if (clicouItem) {
     sidebar.style.left = "-220px";
     mainContent.style.marginLeft = "20px";
     sidebar.setAttribute("aria-hidden", "true");
   }
 });
 
+window.aplicarPermissoesNoMenu = function () {
+  const user = window.usuarioAtual;
+  if (!user || !user.perfil) return;
 
-// ✅ NOVO: Fecha o menu automaticamente ao clicar em QUALQUER item do menu
-document.addEventListener("click", (event) => {
-  const sidebar = document.getElementById("sidebar");
-  const mainContent = document.querySelector("main");
-  if (!sidebar || !mainContent) return;
+  const perfil = normalizarPerfil(user.perfil);
+  const regras = window.PERMISSOES[perfil];
 
-  // Verifica se o clique foi em um item do menu (ou algo dentro dele)
-  const itemMenu = event.target.closest("#sidebar a, #sidebar button, #sidebar li");
-  if (itemMenu) {
-    sidebar.style.left = "-220px";
-    mainContent.style.marginLeft = "20px";
-    sidebar.setAttribute("aria-hidden", "true");
-  }
-});
-;
+  if (!regras) return;
+
+  console.log("🔐 Aplicando permissões para:", perfil, regras);
+
+  // Oculta todos os botões do menu
+  document.querySelectorAll("#sidebar button").forEach(btn => {
+    btn.style.display = "none";
+  });
+
+  // Mostra apenas as seções permitidas
+  regras.canView.forEach(secao => {
+    const btn = document.querySelector(`#sidebar button[onclick="showSection('${secao}')"]`);
+    if (btn) btn.style.display = "block";
+  });
+};
+
+
+
+
+
+
 
 // 🔹 Abre a seção "Erros e Problemas"
 window.abrirErrosProblemas = function() {
@@ -5809,6 +5895,7 @@ document
 
 
 	
+
 
 
 
