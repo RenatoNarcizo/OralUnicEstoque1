@@ -1961,47 +1961,65 @@ window.limparFiltroUsuarios = function() {
   }
 };
 
+async function carregarPerfilAntesDeMostrar(user) {
+  // espera firestore carregar usuários
+  let tentativas = 0;
+
+  while (tentativas < 20) { // tenta por 4 segundos
+    if (Array.isArray(window.usuarios) && window.usuarios.length > 0) {
+      const u = window.usuarios.find(x => x.email?.toLowerCase() === user.email.toLowerCase());
+      if (u) return u; // achou o perfil real
+    }
+    
+    tentativas++;
+    await new Promise(res => setTimeout(res, 200)); // espera 200ms
+  }
+
+  return null; // não achou
+}
 
 
-// === MOSTRAR SISTEMA (versão final corrigida com perfis fixos) ===
-function mostrarSistema(user) {
+// === MOSTRAR SISTEMA (versão segura que espera o perfil carregar) ===
+async function mostrarSistema(user) {
   const loginView = document.getElementById("loginView");
   const mainApp = document.getElementById("mainApp");
 
-  if (loginView && mainApp) {
-    loginView.style.display = "none";
-    mainApp.style.display = "block";
+  loginView.style.display = "none";
+  mainApp.style.display = "block";
+
+  // 🔵 Aguarda Firestore trazer o perfil verdadeiro (EVITA PERFIL = USUARIO)
+  const dados = await carregarPerfilAntesDeMostrar(user);
+
+  let nome, perfil;
+
+  if (dados) {
+    nome = dados.nome;
+    perfil = normalizarPerfil(dados.perfil);
+  } else {
+    // ⚠️ Se não encontrar perfil, usa GERENCIA PARA NÃO BLOQUEAR O SISTEMA
+    nome = user.email.split("@")[0];
+    perfil = "GERENCIA";
   }
 
-  const usuarioLogado = (window.usuarios || [])
-    .find(u => u.email?.toLowerCase() === user.email?.toLowerCase());
+  window.usuarioAtual = {
+    nome,
+    email: user.email,
+    perfil
+  };
 
-  const nomeFallback = (user.email || "").split("@")[0] || "Usuário";
-  const nome = usuarioLogado?.nome || nomeFallback;
-
-  // Normaliza perfil
-  let perfil = normalizarPerfil(usuarioLogado?.perfil || "");
-
-  // 🔥 Perfis válidos DEFINITIVOS
-  const perfisValidos = ["ADMIN", "GERENCIA", "ESTOQUISTA"];
-
-  if (!perfisValidos.includes(perfil)) {
-    console.warn("⚠ Perfil inválido ou vazio para:", user.email);
-    perfil = ""; // sem acesso até você definir
-  }
-
-  window.usuarioAtual = { nome, email: user.email, perfil };
-
+  // atualiza UI
   document.getElementById("userName").textContent = nome;
-  document.getElementById("perfilBadge").textContent = "Perfil: " + (perfil || "SEM PERFIL");
+  document.getElementById("perfilBadge").textContent = "Perfil: " + perfil;
   document.getElementById("nomeUsuarioBemVindo").textContent = nome;
 
-  // Só boas-vindas
+  // exibe boas-vindas
   document.querySelectorAll("main section").forEach(sec => sec.style.display = "none");
   document.getElementById("boasVindas").style.display = "block";
 
-  // Aplica permissões agora
+  // aplica as permissões
   aplicarPermissoesNoMenu();
+
+  console.log("✔ Perfil carregado corretamente:", window.usuarioAtual);
 }
 
 
@@ -5951,6 +5969,7 @@ document
 
 
 	
+
 
 
 
