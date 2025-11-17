@@ -1435,6 +1435,16 @@ console.log("Dados carregados do localStorage:", {
   }
 }
 
+window.validarPermissao = function (secao) {
+    const user = window.usuarioAtual;
+    if (!user || !user.perfil) return false;
+
+    const regras = window.PERMISSOES[user.perfil];
+    if (!regras) return false;
+
+    return regras.canView.includes(secao);
+};
+
 
 // -----------------------------
 // Salvar tudo no localStorage (idempotente)
@@ -1888,6 +1898,9 @@ window.limparFiltroUsuarios = function() {
 
 
 // === MOSTRAR SISTEMA (unificado — mostra apenas boas-vindas e não redireciona) ===
+// =============================================
+//   📌 MOSTRAR SISTEMA (com permissões aplicadas)
+// =============================================
 function mostrarSistema(user) {
   const loginView = document.getElementById("loginView");
   const mainApp = document.getElementById("mainApp");
@@ -1909,24 +1922,23 @@ function mostrarSistema(user) {
   if (perfilBadgeEl) perfilBadgeEl.textContent = "Perfil: " + perfil;
   if (nomeBemVindoEl) nomeBemVindoEl.textContent = nome;
 
+  // registra usuário atual no sistema
   window.usuarioAtual = { nome, email: user.email, perfil };
 
-  if (typeof mostrarMensagem === "function") mostrarMensagem(`👋 Bem-vindo(a), ${nome}!`, "sucesso");
+  // mensagem visual
+  if (typeof mostrarMensagem === "function") {
+    mostrarMensagem(`👋 Bem-vindo(a), ${nome}!`, "sucesso");
+  }
 
-  // garante que somente a tela de boas-vindas fique visível (não redireciona para dashboard)
+  // mostra somente a tela de boas-vindas
   document.querySelectorAll("main section").forEach(sec => sec.style.display = "none");
   const boas = document.getElementById("boasVindas");
   if (boas) boas.style.display = "block";
 
-  // aplica permissões no menu (sem redirecionamento)
-  const permissoesDoUsuario = window.PERMISSOES?.[perfil] || window.PERMISSOES?.["USUÁRIO"] || {};
-  document.querySelectorAll("#sidebar a[data-section]").forEach(link => {
-    const sectionName = link.getAttribute('data-section');
-    if (permissoesDoUsuario.canView?.includes(sectionName)) link.style.display = "";
-    else link.style.display = "none";
-  });
+  // === APLICA PERMISSÕES NO MENU ===
+  aplicarPermissoesNoMenu();
 
-  // atualiza dados / tabelas em background (se necessário)
+  // === CARREGA TABELAS DE FUNDO ===
   if (typeof carregarDadosDoFirestore === "function") {
     carregarDadosDoFirestore().then(() => {
       atualizarTabelaProdutos?.();
@@ -1936,13 +1948,42 @@ function mostrarSistema(user) {
       atualizarTabelaLimites?.();
       atualizarDashboard?.();
       atualizarPainelFinanceiro?.();
-      atualizarTabelaErros?.(); // garante que os erros apareçam
+      atualizarTabelaErros?.();
     });
   } else {
     atualizarTabelaProdutos?.();
     atualizarTabelaErros?.();
   }
 }
+
+// =============================================
+//     ⛔ OCULTAR BOTÕES DO MENU PELO PERFIL
+// =============================================
+window.aplicarPermissoesNoMenu = function () {
+    const user = window.usuarioAtual;
+    if (!user || !user.perfil) return;
+
+    const regras = window.PERMISSOES[user.perfil];
+    if (!regras) return;
+
+    document.querySelectorAll("#sidebar button").forEach(btn => {
+        // extrai a seção chamada no onclick="showSection('nome')"
+        const destino = btn.getAttribute("onclick")
+            ?.replace("showSection('", "")
+            ?.replace("')", "")
+            ?.trim();
+
+        if (!destino) return;
+
+        // exibir ou ocultar conforme permissão
+        if (regras.canView.includes(destino)) {
+            btn.style.display = "";
+        } else {
+            btn.style.display = "none";
+        }
+    });
+};
+
 
 
   // ==========================================================
@@ -2111,12 +2152,31 @@ window.logout = async function () {
 window.db = db;
 window.auth = auth;
 
-// === Controle de seções (mantido) ===
+
+// =============================================
+// 🔒 CONTROLE DE SEÇÕES COM PERMISSÕES
+// =============================================
 window.showSection = function (sectionId) {
-  document.querySelectorAll("section").forEach(sec => (sec.style.display = "none"));
+
+  // 🚫 Bloqueia tentativa de acessar seção proibida
+  if (!window.validarPermissao(sectionId)) {
+    mostrarMensagem("❌ Você não tem permissão para acessar esta seção!", "erro");
+    return;
+  }
+
+  // Oculta todas
+  document.querySelectorAll("section").forEach(sec => {
+    sec.style.display = "none";
+  });
+
+  // Mostra somente a permitida
   const section = document.getElementById(sectionId);
-  if (section) section.style.display = "block";
+  if (section) {
+    section.style.display = "block";
+  }
 };
+
+
 
 // =============================
 // ✅ CONTROLE DO MENU LATERAL (VERSÃO FINAL FUNCIONAL)
@@ -4758,7 +4818,6 @@ window.salvarEdicaoErro = async function (i) {
 
 
 
-
 // ====================================================
 // 🧹 LIMPAR E GERENCIAR LISTA DE COMPRA
 // ====================================================
@@ -4868,6 +4927,7 @@ async function salvarParecer(index) {
   // 🔄 Atualiza tabela
   atualizarTabelaErros();
 }
+
 
 
 
@@ -5809,7 +5869,6 @@ document
 
 
 	
-
 
 
 
