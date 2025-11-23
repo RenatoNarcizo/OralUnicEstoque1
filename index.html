@@ -508,6 +508,40 @@
 #tabelaEntradas td:nth-child(3) {
     max-width: 80px;
 }
+/* Ajuste visual do Estoque Atual */
+
+/* Cód. Produto – deixar mais estreito */
+#tabelaEstoque td:nth-child(2),
+#tabelaEstoque th:nth-child(2) {
+  width: 65px !important;
+  text-align: left !important;
+}
+
+/* Produto – aumentar largura */
+#tabelaEstoque td:nth-child(3),
+#tabelaEstoque th:nth-child(3) {
+  width: 260px !important;
+}
+
+/* Categoria – aumentar largura */
+#tabelaEstoque td:nth-child(5),
+#tabelaEstoque th:nth-child(5) {
+  width: 220px !important;
+}
+
+/* Último Valor (R$) – centralizado */
+#tabelaEstoque td:nth-child(8),
+#tabelaEstoque th:nth-child(8) {
+  text-align: center !important;
+  width: 110px !important;
+}
+
+/* Status – diminuir largura */
+#tabelaEstoque td:nth-child(9),
+#tabelaEstoque th:nth-child(9) {
+  width: 130px !important;
+  text-align: center !important;
+}
 
 
 
@@ -663,14 +697,19 @@
 
 
       
-   <!-- SEÇÃO: CADASTRO DE PRODUTOS -->
+ 
+<!-- SEÇÃO: CADASTRO DE PRODUTOS -->
 <section id="cadastro" class="section">
   <h2><i class="fa fa-box"></i> Cadastro de Produtos</h2>
 
   <div class="input-row" style="margin-bottom:10px;gap:8px;">
+
+    <!-- 🆕 CÓDIGO DO PRODUTO (NOVO CAMPO) -->
+    <input id="produtoCodigo" type="text" placeholder="Cód. Produto" style="width:150px;" />
+
     <input id="produtoNome" type="text" placeholder="Nome do produto" class="flex" />
 
-     <select id="produtoCategoria">
+    <select id="produtoCategoria">
       <option value="">Selecione a categoria</option>
       <option>Centro Cirúrgico</option>
       <option>Cesta paciente</option>
@@ -683,8 +722,6 @@
       <option>Material de Uso e Consumo</option>
       <option>Medicamentos</option>
       <option>Material de Limpeza</option>
-
-
     </select>
 
     <select id="produtoEmbalagem">
@@ -701,33 +738,30 @@
       <option>Saco</option>
       <option>Unidade</option>
       <option>Ampola</option>
-
     </select>
 
     <input id="produtoQtdEmbalagem" type="number" placeholder="Qtd por embalagem" style="width:140px" />
+
     <input id="produtoCodigoBarras" type="text" placeholder="📷Código de Barras (opcional)" style="width:220px" />
 
-    <!-- 🟢 Campo de foto dentro do card -->
-<div style="display:flex; flex-direction:column; align-items:flex-start; gap:4px;">
-  <div style="display:flex; align-items:center; gap:6px;">
-    <!-- Botão personalizado de upload -->
-<label for="produtoFoto" 
-       style="background:#007bff; color:white; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
-  📸 Insira foto do produto
-</label>
-<input id="produtoFoto" type="file" accept="image/*" style="display:none;">
+    <!-- Botão para foto -->
+    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:4px;">
+      <div style="display:flex; align-items:center; gap:6px;">
+        <label for="produtoFoto" 
+               style="background:#007bff; color:white; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+          📸 Insira foto do produto
+        </label>
+        <input id="produtoFoto" type="file" accept="image/*" style="display:none;">
+      </div>
+      <div id="fotoPreview" style="margin-top:6px; font-size:13px; color:#555; text-align:center;"></div>
+    </div>
 
-  </div>
-  <div id="fotoPreview" style="margin-top:6px; font-size:13px; color:#555; text-align:center;"></div>
-</div>
-
-
-    <!-- Botão de cadastrar -->
+    <!-- Botões -->
     <button onclick="cadastrarProduto()"><i class="fa fa-save"></i> Cadastrar</button>
-	<!-- 🧹 Botão de limpar -->
-<button onclick="limparCamposProduto()" title="Limpar campos" style="background:#6c757d; color:#fff;">
-  <i class="fa fa-broom"></i>
-</button>
+
+    <button onclick="limparCamposProduto()" title="Limpar campos" style="background:#6c757d; color:#fff;">
+      <i class="fa fa-broom"></i>
+    </button>
   </div>
 
   <div style="margin-bottom:10px;">
@@ -740,6 +774,10 @@
         <tr>
           <th>#</th>
           <th>Foto</th>
+
+          <!-- 🆕 CÓDIGO DO PRODUTO NA NOVA ORDEM -->
+          <th>Cód. Produto</th>
+
           <th>Nome</th>
           <th>Categoria</th>
           <th>Embalagem</th>
@@ -754,12 +792,13 @@
 </section>
 
 
+
      <section id="entrada" class="section">
       <h2><i class="fa fa-arrow-down"></i> Entrada de Materiais</h2>
       <div class="input-row" style="margin-bottom:10px;gap:8px;">
       
         <input id="entradaCodigoBarras" type="text" placeholder="📷 Ler código de barras" style="min-width:200px;" oninput="buscarProdutoPorCodigo('entrada')" />
-        
+        <input id="entradaCodigoProduto" type="text" placeholder="Cód. Produto" style="min-width:140px;" oninput="buscarProdutoPorCodigoProduto()" />
         <input id="entradaProduto" type="text" placeholder="Nome do produto" list="listaProdutos" style="min-width:220px" />
         <datalist id="listaProdutos"></datalist>
         
@@ -812,6 +851,7 @@
           <thead>
             <tr>
               <th>#</th>
+			  <th>Cód. Produto</th> 
               <th>Produto</th>
               <th>Cód. Barras</th>
               <th>Qtd</th>
@@ -837,7 +877,7 @@
 
  <div class="input-row" style="margin-bottom:10px;gap:8px;">
         <input id="saidaCodigoBarras" type="text" placeholder="📷 Ler código de barras" oninput="buscarProdutoPorCodigoSaida()" />
-
+<input id="saidaCodigoProduto" type="text" placeholder="Cód. Produto" style="width:150px;" />
            
     <input id="saidaProduto" type="text" placeholder="Nome do produto" style="min-width:220px" oninput="atualizarSetorAutomatico()" />
     <input id="saidaQuantidade" type="number" placeholder="Quantidade" style="width:120px" />
@@ -867,6 +907,7 @@
         <tr>
           <th>#</th>
           <th>Produto</th>
+		  <th>Cód. Produto</th>
 		   <th>Código de Barras</th>
           <th>Qtd</th>
           <th>Data</th>
@@ -901,6 +942,7 @@
       <thead>
         <tr>
           <th>#</th>
+		   <th>Cód. Produto</th>
           <th>Produto</th>
           <th>Código de Barras</th>
           <th>Categoria</th>
@@ -976,6 +1018,7 @@
       <thead>
         <tr>
           <th>#</th>
+		  <th>Cód. Produto</th>
           <th>Produto</th>
           <th>Código de Barras</th>
           <th>Categoria</th>
@@ -1056,7 +1099,8 @@
     <table id="tabelaValorHistorico">
       <thead>
         <tr>
-          <th>Produto</th>
+		<th>Cód. Produto</th>
+          <th>Produto</th>		   
           <th>Jan</th>
           <th>Fev</th>
           <th>Mar</th>
@@ -2745,10 +2789,17 @@ function padronizarCamposAntesDeSalvar() {
   }
 })();
 
+// =============================================================
+// 🆕 FUNÇÃO ATUALIZADA — Cadastrar Produto (com Cód. Produto)
+// =============================================================
+// =============================================================
+// 🆕 FUNÇÃO CORRIGIDA — Cadastrar Produto (com Cód. Produto)
+// =============================================================
 window.cadastrarProduto = async function () {
   limparErros("cadastro");
 
   // ----- Elementos do formulário -----
+  const codigoEl = document.getElementById("produtoCodigo");
   const nomeEl = document.getElementById("produtoNome");
   const categoriaEl = document.getElementById("produtoCategoria");
   const embalagemEl = document.getElementById("produtoEmbalagem");
@@ -2756,11 +2807,14 @@ window.cadastrarProduto = async function () {
   const codBarrasEl = document.getElementById("produtoCodigoBarras");
   const fotoEl = document.getElementById("produtoFoto");
 
-  const nome = nomeEl?.value.trim() || "";
-  const categoria = categoriaEl?.value.trim() || "";
-  const embalagem = embalagemEl?.value.trim() || "";
-  const qtdEmb = parseInt(qtdEmbEl?.value.trim()) || 0;
-  const codBarras = codBarrasEl?.value.trim() || "";
+  const codigo = (codigoEl?.value || "").trim();   // <-- CÓDIGO DO PRODUTO CORRETO
+  const nome = (nomeEl?.value || "").trim();
+  const categoria = (categoriaEl?.value || "").trim();
+  const embalagem = (embalagemEl?.value || "").trim();
+  const qtdEmb = parseInt(qtdEmbEl?.value || "") || 0;
+  const codBarras = (codBarrasEl?.value || "").trim();
+
+  const isEdicao = typeof indiceEdicaoProduto === "number" && indiceEdicaoProduto !== null;
 
   // ----- Validações -----
   if (!nome) return destacarErro(nomeEl, "Informe o nome do produto!");
@@ -2768,75 +2822,60 @@ window.cadastrarProduto = async function () {
   if (!embalagem) return destacarErro(embalagemEl, "Selecione o tipo de embalagem!");
   if (!qtdEmb) return destacarErro(qtdEmbEl, "Informe a quantidade por embalagem!");
 
-  // ----- Tratamento da foto (base64) -----
+  // ----- Foto -----
   let fotoBase64 = "";
-  const isEdicao = typeof indiceEdicaoProduto === "number" && indiceEdicaoProduto !== null;
+  if (!isEdicao && !(fotoEl?.files?.[0]))
+    return destacarErro(fotoEl, "A foto é obrigatória no cadastro!");
 
-  if (!isEdicao && !(fotoEl && fotoEl.files && fotoEl.files[0])) {
-    return destacarErro(fotoEl, "A foto do produto é obrigatória!");
+  if (fotoEl?.files?.[0]) {
+    const file = fotoEl.files[0];
+    fotoBase64 = await new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.readAsDataURL(file);
+    });
   }
 
-  if (fotoEl && fotoEl.files && fotoEl.files[0]) {
-    try {
-      const file = fotoEl.files[0];
-      fotoBase64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onerror = () => reject(new Error("Erro ao ler imagem"));
-        reader.onload = (e) => resolve(e.target.result);
-        reader.readAsDataURL(file);
-      });
-    } catch (e) {
-      console.error("Erro ao converter foto:", e);
-    }
-  }
-
-  // ----- Garante array global -----
+  // Garante array
   window.produtos = Array.isArray(window.produtos) ? window.produtos : [];
 
-  // ----- Verifica duplicados -----
- const produtoDuplicado = window.produtos.find(p => {
-  if (!p) return false;
+  // ----- Verifica duplicidade -----
+  const produtoDuplicado = window.produtos.find((p, idx) => {
+    if (isEdicao && idx === indiceEdicaoProduto) return false;
+    return p.nome?.toLowerCase() === nome.toLowerCase() &&
+           (p.codigo || "").toLowerCase() === codigo.toLowerCase();
+  });
 
-  const mesmoNome = p.nome && p.nome.toLowerCase() === nome.toLowerCase();
-  const mesmoCodigo = codBarras && (
-    p.codBarras === codBarras ||
-    p.codigoBarras === codBarras
-  );
-
-  return mesmoNome || mesmoCodigo;
-});
-  if (!isEdicao && produtoDuplicado) {
-    mostrarMensagem("⚠️ Já existe um produto com este nome ou código de barras!", "erro");
-    return;
+  if (produtoDuplicado) {
+    return mostrarMensagem("❌ Já existe este nome + código!", "erro");
   }
 
-  // ----- Edição ou novo -----
+  // ===========================================================
+  // ✏️ ***EDIÇÃO CORRIGIDA AQUI***
+  // ===========================================================
   if (isEdicao) {
-    if (typeof indiceEdicaoProduto !== "number" || !window.produtos[indiceEdicaoProduto]) {
-      console.warn("Índice de edição inválido:", indiceEdicaoProduto);
-      mostrarMensagem("Índice de edição inválido.", "erro");
-    } else {
-      const produtoAntigo = window.produtos[indiceEdicaoProduto];
-      const nomeAntigo = produtoAntigo.nome;
+    const prod = window.produtos[indiceEdicaoProduto];
 
-      Object.assign(produtoAntigo, {
-        nome,
-        categoria,
-        embalagem,
-        qtdEmbalagem: qtdEmb,
-        codBarras,
-        ...(fotoBase64 && { foto: fotoBase64 }),
-      });
+    prod.codigo = codigo;            // <-- ESSA LINHA FAZ O CÓDIGO SALVAR
+    prod.nome = nome;
+    prod.categoria = categoria;
+    prod.embalagem = embalagem;
+    prod.qtdEmbalagem = qtdEmb;
+    prod.codBarras = codBarras;
+    if (fotoBase64) prod.foto = fotoBase64;
 
-      atualizarReferenciasProduto?.(nomeAntigo, nome);
-      mostrarMensagem(`✅ Produto "${nome}" atualizado com sucesso!`, "sucesso");
-      indiceEdicaoProduto = null;
-      mostrarBotaoCancelar(false);
-    }
-  } else {
-    // cria novo produto
+    mostrarMensagem(`✅ Produto "${nome}" atualizado!`, "sucesso");
+    indiceEdicaoProduto = null;
+    mostrarBotaoCancelar(false);
+  }
+
+  // ===========================================================
+  // 🆕 NOVO PRODUTO
+  // ===========================================================
+  else {
     const novoProduto = {
       id: Date.now(),
+      codigo,
       nome,
       categoria,
       embalagem,
@@ -2847,79 +2886,48 @@ window.cadastrarProduto = async function () {
     };
 
     window.produtos.push(novoProduto);
-    mostrarMensagem(`✅ Produto "${nome}" cadastrado com sucesso!`, "sucesso");
+
+    mostrarMensagem(`✅ Produto "${nome}" cadastrado!`, "sucesso");
   }
 
   // =====================================================
-  // 🔒 BLOQUEIO APRIMORADO DE SNAPSHOT (ANTI-CONFLITO)
+  // 🔄 SALVA EM LOCAL STORAGE + FIREBASE (CORRIGIDO)
   // =====================================================
   window.bloquearAtualizacaoSnapshot = true;
-  const tempoInicio = Date.now();
 
   try {
     const estoqueRef = doc(db, "estoqueGlobal", "estoque");
-
-    // 🔹 Lê os dados atuais do Firestore antes de salvar
-    const snap = await getDoc(estoqueRef);
-    const dataAtual = snap.exists() ? snap.data() : {};
-
-    // 🔹 Mescla produtos existentes com os locais (sem apagar)
-    const produtosAtuais = Array.isArray(dataAtual.produtos) ? dataAtual.produtos : [];
-    const idsAtuais = new Set(produtosAtuais.map(p => String(p.id)));
-    const produtosMesclados = [
-      ...produtosAtuais,
-      ...window.produtos.filter(p => !idsAtuais.has(String(p.id)))
-    ];
-
-    // 🔹 Atualiza o Firestore sem sobrescrever outros dados
-    await setDoc(estoqueRef, { produtos: produtosMesclados }, { merge: true });
-    console.log("☁️ Produtos atualizados na nuvem com sucesso!");
-
-    // 🔁 Aguarda confirmação do Firestore antes de liberar o listener
-    const tempoExecucao = Date.now() - tempoInicio;
-    const tempoMinimo = 1000; // mínimo de 1s de bloqueio para estabilidade
+    await setDoc(estoqueRef, { produtos: [...window.produtos] }, { merge: true });
 
     setTimeout(() => {
-  console.log("🔓 Snapshot desbloqueado COM SEGURANÇA.");
-  window.bloquearAtualizacaoSnapshot = false;
-
-  // Recarregar o snapshot garantidamente
-  if (typeof atualizarTabelaProdutos === "function") {
-    atualizarTabelaProdutos();
-  }
-}, 1000);
+      window.bloquearAtualizacaoSnapshot = false;
+      atualizarTabelaProdutos?.();
+    }, 500);
 
   } catch (err) {
-    console.error("❌ Erro ao salvar produto no Firestore:", err);
-    mostrarMensagem("Erro ao salvar produto no Firestore!", "erro");
     window.bloquearAtualizacaoSnapshot = false;
+    mostrarMensagem("Erro ao salvar no Firestore!", "erro");
   }
 
-  // =====================================================
-  // 🔄 ATUALIZAÇÕES COMPLEMENTARES
-  // =====================================================
+  // Atualizações secundárias
   atualizarTabelaEntradas?.();
-  atualizarTabelaSaidas?.();
+  atualizarTabelaEstoque?.();
   atualizarTabelaLimites?.();
   atualizarDashboard?.();
   atualizarPainelFinanceiro?.();
 
-  // =====================================================
-  // 🧹 LIMPA FORMULÁRIO
-  // =====================================================
-  try {
-    nomeEl.value = "";
-    categoriaEl.value = "";
-    embalagemEl.value = "";
-    qtdEmbEl.value = "";
-    codBarrasEl.value = "";
-    if (fotoEl) fotoEl.value = "";
-    const fotoPreview = document.getElementById("fotoPreview");
-    if (fotoPreview) fotoPreview.innerHTML = "";
-  } catch (e) {
-    console.warn("Falha ao limpar o formulário:", e);
-  }
+  // Limpa campos
+  codigoEl.value = "";
+  nomeEl.value = "";
+  categoriaEl.value = "";
+  embalagemEl.value = "";
+  qtdEmbEl.value = "";
+  codBarrasEl.value = "";
+  if (fotoEl) fotoEl.value = "";
+  document.getElementById("fotoPreview").innerHTML = "";
 };
+
+
 
 // ===============================================
 // ✅ Torna função de cancelar edição global
@@ -3005,6 +3013,7 @@ window.atualizarTabelaProdutos = function () {
   tbody.innerHTML = "";
   if (!Array.isArray(window.produtos)) window.produtos = [];
 
+  // Ordenação alfabética por nome
   const produtosOrdenados = [...window.produtos].sort((a, b) => {
     const nomeA = (a.nome || "").toLowerCase();
     const nomeB = (b.nome || "").toLowerCase();
@@ -3013,7 +3022,7 @@ window.atualizarTabelaProdutos = function () {
 
   if (produtosOrdenados.length === 0) {
     const row = document.createElement("tr");
-    row.innerHTML = `<td colspan="8" style="text-align:center; color:#777;">Nenhum produto cadastrado.</td>`;
+    row.innerHTML = `<td colspan="9" style="text-align:center; color:#777;">Nenhum produto cadastrado.</td>`;
     tbody.appendChild(row);
     return;
   }
@@ -3021,50 +3030,59 @@ window.atualizarTabelaProdutos = function () {
   produtosOrdenados.forEach((produto, i) => {
     const nomeLower = (produto.nome || "").toLowerCase();
     const categoriaLower = (produto.categoria || "").toLowerCase();
+
     if (filtro && !nomeLower.includes(filtro) && !categoriaLower.includes(filtro)) return;
 
     const foto = produto.foto || "";
-    const codigoBarras = produto.codBarras || produto.codigoBarras || produto.codigo || "-";
-
     const fotoHtml = foto
       ? `<img src="${foto}" class="thumb" onclick="ampliarImagem('${foto}')" alt="Foto do produto">`
       : `<span style="color:red;font-weight:bold;">❌</span>`;
 
+    const codigoProduto = produto.codigo || "";  // 🆕 CÓDIGO DO PRODUTO
+    const codigoBarras = produto.codBarras || produto.codigoBarras || "-";
+
     const row = document.createElement("tr");
     row.setAttribute("data-id", produto.id ?? "");
 
+    // -------------------------------
+    // ⚠️ ORDEM CORRETA DAS COLUNAS:
+    //
+    // # | Foto | Cód. Produto | Nome | Categoria | Embalagem | Qtd/Emb | Cód. Barras | Ações
+    // -------------------------------
     row.innerHTML = `
-      <td>${i + 1}</td>
-      <td style="text-align:center;">${fotoHtml}</td>
-      <td style="font-weight:600;">${produto.nome || "-"}</td>
-      <td>${produto.categoria || "-"}</td>
-      <td>${produto.embalagem || "-"}</td>
-      <td>${produto.qtdEmbalagem || produto.qtd || "-"}</td>
+  <td>${i + 1}</td>
+  <td style="text-align:center;">${fotoHtml}</td>
 
-      <!-- Código de barras reduzido + tooltip -->
-      <td style="max-width:90px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;"
-    title="${codigoBarras}"
-    onclick="copiarCodigoBarras('${codigoBarras}')">
-    ${codigoBarras}
-</td>
+  <!-- 🆕 CÓDIGO DO PRODUTO (CORRETO) -->
+  <td>${produto.codigo || "-"}</td>
+
+  <td style="font-weight:600;">${produto.nome || "-"}</td>
+  <td>${produto.categoria || "-"}</td>
+  <td>${produto.embalagem || "-"}</td>
+  <td>${produto.qtdEmbalagem || produto.qtd || "-"}</td>
+
+  <td style="max-width:60px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;"
+      title="${codigoBarras}"
+      onclick="copiarCodigoBarras('${codigoBarras}')">
+      ${codigoBarras}
+  </td>
+
+  <td style="text-align:center; width:140px;">
+    <button title="Editar" style="margin-right:6px;"
+            onclick="editarProdutoPorId('${produto.id}')">
+        <i class="fa fa-edit"></i>
+    </button>
+
+    <button title="Excluir"
+            onclick="excluirProdutoPorId('${produto.id}')"
+            style="background:#dc3545; color:white;">
+        <i class="fa fa-trash"></i>
+    </button>
+  </td>
+`;
 
 
-      <!-- Ações com largura maior -->
-      <td style="text-align:center; width:140px;">
-        <button title="Editar"
-                style="margin-right:6px;"
-                onclick="editarProdutoPorId('${produto.id}')">
-            <i class="fa fa-edit"></i>
-        </button>
-
-        <button title="Excluir"
-                onclick="excluirProdutoPorId('${produto.id}')"
-                style="background:#dc3545; color:white;">
-            <i class="fa fa-trash"></i>
-        </button>
-      </td>
-    `;
-
+    // Destacar linha em edição
     if (typeof indiceEdicaoProduto === "number") {
       const prodEmEdicao = window.produtos[indiceEdicaoProduto];
       if (prodEmEdicao && String(prodEmEdicao.id) === String(produto.id)) {
@@ -3075,8 +3093,9 @@ window.atualizarTabelaProdutos = function () {
     tbody.appendChild(row);
   });
 
-  console.log("✅ Produtos listados (visual ordenada).");
+  console.log("✅ Produtos listados (alinhamento corrigido).");
 };
+
 
 window.copiarCodigoBarras = function (codigo) {
   if (!codigo || codigo === "-") return;
@@ -3103,8 +3122,12 @@ window.obterIndicePorIdProduto = function(id) {
   return window.produtos.findIndex(p => String(p.id) === String(id));
 };
 
+
 // ==========================
-// EDIÇÃO: por id
+// EDIÇÃO: por id (CORRIGIDA COM CÓD. PRODUTO)
+// ==========================
+// ==========================
+// EDIÇÃO: por id (CORRIGIDA)
 // ==========================
 window.editarProdutoPorId = function(id) {
   const idx = obterIndicePorIdProduto(id);
@@ -3117,12 +3140,15 @@ window.editarProdutoPorId = function(id) {
   const produto = window.produtos[idx];
   indiceEdicaoProduto = idx;
 
+  // 🟢 AGORA SIM: apenas preencher o formulário — sem alterar o objeto!
+  document.getElementById("produtoCodigo").value = produto.codigo || "";
   document.getElementById("produtoNome").value = produto.nome || "";
   document.getElementById("produtoCategoria").value = produto.categoria || "";
   document.getElementById("produtoEmbalagem").value = produto.embalagem || "";
-  document.getElementById("produtoQtdEmbalagem").value = produto.qtdEmbalagem || produto.qtd || "";
-  document.getElementById("produtoCodigoBarras").value = produto.codBarras || produto.codigoBarras || produto.codigo || "";
+  document.getElementById("produtoQtdEmbalagem").value = produto.qtdEmbalagem || "";
+  document.getElementById("produtoCodigoBarras").value = produto.codBarras || produto.codigoBarras || "";
 
+  // Foto
   const fotoPreview = document.getElementById("fotoPreview");
   if (fotoPreview) {
     if (produto.foto) {
@@ -3136,7 +3162,7 @@ window.editarProdutoPorId = function(id) {
     }
   }
 
-  // Destaca a linha na tabela (usa data-id)
+  // Destacar linha selecionada
   document.querySelectorAll("#tabelaProdutos tbody tr").forEach(tr => {
     tr.style.background = tr.getAttribute("data-id") === String(id) ? "#fff3cd" : "";
   });
@@ -3144,6 +3170,8 @@ window.editarProdutoPorId = function(id) {
   mostrarBotaoCancelar?.(true);
   mostrarMensagem && mostrarMensagem(`✏️ Editando: ${produto.nome}`, "info");
 };
+
+
 
 // ==========================
 // EXCLUIR: por id
@@ -3318,6 +3346,7 @@ window.mostrarBotaoCancelar = function (exibir) {
   }
 };
 // 🔹 Função de filtro de produtos (corrigida e segura)
+// 🔹 Função de filtro de produtos (corrigida e segura) 
 window.filtrarProdutos = function () {
   const filtro = document.getElementById("filtroProduto").value.toLowerCase().trim();
   const tabela = document.getElementById("tabelaProdutos").querySelector("tbody");
@@ -3326,62 +3355,86 @@ window.filtrarProdutos = function () {
 
   tabela.innerHTML = "";
 
-  // Sempre usar a lista REAL de produtos
+  // Lista REAL de produtos
   const lista = Array.isArray(window.produtos) ? [...window.produtos] : [];
 
+  // 🔎 FILTRO COMPLETO (Cód. Produto, Nome, Categoria, Cód. Barras)
   const filtrados = lista.filter(p => {
     const nome = (p.nome || "").toLowerCase();
     const categoria = (p.categoria || "").toLowerCase();
-    return nome.includes(filtro) || categoria.includes(filtro);
+    const codigoProduto = (p.codigo || "").toLowerCase();           // 🆕 CÓD PRODUTO
+    const codigoBarras = (p.codBarras || p.codigoBarras || "").toLowerCase();
+
+    return (
+      nome.includes(filtro) ||
+      categoria.includes(filtro) ||
+      codigoProduto.includes(filtro) ||   // 🆕 FILTRO PELO CÓD PRODUTO
+      codigoBarras.includes(filtro)       // 🆕 FILTRO PELO CÓD BARRAS
+    );
   });
 
+  // Renderização da tabela corrigida (seguindo a ordem do THEAD)
   filtrados.forEach((p, i) => {
     const foto = p.foto
       ? `<img src="${p.foto}" class="thumb">`
       : `<span style="color:red;font-weight:bold;">❌</span>`;
 
-    const codigo = p.codBarras || p.codigoBarras || p.codigo || "-";
+    const codigoProduto = p.codigo || "";   // 🆕 CÓD PRODUTO
+    const codigoBarras = p.codBarras || p.codigoBarras || "-";
 
     const row = document.createElement("tr");
-
     row.innerHTML = `
       <td>${i + 1}</td>
       <td>${foto}</td>
+
+      <!-- 🆕 CÓDIGO DO PRODUTO -->
+      <td>${codigoProduto}</td>
+
       <td>${p.nome || "-"}</td>
       <td>${p.categoria || "-"}</td>
       <td>${p.embalagem || "-"}</td>
-      <td>${p.qtdEmbalagem || "-"}</td>
-      <td>${codigo}</td>
+      <td>${p.qtdEmbalagem || p.qtd || "-"}</td>
+
+      <td style="cursor:pointer;" 
+          title="${codigoBarras}"
+          onclick="copiarCodigoBarras('${codigoBarras}')">
+          ${codigoBarras}
+      </td>
+
       <td>
-        <!-- Agora com ID correto -->
         <button onclick="editarProdutoPorId('${p.id}')"><i class="fa fa-edit"></i></button>
-        <button onclick="excluirProdutoPorId('${p.id}')"><i class="fa fa-trash"></i></button>
+        <button onclick="excluirProdutoPorId('${p.id}')" style="background:#dc3545;color:white;">
+          <i class="fa fa-trash"></i>
+        </button>
       </td>
     `;
 
     tabela.appendChild(row);
   });
 
+  // Mensagem caso nenhum produto seja encontrado
   if (filtrados.length === 0) {
     const row = document.createElement("tr");
-    row.innerHTML = `<td colspan="8" style="text-align:center; color:#888;">Nenhum produto encontrado.</td>`;
+    row.innerHTML = `<td colspan="9" style="text-align:center; color:#888;">Nenhum produto encontrado.</td>`;
     tabela.appendChild(row);
   }
 };
 
 
-// --- ENTRADA DE MATERIAIS ---
+
+// -----------------------------
+// ENTRADA: Atualizações para Cód. Produto
+// -----------------------------
 
 function atualizarSelectProdutos() {
   const selectEntrada = document.getElementById("listaProdutos");
-  
   if (!selectEntrada) return;
-  
-  // limpa todas as opções
+
   selectEntrada.innerHTML = "";
 
-  // garante que a lista esteja ordenada
-  const listaOrdenada = [...produtos].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: 'base' }));
+  const listaOrdenada = [...(window.produtos || [])].sort((a, b) =>
+    (a.nome || "").localeCompare(b.nome || "", "pt-BR", { sensitivity: "base" })
+  );
 
   listaOrdenada.forEach(p => {
     const option = document.createElement("option");
@@ -3390,46 +3443,99 @@ function atualizarSelectProdutos() {
   });
 }
 
+// Busca por código de barras (preenche nome) OU por código do produto se encontrado pelo campo de leitura de CB
 function buscarProdutoPorCodigo(contexto) {
   const campoCodigo = document.getElementById(`${contexto}CodigoBarras`);
   const campoProduto = document.getElementById(`${contexto}Produto`);
-  
+  const campoCodigoProduto = document.getElementById(`${contexto}CodigoProduto`);
+
   if (!campoCodigo || !campoProduto) return;
-  
-  const codigo = campoCodigo.value.trim();
-  
-  // Limpa o erro anterior
+
+  const codigoDigitado = (campoCodigo.value || "").trim().toLowerCase();
+
   campoCodigo.style.border = "1px solid #ccc";
-  campoCodigo.title = "";
   campoProduto.value = "";
-  
-  if (!codigo) return;
-  
-  // 🔹 Corrige o nome do campo do produto
-  const produto = produtos.find(p => p.codBarras === codigo || p.codigoBarras === codigo);
-  
+  if (campoCodigoProduto) campoCodigoProduto.value = "";
+
+  if (!codigoDigitado) return;
+
+  const produto = (window.produtos || []).find(p =>
+    String(p.codBarras || p.codigoBarras || "").trim().toLowerCase() === codigoDigitado ||
+    String(p.codigo || "").trim().toLowerCase() === codigoDigitado   // 🟢 AGORA FUNCIONA
+  );
+
   if (!produto) {
     campoCodigo.style.border = "2px solid red";
-    campoCodigo.title = "Código de barras não encontrado.";
-    mostrarMensagem("Código de barras não encontrado!", "erro");
+    mostrarMensagem("Código não encontrado!", "erro");
     return;
   }
-  
-  // Preenche o campo do nome automaticamente
-  campoProduto.value = produto.nome;
+
+  campoProduto.value = produto.nome || "";
+  if (campoCodigoProduto) campoCodigoProduto.value = produto.codigo || "";
+
   mostrarMensagem(`Produto "${produto.nome}" encontrado.`, "info");
 }
 
-// 🔹 Executa a busca automaticamente quando o leitor termina o código
+
+
+
+// Busca por Cód. Produto (campo novo) — preenche nome e código de barras
+function buscarProdutoPorCodigoProduto() {
+  const campoCodigoProduto = document.getElementById("entradaCodigoProduto");
+  const campoProduto = document.getElementById("entradaProduto");
+  const campoCodigoBarras = document.getElementById("entradaCodigoBarras");
+
+  if (!campoCodigoProduto || !campoProduto) return;
+
+  const codigoDigitado = (campoCodigoProduto.value || "").trim().toLowerCase();
+
+  // Reset visual
+  campoCodigoProduto.style.border = "1px solid #ccc";
+  campoCodigoProduto.title = "";
+  campoProduto.value = "";
+  if (campoCodigoBarras) campoCodigoBarras.value = "";
+
+  if (!codigoDigitado) return;
+
+  // ✅ CORREÇÃO: agora compara corretamente o código digitado com o código salvo
+  const produto = (window.produtos || []).find(p =>
+    String(p.codigo || "").trim().toLowerCase() === codigoDigitado
+  );
+
+  if (!produto) {
+    campoCodigoProduto.style.border = "2px solid red";
+    campoCodigoProduto.title = "Cód. Produto não encontrado.";
+    mostrarMensagem("Cód. Produto não encontrado!", "erro");
+    return;
+  }
+
+  // Preenche nome
+  campoProduto.value = produto.nome || "";
+
+  // Preenche código de barras se existir
+  if (campoCodigoBarras && (produto.codBarras || produto.codigoBarras)) {
+    campoCodigoBarras.value = produto.codBarras || produto.codigoBarras;
+  }
+
+  mostrarMensagem(`Produto "${produto.nome}" encontrado pelo Cód. Produto.`, "info");
+}
+
+
+
+// Eventos
 document.getElementById("entradaCodigoBarras")?.addEventListener("change", () => buscarProdutoPorCodigo("entrada"));
 document.getElementById("entradaCodigoBarras")?.addEventListener("blur", () => buscarProdutoPorCodigo("entrada"));
+document.getElementById("entradaCodigoProduto")?.addEventListener("change", buscarProdutoPorCodigoProduto);
+document.getElementById("entradaCodigoProduto")?.addEventListener("blur", buscarProdutoPorCodigoProduto);
+
 
 // =============================================================
-// ✅ REGISTRAR ENTRADA — versão aprimorada com validações visuais
+// REGISTRAR ENTRADA — integrando Cód. Produto
 // =============================================================
 function registrarEntrada() {
-  limparErros("entrada"); // remove possíveis destaques anteriores
+  limparErros("entrada");
 
+  const codigoProdutoEl = document.getElementById("entradaCodigoProduto"); // novo campo
   const produtoEl = document.getElementById("entradaProduto");
   const qtdEl = document.getElementById("entradaQuantidade");
   const valorEl = document.getElementById("entradaValor");
@@ -3442,6 +3548,7 @@ function registrarEntrada() {
   const setorEl = document.getElementById("entradaSetor");
   const codigoEl = document.getElementById("entradaCodigoBarras");
 
+  const codigoProduto = codigoProdutoEl?.value.trim() || "";
   const produto = produtoEl?.value?.trim() || "";
   const qtd = parseFloat(qtdEl?.value?.trim()) || 0;
   const valor = parseFloat(valorEl?.value?.trim()) || 0;
@@ -3454,9 +3561,7 @@ function registrarEntrada() {
   const setor = setorEl?.value?.trim() || "";
   const codigoBarras = codigoEl?.value?.trim() || "";
 
-  // ==============================
-  // 🧠 Validação dos campos obrigatórios
-  // ==============================
+  // Validações
   if (!produto) return destacarErro(produtoEl, "O campo 'Nome do produto' é obrigatório!");
   if (!qtd || qtd <= 0) return destacarErro(qtdEl, "Informe a quantidade válida!");
   if (!valor || valor <= 0) return destacarErro(valorEl, "Informe o valor unitário!");
@@ -3467,37 +3572,61 @@ function registrarEntrada() {
   if (!validade) return destacarErro(validadeEl, "Informe a data de vencimento do material!");
   if (!setor) return destacarErro(setorEl, "Selecione o setor utilizado!");
 
-  // ==============================
-  // ✏️ Edição de registro existente
-  // ==============================
+  // Edição de registro existente
   if (typeof indiceEdicaoEntrada === "number" && indiceEdicaoEntrada !== null) {
     const e = window.entradas[indiceEdicaoEntrada];
     if (!e) return;
-    Object.assign(e, { produto, qtd, valor, data, nota, fornecedor, cnpj, lote, validade, setor, codigoBarras });
+    Object.assign(e, {
+      codigoProduto,
+      produto,
+      qtd,
+      valor,
+      data,
+      nota,
+      fornecedor,
+      cnpj,
+      lote,
+      validade,
+      setor,
+      codigoBarras
+    });
     mostrarMensagem(`✅ Entrada de "${produto}" atualizada com sucesso!`, "sucesso");
     indiceEdicaoEntrada = null;
     if (typeof window.mostrarBotaoCancelarEntrada === "function") window.mostrarBotaoCancelarEntrada(false);
   } else {
-    // ==============================
-    // 🆕 Nova entrada
-    // ==============================
-    const novaEntrada = { produto, qtd, valor, data, nota, fornecedor, cnpj, lote, validade, setor, codigoBarras, id: Date.now() };
+    // Nova entrada
+    const novaEntrada = { 
+  produto, 
+  qtd,
+  valor,
+  data,
+  nota,
+  fornecedor,
+  cnpj,
+  lote,
+  validade,
+  setor,
+  codigoBarras,
+  codigoProduto, // <-- ADICIONE
+  id: Date.now()
+};
+
     if (!Array.isArray(window.entradas)) window.entradas = [];
     window.entradas.push(novaEntrada);
     mostrarMensagem(`✅ Entrada registrada para "${produto}"`, "sucesso");
   }
 
-  // ==============================
-  // 🔄 Atualiza produto no catálogo
-  // ==============================
-  let produtoRef = window.produtos.find(p =>
+  // Atualiza produto no catálogo — busca por nome, cód. barras ou cód. produto
+  let produtoRef = (window.produtos || []).find(p =>
     (p.nome || "").toLowerCase() === produto.toLowerCase() ||
-    String(p.codBarras || p.codigoBarras || "") === String(codigoBarras)
+    String(p.codBarras || p.codigoBarras || "").trim() === String(codigoBarras).trim() ||
+    String(p.codigo || "").trim() === String(codigoProduto).trim()
   );
 
   if (!produtoRef) {
     produtoRef = {
       id: Date.now(),
+      codigo: codigoProduto || "",
       nome: produto,
       categoria: "Não especificada",
       embalagem: "",
@@ -3505,6 +3634,10 @@ function registrarEntrada() {
       quantidade: 0
     };
     window.produtos.push(produtoRef);
+  } else {
+    // se existir e tiver novo código, atualiza
+    if (codigoProduto && !produtoRef.codigo) produtoRef.codigo = codigoProduto;
+    if (codigoBarras && !produtoRef.codBarras) produtoRef.codBarras = codigoBarras;
   }
 
   // Atualiza estoque e informações do produto
@@ -3513,25 +3646,22 @@ function registrarEntrada() {
   produtoRef.lote = lote || produtoRef.lote;
   produtoRef.validade = validade || produtoRef.validade;
   produtoRef.codigoBarras = produtoRef.codigoBarras || codigoBarras;
+  if (codigoProduto) produtoRef.codigo = codigoProduto;
 
-  // ==============================
-  // 💾 Salva localmente e na nuvem
-  // ==============================
+
+
+  // Salva local & nuvem
   salvarTodosLocal?.();
   salvarProdutosNoFirebase?.(window.produtos);
   window.salvarEntradasNoFirebase?.(window.entradas);
 
-  // ==============================
-  // 📊 Atualiza a interface
-  // ==============================
+  // Atualiza interface
   atualizarTabelaEntradas?.();
   atualizarTabelaEstoque?.();
   atualizarPainelFinanceiro?.();
   atualizarDashboard?.();
 
-  // ==============================
-  // 🧹 Limpa os campos após salvar
-  // ==============================
+  // Limpa campos (mantém comportamento anterior)
   document.querySelectorAll('#entrada input, #entrada select, #entrada textarea').forEach(el => {
     if (el.type === "checkbox" || el.type === "radio") el.checked = false;
     else el.value = "";
@@ -3605,21 +3735,20 @@ function excluirEntrada(i) {
 
   window.entradas.splice(i, 1);
 
-  salvarEntradasNoFirebase(window.entradas);
-  salvarTodosLocal();
+  salvarEntradasNoFirebase?.(window.entradas);
+  salvarTodosLocal?.();
 
   mostrarMensagem(`🗑️ Entrada de "${e.produto}" excluída.`, "sucesso");
 
-  // 🔁 Atualiza tudo
+  // Atualiza tudo
   if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
   if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
   if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
   if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
 }
 
-
 function filtrarEntradas() {
-    atualizarTabelaEntradas();
+  atualizarTabelaEntradas();
 }
 // ADICIONE ESTA FUNÇÃO AO SEU <script type="module">
 function aplicarMascaraCNPJ(valor) {
@@ -3650,68 +3779,87 @@ function formatarCNPJ(input) {
 
 function atualizarTabelaEntradas() {
   const tbody = document.querySelector("#tabelaEntradas tbody");
-  const filtro = document.getElementById("filtroEntrada").value.toLowerCase();
+  const filtroEl = document.getElementById("filtroEntrada");
+  const filtro = filtroEl ? (filtroEl.value || "").toLowerCase() : "";
   tbody.innerHTML = "";
 
-  entradas.slice().reverse().forEach((e, i) => { 
-    const idxOriginal = entradas.length - 1 - i;
+  if (!Array.isArray(window.entradas)) window.entradas = [];
 
-    const produto = (e.produto || "").toLowerCase();
-    const fornecedor = (e.fornecedor || "").toLowerCase();
-    const nota = (e.nota || "").toLowerCase();
-    
-    if (filtro && !produto.includes(filtro) && !fornecedor.includes(filtro) && !nota.includes(filtro)) return;
+  // exibir mais recente primeiro (mantendo lógica anterior)
+  window.entradas.slice().reverse().forEach((e, i) => {
+    const idxOriginal = window.entradas.length - 1 - i;
+
+    const produtoLower = (e.produto || "").toLowerCase();
+    const fornecedorLower = (e.fornecedor || "").toLowerCase();
+    const notaLower = (e.nota || "").toLowerCase();
+    const codigoProdutoLower = (e.codigoProduto || "").toLowerCase();
+    const codigoBarrasLower = (e.codigoBarras || "").toLowerCase();
+
+    if (filtro) {
+      const matches = produtoLower.includes(filtro) ||
+                      fornecedorLower.includes(filtro) ||
+                      notaLower.includes(filtro) ||
+                      codigoProdutoLower.includes(filtro) ||
+                      codigoBarrasLower.includes(filtro);
+      if (!matches) return;
+    }
 
     const row = document.createElement("tr");
 
-    row.innerHTML = `
-      <td>${idxOriginal + 1}</td>
-      <td title="${e.produto || '-'}">${e.produto || "-"}</td>
+   row.innerHTML = `
+  <td>${idxOriginal + 1}</td>
 
-      <!-- Código de barras reduzido + tooltip + copiar ao clicar -->
-      <td 
-        title="${e.codigoBarras || '-'}"
-        onclick="copiarCodigoBarras('${e.codigoBarras || ''}')"
-        style="cursor:pointer; color:#444;"
-      >
-        ${e.codigoBarras || "-"}
-      </td>
+  <!-- 🆕 Cód. Produto (Correção DEFINITIVA) -->
+  <td title="${e.codigoProduto || (window.produtos.find(p => p.nome === e.produto)?.codigo) || '-'}">
+    ${e.codigoProduto || (window.produtos.find(p => p.nome === e.produto)?.codigo) || "-"}
+  </td>
 
-      <td>${e.qtd || 0}</td>
-      <td>${(e.valor || 0).toFixed(2)}</td>
+  <!-- 🔥 PRODUTO — coluna ampliada para melhor leitura -->
+  <td 
+    title="${e.produto || '-'}"
+    style="max-width:260px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+  >
+    ${e.produto || "-"}
+  </td>
 
-      <!-- Data com tooltip -->
-      <td title="${e.data || '-'}">${e.data || "-"}</td>
+  <td 
+    title="${e.codigoBarras || '-'}"
+    onclick="copiarCodigoBarras('${e.codigoBarras || ''}')"
+    style="cursor:pointer; color:#444; max-width:80px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+  >
+    ${e.codigoBarras || "-"}
+  </td>
 
-      <td title="${e.nota || '-'}">${e.nota || "-"}</td>
+  <td>${e.qtd || 0}</td>
+  <td>${(e.valor || 0).toFixed(2)}</td>
+  <td title="${e.data || '-'}">${e.data || "-"}</td>
+  <td title="${e.nota || '-'}">${e.nota || "-"}</td>
+  <td title="${e.fornecedor || '-'}">${e.fornecedor || "-"}</td>
+  <td title="${e.cnpj || '-'}">${e.cnpj || "-"}</td>
+  <td title="${e.lote || '-'}">${e.lote || "-"}</td>
+  <td title="${e.validade || '-'}">${e.validade || "-"}</td>
+  <td title="${e.setor || '-'}">${e.setor || "-"}</td>
 
-      <td title="${e.fornecedor || '-'}">${e.fornecedor || "-"}</td>
+  <td>
+    <button onclick="editarEntrada(${idxOriginal})" title="Editar Entrada">
+      <i class="fa fa-edit"></i>
+    </button>
+    <button onclick="excluirEntrada(${idxOriginal})" title="Excluir Entrada">
+      <i class="fa fa-trash"></i>
+    </button>
+  </td>
+`;
 
-      <!-- CNPJ com tooltip -->
-      <td title="${e.cnpj || '-'}">${e.cnpj || "-"}</td>
-
-      <td title="${e.lote || '-'}">${e.lote || "-"}</td>
-
-      <!-- Validade com tooltip -->
-      <td title="${e.validade || '-'}">${e.validade || "-"}</td>
-
-      <!-- Setor com tooltip -->
-      <td title="${e.setor || '-'}">${e.setor || "-"}</td>
-
-      <td>
-        <button onclick="editarEntrada(${idxOriginal})" title="Editar Entrada">
-          <i class="fa fa-edit"></i>
-        </button>
-        <button onclick="excluirEntrada(${idxOriginal})" title="Excluir Entrada">
-          <i class="fa fa-trash"></i>
-        </button>
-      </td>
-    `;
 
     tbody.appendChild(row);
   });
+ // se não houver entradas, mostra mensagem
+  if ((window.entradas || []).length === 0) {
+    const row = document.createElement("tr");
+    row.innerHTML = `<td colspan="14" style="text-align:center; color:#777;">Nenhuma entrada registrada.</td>`;
+    tbody.appendChild(row);
+  }
 }
-
 // =============================
 // ✅ EDIÇÃO DE ENTRADAS DE MATERIAIS
 // =============================
@@ -3728,10 +3876,8 @@ function editarEntrada(index) {
 
   indiceEdicaoEntrada = index;
 
-  // Preenche os campos do formulário com os dados da entrada
   document.getElementById("entradaProduto").value = entrada.produto || "";
-  document.getElementById("entradaQuantidade").value =
-  entrada.quantidade ?? entrada.qtd ?? entrada.qtdEntrada ?? "";
+  document.getElementById("entradaQuantidade").value = entrada.quantidade ?? entrada.qtd ?? entrada.qtdEntrada ?? "";
   document.getElementById("entradaValor").value = entrada.valor || "";
   document.getElementById("entradaData").value = entrada.data || "";
   document.getElementById("entradaNota").value = entrada.nota || "";
@@ -3741,15 +3887,19 @@ function editarEntrada(index) {
   document.getElementById("entradaValidade").value = entrada.validade || "";
   document.getElementById("entradaSetor").value = entrada.setor || "";
   document.getElementById("entradaCodigoBarras").value = entrada.codigoBarras || "";
+  // novo campo
+  if (document.getElementById("entradaCodigoProduto")) {
+    document.getElementById("entradaCodigoProduto").value = entrada.codigoProduto || "";
+  }
 
-  // Destaca a linha em edição
- const total = window.entradas.length;
-document.querySelectorAll("#tabelaEntradas tbody tr").forEach((tr, i) => {
-  const idxOriginal = total - 1 - i; // inverte a ordem para coincidir com o array
-  tr.style.background = idxOriginal === index ? "#fff3cd" : "";
-});
+  // destaca a linha em edição
+  const total = window.entradas.length;
+  document.querySelectorAll("#tabelaEntradas tbody tr").forEach((tr, i) => {
+    const idxOriginal = total - 1 - i;
+    tr.style.background = idxOriginal === index ? "#fff3cd" : "";
+  });
 
-  // Mostra botão "Cancelar Edição"
+  // mostra botão cancelar
   mostrarBotaoCancelarEntrada(true);
 
   mostrarMensagem(`✏️ Editando entrada do produto: ${entrada.produto}`, "info");
@@ -3978,20 +4128,46 @@ function atualizarTabelaSaidas() {
     if (filtro && !produto.includes(filtro) && !responsavel.includes(filtro) && !setor.includes(filtro)) return;
 
     const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${idxOriginal + 1}</td>
-      <td>${s.produto || "-"}</td>
-      <td style="font-size:12px; color:#555;">${s.codigoBarras || "-"}</td>
-      <td>${s.qtd ?? s.quantidade ?? 0}</td>
-      <td>${s.data || "-"}</td>
-      <td>${s.setor || "-"}</td>
-      <td>${s.responsavel || "-"}</td>
-      <td>${s.observacao || "-"}</td>
-      <td>
-        <button onclick="editarSaida(${idxOriginal})"><i class="fa fa-edit"></i></button>
-        <button onclick="excluirSaida(${idxOriginal})"><i class="fa fa-trash"></i></button>
-      </td>
-    `;
+  row.innerHTML = `
+  <td>${idxOriginal + 1}</td>
+
+  <!-- Cód. Produto (usa o valor salvo na saída ou busca no cadastro pelo nome) -->
+  <td title="${s.codigoProduto || (window.produtos.find(p => p.nome === s.produto)?.codigo) || '-'}">
+    ${s.codigoProduto || (window.produtos.find(p => p.nome === s.produto)?.codigo) || "-"}
+  </td>
+
+  <!-- Produto (coluna maior para leitura) -->
+  <td 
+    title="${s.produto || '-'}"
+    style="max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+  >
+    ${s.produto || "-"}
+  </td>
+
+  <!-- Código de Barras (coluna reduzida) -->
+  <td
+    title="${s.codigoBarras || '-'}"
+    onclick="copiarCodigoBarras('${s.codigoBarras || ''}')"
+    style="cursor:pointer; color:#444; max-width:100px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+  >
+    ${s.codigoBarras || "-"}
+  </td>
+
+  <td>${s.qtd || 0}</td>
+  <td title="${s.data || '-'}">${s.data || "-"}</td>
+  <td title="${s.setor || '-'}">${s.setor || "-"}</td>
+  <td title="${s.responsavel || '-'}">${s.responsavel || "-"}</td>
+  <td title="${s.observacao || '-'}" style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+    ${s.observacao || "-"}
+  </td>
+
+  <td>
+    <button onclick="editarSaida(${idxOriginal})" title="Editar Saída"><i class="fa fa-edit"></i></button>
+    <button onclick="excluirSaida(${idxOriginal})" title="Excluir Saída"><i class="fa fa-trash"></i></button>
+  </td>
+`;
+
+
     tbody.appendChild(row);
   });
 }
@@ -4244,31 +4420,81 @@ if (!document.getElementById("estiloAutoCompleteSaida")) {
 `;
   document.head.appendChild(estiloAuto);
 }
-function buscarProdutoPorCodigoSaida() {
-  const campoCodigo = document.getElementById("saidaCodigoBarras");
+function buscarSaidaPorCodigoBarras() {
+  const campoCodigoBarras = document.getElementById("saidaCodigoBarras");
   const campoProduto = document.getElementById("saidaProduto");
+  const campoCodigoProduto = document.getElementById("saidaCodigoProduto");
 
-  if (!campoCodigo || !campoProduto) return;
-
-  const codigo = campoCodigo.value.trim();
+  const codigo = campoCodigoBarras.value.trim();
   if (!codigo) return;
 
-  // Procurar produto cadastrado
-  const produto = window.produtos.find(p => p.codigoBarras === codigo);
+  const produto = (window.produtos || []).find(p =>
+    String(p.codBarras || p.codigoBarras || "").trim() === codigo
+  );
 
-  if (produto) {
-    campoProduto.value = produto.nome;
-
-    // Atualiza setor automaticamente (caso você já use isso)
-    if (typeof atualizarSetorAutomatico === "function") {
-      atualizarSetorAutomatico();
-    }
+  if (!produto) {
+    campoCodigoBarras.style.border = "2px solid red";
+    return;
   }
+
+  campoProduto.value = produto.nome || "";
+  campoCodigoProduto.value = produto.codigo || "";  // <<< AQUI!
+  campoCodigoBarras.style.border = "1px solid #ccc";
 }
 
+function buscarSaidaPorCodigoProduto() {
+  const campoCodigoProduto = document.getElementById("saidaCodigoProduto");
+  const campoProduto = document.getElementById("saidaProduto");
+  const campoCodigoBarras = document.getElementById("saidaCodigoBarras");
+
+  const codDigitado = campoCodigoProduto.value.trim().toLowerCase();
+  if (!codDigitado) return;
+
+  const produto = (window.produtos || []).find(p =>
+    String(p.codigo || "").trim().toLowerCase() === codDigitado
+  );
+
+  if (!produto) {
+    campoCodigoProduto.style.border = "2px solid red";
+    return;
+  }
+
+  campoProduto.value = produto.nome || "";
+  campoCodigoBarras.value = produto.codBarras || produto.codigoBarras || "";
+  campoCodigoProduto.style.border = "1px solid #ccc";
+}
+function buscarSaidaPorNomeProduto() {
+  const campoProduto = document.getElementById("saidaProduto");
+  const campoCodigoProduto = document.getElementById("saidaCodigoProduto");
+  const campoCodigoBarras = document.getElementById("saidaCodigoBarras");
+
+  const nome = campoProduto.value.trim().toLowerCase();
+  if (!nome) return;
+
+  const produto = (window.produtos || []).find(p =>
+    String(p.nome || "").trim().toLowerCase() === nome
+  );
+
+  if (!produto) {
+    campoProduto.style.border = "2px solid red";
+    return;
+  }
+
+  campoCodigoProduto.value = produto.codigo || "";
+  campoCodigoBarras.value = produto.codBarras || produto.codigoBarras || "";
+  campoProduto.style.border = "1px solid #ccc";
+}
+
+// 📌 COLE AQUI OS EVENTOS AUTOMÁTICOS
+document.getElementById("saidaCodigoBarras")
+  ?.addEventListener("blur", buscarSaidaPorCodigoBarras);
+document.getElementById("saidaCodigoProduto")
+  ?.addEventListener("blur", buscarSaidaPorCodigoProduto);
+document.getElementById("saidaProduto")
+  ?.addEventListener("blur", buscarSaidaPorNomeProduto);
+  
 // 🔁 Inicializa o autocompletar após 1 segundo (garante que os produtos já foram carregados)
 setTimeout(iniciarAutoCompleteSaida, 1000);
-
 
 // ============================================================
 // 📦 ESTOQUE ATUAL — Versão corrigida (não sobrescreve dados)
@@ -4384,16 +4610,28 @@ window.atualizarTabelaEstoque = function (filtroTexto = "") {
   // Ordena alfabeticamente pelo nome (pt-BR)
   produtosParaExibir.sort((a, b) => (String(a.nome || "").toLowerCase()).localeCompare(String(b.nome || "").toLowerCase(), 'pt-BR'));
 
-  // Filtra para UI
-  const filtrados = produtosParaExibir.filter(p => {
-    if (!filtro) return true;
-    return (
-      String(p.nome || "").toLowerCase().includes(filtro) ||
-      String(p.categoria || "").toLowerCase().includes(filtro) ||
-      String(p.quantidade || "").toLowerCase().includes(filtro) ||
-      String(p.validade || "").toLowerCase().includes(filtro)
-    );
-  });
+  // Filtra para UI — AGORA COMPLETO
+const filtrados = produtosParaExibir.filter(p => {
+  if (!filtro) return true;
+
+  return (
+    String(p._orig?.codigo || "").toLowerCase().includes(filtro) ||  // Cód. Produto
+    String(p.nome || "").toLowerCase().includes(filtro) ||           // Produto
+    String(p.codigoBarras || "").toLowerCase().includes(filtro) ||   // Código de Barras
+    String(p.categoria || "").toLowerCase().includes(filtro) ||      // Categoria
+    String(p.quantidade || "").toLowerCase().includes(filtro) ||     // Quantidade
+    String(p.lote || "").toLowerCase().includes(filtro) ||           // Lote
+    String(p.ultimoValor || "").toLowerCase().includes(filtro) ||    // Último Valor (R$)
+    String(p.validade || "").toLowerCase().includes(filtro)          // Validade
+  );
+});
+function formatarDataBR(dataISO) {
+  if (!dataISO || dataISO === "-") return "-";
+  const partes = dataISO.split("-");
+  if (partes.length !== 3) return dataISO;
+  return `${partes[2]}-${partes[1]}-${partes[0]}`;
+}
+
 
   // Renderiza
   if (filtrados.length === 0) {
@@ -4402,19 +4640,73 @@ window.atualizarTabelaEstoque = function (filtroTexto = "") {
     filtrados.forEach((p, i) => {
       const valor = Number(p.ultimoValor || 0);
       const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${i + 1}</td>
-        <td>${p.nome || "-"}</td>
-        <td>${p.codigoBarras || "-"}</td>
-        <td>${p.categoria || "-"}</td>
-        <td style="text-align:center;">${p.quantidade}</td>
-        <td>${p.lote || "-"}</td>
-        <td>${valor ? valor.toFixed(2) : "-"}</td>
-        <td>${p.validade || "-"}</td>
-        <td style="font-weight:bold; color:${p.statusOk ? '#198754' : '#dc3545'};">
-          ${p.statusOk ? "✅ Em Estoque" : "❌ Zerado"}
-        </td>
-      `;
+ tr.innerHTML = `
+  <td>${i + 1}</td>
+
+  <!-- 🟦 CÓD. PRODUTO — agora REALMENTE PEQUENO -->
+  <td 
+    style="max-width:45px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+    title="${p._orig?.codigo || '-'}"
+  >
+    ${p._orig?.codigo || "-"}
+  </td>
+
+  <!-- 🟩 PRODUTO (mantido grande para leitura) -->
+  <td 
+    style="max-width:280px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+    title="${p.nome || '-'}"
+  >
+    ${p.nome || "-"}
+  </td>
+
+  <!-- 🟫 CÓDIGO DE BARRAS -->
+  <td 
+    style="max-width:90px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+    title="${p.codigoBarras || '-'}"
+  >
+    ${p.codigoBarras || "-"}
+  </td>
+
+  <!-- 🟨 CATEGORIA — ampliada para mostrar nomes completos -->
+  <td 
+    style="max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+    title="${p.categoria || '-'}"
+  >
+    ${p.categoria || "-"}
+  </td>
+
+  <!-- 🟥 QUANTIDADE -->
+  <td style="text-align:center;">${p.quantidade}</td>
+
+  <!-- LOTE -->
+  <td>${p.lote || "-"}</td>
+
+  <!-- 🟪 ÚLTIMO VALOR — centralizado -->
+  <td 
+    style="max-width:85px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+    title="${valor ? valor.toFixed(2) : '-'}"
+  >
+    ${valor ? valor.toFixed(2) : "-"}
+  </td>
+
+ <!-- VALIDADE (formato BR DD-MM-YYYY) -->
+<td 
+  style="max-width:120px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+  title="${formatarDataBR(p.validade)}"
+>
+  ${formatarDataBR(p.validade)}
+</td>
+
+
+  <!-- STATUS -->
+  <td style="font-weight:bold; color:${p.statusOk ? '#198754' : '#dc3545'};">
+    ${p.statusOk ? "✅ Em Estoque" : "❌ Zerado"}
+  </td>
+`;
+
+
+
+
       tabela.appendChild(tr);
     });
   }
@@ -4439,11 +4731,23 @@ function filtrarEstoque() {
 // 🧹 LIMPAR FILTRO — botão “Limpar”
 // ============================================================
 function limparFiltroEstoque() {
-  const campo = document.getElementById("filtroEstoque");
-  if (campo) campo.value = "";
+  const campoTexto = document.getElementById("filtroEstoque");
+  const campoCategoria = document.getElementById("filtroCategoria"); // ID do select de categorias
+
+  // 1️⃣ Limpa o texto digitado no filtro
+  if (campoTexto) campoTexto.value = "";
+
+  // 2️⃣ Volta o select para "Todas as Categorias"
+  if (campoCategoria) campoCategoria.value = "";
+
+  // 3️⃣ Recarrega a tabela completa
   atualizarTabelaEstoque();
-  campo?.focus();
+
+  // 4️⃣ Foco no campo de busca
+  campoTexto?.focus();
 }
+
+
 
 // ============================================================
 // 🔄 RE-CALCULAR ESTOQUE (botão manual, opcional)
@@ -4530,7 +4834,6 @@ function atualizarTabelaLimites(filtroTexto = "") {
   const saidas = window.saidas || [];
   const resumoDiv = document.getElementById("resumoLimites");
 
-  // Captura o texto do filtro
   const filtro = filtroTexto.toLowerCase().trim() ||
     (document.getElementById("filtroLimites")?.value || "").toLowerCase().trim();
 
@@ -4552,7 +4855,7 @@ function atualizarTabelaLimites(filtroTexto = "") {
     return;
   }
 
-  // 🔹 Cria o mapa de estoque real (entradas - saídas)
+  // 🔹 Cria mapa de estoque (entradas - saídas)
   const mapaEstoque = {};
   entradas.forEach(e => {
     const nome = e.produto || e.nomeProduto || "";
@@ -4567,11 +4870,18 @@ function atualizarTabelaLimites(filtroTexto = "") {
 
   let total = 0, abaixo = 0, dentro = 0, acima = 0;
 
-  // 🔍 Filtro avançado + cálculo de limites e recomendação revisada
-  const produtosFiltrados = produtos.filter(p => {
+  // 🔍 Filtro + status + recomendação
+  let produtosFiltrados = produtos.filter(p => {
+    const filtroTxt = filtro.toLowerCase();
+
     const nome = (p.nome || "").toLowerCase();
     const categoria = (p.categoria || "").toLowerCase();
+    const codProduto = (p.codigo || "").toLowerCase();
+    const codBarras = (p.codigoBarras || "").toLowerCase();
+    
     const qtd = Number(mapaEstoque[p.nome] ?? p.quantidade ?? 0);
+    const textoQtd = String(qtd);
+
     const minimo = Number(p.minimo || 0);
     const maximo = Number(p.maximo || 0);
 
@@ -4580,7 +4890,7 @@ function atualizarTabelaLimites(filtroTexto = "") {
 
     if (qtd < minimo) {
       status = "⚠️ Abaixo do Mínimo";
-      recomendacao = `Comprar ${maximo - qtd}`; // 🟢 corrigido para atingir o máximo
+      recomendacao = `Comprar ${maximo - qtd}`;
     } else if (maximo > 0 && qtd > maximo) {
       status = "📦 Acima do Máximo";
       recomendacao = `Reduzir novas entradas (${qtd - maximo} excedentes)`;
@@ -4588,19 +4898,31 @@ function atualizarTabelaLimites(filtroTexto = "") {
 
     const textoStatus = status.toLowerCase();
     const textoRecomendacao = recomendacao.toLowerCase();
-    const textoQtd = String(qtd);
 
-    if (!filtro) return true;
+    if (!filtroTxt) return true;
 
     return (
-      nome.includes(filtro) ||
-      categoria.includes(filtro) ||
-      textoQtd.includes(filtro) ||
-      textoStatus.includes(filtro) ||
-      textoRecomendacao.includes(filtro)
+      codProduto.includes(filtroTxt) ||
+      nome.includes(filtroTxt) ||
+      codBarras.includes(filtroTxt) ||
+      categoria.includes(filtroTxt) ||
+      textoQtd.includes(filtroTxt) ||
+      textoStatus.includes(filtroTxt) ||
+      textoRecomendacao.includes(filtroTxt)
     );
   });
 
+  // 🟦 FILTRO DE CATEGORIA — MOSTRA APENAS OS PRODUTOS DA CATEGORIA ESCOLHIDA
+  const categoriaSelecionada = document.getElementById("filtroCategoria")?.value || "";
+  if (categoriaSelecionada) {
+    produtosFiltrados = produtosFiltrados.filter(p =>
+      (p.categoria || "") === categoriaSelecionada
+    );
+  }
+// ✅ ORDENAR PRODUTOS POR NOME (A → Z)
+produtosFiltrados.sort((a, b) =>
+  (a.nome || "").localeCompare(b.nome || "", "pt-BR", { sensitivity: "base" })
+);
   // 🔸 Monta a tabela
   produtosFiltrados.forEach((p, i) => {
     total++;
@@ -4616,7 +4938,7 @@ function atualizarTabelaLimites(filtroTexto = "") {
 
     if (qtd < minimo) {
       status = "⚠️ Abaixo do Mínimo";
-      recomendacao = `Comprar ${maximo - qtd}`; // ✅ corrigido
+      recomendacao = `Comprar ${maximo - qtd}`;
       abaixo++;
     } else if (maximo > 0 && qtd > maximo) {
       status = "📦 Acima do Máximo";
@@ -4631,22 +4953,76 @@ function atualizarTabelaLimites(filtroTexto = "") {
       status.includes("Acima") ? "#fd7e14" : "#198754";
 
     const linha = document.createElement("tr");
-    linha.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${p.nome || "-"}</td>
-      <td>${p.codigoBarras || "-"}</td>
-      <td>${p.categoria || "-"}</td>
-      <td style="text-align:center;">${qtd}</td>
-      <td><input type="number" id="min_${i}" value="${minimo}" style="width:80px"></td>
-      <td><input type="number" id="max_${i}" value="${maximo}" style="width:80px"></td>
-      <td style="color:${corStatus}; font-weight:bold;">${status}</td>
-      <td>${recomendacao}</td>
-      <td>
-        <button onclick="salvarLimites(${i})" title="Salvar Limites">
-          <i class="fa fa-save"></i>
-        </button>
-      </td>
-    `;
+  linha.innerHTML = `
+  <td>${i + 1}</td>
+
+ <!-- 🆕 CÓD. PRODUTO — agora menor e alinhado à esquerda -->
+<td 
+  style="max-width:30px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:left;"
+  title="${p.codigo || '-'}"
+>
+  ${p.codigo || "-"}
+</td>
+
+  <!-- PRODUTO (MAIOR) -->
+  <td style="max-width:260px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+      title="${p.nome || '-'}">
+    ${p.nome || "-"}
+  </td>
+
+  <!-- CÓDIGO DE BARRAS (MENOR) -->
+  <td style="max-width:80px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;"
+      title="${p.codigoBarras || '-'}"
+      onclick="copiarCodigoBarras('${p.codigoBarras || ''}')">
+    ${p.codigoBarras || "-"}
+  </td>
+
+  <!-- CATEGORIA (MAIOR) -->
+  <td style="max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+      title="${p.categoria || '-'}">
+    ${p.categoria || "-"}
+  </td>
+
+  <td style="text-align:center;">${qtd}</td>
+
+  <td>
+  <input 
+    type="number" 
+    id="min_${p.codigo}"
+    value="${minimo}" 
+    style="width:55px; padding:3px; text-align:center;"
+  >
+</td>
+
+<td>
+  <input 
+    type="number" 
+    id="max_${p.codigo}"
+    value="${maximo}" 
+    style="width:55px; padding:3px; text-align:center;"
+  >
+</td>
+
+  <!-- STATUS (MAIOR) -->
+  <td style="font-weight:bold; color:${corStatus}; white-space:nowrap; max-width:160px; text-overflow:ellipsis; overflow:hidden;">
+    ${status}
+  </td>
+
+  <!-- RECOMENDAÇÃO -->
+  <td style="max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+    ${recomendacao}
+  </td>
+
+  <!-- AÇÕES (MAIS LARGA) -->
+  <td style="text-align:center; width:90px;">
+    <button onclick="salvarLimites('${p.codigo}')" title="Salvar Limites" style="margin-right:5px;">
+      <i class="fa fa-save"></i>
+    </button>
+  </td>
+`;
+
+
+
     tabela.appendChild(linha);
   });
 
@@ -4660,6 +5036,7 @@ function atualizarTabelaLimites(filtroTexto = "") {
     `;
   }
 }
+
 
 // ============================================================
 // 🔍 Filtro dinâmico — ao digitar
@@ -5010,32 +5387,47 @@ window.abrirErrosProblemas = function () {
   atualizarTabelaErros?.();
 };
 
-
-
-
-
-
-
-
-
-
-
-
 // ====================================================
-// 🧹 LIMPAR E GERENCIAR LISTA DE COMPRA
+// 🧹 LIMPAR E GERENCIAR LISTA DE COMPRA (CORREÇÃO FINAL)
 // ====================================================
-
 function limparListaCompra() {
-  const tabela = document.querySelector("#tabelaListaCompra tbody");
-  const totalSpan = document.getElementById("totalItensCompra");
-  const container = document.getElementById("listaCompraContainer");
+  console.log("🔄 Limpando lista de compra...");
 
+  // 1️⃣ Limpa a tabela da lista gerada
+  const tabela = document.querySelector("#tabelaListaCompra tbody");
   if (tabela) tabela.innerHTML = "";
+
+  // 2️⃣ Zera o total de itens
+  const totalSpan = document.getElementById("totalItensCompra");
   if (totalSpan) totalSpan.textContent = "0";
+
+  // 3️⃣ Esconde o container da lista gerada
+  const container = document.getElementById("listaCompraContainer");
   if (container) container.style.display = "none";
 
-  mostrarMensagem("🧹 Lista de compra limpa com sucesso.", "info");
+  // 4️⃣ *** VOLTAR O SELECT PARA “TODAS AS CATEGORIAS” ***
+  const selectCategoria = document.getElementById("filtroCategoria");
+  if (selectCategoria) {
+    selectCategoria.value = ""; // <-- ESSA LINHA É A PRINCIPAL
+  }
+
+  // 5️⃣ *** RESETAR o filtro de texto ***
+  const filtroTexto = document.getElementById("filtroLimites");
+  if (filtroTexto) filtroTexto.value = "";
+
+  // 6️⃣ *** Resetar filtros globais ***
+  window.filtroLimites = "";
+  window.filtroCategoria = "";
+
+  // 7️⃣ *** RECARREGAR A TABELA COMPLETA — SEM FILTROS ***
+  if (typeof atualizarTabelaLimites === "function") {
+    atualizarTabelaLimites();
+  }
+
+  // 8️⃣ Mensagem final
+  mostrarMensagem("🧹 Lista de compra limpa! Tabela restaurada.", "info");
 }
+
 
 function removerItemListaCompra(botao) {
   const linha = botao.closest("tr");
@@ -5091,6 +5483,97 @@ function atualizarTabelaErros() {
   });
 }
 
+
+
+
+function concluirErro(index) {
+  window.errosProblemas[index].concluidoEm = new Date().toLocaleDateString();
+  mostrarMensagem("✔️ Erro concluído com sucesso!", "sucesso");
+  atualizarTabelaErros();
+}
+
+function excluirErro(index) {
+  if (confirm("Deseja realmente excluir este registro?")) {
+    window.errosProblemas.splice(index, 1);
+    atualizarTabelaErros();
+    mostrarMensagem("🗑️ Registro excluído com sucesso.", "sucesso");
+  }
+}
+
+function filtrarErros() {
+  const termo = document.getElementById("filtroErros").value.toLowerCase();
+  const tbody = document.querySelector("#tabelaErros tbody");
+  tbody.querySelectorAll("tr").forEach(tr => {
+    const texto = tr.textContent.toLowerCase();
+    tr.style.display = texto.includes(termo) ? "" : "none";
+  });
+}
+
+function limparFiltroErros() {
+  const campo = document.getElementById("filtroErros");
+  if (campo) campo.value = "";
+  filtrarErros();
+  mostrarMensagem("Filtro limpo.", "info");
+}
+// ====================================================
+// 💾 SALVAR / LIMPAR / FILTRAR LIMITES
+// ====================================================
+
+function salvarLimites(codProduto) {
+  // procura o produto REAL na lista original
+  const produtoRef = window.produtos.find(p => String(p.codigo) === String(codProduto));
+  if (!produtoRef) {
+    mostrarMensagem("Erro: Produto não encontrado para salvar limites!", "erro");
+    return;
+  }
+
+  // pega os inputs corretos
+  const minEl = document.getElementById(`min_${codProduto}`);
+  const maxEl = document.getElementById(`max_${codProduto}`);
+
+  // salva os valores
+  produtoRef.minimo = Number(minEl?.value || 0);
+  produtoRef.maximo = Number(maxEl?.value || 0);
+
+  // salva local e Firebase
+  salvarProdutosNoFirebase(window.produtos);
+  salvarTodosLocal();
+
+  mostrarMensagem(`Limites do produto "${produtoRef.nome}" salvos com sucesso!`, "sucesso");
+
+  atualizarTabelaLimites();
+}
+
+
+function removerLimites(nome) {
+  const produtoRef = window.produtos.find(p => p.nome === nome);
+  if (!produtoRef) return;
+
+  if (confirm(`Remover limites do produto "${nome}"?`)) {
+    produtoRef.minimo = 0;
+    produtoRef.maximo = 0;
+    salvarProdutosNoFirebase(window.produtos);
+    salvarTodosLocal();
+    atualizarTabelaLimites();
+    mostrarMensagem(`Limites de "${nome}" removidos com sucesso.`, "sucesso");
+  }
+}
+
+function filtrarLimites() {
+  const filtro = document.getElementById("filtroLimites");
+  window.filtroLimites = filtro?.value || "";
+  atualizarTabelaLimites();
+}
+
+function limparFiltroLimites() {
+  const filtro = document.getElementById("filtroLimites");
+  if (filtro) filtro.value = "";
+  window.filtroLimites = "";
+  atualizarTabelaLimites();
+  mostrarMensagem("Filtro de Estoque Mínimo e Máximo limpo.", "info");
+}
+
+
 async function salvarParecer(index) {
   const parecerInput = document.getElementById(`parecer_${index}`);
   const dataConclusaoInput = document.getElementById(`dataConclusao_${index}`);
@@ -5134,83 +5617,6 @@ async function salvarParecer(index) {
 
 
 
-function concluirErro(index) {
-  window.errosProblemas[index].concluidoEm = new Date().toLocaleDateString();
-  mostrarMensagem("✔️ Erro concluído com sucesso!", "sucesso");
-  atualizarTabelaErros();
-}
-
-function excluirErro(index) {
-  if (confirm("Deseja realmente excluir este registro?")) {
-    window.errosProblemas.splice(index, 1);
-    atualizarTabelaErros();
-    mostrarMensagem("🗑️ Registro excluído com sucesso.", "sucesso");
-  }
-}
-
-function filtrarErros() {
-  const termo = document.getElementById("filtroErros").value.toLowerCase();
-  const tbody = document.querySelector("#tabelaErros tbody");
-  tbody.querySelectorAll("tr").forEach(tr => {
-    const texto = tr.textContent.toLowerCase();
-    tr.style.display = texto.includes(termo) ? "" : "none";
-  });
-}
-
-function limparFiltroErros() {
-  const campo = document.getElementById("filtroErros");
-  if (campo) campo.value = "";
-  filtrarErros();
-  mostrarMensagem("Filtro limpo.", "info");
-}
-
-
-// ====================================================
-// 💾 SALVAR / LIMPAR / FILTRAR LIMITES
-// ====================================================
-
-function salvarLimites(i) {
-  const minEl = document.getElementById(`min_${i}`);
-  const maxEl = document.getElementById(`max_${i}`);
-
-  if (!window.produtos[i]) return;
-
-  window.produtos[i].minimo = Number(minEl.value) || 0;
-  window.produtos[i].maximo = Number(maxEl.value) || 0;
-
-  salvarProdutosNoFirebase(window.produtos);
-  salvarTodosLocal();
-  mostrarMensagem(`Limites do produto "${window.produtos[i].nome}" atualizados com sucesso!`, "sucesso");
-  atualizarTabelaLimites();
-}
-
-function removerLimites(nome) {
-  const produtoRef = window.produtos.find(p => p.nome === nome);
-  if (!produtoRef) return;
-
-  if (confirm(`Remover limites do produto "${nome}"?`)) {
-    produtoRef.minimo = 0;
-    produtoRef.maximo = 0;
-    salvarProdutosNoFirebase(window.produtos);
-    salvarTodosLocal();
-    atualizarTabelaLimites();
-    mostrarMensagem(`Limites de "${nome}" removidos com sucesso.`, "sucesso");
-  }
-}
-
-function filtrarLimites() {
-  const filtro = document.getElementById("filtroLimites");
-  window.filtroLimites = filtro?.value || "";
-  atualizarTabelaLimites();
-}
-
-function limparFiltroLimites() {
-  const filtro = document.getElementById("filtroLimites");
-  if (filtro) filtro.value = "";
-  window.filtroLimites = "";
-  atualizarTabelaLimites();
-  mostrarMensagem("Filtro de Estoque Mínimo e Máximo limpo.", "info");
-}
 
 // ====================================================
 // 💰 PAINEL FINANCEIRO — Correção completa e automática
@@ -5888,6 +6294,7 @@ document.addEventListener('click', (event) => {
     }
 });
 
+
 // =============================================
 // 📊 FUNÇÃO: Atualizar Tabela de Valor Histórico
 // =============================================
@@ -5899,7 +6306,7 @@ window.atualizarTabelaValorHistorico = function() {
   const entradas = window.entradas || [];
   if (entradas.length === 0) {
     const row = document.createElement("tr");
-    row.innerHTML = `<td colspan="13" style="text-align:center; color:#888;">Sem registros de entrada encontrados.</td>`;
+    row.innerHTML = `<td colspan="14" style="text-align:center; color:#888;">Sem registros de entrada encontrados.</td>`;
     tabela.appendChild(row);
     return;
   }
@@ -5919,74 +6326,125 @@ window.atualizarTabelaValorHistorico = function() {
     historico[produto][mes] = valor;
   });
 
-  // 🔹 Preenche a tabela
-  Object.entries(historico).forEach(([produto, valores]) => {
-    const row = document.createElement("tr");
-    let html = `<td>${produto}</td>`;
+  // 🔹 Ordena produtos em ordem alfabética
+const historicoOrdenado = Object.entries(historico).sort(([a], [b]) =>
+  a.localeCompare(b, 'pt-BR')
+);
 
+// 🔹 Preenche a tabela com lista ordenada
+historicoOrdenado.forEach(([produto, valores]) => {
+
+    // 🆕 Buscar o Cód. Produto no cadastro
+    const cadastrado = window.produtos.find(p => p.nome === produto);
+    const codigoProduto = cadastrado?.codigo || "-";
+
+    const row = document.createElement("tr");
+
+    // 🆕 Cód. Produto + Produto (colunas iniciais) — CORRIGIDO
+    let html = `
+      <td style="text-align:center; width:70px;" title="${codigoProduto}">
+        ${codigoProduto}
+      </td>
+
+      <td style="text-align:left; max-width:260px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+          title="${produto}">
+        ${produto}
+      </td>
+    `;
+
+    // 🗓️ 12 meses
     for (let i = 0; i < 12; i++) {
       const valor = valores[i];
+
       if (valor === null) {
-        html += `<td style="color:#ccc;">–</td>`;
+        html += `<td style="color:#ccc; text-align:center;">–</td>`;
       } else {
-        // seta comparando com o mês anterior
+
         let seta = "";
-       if (i > 0 && valores[i - 1] !== null) {
-  const anterior = valores[i - 1];
-  if (valor > anterior) {
-    // 🔺 Vermelha (aumento)
-    seta = `<span style="
-      display:inline-block;
-      background:#dc3545;
-      color:#fff;
-      border-radius:50%;
-      width:18px;
-      height:18px;
-      line-height:18px;
-      font-size:12px;
-      text-align:center;
-      box-shadow:0 0 3px rgba(0,0,0,0.3);
-      transform:rotate(0deg);
-    ">▲</span>`;
-  } else if (valor < anterior) {
-    // 🔻 Azul (queda)
-    seta = `<span style="
-      display:inline-block;
-      background:#0d6efd;
-      color:#fff;
-      border-radius:50%;
-      width:18px;
-      height:18px;
-      line-height:18px;
-      font-size:12px;
-      text-align:center;
-      box-shadow:0 0 3px rgba(0,0,0,0.3);
-      transform:rotate(180deg);
-    ">▲</span>`;
-  } else {
-    // ⚪ Branca (sem alteração)
-    seta = `<span style="
-      display:inline-block;
-      background:#ccc;
-      color:#fff;
-      border-radius:50%;
-      width:12px;
-      height:12px;
-      box-shadow:inset 0 0 2px rgba(0,0,0,0.4);
-    "></span>`;
-  }
-}
 
-html += `<td style="text-align:center;">R$ ${valor.toFixed(2)} ${seta}</td>`;
+        // Comparação com o mês anterior
+        if (i > 0 && valores[i - 1] !== null) {
+          const anterior = valores[i - 1];
 
+          if (valor > anterior) {
+            seta = `<span style="
+              display:inline-block;
+              background:#dc3545;
+              color:#fff;
+              border-radius:50%;
+              width:18px;
+              height:18px;
+              line-height:18px;
+              font-size:12px;
+              text-align:center;
+            ">▲</span>`;
+          }
 
+          else if (valor < anterior) {
+            seta = `<span style="
+              display:inline-block;
+              background:#0d6efd;
+              color:#fff;
+              border-radius:50%;
+              width:18px;
+              height:18px;
+              line-height:18px;
+              font-size:12px;
+              text-align:center;
+              transform:rotate(180deg);
+            ">▲</span>`;
+          }
+
+          else {
+            seta = `<span style="
+              display:inline-block;
+              background:#ccc;
+              border-radius:50%;
+              width:12px;
+              height:12px;
+              box-shadow:inset 0 0 2px rgba(0,0,0,0.4);
+            "></span>`;
+          }
+        }
+
+        html += `
+          <td style="text-align:center;">
+            R$ ${valor.toFixed(2)} ${seta}
+          </td>
+        `;
       }
     }
 
-    row.innerHTML = html;
+       row.innerHTML = html;
     tabela.appendChild(row);
   });
+
+  // ✅ Aplica o filtro APÓS montar toda a tabela
+  filtrarValorHistorico();
 };
+
+function filtrarValorHistorico() {
+  const filtro = (document.getElementById("filtroValorHistorico")?.value || "")
+    .toLowerCase()
+    .trim();
+
+  const linhas = document.querySelectorAll("#tabelaValorHistorico tbody tr");
+
+  linhas.forEach(tr => {
+    const texto = tr.textContent.toLowerCase();
+    tr.style.display = texto.includes(filtro) ? "" : "none";
+  });
+}
+
+function limparFiltroValorHistorico() {
+  const campo = document.getElementById("filtroValorHistorico");
+  if (campo) campo.value = "";
+
+  filtrarValorHistorico();
+  mostrarMensagem("Filtro limpo!", "info");
+}
+
+
 
 /* =====================================================
    ✨ CORREÇÃO ORTOGRÁFICA AUTOMÁTICA — RELATOS DE ERROS
@@ -6064,46 +6522,4 @@ document
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
-
-
-
-
-
-
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		
