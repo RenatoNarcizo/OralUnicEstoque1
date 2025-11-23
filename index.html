@@ -4988,7 +4988,7 @@ produtosFiltrados.sort((a, b) =>
   <td>
   <input 
     type="number" 
-    id="min_${p.codigo}"
+     id="min_${p.codigo || p.nome.replace(/\s+/g,'_')}"
     value="${minimo}" 
     style="width:55px; padding:3px; text-align:center;"
   >
@@ -4997,7 +4997,7 @@ produtosFiltrados.sort((a, b) =>
 <td>
   <input 
     type="number" 
-    id="max_${p.codigo}"
+    id="max_${p.codigo || p.nome.replace(/\s+/g,'_')}"
     value="${maximo}" 
     style="width:55px; padding:3px; text-align:center;"
   >
@@ -5015,10 +5015,10 @@ produtosFiltrados.sort((a, b) =>
 
   <!-- AÇÕES (MAIS LARGA) -->
   <td style="text-align:center; width:90px;">
-    <button onclick="salvarLimites('${p.codigo}')" title="Salvar Limites" style="margin-right:5px;">
-      <i class="fa fa-save"></i>
-    </button>
-  </td>
+  <button onclick="salvarLimites('${p.codigo || p.nome.replace(/\s+/g,'_')}')" title="Salvar Limites" style="margin-right:5px;">
+    <i class="fa fa-save"></i>
+  </button>
+</td>
 `;
 
 
@@ -5519,23 +5519,23 @@ function limparFiltroErros() {
 // 💾 SALVAR / LIMPAR / FILTRAR LIMITES
 // ====================================================
 
-function salvarLimites(codProduto) {
-  // procura o produto REAL na lista original
-  const produtoRef = window.produtos.find(p => String(p.codigo) === String(codProduto));
+function salvarLimites(idProduto) {
+  const produtoRef = window.produtos.find(p =>
+    String(p.codigo) === String(idProduto) ||
+    p.nome.replace(/\s+/g,'_') === idProduto
+  );
+
   if (!produtoRef) {
     mostrarMensagem("Erro: Produto não encontrado para salvar limites!", "erro");
     return;
   }
 
-  // pega os inputs corretos
-  const minEl = document.getElementById(`min_${codProduto}`);
-  const maxEl = document.getElementById(`max_${codProduto}`);
+  const minEl = document.getElementById(`min_${idProduto}`);
+  const maxEl = document.getElementById(`max_${idProduto}`);
 
-  // salva os valores
   produtoRef.minimo = Number(minEl?.value || 0);
   produtoRef.maximo = Number(maxEl?.value || 0);
 
-  // salva local e Firebase
   salvarProdutosNoFirebase(window.produtos);
   salvarTodosLocal();
 
@@ -5543,6 +5543,7 @@ function salvarLimites(codProduto) {
 
   atualizarTabelaLimites();
 }
+
 
 
 function removerLimites(nome) {
@@ -6523,3 +6524,4 @@ document
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
