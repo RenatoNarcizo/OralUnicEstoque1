@@ -2839,12 +2839,28 @@ window.cadastrarProduto = async function () {
   // Garante array
   window.produtos = Array.isArray(window.produtos) ? window.produtos : [];
 
-  // ----- Verifica duplicidade -----
-  const produtoDuplicado = window.produtos.find((p, idx) => {
-    if (isEdicao && idx === indiceEdicaoProduto) return false;
-    return p.nome?.toLowerCase() === nome.toLowerCase() &&
-           (p.codigo || "").toLowerCase() === codigo.toLowerCase();
-  });
+ // ----- Verifica duplicidade -----
+const produtoDuplicado = window.produtos.find((p, idx) => {
+
+  // Ignora se for edição do próprio produto
+  if (isEdicao && idx === indiceEdicaoProduto) return false;
+
+  // Normaliza valores
+  const nomeA = (p.nome || "").toLowerCase();
+  const nomeB = nome.toLowerCase();
+  const codigoA = (p.codigo || "").toLowerCase();
+  const codigoB = (codigo || "").toLowerCase();
+
+  // ❗ REGRAS REAIS:
+  // 1. Se tiver código → compara por código
+  if (codigoB !== "" && codigoA === codigoB) return true;
+
+  // 2. Se NÃO tiver código → compara apenas por NOME
+  if (codigoB === "" && codigoA === "" && nomeA === nomeB) return true;
+
+  return false;
+});
+
 
   if (produtoDuplicado) {
     return mostrarMensagem("❌ Já existe este nome + código!", "erro");
@@ -6555,5 +6571,6 @@ document
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
