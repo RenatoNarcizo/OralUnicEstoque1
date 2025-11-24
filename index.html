@@ -2889,43 +2889,74 @@ window.cadastrarProduto = async function () {
 
     mostrarMensagem(`✅ Produto "${nome}" cadastrado!`, "sucesso");
   }
+// =====================================================
+// 🔄 SALVAR EM LOCAL STORAGE + FIREBASE (CORRIGIDO E SEGURO)
+// =====================================================
+window.bloquearAtualizacaoSnapshot = true;
 
-  // =====================================================
-  // 🔄 SALVA EM LOCAL STORAGE + FIREBASE (CORRIGIDO)
-  // =====================================================
-  window.bloquearAtualizacaoSnapshot = true;
+try {
+  const estoqueRef = doc(db, "estoqueGlobal", "estoque");
 
-  try {
-    const estoqueRef = doc(db, "estoqueGlobal", "estoque");
-    await setDoc(estoqueRef, { produtos: [...window.produtos] }, { merge: true });
+  // 🔒 SANEAMENTO COMPLETO DOS PRODUTOS (EVITA ERRO NO FIRESTORE)
+  const produtosSanitizados = window.produtos.map(p => ({
+    id: p.id || Date.now(),
 
-    setTimeout(() => {
-      window.bloquearAtualizacaoSnapshot = false;
-      atualizarTabelaProdutos?.();
-    }, 500);
+    // 🔐 evita undefined / null
+    codigo: p.codigo || "",
+    nome: p.nome || "",
+    categoria: p.categoria || "",
+    embalagem: p.embalagem || "",
+    qtdEmbalagem: Number(p.qtdEmbalagem || 0),
 
-  } catch (err) {
+    // 🔧 padroniza campo do código de barras
+    codBarras: p.codBarras || p.codigoBarras || "",
+
+    foto: p.foto || "",
+
+    minimo: Number(p.minimo || 0),
+    maximo: Number(p.maximo || 0),
+
+    criadoEm: p.criadoEm || new Date().toISOString()
+  }));
+
+  // 🔥 Salvar apenas produtos sanitizados
+  await setDoc(
+    estoqueRef,
+    { produtos: produtosSanitizados },
+    { merge: true }
+  );
+
+  // 🔐 DESBLOQUEIO CONTROLADO
+  setTimeout(() => {
     window.bloquearAtualizacaoSnapshot = false;
-    mostrarMensagem("Erro ao salvar no Firestore!", "erro");
-  }
 
-  // Atualizações secundárias
-  atualizarTabelaEntradas?.();
-  atualizarTabelaEstoque?.();
-  atualizarTabelaLimites?.();
-  atualizarDashboard?.();
-  atualizarPainelFinanceiro?.();
+    // 🔄 Atualiza SOMENTE produtos (evita loops)
+    atualizarTabelaProdutos?.();
 
-  // Limpa campos
-  codigoEl.value = "";
-  nomeEl.value = "";
-  categoriaEl.value = "";
-  embalagemEl.value = "";
-  qtdEmbEl.value = "";
-  codBarrasEl.value = "";
-  if (fotoEl) fotoEl.value = "";
-  document.getElementById("fotoPreview").innerHTML = "";
+  }, 800);
+
+} catch (err) {
+  console.error("🔥 Erro Firestore:", err);
+  window.bloquearAtualizacaoSnapshot = false;
+  mostrarMensagem("Erro ao salvar no Firestore!", "erro");
+}
+
+// =====================================================
+// 🧹 LIMPA CAMPOS DO FORMULÁRIO
+// =====================================================
+codigoEl.value = "";
+nomeEl.value = "";
+categoriaEl.value = "";
+embalagemEl.value = "";
+qtdEmbEl.value = "";
+codBarrasEl.value = "";
+
+if (fotoEl) fotoEl.value = "";
+
+document.getElementById("fotoPreview").innerHTML = "";
 };
+
+
 
 
 
@@ -6524,4 +6555,5 @@ document
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
