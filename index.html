@@ -2437,19 +2437,42 @@ window.toggleSidebar = function () {
 // -----------------------------
 // Listener único para cliques (fecha sidebar quando clicar em itens do menu)
 // -----------------------------
+// Listener único: fecha sidebar ao clicar em item do menu OU clicar fora da sidebar
 document.addEventListener("click", (event) => {
   const sidebar = document.getElementById("sidebar");
   const mainContent = document.querySelector("main");
+  const menuToggle = document.getElementById("menuToggle"); // botão que abre/fecha
+
   if (!sidebar || !mainContent) return;
 
-  // Fechar quando clicar em item do menu (button, a, li dentro do #sidebar)
-  const clicouItem = event.target.closest("#sidebar button, #sidebar a, #sidebar li");
-  if (clicouItem) {
+  // Determina se a sidebar está visível (usa estilo computado para maior robustez)
+  const computedLeft = parseFloat(window.getComputedStyle(sidebar).left) || 0;
+  const sidebarAberta = computedLeft >= 0; // se left >= 0 considera aberta
+
+  // 1) Se clicou em item do menu, fecha sempre
+  const clicouItemMenu = event.target.closest("#sidebar button, #sidebar a, #sidebar li");
+  if (clicouItemMenu) {
     sidebar.style.left = "-220px";
     mainContent.style.marginLeft = "20px";
     sidebar.setAttribute("aria-hidden", "true");
+    return;
   }
+
+  // 2) Se sidebar estiver aberta e o clique foi FORA da sidebar e FORA do botão de toggle, fecha
+  const clicouDentroSidebar = sidebar.contains(event.target);
+  const clicouNoToggle = menuToggle && menuToggle.contains(event.target);
+
+  if (sidebarAberta && !clicouDentroSidebar && !clicouNoToggle) {
+    // Fecha a sidebar
+    sidebar.style.left = "-220px";
+    mainContent.style.marginLeft = "20px";
+    sidebar.setAttribute("aria-hidden", "true");
+    return;
+  }
+
+  // 3) Se clicou no toggle, deixa o toggle() cuidar (não forçamos fechar aqui)
 });
+
 
 // === PERMISSÕES DO MENU (versão final) ===
 window.aplicarPermissoesNoMenu = function () {
@@ -2474,12 +2497,6 @@ window.aplicarPermissoesNoMenu = function () {
     if (btn) btn.style.display = "block";
   });
 };
-
-
-
-
-
-
 
 
 // 🔹 Abre a seção "Erros e Problemas"
@@ -3224,8 +3241,7 @@ window.obterIndicePorIdProduto = function(id) {
 };
 
 
-// ==========================
-// EDIÇÃO: por id (CORRIGIDA COM CÓD. PRODUTO)
+
 // ==========================
 // ==========================
 // EDIÇÃO: por id (CORRIGIDA)
@@ -4027,85 +4043,90 @@ function cancelarEdicaoEntrada() {
 
 
 /* =====================================================
-   🔹 AUTO-COMPLETE DINÂMICO — ENTRADA DE MATERIAIS
+   🔹 AUTO-COMPLETE DINÂMICO — ENTRADA DE MATERIAIS (VERSÃO FINAL)
    ===================================================== */
 function iniciarAutoCompleteEntrada() {
-  const produtoInput = document.getElementById("entradaProduto");
-  const fornecedorInput = document.getElementById("entradaFornecedor");
-  const cnpjInput = document.getElementById("entradaCNPJ");
 
-  // 🟢 Cria os contêineres de sugestão se não existirem
-  if (!document.getElementById("sugestoesProduto")) {
-    const sug = document.createElement("div");
-    sug.id = "sugestoesProduto";
-    sug.className = "autocomplete-sugestoes";
-    produtoInput.parentNode.style.position = "relative";
-    produtoInput.parentNode.appendChild(sug);
-  }
+    const produtoInput = document.getElementById("entradaProduto");
+    const fornecedorInput = document.getElementById("entradaFornecedor");
+    const cnpjInput = document.getElementById("entradaCNPJ");
 
-  if (!document.getElementById("sugestoesFornecedor")) {
-    const sug = document.createElement("div");
-    sug.id = "sugestoesFornecedor";
-    sug.className = "autocomplete-sugestoes";
-    fornecedorInput.parentNode.style.position = "relative";
-    fornecedorInput.parentNode.appendChild(sug);
-  }
+    if (!produtoInput || !fornecedorInput || !cnpjInput) {
+        console.warn("⚠️ Campos de entrada não encontrados para autocomplete.");
+        return;
+    }
 
-  if (!document.getElementById("sugestoesCNPJ")) {
-    const sug = document.createElement("div");
-    sug.id = "sugestoesCNPJ";
-    sug.className = "autocomplete-sugestoes";
-    cnpjInput.parentNode.style.position = "relative";
-    cnpjInput.parentNode.appendChild(sug);
-  }
+    // 👉 Garante contêineres
+    const criarContainer = (id, parent) => {
+        if (!document.getElementById(id)) {
+            const div = document.createElement("div");
+            div.id = id;
+            div.className = "autocomplete-sugestoes";
+            parent.style.position = "relative";
+            parent.appendChild(div);
+        }
+    };
 
-  // 🧠 Função genérica de autocompletar
-  function configurarCampo(inputEl, lista, sugestoesId) {
-    inputEl.addEventListener("input", () => {
-      const texto = inputEl.value.trim().toLowerCase();
-      const container = document.getElementById(sugestoesId);
-      container.innerHTML = "";
-      if (!texto) return;
+    criarContainer("sugestoesProduto", produtoInput.parentNode);
+    criarContainer("sugestoesFornecedor", fornecedorInput.parentNode);
+    criarContainer("sugestoesCNPJ", cnpjInput.parentNode);
 
-      const filtrados = lista
-        .filter((v) => v && v.toLowerCase().includes(texto))
-        .slice(0, 10); // mostra no máximo 10 sugestões
+    /* FUNÇÃO GENÉRICA */
+    function configurarCampo(inputEl, listaFn, sugestoesId) {
+        inputEl.addEventListener("input", () => {
+            const texto = inputEl.value.trim().toLowerCase();
+            const container = document.getElementById(sugestoesId);
+            container.innerHTML = "";
 
-      filtrados.forEach((item) => {
-        const div = document.createElement("div");
-        div.textContent = item;
-        div.className = "sugestao-item";
-        div.onclick = () => {
-          inputEl.value = item;
-          container.innerHTML = "";
-        };
-        container.appendChild(div);
-      });
-    });
+            if (!texto) return;
 
-    // Fecha sugestões ao clicar fora
-    document.addEventListener("click", (e) => {
-      if (!inputEl.contains(e.target)) {
-        document.getElementById(sugestoesId).innerHTML = "";
-      }
-    });
-  }
+            // 👉 Agora a lista é sempre atualizada na hora
+            const lista = listaFn();
 
-  // 🔹 Captura dados únicos
-  const nomesProdutos = [...new Set((window.produtos || []).map(p => p.nome).filter(Boolean))];
-  const fornecedores = [...new Set((window.entradas || []).map(e => e.fornecedor).filter(Boolean))];
-  const cnpjs = [...new Set((window.entradas || []).map(e => e.cnpj).filter(Boolean))];
+            const filtrados = lista
+                .filter(v => v && v.toLowerCase().includes(texto))
+                .slice(0, 10);
 
-  // 🔧 Aplica o autocompletar
-  configurarCampo(produtoInput, nomesProdutos, "sugestoesProduto");
-  configurarCampo(fornecedorInput, fornecedores, "sugestoesFornecedor");
-  configurarCampo(cnpjInput, cnpjs, "sugestoesCNPJ");
+            filtrados.forEach(item => {
+                const div = document.createElement("div");
+                div.textContent = item;
+                div.className = "sugestao-item";
+                div.onclick = () => {
+                    inputEl.value = item;
+                    container.innerHTML = "";
+                };
+                container.appendChild(div);
+            });
+        });
 
-  console.log("✨ AutoComplete dinâmico iniciado com sucesso.");
+        // Fecha ao clicar fora
+        document.addEventListener("click", (e) => {
+            if (!inputEl.contains(e.target)) {
+                document.getElementById(sugestoesId).innerHTML = "";
+            }
+        });
+    }
+
+    // 🔥 Agora as listas são APENAS funções (sempre atualizadas)
+    const nomesProdutos = () =>
+        [...new Set((window.produtos || []).map(p => p.nome).filter(Boolean))];
+
+    const fornecedores = () =>
+        [...new Set((window.entradas || []).map(e => e.fornecedor).filter(Boolean))];
+
+    const cnpjs = () =>
+        [...new Set((window.entradas || []).map(e => e.cnpj).filter(Boolean))];
+
+    // Aplica autocomplete
+    configurarCampo(produtoInput, nomesProdutos, "sugestoesProduto");
+    configurarCampo(fornecedorInput, fornecedores, "sugestoesFornecedor");
+    configurarCampo(cnpjInput, cnpjs, "sugestoesCNPJ");
+
+    console.log("✨ AutoComplete Iniciado (versão atualizada)");
 }
 
 /* =====================================================
-   🔹 ESTILO DO AUTO-COMPLETE
+   🔹 Estilos (mantidos)
    ===================================================== */
 const estiloAuto = document.createElement("style");
 estiloAuto.textContent = `
@@ -4135,8 +4156,21 @@ estiloAuto.textContent = `
 `;
 document.head.appendChild(estiloAuto);
 
-// 🔁 Inicializa após 1 segundo (garantindo que os dados já estão carregados)
-setTimeout(iniciarAutoCompleteEntrada, 1000);
+/* =====================================================
+   🔹 Inicialização INTELIGENTE
+   🔥 Agora funciona mesmo com snapshots e carregamento tardio dos produtos
+   ===================================================== */
+function esperarDadosEIniciarAutoComplete() {
+    const tentar = setInterval(() => {
+        if (window.produtos && window.produtos.length > 0) {
+            clearInterval(tentar);
+            iniciarAutoCompleteEntrada();
+        }
+    }, 300);
+}
+
+esperarDadosEIniciarAutoComplete();
+
 
 
 
@@ -5931,199 +5965,191 @@ function atualizarBlocoResumo(totalProdutos, qtdTotalEstoque, totalSaidas, valor
 }
 
 // ===============================================
-// FUNÇÃO PRINCIPAL DO DASHBOARD
+// FUNÇÃO PRINCIPAL DO DASHBOARD (VERSÃO CORRIGIDA)
 // ===============================================
-
 function atualizarDashboard() {
-    // Busca dados no cache local (window.produtos, window.entradas, window.saidas)
-    const produtosLocal = window.produtos || [];
-    const entradasLocal = window.entradas || [];
-    const saidasLocal = window.saidas || [];
+  try {
+    const produtosLocal = Array.isArray(window.produtos) ? window.produtos : [];
+    const entradasLocal = Array.isArray(window.entradas) ? window.entradas : [];
+    const saidasLocal = Array.isArray(window.saidas) ? window.saidas : [];
 
-    // Funções de Busca e Cálculo
+    // helper: compara nomes ignorando case e trim
+    const igualNome = (a, b) => String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase();
+
+    // Busca último valor unitário de entrada por nome do produto (case-insensitive)
     function buscarValorUnitario(nomeProduto) {
-        // Busca o último valor de entrada registrado
-        const ultimaEntrada = entradasLocal
-            .filter(e => e.produto === nomeProduto && Number(e.valor) > 0)
-            .sort((a, b) => new Date(b.data) - new Date(a.data))[0];
-        return Number(ultimaEntrada?.valor) || 0;
+      if (!nomeProduto) return 0;
+      const entradasDoProduto = entradasLocal
+        .filter(e => igualNome(e.produto, nomeProduto) && !isNaN(Number(e.valor)) && Number(e.valor) > 0)
+        .sort((a, b) => new Date(b.data) - new Date(a.data));
+      return entradasDoProduto.length ? Number(entradasDoProduto[0].valor) : 0;
     }
 
-    // Calcula a soma total de saídas por nome do produto
+    // Contagem total de saídas por produto (nome)
     const contagemSaidas = saidasLocal.reduce((acc, s) => {
-        const nome = s.produto;
-        // Tenta usar 'qtd' ou 'quantidade' para compatibilidade
-        const qtdSaida = Number(s.qtd || s.quantidade) || 0; 
-        acc[nome] = (acc[nome] || 0) + qtdSaida;
-        return acc;
+      const nome = s.produto || s.nomeProduto || "";
+      const qtdSaida = Number(s.qtd || s.quantidade || 0) || 0;
+      const key = String(nome).trim();
+      if (!key) return acc;
+      acc[key] = (acc[key] || 0) + qtdSaida;
+      return acc;
     }, {});
-    
-    // 2. PREPARAÇÃO DE DADOS DETALHADOS POR PRODUTO
+
+    // Monta detalhes por produto
     const estoqueDetalhado = produtosLocal.map(p => {
-        const qtdAtual = Number(p.quantidade) || 0;
-        // CORRIGIDO: Chama a função com o nome correto
-        const valorUnitario = buscarValorUnitario(p.nome); 
-        const qtdSaidas = contagemSaidas[p.nome] || 0;
+      // tenta vários campos para quantidade
+      const qtdAtual = Number(p.quantidade || p.qtd || p.qtdEmbalagem || p.qtdAtual || 0) || 0;
+      const embalagem = p.embalagem || p.unidade || "un";
+      const minimo = Number(p.minimo || 0) || 0;
+      const nome = p.nome || p.descricao || "";
 
-        // CÁLCULO CUSTO MÉDIO PONDERADO (CMP)
-        // Usa 'qtd' ou 'quantidade'
-        const entradasProduto = entradasLocal.filter(e => e.produto === p.nome && Number(e.valor) > 0 && Number(e.qtd || e.quantidade) > 0);
-        const custoTotalProduto = entradasProduto.reduce((sum, e) => sum + (Number(e.valor) * Number(e.qtd || e.quantidade)), 0);
-        const qtdTotalEntradaProduto = entradasProduto.reduce((sum, e) => sum + Number(e.qtd || e.quantidade), 0);
-        const CMP_produto = qtdTotalEntradaProduto > 0 ? custoTotalProduto / qtdTotalEntradaProduto : 0;
+      // últimas entradas deste produto
+      const entradasProduto = entradasLocal
+        .filter(e => igualNome(e.produto, nome) && !isNaN(Number(e.valor)) && (Number(e.qtd || e.quantidade || 0) > 0))
+        .sort((a, b) => new Date(a.data) - new Date(b.data)); // ordena asc por data
 
-        // Calcula a validade mais próxima
-        let validadeMaisProxima = null;
-        entradasLocal.filter(e => e.produto === p.nome && e.validade)
-                     .forEach(e => {
-            const dataValidade = new Date(e.validade + 'T00:00:00'); 
-            if (!validadeMaisProxima || dataValidade < validadeMaisProxima) {
-                validadeMaisProxima = dataValidade;
-            }
-        });
+      // custo total e qtd total para CMP
+      const custoTotalProduto = entradasProduto.reduce((sum, e) => sum + ((Number(e.valor) || 0) * (Number(e.qtd || e.quantidade || 0) || 0)), 0);
+      const qtdTotalEntradaProduto = entradasProduto.reduce((sum, e) => sum + (Number(e.qtd || e.quantidade || 0) || 0), 0);
+      const CMP_produto = qtdTotalEntradaProduto > 0 ? (custoTotalProduto / qtdTotalEntradaProduto) : 0;
 
-        const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0);
-        const diasVencer = validadeMaisProxima ? Math.ceil((validadeMaisProxima.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24)) : Infinity;
+      // ultimo custo (última entrada com valor)
+      const ultimaComValor = entradasProduto.length ? entradasProduto[entradasProduto.length - 1] : null;
+      const ultimoCusto = ultimaComValor ? Number(ultimaComValor.valor || 0) : 0;
 
-        return {
-            nome: p.nome,
-            qtdAtual: qtdAtual,
-            embalagem: p.embalagem || 'un',
-            minimo: Number(p.minimo) || 0,
-            ultimoCusto: valorUnitario,
-            cmp: CMP_produto,
-            qtdSaidas: qtdSaidas,
-            validade: validadeMaisProxima,
-            diasVencer: diasVencer,
-            isCritico: qtdAtual < (Number(p.minimo) || 0) && (Number(p.minimo) || 0) > 0,
-        };
+      // validade mais próxima entre entradas com validade
+      let validadeMaisProxima = null;
+      entradasProduto.forEach(e => {
+        if (!e.validade) return;
+        // tenta normalizar strings tipo 'YYYY-MM-DD' ou já Date
+        const cand = new Date(String(e.validade).trim());
+        if (isNaN(cand.getTime())) return;
+        if (!validadeMaisProxima || cand < validadeMaisProxima) validadeMaisProxima = cand;
+      });
+      const hoje = new Date(); hoje.setHours(0,0,0,0);
+      const diasVencer = validadeMaisProxima ? Math.ceil((validadeMaisProxima.getTime() - hoje.getTime()) / (1000*60*60*24)) : Infinity;
+
+      const qtdSaidas = contagemSaidas[nome] || 0;
+      const isCritico = minimo > 0 && qtdAtual < minimo;
+
+      return {
+        id: p.id || p.codigo || nome,
+        nome,
+        qtdAtual,
+        embalagem,
+        minimo,
+        ultimoCusto,
+        cmp: CMP_produto,
+        qtdSaidas,
+        validade: validadeMaisProxima,
+        diasVencer,
+        isCritico
+      };
     });
 
+    // --- Prepara listas do dashboard ---
+    const criarLi = item => `<li>${item}</li>`;
 
-    // --- 3. POPULANDO AS LISTAS TOP 5 ---
-    const criarLi = (item) => `<li>${item}</li>`;
-
-    // a. 🕒 Produtos Próximos do Vencimento
+    // Produtos próximos do vencimento (mostra vencidos e próximos)
     const proximosVencer = estoqueDetalhado
-        .filter(p => p.validade && p.qtdAtual > 0 && p.diasVencer > -30) 
-        .sort((a, b) => a.diasVencer - b.diasVencer) 
-        .slice(0, 5);
-    
+      .filter(p => isFinite(p.diasVencer) && p.qtdAtual > 0 && p.diasVencer <= 90) // limite 90 dias para não listar tudo
+      .sort((a,b) => a.diasVencer - b.diasVencer)
+      .slice(0, 5);
+
     const listaVencer = document.getElementById("listaProximosVencer");
     if (listaVencer) {
-        listaVencer.innerHTML = proximosVencer.length > 0 
-            ? proximosVencer.map(p => {
-                const status = p.diasVencer <= 0 ? `<span style="color: red; font-weight: bold;">(VENCIDO)</span>` : `(Vence em: ${p.diasVencer} dias)`;
-                return criarLi(`${p.nome} (${p.qtdAtual} ${p.embalagem}) - ${status}`);
-            }).join('') 
-            : criarLi('Nenhum produto próximo do vencimento.');
+      if (proximosVencer.length === 0) {
+        listaVencer.innerHTML = criarLi("Nenhum produto próximo do vencimento.");
+      } else {
+        listaVencer.innerHTML = proximosVencer.map(p => {
+          const status = p.diasVencer <= 0 ? `<span style="color:red;font-weight:bold;">(VENCIDO)</span>` : `(Vence em ${p.diasVencer} dias)`;
+          return criarLi(`${p.nome} — ${p.qtdAtual} ${p.embalagem} ${status}`);
+        }).join("");
+      }
     }
 
-    // b. 💰 Produtos Mais Caros
-    const maisCaros = estoqueDetalhado
-        .filter(p => p.ultimoCusto > 0)
-        .sort((a, b) => b.ultimoCusto - a.ultimoCusto)
-        .slice(0, 5);
-    
+    // Produtos mais caros (pelo último custo)
+    const maisCaros = estoqueDetalhado.filter(p => p.ultimoCusto > 0)
+      .sort((a,b) => b.ultimoCusto - a.ultimoCusto)
+      .slice(0,5);
     const listaMaisCarosEl = document.getElementById("listaMaisCaros");
     if (listaMaisCarosEl) {
-        listaMaisCarosEl.innerHTML = maisCaros.length > 0 
-            ? maisCaros.map(p => criarLi(`${p.nome} (${formatarMoeda(p.ultimoCusto)}/${p.embalagem})`)).join('') 
-            : criarLi('Nenhum custo registrado.');
+      listaMaisCarosEl.innerHTML = maisCaros.length
+        ? maisCaros.map(p => criarLi(`${p.nome} (${formatarMoeda(p.ultimoCusto)}/${p.embalagem})`)).join("")
+        : criarLi("Nenhum custo registrado.");
     }
 
-    // c. 📦 Produtos Mais Utilizados
-    const maisSaidas = estoqueDetalhado
-        .filter(p => p.qtdSaidas > 0) 
-        .sort((a, b) => b.qtdSaidas - a.qtdSaidas)
-        .slice(0, 5);
-    
+    // Produtos mais utilizados (saídas)
+    const maisSaidas = estoqueDetalhado.filter(p => p.qtdSaidas > 0)
+      .sort((a,b) => b.qtdSaidas - a.qtdSaidas)
+      .slice(0,5);
     const listaMaisSaidasEl = document.getElementById("listaMaisSaidas");
     if (listaMaisSaidasEl) {
-        listaMaisSaidasEl.innerHTML = maisSaidas.length > 0 
-            ? maisSaidas.map(p => criarLi(`${p.nome} (${p.qtdSaidas} saídas)`)).join('') 
-            : criarLi('Nenhuma saída registrada.');
+      listaMaisSaidasEl.innerHTML = maisSaidas.length
+        ? maisSaidas.map(p => criarLi(`${p.nome} (${p.qtdSaidas} saídas)`)).join("")
+        : criarLi("Nenhuma saída registrada.");
     }
 
-    // d. 💤 Produtos com Menos Saídas
-    const menosSaidas = estoqueDetalhado
-        .filter(p => p.qtdAtual > 0) 
-        .sort((a, b) => a.qtdSaidas - b.qtdSaidas)
-        .slice(0, 5);
-    
+    // Menos saídas
+    const menosSaidas = estoqueDetalhado.filter(p => p.qtdAtual > 0)
+      .sort((a,b) => a.qtdSaidas - b.qtdSaidas)
+      .slice(0,5);
     const listaMenosSaidasEl = document.getElementById("listaMenosSaidas");
     if (listaMenosSaidasEl) {
-        listaMenosSaidasEl.innerHTML = menosSaidas.length > 0 
-            ? menosSaidas.map(p => criarLi(`${p.nome} (${p.qtdSaidas} saídas)`)).join('') 
-            : criarLi('Nenhum produto encontrado em estoque.');
+      listaMenosSaidasEl.innerHTML = menosSaidas.length
+        ? menosSaidas.map(p => criarLi(`${p.nome} (${p.qtdSaidas} saídas)`)).join("")
+        : criarLi("Nenhum produto encontrado em estoque.");
     }
-    
-    // e. ⚠️ Estoque Crítico
-    const criticos = estoqueDetalhado
-        .filter(p => p.isCritico) 
-        .sort((a, b) => (a.qtdAtual - a.minimo) - (b.qtdAtual - b.minimo))
-        .slice(0, 5);
-    
+
+    // Estoque crítico
+    const criticos = estoqueDetalhado.filter(p => p.isCritico)
+      .sort((a,b) => (a.qtdAtual - a.minimo) - (b.qtdAtual - b.minimo))
+      .slice(0,5);
     const listaCriticos = document.getElementById("listaEstoqueCritico");
     if (listaCriticos) {
-        listaCriticos.innerHTML = criticos.length > 0 
-            ? criticos.map(p => criarLi(`${p.nome} (${p.qtdAtual} ${p.embalagem} - Mín: ${p.minimo})`)).join('') 
-            : criarLi('Tudo OK!');
+      listaCriticos.innerHTML = criticos.length
+        ? criticos.map(p => criarLi(`${p.nome} (${p.qtdAtual} ${p.embalagem} — Mín: ${p.minimo})`)).join("")
+        : criarLi("Tudo OK!");
     }
 
+    // --- Resumo Geral ---
+    const totalProdutos = produtosLocal.length;
+    const qtdTotalEmEstoque = estoqueDetalhado.reduce((s,p) => s + (Number(p.qtdAtual)||0), 0);
+    const totalSaidasRegistradas = saidasLocal.reduce((s, r) => s + (Number(r.qtd || r.quantidade) || 0), 0);
+    const criticosCount = criticos.length;
+    const valorUltimaEntrada = estoqueDetalhado.reduce((s,p) => s + (Number(p.qtdAtual || 0) * Number(p.ultimoCusto || 0)), 0);
+    const valorEstoqueCustoMedio = estoqueDetalhado.reduce((s,p) => s + (Number(p.qtdAtual || 0) * Number(p.cmp || 0)), 0);
 
-   // --- 4. CÁLCULOS PARA O RESUMO GERAL ---
-    
-    const totalProdutos = produtosLocal.length;
-    const qtdTotalEmEstoque = estoqueDetalhado.reduce((sum, p) => sum + p.qtdAtual, 0);
-    // Soma a quantidade total de saídas registradas (e não apenas o número de registros)
-    const totalSaidasRegistradas = saidasLocal.reduce((sum, s) => sum + (Number(s.qtd || s.quantidade) || 0), 0); 
-    const criticosCount = estoqueDetalhado.filter(p => p.isCritico).length;
-    
-    const valorUltimaEntrada = estoqueDetalhado.reduce((sum, p) => sum + (p.qtdAtual * p.ultimoCusto), 0);
-    const valorEstoqueCustoMedio = estoqueDetalhado.reduce((sum, p) => sum + (p.qtdAtual * p.cmp), 0); 
-    
-    // VARIÁVEIS DO NOVO MODELO (Ajustadas para o seu cálculo):
-    const valorTotalUltimaEntrada = valorUltimaEntrada; // O seu 'valorUltimaEntrada'
-    const valorTotalCustoMedio = valorEstoqueCustoMedio; // O seu 'valorEstoqueContabil'
-    
-    // O valor Total do Estoque Atual é geralmente o Custo Médio Ponderado
-    const valorTotalEstoqueAtual = valorEstoqueCustoMedio; 
-    
-    // O valor Contábil (usando o seu CMP)
-    const valorTotalEstoqueContabil = valorEstoqueCustoMedio; 
-
-
-    // 5. EXIBIÇÃO DO RESUMO GERAL
-    const resumoGeral = document.getElementById("resumoGeral");
-    
-   if (resumoGeral) {
-        resumoGeral.innerHTML = `
-            <p><b>Total de produtos:</b> ${totalProdutos}</p>
-            <p><b>Quantidade total em estoque:</b> ${qtdTotalEmEstoque}</p>
-            <p><b>Total de saídas registradas:</b> ${totalSaidasRegistradas}</p>
-            <hr>
-            <p><b>💰 Valor total (Último valor de entrada):</b> R$ ${valorTotalUltimaEntrada.toFixed(2)}</p>
-            <p><b>📊 Valor total (Custo médio ponderado):</b> R$ ${valorTotalCustoMedio.toFixed(2)}</p>
-            <p><b>📦 Valor total do Estoque Atual:</b> R$ ${valorTotalEstoqueAtual.toFixed(2)}</p>
-            <p><b>💼 Valor total do Estoque Atual (Contábil):</b> R$ ${valorTotalEstoqueContabil.toFixed(2)}</p>
-            
-            `;
+    const resumoEl = document.getElementById("resumoGeral");
+    if (resumoEl) {
+      resumoEl.innerHTML = `
+        <div><b>Total de produtos:</b> ${totalProdutos}</div>
+        <div><b>Quantidade total em estoque:</b> ${qtdTotalEmEstoque}</div>
+        <div><b>Total de saídas registradas:</b> ${totalSaidasRegistradas}</div>
+        <hr>
+        <div><b>💰 Valor total (Último valor de entrada):</b> ${formatarMoeda(valorUltimaEntrada)}</div>
+        <div><b>📊 Valor total (Custo médio ponderado):</b> ${formatarMoeda(valorEstoqueCustoMedio)}</div>
+        <div><b>⚖️ Valor total do Estoque Atual (estimado):</b> ${formatarMoeda(valorEstoqueCustoMedio)}</div>
+        <div><b>⚠️ Produtos em Estoque Crítico:</b> <span style="color:${criticosCount>0?'red':'green'}">${criticosCount}</span></div>
+      `;
     }
+
+    // Garante que painel financeiro também atualize (se disponível)
+    if (typeof atualizarPainelFinanceiro === "function") {
+      try { atualizarPainelFinanceiro(); } catch (e) { console.warn("Falha ao atualizar painel financeiro:", e); }
+    }
+
+    console.log("✅ Dashboard atualizado:", {
+      produtos: totalProdutos,
+      qtdEstoque: qtdTotalEmEstoque,
+      valorUltimaEntrada,
+      valorEstoqueCustoMedio
+    });
+  } catch (err) {
+    console.error("❌ Erro em atualizarDashboard():", err);
+  }
 }
 
-// Para garantir que o dashboard atualize ao ser acessado:
-document.querySelector("#sidebar button[onclick=\"showSection('dashboard')\"]").addEventListener('click', () => {
-    // É importante que 'atualizarDashboard()' seja chamada após 'carregarDadosDoFirestore()'
-    // Se a função 'carregarDadosDoFirestore' estiver funcionando e chamando 'atualizarDashboard'
-    // no final, você não precisa disso. Mas é uma garantia.
-    if (typeof carregarDadosDoFirestore === 'function') {
-        carregarDadosDoFirestore();
-    } else {
-        atualizarDashboard();
-    }
-});
 
 // --- RELATÓRIOS ---
 
