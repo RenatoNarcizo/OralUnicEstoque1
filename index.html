@@ -1361,7 +1361,8 @@
     getDoc,
     onSnapshot,
     collection,     // 👈 ADICIONADO
-    getDocs         // 👈 ADICIONADO
+    getDocs,        // 👈 ADICIONADO
+	deleteDoc
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
   // 🔐 Configuração do Firebase
@@ -1388,6 +1389,7 @@
   window.onSnapshot = onSnapshot;
   window.collection = collection;   // 👈 ADICIONADO
   window.getDocs = getDocs;         // 👈 ADICIONADO
+  window.deleteDoc = deleteDoc;
 
   const estoqueRef = doc(db, "estoqueGlobal", "estoque");
   const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
@@ -3291,26 +3293,42 @@ window.editarProdutoPorId = function(id) {
 
 
 // ==========================
-// EXCLUIR: por id
+// EXCLUIR: por id (100% CORRIGIDO)
 // ==========================
-window.excluirProdutoPorId = function(id) {
+window.excluirProdutoPorId = async function(id) {
   const idx = obterIndicePorIdProduto(id);
   if (idx === -1) {
-    mostrarMensagem && mostrarMensagem("Produto não encontrado.", "erro");
+    mostrarMensagem("Produto não encontrado.", "erro");
     return;
   }
 
   const produto = window.produtos[idx];
-  if (!confirm(`Excluir o produto "${produto.nome}"? Esta ação removerá também registros dependentes.`)) return;
+  if (!confirm(`Excluir o produto "${produto.nome}"?`)) return;
 
-  window.produtos.splice(idx, 1);
-  salvarTodosLocal?.();
-  if (typeof salvarProdutosNoFirebase === "function") salvarProdutosNoFirebase(window.produtos);
+  try {
+    // 🔥 1. Remove do Firestore (subcollection)
+    const estoqueRef = doc(db, "estoqueGlobal", "estoque");
+    const produtosCol = collection(estoqueRef, "produtos");
+    await deleteDoc(doc(produtosCol, id));
 
-  if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-  if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-  mostrarMensagem && mostrarMensagem(`Produto "${produto.nome}" excluído.`, "sucesso");
+    // 🔥 2. Remove localmente
+    window.produtos.splice(idx, 1);
+
+    // 🔥 3. Salva somente no localStorage (não no doc gigante)
+    salvarTodosLocal?.();
+
+    // 🔥 4. Atualiza tabelas
+    atualizarTabelaProdutos?.();
+    atualizarTabelaEstoque?.();
+
+    mostrarMensagem(`Produto "${produto.nome}" excluído com sucesso!`, "sucesso");
+  }
+  catch (e) {
+    console.error("Erro ao excluir produto:", e);
+    mostrarMensagem("❌ Falha ao excluir produto.", "erro");
+  }
 };
+
 
 
 
@@ -6651,6 +6669,7 @@ document
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
