@@ -1345,19 +1345,23 @@
   import {
     initializeApp
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+
   import {
     getAuth,
     signInWithEmailAndPassword,
     onAuthStateChanged,
     signOut,
-	createUserWithEmailAndPassword
+    createUserWithEmailAndPassword
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
   import {
     getFirestore,
     doc,
     setDoc,
     getDoc,
-    onSnapshot
+    onSnapshot,
+    collection,     // 👈 ADICIONADO
+    getDocs         // 👈 ADICIONADO
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
   // 🔐 Configuração do Firebase
@@ -1370,21 +1374,24 @@
     appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
   };
 
- // 🚀 Inicializa Firebase e Firestore
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+  // 🚀 Inicializa Firebase e Firestore
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-// 🔹 Torna acessível globalmente para funções fora do módulo
-window.db = db;
-window.auth = auth;
-window.doc = doc;
-window.setDoc = setDoc;
-window.getDoc = getDoc;
-window.onSnapshot = onSnapshot;
+  // 🔹 Torna acessível globalmente para funções fora do módulo
+  window.db = db;
+  window.auth = auth;
+  window.doc = doc;
+  window.setDoc = setDoc;
+  window.getDoc = getDoc;
+  window.onSnapshot = onSnapshot;
+  window.collection = collection;   // 👈 ADICIONADO
+  window.getDocs = getDocs;         // 👈 ADICIONADO
 
-const estoqueRef = doc(db, "estoqueGlobal", "estoque");
-const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
+  const estoqueRef = doc(db, "estoqueGlobal", "estoque");
+  const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
+
 // ===================================================
 // 🔐 LOGIN E AUTENTICAÇÃO (100% COMPATÍVEL COM SEU SCRIPT)
 // ===================================================
@@ -1455,7 +1462,27 @@ document.addEventListener("DOMContentLoaded", () => {
 // ===================================================
 // 🔹 Wrappers globais para salvar dados no Firestore
 // ===================================================
-window.salvarProdutosNoFirebase = (dados) => salvarDadosNoFirestore("produtos", dados);
+// 🔄 NOVA FUNÇÃO — SALVA cada produto individualmente na coleção estoque/produtos
+window.salvarProdutosNoFirebase = async function(listaDeProdutos) {
+  try {
+    if (!Array.isArray(listaDeProdutos)) return;
+
+    const estoqueRef = doc(db, "estoqueGlobal", "estoque");
+    const produtosCol = collection(estoqueRef, "produtos");
+
+    for (const p of listaDeProdutos) {
+      const id = String(p.id || Date.now() + Math.floor(Math.random() * 10000));
+      p.id = id; // garante id
+      const docRef = doc(produtosCol, id);
+      await setDoc(docRef, p, { merge: true });
+    }
+
+    console.log("✅ Produtos salvos individualmente na coleção estoque/produtos");
+  } catch (e) {
+    console.error("❌ Erro ao salvar produtos individualmente:", e);
+  }
+};
+
 window.salvarEntradasNoFirebase = (dados) => salvarDadosNoFirestore("entradas", dados);
 window.salvarSaidasNoFirebase = (dados) => salvarDadosNoFirestore("saidas", dados);
 window.salvarUsuariosNoFirebase = (dados) => salvarDadosNoFirestore("usuarios", dados);
@@ -1603,80 +1630,103 @@ window.salvarTodosLocal = salvarTodosLocal;
 
 
 // ===================================================
-// 🌐 CARREGAMENTO E SINCRONIZAÇÃO EM TEMPO REAL (VERSÃO CORRIGIDA E COMPLETA)
+// 🌐 CARREGAMENTO E SINCRONIZAÇÃO EM TEMPO REAL (COM PRODUTOS MESCLADOS DA COLEÇÃO)
 // ===================================================
 async function carregarDadosDoFirestore() {
-  console.log("🔄 Iniciando escuta em tempo real do Firestore...");
+  console.log("🔄 Iniciando carregamento e sincronização do Firestore...");
 
   try {
     const estoqueRef = doc(db, "estoqueGlobal", "estoque");
 
-    // Listener em tempo real robusto (mescla Firestore + local)
-    onSnapshot(estoqueRef, (docSnap) => {
+    // ======== 1) Escutar documento "estoque" (entradas, saídas, limites etc) ========
+    onSnapshot(estoqueRef, async (docSnap) => {
       try {
         if (!docSnap.exists()) {
-          setDoc(estoqueRef, {
-            produtos: [], entradas: [], saidas: [], limites: [], usuarios: [], errosProblemas: []
-          }).then(() => console.log("✅ Documento 'estoque' criado com campos iniciais."))
-            .catch(e => console.error("❌ Falha ao criar documento inicial:", e));
+          await setDoc(estoqueRef, {
+            produtos: [],
+            entradas: [],
+            saidas: [],
+            limites: [],
+            usuarios: [],
+            errosProblemas: []
+          }, { merge: true });
+
+          console.log("📄 Documento 'estoque' criado (inicial).");
           return;
         }
 
         if (window.bloquearAtualizacaoSnapshot) {
-          console.log("⏸️ Snapshot ignorado (bloqueio ativo).");
+          console.log("⏸️ Snapshot ignorado (salvando produto).");
           return;
         }
 
         const data = docSnap.data() || {};
 
-        const mergeUniqueBy = (arrFirestore, arrLocal, keyFn) => {
-          const result = Array.isArray(arrFirestore) ? [...arrFirestore] : [];
-          const exists = item => result.some(r => keyFn(r) === keyFn(item));
-          (Array.isArray(arrLocal) ? arrLocal : []).forEach(localItem => {
-            try { if (!exists(localItem)) result.push(localItem); }
-            catch (e) {
-              const keyLocal = JSON.stringify(localItem);
-              if (!result.some(r => JSON.stringify(r) === keyLocal)) result.push(localItem);
-            }
-          });
-          return result;
-        };
+        // ======== 2) Carregar produtos do documento antigo ========
+        const produtosAntigos = Array.isArray(data.produtos) ? data.produtos : [];
 
-        window.produtos = mergeUniqueBy(Array.isArray(data.produtos) ? data.produtos : [], window.produtos || [], p => (p && (p.id || p.nome)) ? String(p.id || p.nome).toLowerCase() : JSON.stringify(p));
-        window.entradas = mergeUniqueBy(Array.isArray(data.entradas) ? data.entradas : [], window.entradas || [], e => `${(e.produto||e.nomeProduto||"").toLowerCase()}|${(e.nota||"")}|${(e.data||"")}|${String(e.qtd||e.quantidade||"")}`);
-        window.saidas = mergeUniqueBy(Array.isArray(data.saidas) ? data.saidas : [], window.saidas || [], s => `${(s.produto||s.nomeProduto||"").toLowerCase()}|${(s.data||"")}|${String(s.qtd||s.quantidade||"")}|${(s.responsavel||"")}`);
-        window.limites = mergeUniqueBy(Array.isArray(data.limites) ? data.limites : [], window.limites || [], l => (l && l.produto) ? String(l.produto).toLowerCase() : JSON.stringify(l));
-        window.usuarios = mergeUniqueBy(Array.isArray(data.usuarios) ? data.usuarios : [], window.usuarios || [], u => (u && u.email) ? String(u.email).toLowerCase() : JSON.stringify(u));
-        window.errosProblemas = mergeUniqueBy(Array.isArray(data.errosProblemas) ? data.errosProblemas : [], window.errosProblemas || [], r => `${(r.titulo||r.tituloErro||"").toLowerCase()}|${(r.data||r.dt||"")}`);
-
-        if (typeof salvarTodosLocal === "function") {
-          try { salvarTodosLocal(); } catch(e){ console.warn("⚠️ salvarTodosLocal falhou:", e); }
+        // ======== 3) Carregar produtos da coleção nova ========
+        let produtosColecao = [];
+        try {
+          const produtosCol = collection(estoqueRef, "produtos");
+          const snap = await getDocs(produtosCol);
+          produtosColecao = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch (e) {
+          console.warn("⚠️ Falha ao ler coleção produtos:", e);
         }
 
-        // Atualiza UI
-        if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-        if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-        if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
-        if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-        if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-        if (typeof atualizarTabelaErros === "function") atualizarTabelaErros();
-        if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
-        if (typeof atualizarDashboard === "function") atualizarDashboard();
-        if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
+        // ======== 4) MESCLAR (priorizar coleção nova) ========
+        const mapa = new Map();
 
-        console.log(`✅ Snapshot aplicado. Produtos:${window.produtos.length} Entradas:${window.entradas.length} Saídas:${window.saidas.length} Erros:${window.errosProblemas.length} Usuários:${window.usuarios.length}`);
+        // novos documentos → prioridade
+        produtosColecao.forEach(p => mapa.set(String(p.id).toLowerCase(), p));
+
+        // produtos antigos (do doc grande)
+        produtosAntigos.forEach(p => {
+          const chave = String(p.id || p.codigo || p.nome).toLowerCase();
+          if (!mapa.has(chave)) {
+            const id = String(p.id || Date.now() + Math.floor(Math.random() * 10000));
+            mapa.set(chave, { ...p, id });
+          }
+        });
+
+        window.produtos = Array.from(mapa.values());
+
+        // ======== 5) Atualizar os outros dados normalmente ========
+        window.entradas = Array.isArray(data.entradas) ? data.entradas : [];
+        window.saidas = Array.isArray(data.saidas) ? data.saidas : [];
+        window.limites = Array.isArray(data.limites) ? data.limites : [];
+        window.errosProblemas = Array.isArray(data.errosProblemas) ? data.errosProblemas : [];
+
+        // NÃO MEXER EM USUÁRIOS AQUI (você tem sincronização própria)
+
+        // ======== 6) Salvar no localStorage ========
+        salvarTodosLocal?.();
+
+        // ======== 7) Atualizar interface ========
+        atualizarTabelaProdutos?.();
+        atualizarTabelaEstoque?.();
+        atualizarTabelaEntradas?.();
+        atualizarTabelaSaidas?.();
+        atualizarTabelaLimites?.();
+        atualizarTabelaErros?.();
+        atualizarTabelaUsuarios?.();
+        atualizarDashboard?.();
+        atualizarPainelFinanceiro?.();
+
+        console.log(`🔥 Dados sincronizados. Produtos: ${window.produtos.length}`);
+
       } catch (err) {
         console.error("❌ Erro no processamento do snapshot:", err);
       }
     });
 
   } catch (erro) {
-    console.error("❌ Erro ao escutar Firestore:", erro);
-    if (typeof mostrarMensagem === "function") {
-      mostrarMensagem("Erro ao conectar ao Firestore!", "erro");
-    }
+    console.error("❌ Erro ao iniciar sincronização:", erro);
+    mostrarMensagem?.("Erro ao conectar ao Firestore!", "erro");
   }
 }
+
 
 // ============================================================
 // 🔁 SINCRONIZAÇÃO SEM PERMITIR PERFIL “USUARIO”
@@ -2789,14 +2839,11 @@ function padronizarCamposAntesDeSalvar() {
   }
 })();
 
-// =============================================================
-// 🆕 FUNÇÃO ATUALIZADA — Cadastrar Produto (com Cód. Produto)
-// =============================================================
-// =============================================================
-// 🆕 FUNÇÃO CORRIGIDA — Cadastrar Produto (com Cód. Produto)
-// =============================================================
+// ================================
+// FUNÇÃO FINAL: cadastrarProduto
+// ================================
 window.cadastrarProduto = async function () {
-  limparErros("cadastro");
+  limparErros && limparErros("cadastro");
 
   // ----- Elementos do formulário -----
   const codigoEl = document.getElementById("produtoCodigo");
@@ -2807,7 +2854,7 @@ window.cadastrarProduto = async function () {
   const codBarrasEl = document.getElementById("produtoCodigoBarras");
   const fotoEl = document.getElementById("produtoFoto");
 
-  const codigo = (codigoEl?.value || "").trim();   // <-- CÓDIGO DO PRODUTO CORRETO
+  const codigo = (codigoEl?.value || "").trim();
   const nome = (nomeEl?.value || "").trim();
   const categoria = (categoriaEl?.value || "").trim();
   const embalagem = (embalagemEl?.value || "").trim();
@@ -2822,140 +2869,128 @@ window.cadastrarProduto = async function () {
   if (!embalagem) return destacarErro(embalagemEl, "Selecione o tipo de embalagem!");
   if (!qtdEmb) return destacarErro(qtdEmbEl, "Informe a quantidade por embalagem!");
 
-  // ----- Foto -----
+  // ----- Foto (base64) -----
   let fotoBase64 = "";
-  if (!isEdicao && !(fotoEl?.files?.[0]))
+  if (!isEdicao && !(fotoEl?.files?.[0])) {
     return destacarErro(fotoEl, "A foto é obrigatória no cadastro!");
-
+  }
   if (fotoEl?.files?.[0]) {
-    const file = fotoEl.files[0];
-    fotoBase64 = await new Promise(resolve => {
-      const reader = new FileReader();
-      reader.onload = e => resolve(e.target.result);
-      reader.readAsDataURL(file);
-    });
+    try {
+      fotoBase64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = err => reject(err);
+        reader.readAsDataURL(fotoEl.files[0]);
+      });
+    } catch (e) {
+      console.warn("Falha ao ler foto:", e);
+    }
   }
 
-  // Garante array
+  // garante arrays
   window.produtos = Array.isArray(window.produtos) ? window.produtos : [];
 
- // ----- Verifica duplicidade -----
-const produtoDuplicado = window.produtos.find((p, idx) => {
+  // ----- Verifica duplicidade -----
+  const produtoDuplicado = window.produtos.find((p, idx) => {
+    if (isEdicao && idx === indiceEdicaoProduto) return false;
+    const nomeA = (p.nome || "").toLowerCase();
+    const nomeB = nome.toLowerCase();
+    const codigoA = (p.codigo || "").toLowerCase();
+    const codigoB = (codigo || "").toLowerCase();
+    if (codigoB !== "" && codigoA === codigoB) return true;
+    if ((codigoB === "" || !codigoB) && nomeA === nomeB) return true;
+    return false;
+  });
+  if (produtoDuplicado) return mostrarMensagem("❌ Já existe este nome + código!", "erro");
 
-  // Ignora se for edição do próprio produto
-  if (isEdicao && idx === indiceEdicaoProduto) return false;
-
-  // Normaliza valores
-  const nomeA = (p.nome || "").toLowerCase();
-  const nomeB = nome.toLowerCase();
-  const codigoA = (p.codigo || "").toLowerCase();
-  const codigoB = (codigo || "").toLowerCase();
-
-  // ❗ REGRAS REAIS:
-  // 1. Se tiver código → compara por código
-  if (codigoB !== "" && codigoA === codigoB) return true;
-
-  // 2. Se NÃO tiver código → compara apenas por NOME
-  if (codigoB === "" && codigoA === "" && nomeA === nomeB) return true;
-
-  return false;
-});
-
-
-  if (produtoDuplicado) {
-    return mostrarMensagem("❌ Já existe este nome + código!", "erro");
+  // ----- Helper: salva 1 produto na subcollection (se disponível) -----
+  async function salvarUmProduto(prod) {
+    try {
+      // Se você já definiu window.salvarUmProdutoNoFirebase externamente, usa ela
+      if (typeof window.salvarUmProdutoNoFirebase === "function") {
+        await window.salvarUmProdutoNoFirebase(prod);
+        return;
+      }
+      // fallback: grava diretamente na subcollection estoque/ produtos
+      const estoqueRefLocal = doc(db, "estoqueGlobal", "estoque");
+      const produtosCol = collection(estoqueRefLocal, "produtos");
+      const id = String(prod.id || Date.now());
+      prod.id = id;
+      await setDoc(doc(produtosCol, id), prod, { merge: true });
+      console.log("✔ Produto salvo na coleção:", id);
+    } catch (e) {
+      console.error("Erro ao salvar produto individual:", e);
+      throw e;
+    }
   }
 
-  // ===========================================================
-  // ✏️ ***EDIÇÃO CORRIGIDA AQUI***
-  // ===========================================================
+  // ----- EDIÇÃO -----
   if (isEdicao) {
     const prod = window.produtos[indiceEdicaoProduto];
+    if (!prod) {
+      mostrarMensagem("Produto para edição não encontrado.", "erro");
+      return;
+    }
 
-    prod.codigo = codigo;            // <-- ESSA LINHA FAZ O CÓDIGO SALVAR
+    // atualiza campos locais
+    prod.codigo = codigo;
     prod.nome = nome;
     prod.categoria = categoria;
     prod.embalagem = embalagem;
     prod.qtdEmbalagem = qtdEmb;
     prod.codBarras = codBarras;
     if (fotoBase64) prod.foto = fotoBase64;
+    prod.atualizadoEm = new Date().toISOString();
 
-    mostrarMensagem(`✅ Produto "${nome}" atualizado!`, "sucesso");
-    indiceEdicaoProduto = null;
-    mostrarBotaoCancelar(false);
+    // salva só o produto atualizado na coleção (NÃO sobrescreve doc gigante)
+    window.bloquearAtualizacaoSnapshot = true;
+    try {
+      await salvarUmProduto(prod);
+      mostrarMensagem(`✅ Produto "${nome}" atualizado!`, "sucesso");
+      indiceEdicaoProduto = null;
+      mostrarBotaoCancelar && mostrarBotaoCancelar(false);
+    } catch (err) {
+      console.error(err);
+      mostrarMensagem("Erro ao atualizar produto.", "erro");
+    } finally {
+      // pequena espera para evitar loops de snapshot
+      setTimeout(() => { window.bloquearAtualizacaoSnapshot = false; atualizarTabelaProdutos?.(); }, 600);
+    }
+
+    return;
   }
 
-  // ===========================================================
-  // 🆕 NOVO PRODUTO
-  // ===========================================================
-  else {
-    const novoProduto = {
-      id: Date.now(),
-      codigo,
-      nome,
-      categoria,
-      embalagem,
-      qtdEmbalagem: qtdEmb,
-      codBarras,
-      foto: fotoBase64,
-      criadoEm: new Date().toISOString(),
-    };
+  // ----- NOVO PRODUTO -----
+  const novoProduto = {
+    id: String(Date.now()),
+    codigo,
+    nome,
+    categoria,
+    embalagem,
+    qtdEmbalagem: qtdEmb,
+    codBarras,
+    foto: fotoBase64 || "",
+    criadoEm: new Date().toISOString()
+  };
 
-    window.produtos.push(novoProduto);
+  // adiciona localmente e salva individualmente
+  window.produtos.push(novoProduto);
+  window.bloquearAtualizacaoSnapshot = true;
 
+  try {
+    await salvarUmProduto(novoProduto);
     mostrarMensagem(`✅ Produto "${nome}" cadastrado!`, "sucesso");
+  } catch (err) {
+    console.error(err);
+    mostrarMensagem("Erro ao salvar produto.", "erro");
+  } finally {
+    setTimeout(() => { window.bloquearAtualizacaoSnapshot = false; atualizarTabelaProdutos?.(); }, 600);
   }
-// =====================================================
-// 🔄 SALVAR EM LOCAL STORAGE + FIREBASE (CORRIGIDO E SEGURO)
-// =====================================================
-window.bloquearAtualizacaoSnapshot = true;
 
-try {
-  const estoqueRef = doc(db, "estoqueGlobal", "estoque");
+  // salva cópia no localStorage
+  salvarTodosLocal?.();
+};
 
-  // 🔒 SANEAMENTO COMPLETO DOS PRODUTOS (EVITA ERRO NO FIRESTORE)
-  const produtosSanitizados = window.produtos.map(p => ({
-    id: p.id || Date.now(),
-
-    // 🔐 evita undefined / null
-    codigo: p.codigo || "",
-    nome: p.nome || "",
-    categoria: p.categoria || "",
-    embalagem: p.embalagem || "",
-    qtdEmbalagem: Number(p.qtdEmbalagem || 0),
-
-    // 🔧 padroniza campo do código de barras
-    codBarras: p.codBarras || p.codigoBarras || "",
-
-    foto: p.foto || "",
-
-    minimo: Number(p.minimo || 0),
-    maximo: Number(p.maximo || 0),
-
-    criadoEm: p.criadoEm || new Date().toISOString()
-  }));
-
-  // 🔥 Salvar apenas produtos sanitizados
-  await setDoc(
-    estoqueRef,
-    { produtos: produtosSanitizados },
-    { merge: true }
-  );
-
-  // 🔐 DESBLOQUEIO CONTROLADO
-  setTimeout(() => {
-    window.bloquearAtualizacaoSnapshot = false;
-
-    // 🔄 Atualiza SOMENTE produtos (evita loops)
-    atualizarTabelaProdutos?.();
-
-  }, 800);
-
-} catch (err) {
-  console.error("🔥 Erro Firestore:", err);
-  window.bloquearAtualizacaoSnapshot = false;
-  mostrarMensagem("Erro ao salvar no Firestore!", "erro");
-}
 
 // =====================================================
 // 🧹 LIMPA CAMPOS DO FORMULÁRIO
@@ -6571,6 +6606,7 @@ document
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
