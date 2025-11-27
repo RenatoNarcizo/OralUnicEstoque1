@@ -1391,6 +1391,61 @@
 
   const estoqueRef = doc(db, "estoqueGlobal", "estoque");
   const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
+// ================================
+// carregarProdutosMesclados()
+// Busca produtos do documento antigo + da subcollection e mescla sem duplicar
+// ================================
+async function carregarProdutosMesclados() {
+  try {
+    const estoqueRefLocal = doc(db, "estoqueGlobal", "estoque");
+
+    // 1) produtos do documento antigo
+    let produtosDoDoc = [];
+    try {
+      const snapDoc = await getDoc(estoqueRefLocal);
+      if (snapDoc.exists()) {
+        const data = snapDoc.data() || {};
+        produtosDoDoc = Array.isArray(data.produtos) ? data.produtos.map(p => ({ ...p })) : [];
+      }
+    } catch (e) {
+      console.warn("Falha ao ler produtos do documento antigo:", e);
+    }
+
+    // 2) produtos da subcollection (novos)
+    let produtosDaCol = [];
+    try {
+      const colRef = collection(estoqueRefLocal, "produtos");
+      const snapCol = await getDocs(colRef);
+      produtosDaCol = snapCol.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+      console.warn("Falha ao ler produtos da subcollection:", e);
+    }
+
+    // 3) mesclar (prioriza docs da collection)
+    const mapa = new Map();
+    produtosDaCol.forEach(p => {
+      mapa.set(String(p.id || p.codigo || p.nome).toLowerCase(), p);
+    });
+    produtosDoDoc.forEach(p => {
+      const chave = String(p.id || p.codigo || p.nome || "").toLowerCase();
+      if (!mapa.has(chave)) {
+        const id = String(p.id || Date.now() + Math.floor(Math.random() * 10000));
+        mapa.set(chave, { ...p, id });
+      }
+    });
+
+    window.produtos = Array.from(mapa.values());
+
+    // salva e atualiza UI
+    if (typeof salvarTodosLocal === "function") salvarTodosLocal();
+    if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
+    console.log("✅ carregarProdutosMesclados: produtos carregados =", window.produtos.length);
+    return window.produtos;
+  } catch (err) {
+    console.error("Erro em carregarProdutosMesclados:", err);
+    return [];
+  }
+}
 
 // ===================================================
 // 🔐 LOGIN E AUTENTICAÇÃO (100% COMPATÍVEL COM SEU SCRIPT)
@@ -2840,7 +2895,7 @@ function padronizarCamposAntesDeSalvar() {
 })();
 
 // ================================
-// FUNÇÃO FINAL: cadastrarProduto
+// FUNÇÃO FINAL: cadastrarProduto (CORRIGIDA)
 // ================================
 window.cadastrarProduto = async function () {
   limparErros && limparErros("cadastro");
@@ -2861,78 +2916,69 @@ window.cadastrarProduto = async function () {
   const qtdEmb = parseInt(qtdEmbEl?.value || "") || 0;
   const codBarras = (codBarrasEl?.value || "").trim();
 
-  const isEdicao = typeof indiceEdicaoProduto === "number" && indiceEdicaoProduto !== null;
+  const isEdicao = typeof indiceEdicaoProduto === "number"
+                && indiceEdicaoProduto !== null;
 
-  // ----- Validações -----
+  // Validações
   if (!nome) return destacarErro(nomeEl, "Informe o nome do produto!");
   if (!categoria) return destacarErro(categoriaEl, "Selecione a categoria!");
-  if (!embalagem) return destacarErro(embalagemEl, "Selecione o tipo de embalagem!");
-  if (!qtdEmb) return destacarErro(qtdEmbEl, "Informe a quantidade por embalagem!");
+  if (!embalagem) return destacarErro(embalagemEl, "Selecione a embalagem!");
+  if (!qtdEmb) return destacarErro(qtdEmbEl, "Informe a quantidade!");
 
-  // ----- Foto (base64) -----
+  // Foto
   let fotoBase64 = "";
   if (!isEdicao && !(fotoEl?.files?.[0])) {
-    return destacarErro(fotoEl, "A foto é obrigatória no cadastro!");
+    return destacarErro(fotoEl, "A foto é obrigatória!");
   }
   if (fotoEl?.files?.[0]) {
-    try {
-      fotoBase64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = e => resolve(e.target.result);
-        reader.onerror = err => reject(err);
-        reader.readAsDataURL(fotoEl.files[0]);
-      });
-    } catch (e) {
-      console.warn("Falha ao ler foto:", e);
-    }
+    fotoBase64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = err => reject(err);
+      reader.readAsDataURL(fotoEl.files[0]);
+    });
   }
 
-  // garante arrays
+  // Garante array
   window.produtos = Array.isArray(window.produtos) ? window.produtos : [];
 
-  // ----- Verifica duplicidade -----
+  // Duplicidade
   const produtoDuplicado = window.produtos.find((p, idx) => {
     if (isEdicao && idx === indiceEdicaoProduto) return false;
-    const nomeA = (p.nome || "").toLowerCase();
+    const nomeA = (p.nome||"").toLowerCase();
     const nomeB = nome.toLowerCase();
-    const codigoA = (p.codigo || "").toLowerCase();
-    const codigoB = (codigo || "").toLowerCase();
-    if (codigoB !== "" && codigoA === codigoB) return true;
-    if ((codigoB === "" || !codigoB) && nomeA === nomeB) return true;
+    const codigoA = (p.codigo||"").toLowerCase();
+    const codigoB = (codigo||"").toLowerCase();
+    if (codigoB && codigoA === codigoB) return true;
+    if (!codigoB && nomeA === nomeB) return true;
     return false;
   });
-  if (produtoDuplicado) return mostrarMensagem("❌ Já existe este nome + código!", "erro");
+  if (produtoDuplicado)
+    return mostrarMensagem("❌ Já existe este nome/código!", "erro");
 
-  // ----- Helper: salva 1 produto na subcollection (se disponível) -----
+  // Helper
   async function salvarUmProduto(prod) {
     try {
-      // Se você já definiu window.salvarUmProdutoNoFirebase externamente, usa ela
       if (typeof window.salvarUmProdutoNoFirebase === "function") {
         await window.salvarUmProdutoNoFirebase(prod);
         return;
       }
-      // fallback: grava diretamente na subcollection estoque/ produtos
       const estoqueRefLocal = doc(db, "estoqueGlobal", "estoque");
       const produtosCol = collection(estoqueRefLocal, "produtos");
       const id = String(prod.id || Date.now());
       prod.id = id;
       await setDoc(doc(produtosCol, id), prod, { merge: true });
-      console.log("✔ Produto salvo na coleção:", id);
     } catch (e) {
-      console.error("Erro ao salvar produto individual:", e);
+      console.error("Erro ao salvar:", e);
       throw e;
     }
   }
 
-  // ----- EDIÇÃO -----
+  // --- EDIÇÃO ---
   if (isEdicao) {
     const prod = window.produtos[indiceEdicaoProduto];
-    if (!prod) {
-      mostrarMensagem("Produto para edição não encontrado.", "erro");
-      return;
-    }
+    if (!prod) return mostrarMensagem("Produto não encontrado.", "erro");
 
-    // atualiza campos locais
     prod.codigo = codigo;
     prod.nome = nome;
     prod.categoria = categoria;
@@ -2940,27 +2986,24 @@ window.cadastrarProduto = async function () {
     prod.qtdEmbalagem = qtdEmb;
     prod.codBarras = codBarras;
     if (fotoBase64) prod.foto = fotoBase64;
-    prod.atualizadoEm = new Date().toISOString();
 
-    // salva só o produto atualizado na coleção (NÃO sobrescreve doc gigante)
     window.bloquearAtualizacaoSnapshot = true;
+
     try {
       await salvarUmProduto(prod);
       mostrarMensagem(`✅ Produto "${nome}" atualizado!`, "sucesso");
       indiceEdicaoProduto = null;
-      mostrarBotaoCancelar && mostrarBotaoCancelar(false);
-    } catch (err) {
-      console.error(err);
-      mostrarMensagem("Erro ao atualizar produto.", "erro");
+      mostrarBotaoCancelar?.(false);
     } finally {
-      // pequena espera para evitar loops de snapshot
-      setTimeout(() => { window.bloquearAtualizacaoSnapshot = false; atualizarTabelaProdutos?.(); }, 600);
+      setTimeout(() => {
+        window.bloquearAtualizacaoSnapshot = false;
+        atualizarTabelaProdutos?.();
+      }, 600);
     }
-
     return;
   }
 
-  // ----- NOVO PRODUTO -----
+  // --- NOVO PRODUTO ---
   const novoProduto = {
     id: String(Date.now()),
     codigo,
@@ -2969,43 +3012,40 @@ window.cadastrarProduto = async function () {
     embalagem,
     qtdEmbalagem: qtdEmb,
     codBarras,
-    foto: fotoBase64 || "",
-    criadoEm: new Date().toISOString()
+    foto: fotoBase64,
+    criadoEm: new Date().toISOString(),
   };
 
-  // adiciona localmente e salva individualmente
   window.produtos.push(novoProduto);
+
   window.bloquearAtualizacaoSnapshot = true;
 
   try {
     await salvarUmProduto(novoProduto);
     mostrarMensagem(`✅ Produto "${nome}" cadastrado!`, "sucesso");
-  } catch (err) {
-    console.error(err);
-    mostrarMensagem("Erro ao salvar produto.", "erro");
   } finally {
-    setTimeout(() => { window.bloquearAtualizacaoSnapshot = false; atualizarTabelaProdutos?.(); }, 600);
+    setTimeout(() => {
+      window.bloquearAtualizacaoSnapshot = false;
+      atualizarTabelaProdutos?.();
+    }, 600);
   }
 
-  // salva cópia no localStorage
   salvarTodosLocal?.();
+
+  // --- LIMPAR CAMPOS (AGORA SIM, DENTRO DA FUNÇÃO) ---
+  codigoEl.value = "";
+  nomeEl.value = "";
+  categoriaEl.value = "";
+  embalagemEl.value = "";
+  qtdEmbEl.value = "";
+  codBarrasEl.value = "";
+  if (fotoEl) fotoEl.value = "";
+  const preview = document.getElementById("fotoPreview");
+  if (preview) preview.innerHTML = "";
 };
 
 
-// =====================================================
-// 🧹 LIMPA CAMPOS DO FORMULÁRIO
-// =====================================================
-codigoEl.value = "";
-nomeEl.value = "";
-categoriaEl.value = "";
-embalagemEl.value = "";
-qtdEmbEl.value = "";
-codBarrasEl.value = "";
 
-if (fotoEl) fotoEl.value = "";
-
-document.getElementById("fotoPreview").innerHTML = "";
-};
 
 
 
@@ -3093,6 +3133,7 @@ window.atualizarTabelaProdutos = function () {
   const filtro = filtroEl ? filtroEl.value.toLowerCase() : "";
 
   tbody.innerHTML = "";
+
   if (!Array.isArray(window.produtos)) window.produtos = [];
 
   // Ordenação alfabética por nome
@@ -3104,15 +3145,18 @@ window.atualizarTabelaProdutos = function () {
 
   if (produtosOrdenados.length === 0) {
     const row = document.createElement("tr");
-    row.innerHTML = `<td colspan="9" style="text-align:center; color:#777;">Nenhum produto cadastrado.</td>`;
+    row.innerHTML =
+      `<td colspan="9" style="text-align:center; color:#777;">Nenhum produto cadastrado.</td>`;
     tbody.appendChild(row);
     return;
   }
 
+  // Renderização das linhas
   produtosOrdenados.forEach((produto, i) => {
     const nomeLower = (produto.nome || "").toLowerCase();
     const categoriaLower = (produto.categoria || "").toLowerCase();
 
+    // Filtro
     if (filtro && !nomeLower.includes(filtro) && !categoriaLower.includes(filtro)) return;
 
     const foto = produto.foto || "";
@@ -3120,49 +3164,38 @@ window.atualizarTabelaProdutos = function () {
       ? `<img src="${foto}" class="thumb" onclick="ampliarImagem('${foto}')" alt="Foto do produto">`
       : `<span style="color:red;font-weight:bold;">❌</span>`;
 
-    const codigoProduto = produto.codigo || "";  // 🆕 CÓDIGO DO PRODUTO
-    const codigoBarras = produto.codBarras || produto.codigoBarras || "-";
+    const codigoBarras = produto.codBarras || "-";
 
     const row = document.createElement("tr");
-    row.setAttribute("data-id", produto.id ?? "");
+    row.setAttribute("data-id", produto.id || "");
 
-    // -------------------------------
-    // ⚠️ ORDEM CORRETA DAS COLUNAS:
-    //
-    // # | Foto | Cód. Produto | Nome | Categoria | Embalagem | Qtd/Emb | Cód. Barras | Ações
-    // -------------------------------
     row.innerHTML = `
-  <td>${i + 1}</td>
-  <td style="text-align:center;">${fotoHtml}</td>
+      <td>${i + 1}</td>
+      <td style="text-align:center;">${fotoHtml}</td>
+      <td>${produto.codigo || "-"}</td>
+      <td style="font-weight:600;">${produto.nome || "-"}</td>
+      <td>${produto.categoria || "-"}</td>
+      <td>${produto.embalagem || "-"}</td>
+      <td>${produto.qtdEmbalagem || "-"}</td>
+      <td style="max-width:60px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;"
+          title="${codigoBarras}"
+          onclick="copiarCodigoBarras('${codigoBarras}')">
+          ${codigoBarras}
+      </td>
 
-  <!-- 🆕 CÓDIGO DO PRODUTO (CORRETO) -->
-  <td>${produto.codigo || "-"}</td>
+      <td style="text-align:center; width:140px;">
+        <button title="Editar" style="margin-right:6px;"
+                onclick="editarProdutoPorId('${produto.id}')">
+            <i class="fa fa-edit"></i>
+        </button>
 
-  <td style="font-weight:600;">${produto.nome || "-"}</td>
-  <td>${produto.categoria || "-"}</td>
-  <td>${produto.embalagem || "-"}</td>
-  <td>${produto.qtdEmbalagem || produto.qtd || "-"}</td>
-
-  <td style="max-width:60px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;"
-      title="${codigoBarras}"
-      onclick="copiarCodigoBarras('${codigoBarras}')">
-      ${codigoBarras}
-  </td>
-
-  <td style="text-align:center; width:140px;">
-    <button title="Editar" style="margin-right:6px;"
-            onclick="editarProdutoPorId('${produto.id}')">
-        <i class="fa fa-edit"></i>
-    </button>
-
-    <button title="Excluir"
-            onclick="excluirProdutoPorId('${produto.id}')"
-            style="background:#dc3545; color:white;">
-        <i class="fa fa-trash"></i>
-    </button>
-  </td>
-`;
-
+        <button title="Excluir"
+                onclick="excluirProdutoPorId('${produto.id}')"
+                style="background:#dc3545; color:white;">
+            <i class="fa fa-trash"></i>
+        </button>
+      </td>
+    `;
 
     // Destacar linha em edição
     if (typeof indiceEdicaoProduto === "number") {
@@ -3175,23 +3208,9 @@ window.atualizarTabelaProdutos = function () {
     tbody.appendChild(row);
   });
 
-  console.log("✅ Produtos listados (alinhamento corrigido).");
+  console.log("✅ Tabela de produtos atualizada sem snapshot gigante.");
 };
 
-
-window.copiarCodigoBarras = function (codigo) {
-  if (!codigo || codigo === "-") return;
-
-  navigator.clipboard.writeText(codigo)
-    .then(() => {
-      mostrarMensagem
-        ? mostrarMensagem("📋 Código copiado!", "sucesso")
-        : alert("Código copiado!");
-    })
-    .catch(() => {
-      alert("Não foi possível copiar o código.");
-    });
-};
 
 
 
