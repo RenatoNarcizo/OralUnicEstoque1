@@ -1099,6 +1099,7 @@
     <table id="tabelaValorHistorico">
       <thead>
         <tr>
+		 <th style="width:40px; text-align:center;">#</th>
 		<th>Cód. Produto</th>
           <th>Produto</th>		   
           <th>Jan</th>
@@ -6440,7 +6441,6 @@ document.addEventListener('click', (event) => {
     }
 });
 
-
 // =============================================
 // 📊 FUNÇÃO: Atualizar Tabela de Valor Histórico
 // =============================================
@@ -6478,25 +6478,22 @@ const historicoOrdenado = Object.entries(historico).sort(([a], [b]) =>
 );
 
 // 🔹 Preenche a tabela com lista ordenada
-historicoOrdenado.forEach(([produto, valores]) => {
-
-    // 🆕 Buscar o Cód. Produto no cadastro
+historicoOrdenado.forEach(([produto, valores], index) => {
     const cadastrado = window.produtos.find(p => p.nome === produto);
     const codigoProduto = cadastrado?.codigo || "-";
-
     const row = document.createElement("tr");
 
-    // 🆕 Cód. Produto + Produto (colunas iniciais) — CORRIGIDO
     let html = `
+      <td style="text-align:center; font-weight:600;">${index + 1}</td>
       <td style="text-align:center; width:70px;" title="${codigoProduto}">
         ${codigoProduto}
       </td>
-
       <td style="text-align:left; max-width:260px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
           title="${produto}">
         ${produto}
       </td>
     `;
+
 
     // 🗓️ 12 meses
     for (let i = 0; i < 12; i++) {
@@ -6565,31 +6562,33 @@ historicoOrdenado.forEach(([produto, valores]) => {
     tabela.appendChild(row);
   });
 
-  // ✅ Aplica o filtro APÓS montar toda a tabela
-  filtrarValorHistorico();
-};
-
-function filtrarValorHistorico() {
-  const filtro = (document.getElementById("filtroValorHistorico")?.value || "")
+  // 🔍 Filtro CORRIGIDO de busca — procura em toda a linha
+window.filtrarValorHistorico = function() {
+  const filtro = (document.getElementById("filtroValorHistorico").value || "")
     .toLowerCase()
     .trim();
 
   const linhas = document.querySelectorAll("#tabelaValorHistorico tbody tr");
 
-  linhas.forEach(tr => {
-    const texto = tr.textContent.toLowerCase();
-    tr.style.display = texto.includes(filtro) ? "" : "none";
+  linhas.forEach(linha => {
+    const textoLinha = (linha.innerText || "").toLowerCase();
+    linha.style.display = textoLinha.includes(filtro) ? "" : "none";
   });
-}
+};
 
-function limparFiltroValorHistorico() {
+// 🔄 Limpar filtro
+window.limparFiltroValorHistorico = function() {
   const campo = document.getElementById("filtroValorHistorico");
   if (campo) campo.value = "";
+  window.filtrarValorHistorico();
+};
 
-  filtrarValorHistorico();
-  mostrarMensagem("Filtro limpo!", "info");
 }
 
+// 🔄 Atualiza a tabela automaticamente ao abrir a seção
+document
+  .querySelector("#sidebar button[onclick=\"showSection('valorHistorico')\"]")
+  ?.addEventListener("click", atualizarTabelaValorHistorico);
 
 
 /* =====================================================
@@ -6639,26 +6638,9 @@ function habilitarCorrecaoOrtografica() {
 setTimeout(habilitarCorrecaoOrtografica, 1000);
 
 
-// 🔍 Filtro de busca (mantém)
-window.filtrarValorHistorico = function() {
-  const filtro = document.getElementById("filtroValorHistorico").value.toLowerCase();
-  const linhas = document.querySelectorAll("#tabelaValorHistorico tbody tr");
-  linhas.forEach(linha => {
-    const produto = linha.querySelector("td")?.innerText.toLowerCase() || "";
-    linha.style.display = produto.includes(filtro) ? "" : "none";
-  });
-};
 
-window.limparFiltroValorHistorico = function() {
-  const campo = document.getElementById("filtroValorHistorico");
-  if (campo) campo.value = "";
-  filtrarValorHistorico();
-};
 
-// 🔄 Atualiza a tabela automaticamente ao abrir a seção
-document
-  .querySelector("#sidebar button[onclick=\"showSection('valorHistorico')\"]")
-  ?.addEventListener("click", atualizarTabelaValorHistorico);
+
 
 
 </script>
@@ -6669,6 +6651,7 @@ document
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
