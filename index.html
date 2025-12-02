@@ -3401,9 +3401,10 @@ document.getElementById("produtoFoto").addEventListener("change", (e) => {
 
 
 // ===============================================
-// ✅ Função para limpar os campos de cadastro
+// 🔄 Função para limpar todos os campos do cadastro
 // ===============================================
 window.limparCamposProduto = function () {
+  const codigoEl = document.getElementById("produtoCodigo");
   const nomeEl = document.getElementById("produtoNome");
   const categoriaEl = document.getElementById("produtoCategoria");
   const embalagemEl = document.getElementById("produtoEmbalagem");
@@ -3413,7 +3414,8 @@ window.limparCamposProduto = function () {
   const fotoPreview = document.getElementById("fotoPreview");
   const filtro = document.getElementById("filtroProduto");
 
-  // 🧹 Limpa todos os campos de cadastro
+  // 🔄 Limpa todos os campos de cadastro
+  if (codigoEl) codigoEl.value = "";
   if (nomeEl) nomeEl.value = "";
   if (categoriaEl) categoriaEl.value = "";
   if (embalagemEl) embalagemEl.value = "";
@@ -3422,34 +3424,37 @@ window.limparCamposProduto = function () {
   if (fotoEl) fotoEl.value = "";
   if (fotoPreview) fotoPreview.innerHTML = "";
 
-  // 🔹 Remove produto em edição, se existir
+  // 🧽 Remove produto em edição
   if (typeof indiceEdicaoProduto !== "undefined") {
     indiceEdicaoProduto = null;
   }
 
-  // 🔹 Restaura visual dos botões e tabela
+  // 🧹 Limpa destaque da tabela
   document.querySelectorAll("#tabelaProdutos tbody tr").forEach((tr) => {
     tr.style.background = "";
   });
 
-  // 🔹 Esconde botão "Cancelar Edição", se houver
+  // 🔙 Esconde botão de cancelar edição
   if (typeof window.mostrarBotaoCancelar === "function") {
     window.mostrarBotaoCancelar(false);
   }
 
-  // 🔹 Limpa o campo de filtro e recarrega a tabela completa
+  // 🔍 Limpa campo de filtro
   if (filtro) {
     filtro.value = "";
     if (typeof window.filtrarProdutos === "function") {
-      window.filtrarProdutos(); // atualiza tabela com todos os produtos
+      window.filtrarProdutos();
     }
   }
 
-  // ✅ Mensagem de feedback
+  // 👉 Foca novamente no primeiro campo
+  if (codigoEl) codigoEl.focus();
+
+  // 📢 Feedback
   if (typeof mostrarMensagem === "function") {
-    mostrarMensagem("🧹 Campos e filtro limpos.", "info");
+    mostrarMensagem("Campos do produto limpos.", "info");
   } else {
-    console.log("🧹 Campos e filtro limpos.");
+    console.log("Campos do produto limpos.");
   }
 };
 
@@ -6651,6 +6656,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
