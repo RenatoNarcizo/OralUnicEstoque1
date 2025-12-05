@@ -1746,7 +1746,7 @@ async function carregarDadosDoFirestore() {
         const data = docSnap.data() || {};
 
         // ======== 2) Carregar produtos (documento antigo + subcoleção nova) ========
-        const produtosAntigos = Array.isArray(data.produtos) ? data.produtos : [];
+        const produtosAntigos = [];
         let produtosColecao = [];
 
         try {
@@ -6696,6 +6696,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
