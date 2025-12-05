@@ -3839,25 +3839,34 @@ window.limparCamposEntrada = function () {
 
 
 
-function excluirEntrada(i) {
+window.excluirEntrada = async function (i) {
   const e = window.entradas[i];
   if (!e) return;
 
   if (!confirm(`Excluir entrada do produto "${e.produto}" (Qtd: ${e.qtd || e.quantidade})?`)) return;
 
-  window.entradas.splice(i, 1);
+  try {
+    // Remove do Firestore direto da subcoleção
+    const { deleteDoc, doc } = await import("https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js");
+    const entradaRef = doc(db, "estoqueGlobal", "estoque", "entradas", e.id);
+    await deleteDoc(entradaRef);
 
-  salvarEntradasNoFirebase?.(window.entradas);
-  salvarTodosLocal?.();
+    // Remove localmente
+    window.entradas.splice(i, 1);
+    salvarTodosLocal?.();
 
-  mostrarMensagem(`🗑️ Entrada de "${e.produto}" excluída.`, "sucesso");
+    mostrarMensagem(`? Entrada de "${e.produto}" excluída.`, "sucesso");
 
-  // Atualiza tudo
-  if (typeof atualizarTabelaEntradas === "function") atualizarTabelaEntradas();
-  if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-  if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-  if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
-}
+    // Atualiza tudo
+    atualizarTabelaEntradas?.();
+    atualizarTabelaEstoque?.();
+    atualizarTabelaLimites?.();
+    atualizarPainelFinanceiro?.();
+  } catch (erro) {
+    console.error("? Erro ao excluir entrada:", erro);
+    mostrarMensagem("Erro ao excluir entrada do Firestore.", "erro");
+  }
+};
 
 function filtrarEntradas() {
   atualizarTabelaEntradas();
@@ -6627,6 +6636,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
