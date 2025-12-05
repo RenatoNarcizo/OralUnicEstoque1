@@ -3252,9 +3252,6 @@ window.editarProdutoPorId = function(id) {
 
 
 
-// ==========================
-// EXCLUIR: por id (100% CORRIGIDO)
-// ==========================
 window.excluirProdutoPorId = async function(id) {
   const idx = obterIndicePorIdProduto(id);
   if (idx === -1) {
@@ -3266,28 +3263,43 @@ window.excluirProdutoPorId = async function(id) {
   if (!confirm(`Excluir o produto "${produto.nome}"?`)) return;
 
   try {
-    // 🔥 1. Remove do Firestore (subcollection)
-    const estoqueRef = doc(db, "estoqueGlobal", "estoque");
-    const produtosCol = collection(estoqueRef, "produtos");
-    await deleteDoc(doc(produtosCol, id));
+    // 🔒 1️⃣ Bloqueia atualização via snapshot durante o processo
+    window.bloquearAtualizacaoSnapshot = true;
 
-    // 🔥 2. Remove localmente
+    // 🧭 2️⃣ Caminho correto no Firestore
+    const estoqueRef = doc(db, "estoqueGlobal", "estoque");
+    const produtoRef = doc(collection(estoqueRef, "produtos"), id);
+
+    await deleteDoc(produtoRef);
+
+    console.log(`🗑️ Produto ${id} removido do Firestore com sucesso.`);
+
+    // 🧹 3️⃣ Remove localmente
     window.produtos.splice(idx, 1);
 
-    // 🔥 3. Salva somente no localStorage (não no doc gigante)
+    // 💾 4️⃣ Atualiza cache local
     salvarTodosLocal?.();
 
-    // 🔥 4. Atualiza tabelas
+    // 🔄 5️⃣ Atualiza interface
     atualizarTabelaProdutos?.();
     atualizarTabelaEstoque?.();
+    atualizarDashboard?.();
+    atualizarPainelFinanceiro?.();
 
-    mostrarMensagem(`Produto "${produto.nome}" excluído com sucesso!`, "sucesso");
-  }
-  catch (e) {
-    console.error("Erro ao excluir produto:", e);
+    mostrarMensagem(`✅ Produto "${produto.nome}" excluído com sucesso!`, "sucesso");
+
+  } catch (e) {
+    console.error("❌ Erro ao excluir produto:", e);
     mostrarMensagem("❌ Falha ao excluir produto.", "erro");
+  } finally {
+    // 🔓 6️⃣ Reativa o snapshot
+    setTimeout(() => {
+      window.bloquearAtualizacaoSnapshot = false;
+      console.log("🔓 Snapshot reativado após exclusão.");
+    }, 2000);
   }
 };
+
 
 
 
@@ -6615,6 +6627,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
