@@ -2238,6 +2238,9 @@ async function mostrarSistema(user) {
 // ====================================================
 // 🔐 AUTENTICAÇÃO E SINCRONIZAÇÃO EM TEMPO REAL (CORREÇÃO FINAL)
 // ====================================================
+// ====================================================
+// 🔐 AUTENTICAÇÃO E SINCRONIZAÇÃO EM TEMPO REAL (VERSÃO FINAL)
+// ====================================================
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     console.warn("👋 Nenhum usuário logado — aguardando login...");
@@ -2245,87 +2248,18 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   console.log(`✅ Usuário logado: ${user.email}`);
-  console.log("🔄 Carregando dados do Firestore, aguarde...");
+  console.log("🔄 Iniciando carregamento e sincronização do Firestore...");
 
   try {
-    // 🔹 Carrega dados iniciais
+    // 🔹 1) Carrega dados iniciais e ativa listener principal
     await carregarDadosDoFirestore();
 
-    // 🔁 Sincroniza o usuário autenticado (se existir)
+    // 🔹 2) Sincroniza usuários do Auth (se existir função)
     if (typeof sincronizarUsuariosDoAuth === "function") {
       await sincronizarUsuariosDoAuth();
     }
 
-    // === 🔁 SINCRONIZAÇÃO EM TEMPO REAL ===
-    const estoqueRef = doc(db, "estoqueGlobal", "estoque");
-    const usuariosRef = doc(db, "estoqueGlobal", "usuarios");
-
-    // --- Escuta o ESTOQUE ---
-    onSnapshot(estoqueRef, (snapshot) => {
-      try {
-        if (window.bloquearAtualizacaoSnapshot) {
-          console.log("⏸️ Snapshot ignorado (bloqueio ativo - salvando produto)");
-          return;
-        }
-
-        if (!snapshot.exists()) {
-          console.warn("⚠️ Documento 'estoque' ainda não existe no Firestore.");
-          return;
-        }
-
-        const data = snapshot.data() || {};
-        window.produtos = data.produtos || [];
-        window.entradas = data.entradas || [];
-        window.saidas = data.saidas || [];
-        window.limites = data.limites || [];
-
-        salvarTodosLocal?.();
-        atualizarTabelaProdutos?.();
-        atualizarTabelaEstoque?.();
-        atualizarTabelaEntradas?.();
-        atualizarTabelaSaidas?.();
-        atualizarDashboard?.();
-        atualizarPainelFinanceiro?.();
-
-        console.log("✅ Estoque sincronizado com sucesso.");
-      } catch (err) {
-        console.error("❌ Erro ao processar snapshot de estoque:", err);
-      }
-    });
-
-    // --- Escuta os USUÁRIOS ---
-    onSnapshot(usuariosRef, (snapshot) => {
-      try {
-        if (!snapshot.exists()) {
-          console.warn("⚠️ Documento 'usuarios' não existe no Firestore.");
-          return;
-        }
-
-        const data = snapshot.data() || {};
-        const usuariosRemotos = Array.isArray(data.usuarios) ? data.usuarios : [];
-
-        // 🔄 Mescla com dados locais (sem duplicar)
-        const emailsExistentes = new Set((window.usuarios || []).map(u => u.email?.toLowerCase()));
-        const usuariosMesclados = [
-          ...(window.usuarios || []),
-          ...usuariosRemotos.filter(u => !emailsExistentes.has(u.email?.toLowerCase()))
-        ];
-
-        window.usuarios = usuariosMesclados;
-
-        // 💾 Atualiza localStorage
-        if (typeof salvarTodosLocal === "function") salvarTodosLocal();
-
-        // 🔄 Atualiza tabela de usuários
-        if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
-
-        console.log(`👥 Usuários sincronizados: ${window.usuarios.length}`);
-      } catch (erro) {
-        console.error("❌ Erro ao sincronizar usuários:", erro);
-      }
-    });
-
-    console.log("🔄 Escutas em tempo real configuradas com sucesso.");
+    console.log("🟢 Escutas em tempo real configuradas com sucesso.");
 
   } catch (erroGeral) {
     console.error("❌ Erro durante a inicialização da sincronização:", erroGeral);
@@ -6696,6 +6630,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
