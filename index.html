@@ -1724,17 +1724,14 @@ async function carregarDadosDoFirestore() {
   try {
     const estoqueRef = doc(db, "estoqueGlobal", "estoque");
 
-    // ======== 1) Escutar documento "estoque" (entradas, saídas, limites etc) ========
+    // ======== 1) Escutar documento "estoque" (dados gerais) ========
     onSnapshot(estoqueRef, async (docSnap) => {
       try {
         if (!docSnap.exists()) {
           await setDoc(estoqueRef, {
-            produtos: [],
-            entradas: [],
-            saidas: [],
+            resumo: {},
             limites: [],
-            usuarios: [],
-            errosProblemas: []
+            usuarios: []
           }, { merge: true });
 
           console.log("📄 Documento 'estoque' criado (inicial).");
@@ -1748,11 +1745,10 @@ async function carregarDadosDoFirestore() {
 
         const data = docSnap.data() || {};
 
-        // ======== 2) Carregar produtos do documento antigo ========
+        // ======== 2) Carregar produtos (documento antigo + subcoleção nova) ========
         const produtosAntigos = Array.isArray(data.produtos) ? data.produtos : [];
-
-        // ======== 3) Carregar produtos da coleção nova ========
         let produtosColecao = [];
+
         try {
           const produtosCol = collection(estoqueRef, "produtos");
           const snap = await getDocs(produtosCol);
@@ -1761,13 +1757,8 @@ async function carregarDadosDoFirestore() {
           console.warn("⚠️ Falha ao ler coleção produtos:", e);
         }
 
-        // ======== 4) MESCLAR (priorizar coleção nova) ========
         const mapa = new Map();
-
-        // novos documentos → prioridade
         produtosColecao.forEach(p => mapa.set(String(p.id).toLowerCase(), p));
-
-        // produtos antigos (do doc grande)
         produtosAntigos.forEach(p => {
           const chave = String(p.id || p.codigo || p.nome).toLowerCase();
           if (!mapa.has(chave)) {
@@ -1778,23 +1769,39 @@ async function carregarDadosDoFirestore() {
 
         window.produtos = Array.from(mapa.values());
 
-        // ======== 5) Atualizar os outros dados normalmente ========
-        window.entradas = Array.isArray(data.entradas) ? data.entradas : [];
-        window.saidas = Array.isArray(data.saidas) ? data.saidas : [];
-        window.limites = Array.isArray(data.limites) ? data.limites : [];
-        window.errosProblemas = Array.isArray(data.errosProblemas) ? data.errosProblemas : [];
+        // ======== 3) Carregar subcoleções novas (entradas, saídas, erros) ========
+        let entradasColecao = [];
+        let saidasColecao = [];
+        let errosColecao = [];
 
-        // NÃO MEXER EM USUÁRIOS AQUI (você tem sincronização própria)
+        try {
+          const [snapEntradas, snapSaidas, snapErros] = await Promise.all([
+            getDocs(collection(estoqueRef, "entradas")),
+            getDocs(collection(estoqueRef, "saidas")),
+            getDocs(collection(estoqueRef, "errosProblemas"))
+          ]);
 
-        // ======== 6) Salvar no localStorage ========
-         if (!navigator.onLine) {
-          salvarTodosLocal?.();
-          console.log("?? Sistema offline — cache local atualizado.");
-        } else {
-          console.log("?? Sistema online — sincronização direta via Firestore, sem cache local.");
+          entradasColecao = snapEntradas.docs.map(d => ({ id: d.id, ...d.data() }));
+          saidasColecao = snapSaidas.docs.map(d => ({ id: d.id, ...d.data() }));
+          errosColecao = snapErros.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch (e) {
+          console.warn("⚠️ Falha ao ler subcoleções:", e);
         }
 
-        // ======== 7) Atualizar interface ========
+        window.entradas = entradasColecao;
+        window.saidas = saidasColecao;
+        window.errosProblemas = errosColecao;
+        window.limites = Array.isArray(data.limites) ? data.limites : [];
+
+        // ======== 4) Atualizar cache local (offline) ========
+        if (!navigator.onLine) {
+          salvarTodosLocal?.();
+          console.log("📦 Sistema offline — cache local atualizado.");
+        } else {
+          console.log("🌐 Sistema online — dados sincronizados via Firestore.");
+        }
+
+        // ======== 5) Atualizar interface ========
         atualizarTabelaProdutos?.();
         atualizarTabelaEstoque?.();
         atualizarTabelaEntradas?.();
@@ -1805,8 +1812,7 @@ async function carregarDadosDoFirestore() {
         atualizarDashboard?.();
         atualizarPainelFinanceiro?.();
 
-        console.log(`🔥 Dados sincronizados. Produtos: ${window.produtos.length}`);
-
+        console.log(`🔥 Dados sincronizados. Produtos: ${window.produtos.length}, Entradas: ${window.entradas.length}, Saídas: ${window.saidas.length}`);
       } catch (err) {
         console.error("❌ Erro no processamento do snapshot:", err);
       }
@@ -1817,6 +1823,7 @@ async function carregarDadosDoFirestore() {
     mostrarMensagem?.("Erro ao conectar ao Firestore!", "erro");
   }
 }
+
 
 
 // ============================================================
@@ -6689,6 +6696,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
