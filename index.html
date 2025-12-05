@@ -1614,19 +1614,46 @@ window.PERMISSOES = {
 };
 
 
- async function salvarDadosNoFirestore(nomeColecao, dados) {
-  if (!auth.currentUser) return;
-
+async function salvarDadosNoFirestore(nomeColecao, dados) {
   try {
-    const docRef = doc(db, "estoqueGlobal", nomeColecao === "usuarios" ? "usuarios" : "estoque");
-    await setDoc(docRef, nomeColecao === "usuarios"
-      ? { usuarios: dados }
-      : { [nomeColecao]: dados }, { merge: true });
+    // 🔹 1. Verifica conexão com a internet
+    if (!navigator.onLine) {
+      console.warn("⚠️ Sem internet — salvando apenas localmente.");
+      salvarTodosLocal();
+      return;
+    }
+
+    // 🔹 2. Verifica autenticação
+    if (!auth.currentUser) {
+      console.warn("⚠️ Nenhum usuário logado — aguardando autenticação para salvar.");
+      salvarTodosLocal();
+      return;
+    }
+
+    // 🔹 3. Define referência no Firestore
+    const docRef = doc(
+      db,
+      "estoqueGlobal",
+      nomeColecao === "usuarios" ? "usuarios" : "estoque"
+    );
+
+    // 🔹 4. Grava no Firestore
+    await setDoc(
+      docRef,
+      nomeColecao === "usuarios"
+        ? { usuarios: dados }
+        : { [nomeColecao]: dados },
+      { merge: true }
+    );
+
     console.log(`✅ ${nomeColecao} salvos no Firestore com sucesso.`);
   } catch (e) {
+    // 🔹 5. Caso dê erro, salva localmente
     console.error("❌ Erro ao salvar no Firestore:", e);
+    salvarTodosLocal();
   }
 }
+
 
 
 // -----------------------------
@@ -1634,27 +1661,31 @@ window.PERMISSOES = {
 // -----------------------------
 function salvarTodosLocal() {
   try {
+    // 🔹 Cria uma cópia leve dos dados (amostra, não o banco inteiro)
     const dadosSistema = {
-      produtos: window.produtos || [],
-      entradas: window.entradas || [],
-      saidas: window.saidas || [],
-      usuarios: window.usuarios || [],
+      produtos: (window.produtos || []).slice(0, 20),
+      entradas: (window.entradas || []).slice(0, 10),
+      saidas: (window.saidas || []).slice(0, 10),
+      usuarios: (window.usuarios || []).slice(0, 5),
       limites: window.limites || [],
-      errosProblemas: window.errosProblemas || []
+      errosProblemas: (window.errosProblemas || []).slice(0, 5)
     };
+
     localStorage.setItem("dadosSistema", JSON.stringify(dadosSistema));
-    console.log("💾 Dados salvos localmente:", {
-      produtos: (window.produtos||[]).length,
-      entradas: (window.entradas||[]).length,
-      saidas: (window.saidas||[]).length,
-      usuarios: (window.usuarios||[]).length,
-      errosProblemas: (window.errosProblemas||[]).length
+
+    console.log("💾 Cache local leve salvo:", {
+      produtos: dadosSistema.produtos.length,
+      entradas: dadosSistema.entradas.length,
+      saidas: dadosSistema.saidas.length,
+      usuarios: dadosSistema.usuarios.length,
+      errosProblemas: dadosSistema.errosProblemas.length
     });
   } catch (e) {
-    console.error("⚠️ Erro ao salvar no localStorage:", e);
+    console.warn("⚠️ Cache local ignorado (QuotaExceededError prevenido):", e);
   }
 }
 window.salvarTodosLocal = salvarTodosLocal;
+
 
 // -----------------------------
 // Carregar dados do localStorage (único, idempotente)
@@ -1759,7 +1790,12 @@ async function carregarDadosDoFirestore() {
         // NÃO MEXER EM USUÁRIOS AQUI (você tem sincronização própria)
 
         // ======== 6) Salvar no localStorage ========
-        salvarTodosLocal?.();
+         if (!navigator.onLine) {
+          salvarTodosLocal?.();
+          console.log("?? Sistema offline — cache local atualizado.");
+        } else {
+          console.log("?? Sistema online — sincronização direta via Firestore, sem cache local.");
+        }
 
         // ======== 7) Atualizar interface ========
         atualizarTabelaProdutos?.();
@@ -6656,6 +6692,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
