@@ -1716,7 +1716,7 @@ window.salvarTodosLocal = salvarTodosLocal;
 
 
 // ===================================================
-// 🌐 CARREGAMENTO E SINCRONIZAÇÃO EM TEMPO REAL (COM PRODUTOS MESCLADOS DA COLEÇÃO)
+// 🌐 CARREGAMENTO E SINCRONIZAÇÃO EM TEMPO REAL (VERSÃO FINAL)
 // ===================================================
 async function carregarDadosDoFirestore() {
   console.log("🔄 Iniciando carregamento e sincronização do Firestore...");
@@ -1724,7 +1724,7 @@ async function carregarDadosDoFirestore() {
   try {
     const estoqueRef = doc(db, "estoqueGlobal", "estoque");
 
-    // ======== 1) Escutar documento "estoque" (dados gerais) ========
+    // ======== 1️⃣ Escuta o documento principal (dados gerais) ========
     onSnapshot(estoqueRef, async (docSnap) => {
       try {
         if (!docSnap.exists()) {
@@ -1739,90 +1739,75 @@ async function carregarDadosDoFirestore() {
         }
 
         if (window.bloquearAtualizacaoSnapshot) {
-          console.log("⏸️ Snapshot ignorado (salvando produto).");
+          console.log("⏸️ Snapshot ignorado (bloqueio ativo).");
           return;
         }
 
         const data = docSnap.data() || {};
 
-        // ======== 2) Carregar produtos (documento antigo + subcoleção nova) ========
-        const produtosAntigos = [];
-        let produtosColecao = [];
-
-        try {
-          const produtosCol = collection(estoqueRef, "produtos");
-          const snap = await getDocs(produtosCol);
-          produtosColecao = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        } catch (e) {
-          console.warn("⚠️ Falha ao ler coleção produtos:", e);
-        }
-
-        const mapa = new Map();
-        produtosColecao.forEach(p => mapa.set(String(p.id).toLowerCase(), p));
-        produtosAntigos.forEach(p => {
-          const chave = String(p.id || p.codigo || p.nome).toLowerCase();
-          if (!mapa.has(chave)) {
-            const id = String(p.id || Date.now() + Math.floor(Math.random() * 10000));
-            mapa.set(chave, { ...p, id });
-          }
-        });
-
-        window.produtos = Array.from(mapa.values());
-
-        // ======== 3) Carregar subcoleções novas (entradas, saídas, erros) ========
-        let entradasColecao = [];
-        let saidasColecao = [];
-        let errosColecao = [];
-
-        try {
-          const [snapEntradas, snapSaidas, snapErros] = await Promise.all([
-            getDocs(collection(estoqueRef, "entradas")),
-            getDocs(collection(estoqueRef, "saidas")),
-            getDocs(collection(estoqueRef, "errosProblemas"))
-          ]);
-
-          entradasColecao = snapEntradas.docs.map(d => ({ id: d.id, ...d.data() }));
-          saidasColecao = snapSaidas.docs.map(d => ({ id: d.id, ...d.data() }));
-          errosColecao = snapErros.docs.map(d => ({ id: d.id, ...d.data() }));
-        } catch (e) {
-          console.warn("⚠️ Falha ao ler subcoleções:", e);
-        }
-
-        window.entradas = entradasColecao;
-        window.saidas = saidasColecao;
-        window.errosProblemas = errosColecao;
+        // 🔹 Atualiza dados gerais (que ficam no documento)
         window.limites = Array.isArray(data.limites) ? data.limites : [];
+        window.resumo = data.resumo || {};
 
-        // ======== 4) Atualizar cache local (offline) ========
-        if (!navigator.onLine) {
-          salvarTodosLocal?.();
-          console.log("📦 Sistema offline — cache local atualizado.");
-        } else {
-          console.log("🌐 Sistema online — dados sincronizados via Firestore.");
-        }
+        // 🔹 Atualiza cache local (somente dados leves)
+        salvarTodosLocal?.();
 
-        // ======== 5) Atualizar interface ========
-        atualizarTabelaProdutos?.();
-        atualizarTabelaEstoque?.();
-        atualizarTabelaEntradas?.();
-        atualizarTabelaSaidas?.();
+        // 🔹 Atualiza interface leve
         atualizarTabelaLimites?.();
-        atualizarTabelaErros?.();
         atualizarTabelaUsuarios?.();
         atualizarDashboard?.();
         atualizarPainelFinanceiro?.();
 
-        console.log(`🔥 Dados sincronizados. Produtos: ${window.produtos.length}, Entradas: ${window.entradas.length}, Saídas: ${window.saidas.length}`);
+        console.log("✅ Documento principal sincronizado com sucesso.");
       } catch (err) {
-        console.error("❌ Erro no processamento do snapshot:", err);
+        console.error("❌ Erro no snapshot do documento principal:", err);
       }
     });
+
+    // ======== 2️⃣ Escuta a subcoleção de produtos em tempo real ========
+    const produtosCol = collection(estoqueRef, "produtos");
+    onSnapshot(produtosCol, (snap) => {
+      try {
+        window.produtos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        salvarTodosLocal?.();
+        atualizarTabelaProdutos?.();
+        atualizarTabelaEstoque?.();
+        atualizarDashboard?.();
+        atualizarPainelFinanceiro?.();
+
+        console.log(`🔥 Produtos sincronizados em tempo real: ${window.produtos.length}`);
+      } catch (err) {
+        console.error("❌ Erro ao processar produtos:", err);
+      }
+    });
+
+    // ======== 3️⃣ Escuta subcoleções de entradas, saídas e erros ========
+    const escutarColecao = (nome, destino, atualizarFn) => {
+      onSnapshot(collection(estoqueRef, nome), (snap) => {
+        try {
+          window[destino] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          salvarTodosLocal?.();
+          atualizarFn?.();
+          console.log(`📦 ${nome} sincronizados (${window[destino].length})`);
+        } catch (e) {
+          console.error(`❌ Erro ao sincronizar ${nome}:`, e);
+        }
+      });
+    };
+
+    escutarColecao("entradas", "entradas", atualizarTabelaEntradas);
+    escutarColecao("saidas", "saidas", atualizarTabelaSaidas);
+    escutarColecao("errosProblemas", "errosProblemas", atualizarTabelaErros);
+
+    console.log("🟢 Escutas em tempo real configuradas com sucesso.");
 
   } catch (erro) {
     console.error("❌ Erro ao iniciar sincronização:", erro);
     mostrarMensagem?.("Erro ao conectar ao Firestore!", "erro");
   }
 }
+
 
 
 
@@ -6630,6 +6615,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
