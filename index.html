@@ -1514,13 +1514,11 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
+// ============================================================
+// 🔥 FIRESTORE – SALVAMENTO ESCALÁVEL E OTIMIZADO
+// ============================================================
 
-
- 
-// ===================================================
-// 🔹 Wrappers globais para salvar dados no Firestore
-// ===================================================
-// 🔄 NOVA FUNÇÃO — SALVA cada produto individualmente na coleção estoque/produtos
+// 🧩 Salvar produtos individualmente na subcoleção
 window.salvarProdutosNoFirebase = async function(listaDeProdutos) {
   try {
     if (!Array.isArray(listaDeProdutos)) return;
@@ -1541,118 +1539,117 @@ window.salvarProdutosNoFirebase = async function(listaDeProdutos) {
   }
 };
 
-window.salvarEntradasNoFirebase = (dados) => salvarDadosNoFirestore("entradas", dados);
-window.salvarSaidasNoFirebase = (dados) => salvarDadosNoFirestore("saidas", dados);
-window.salvarUsuariosNoFirebase = (dados) => salvarDadosNoFirestore("usuarios", dados);
-window.salvarErrosProblemasNoFirebase = (dados) => salvarDadosNoFirestore("errosProblemas", dados);
+// 🧩 Salvar entradas na subcoleção
+window.salvarEntradasNoFirebase = async function(listaDeEntradas) {
+  try {
+    if (!Array.isArray(listaDeEntradas)) return;
 
+    const entradasRef = collection(db, "estoqueGlobal", "estoque", "entradas");
+    for (const e of listaDeEntradas) {
+      const id = String(e.id || Date.now() + Math.floor(Math.random() * 10000));
+      e.id = id;
+      await setDoc(doc(entradasRef, id), e, { merge: true });
+    }
 
+    console.log("✅ Entradas salvas na coleção estoque/entradas");
+  } catch (e) {
+    console.error("❌ Erro ao salvar entradas no Firestore:", e);
+  }
+};
 
-// ✅ Garante que as variáveis sejam sempre arrays válidos
+// 🧩 Salvar saídas na subcoleção
+window.salvarSaidasNoFirebase = async function(listaDeSaidas) {
+  try {
+    if (!Array.isArray(listaDeSaidas)) return;
+
+    const saidasRef = collection(db, "estoqueGlobal", "estoque", "saidas");
+    for (const s of listaDeSaidas) {
+      const id = String(s.id || Date.now() + Math.floor(Math.random() * 10000));
+      s.id = id;
+      await setDoc(doc(saidasRef, id), s, { merge: true });
+    }
+
+    console.log("✅ Saídas salvas na coleção estoque/saidas");
+  } catch (e) {
+    console.error("❌ Erro ao salvar saídas no Firestore:", e);
+  }
+};
+
+// 🧩 Salvar erros e problemas na subcoleção
+window.salvarErrosProblemasNoFirebase = async function(listaDeErros) {
+  try {
+    if (!Array.isArray(listaDeErros)) return;
+
+    const errosRef = collection(db, "estoqueGlobal", "estoque", "errosProblemas");
+    for (const err of listaDeErros) {
+      const id = String(err.id || Date.now() + Math.floor(Math.random() * 10000));
+      err.id = id;
+      await setDoc(doc(errosRef, id), err, { merge: true });
+    }
+
+    console.log("✅ Erros/Problemas salvos na coleção estoque/errosProblemas");
+  } catch (e) {
+    console.error("❌ Erro ao salvar errosProblemas no Firestore:", e);
+  }
+};
+
+// 🧩 Salvar usuários (documento separado)
+window.salvarUsuariosNoFirebase = async function(listaDeUsuarios) {
+  try {
+    const docRef = doc(db, "estoqueGlobal", "usuarios");
+    await setDoc(docRef, { usuarios: listaDeUsuarios }, { merge: true });
+    console.log("✅ Usuários salvos no documento estoqueGlobal/usuarios");
+  } catch (e) {
+    console.error("❌ Erro ao salvar usuários no Firestore:", e);
+  }
+};
+
+// 🧩 Atualizar o documento principal com resumo leve
+window.salvarResumoDoEstoque = async function() {
+  try {
+    const docRef = doc(db, "estoqueGlobal", "estoque");
+    await setDoc(docRef, {
+      resumo: {
+        totalProdutos: (window.produtos || []).length,
+        totalEntradas: (window.entradas || []).length,
+        totalSaidas: (window.saidas || []).length,
+        ultimaAtualizacao: new Date().toISOString()
+      },
+      limites: window.limites || [],
+      usuarios: window.usuarios || []
+    }, { merge: true });
+
+    console.log("📄 Documento principal 'estoque' atualizado (leve e resumido).");
+  } catch (e) {
+    console.error("❌ Erro ao atualizar documento principal:", e);
+  }
+};
+
+// ============================================================
+// 🧩 Garante arrays válidos
+// ============================================================
 if (!Array.isArray(window.produtos)) window.produtos = [];
 if (!Array.isArray(window.entradas)) window.entradas = [];
 if (!Array.isArray(window.saidas)) window.saidas = [];
 if (!Array.isArray(window.usuarios)) window.usuarios = [];
 
-// ✅ Mostra no console os dados carregados
-console.log("Dados carregados do localStorage:", {
+console.log("📦 Dados carregados do localStorage:", {
   produtos: window.produtos.length,
   entradas: window.entradas.length,
   saidas: window.saidas.length,
   usuarios: window.usuarios.length
 });
 
-
+// ============================================================
+// 👥 Permissões (sem alterações)
+// ============================================================
 window.PERMISSOES = {
-  "ADMIN": {
-    canView: [
-      "boasVindas",
-      "dashboard",
-      "cadastro",
-      "entrada",
-      "saida",
-      "estoque",
-      "limites",
-      "valorHistorico",
-      "financeiro",
-      "relatorios",
-      "usuarios",
-      "errosProblemas"
-    ]
-  },
-
-  "GERENCIA": {
-    canView: [
-      "boasVindas",
-      "dashboard",
-      "cadastro",
-      "entrada",
-      "saida",
-      "estoque",
-      "limites",
-      "valorHistorico",
-      "financeiro",
-      "relatorios",
-      "errosProblemas"
-      // ❌ não pode acessar "usuarios"
-    ]
-  },
-
-  "ESTOQUISTA": {
-    canView: [
-      "boasVindas",
-      "cadastro",
-      "entrada",
-      "saida",
-      "estoque",
-      "limites",
-      "valorHistorico",
-      "relatorios"
-      // ❌ não pode acessar dashboard, financeiro, usuários
-    ]
-  }
+  "ADMIN": { canView: ["boasVindas","dashboard","cadastro","entrada","saida","estoque","limites","valorHistorico","financeiro","relatorios","usuarios","errosProblemas"] },
+  "GERENCIA": { canView: ["boasVindas","dashboard","cadastro","entrada","saida","estoque","limites","valorHistorico","financeiro","relatorios","errosProblemas"] },
+  "ESTOQUISTA": { canView: ["boasVindas","cadastro","entrada","saida","estoque","limites","valorHistorico","relatorios"] }
 };
 
 
-async function salvarDadosNoFirestore(nomeColecao, dados) {
-  try {
-    // 🔹 1. Verifica conexão com a internet
-    if (!navigator.onLine) {
-      console.warn("⚠️ Sem internet — salvando apenas localmente.");
-      salvarTodosLocal();
-      return;
-    }
-
-    // 🔹 2. Verifica autenticação
-    if (!auth.currentUser) {
-      console.warn("⚠️ Nenhum usuário logado — aguardando autenticação para salvar.");
-      salvarTodosLocal();
-      return;
-    }
-
-    // 🔹 3. Define referência no Firestore
-    const docRef = doc(
-      db,
-      "estoqueGlobal",
-      nomeColecao === "usuarios" ? "usuarios" : "estoque"
-    );
-
-    // 🔹 4. Grava no Firestore
-    await setDoc(
-      docRef,
-      nomeColecao === "usuarios"
-        ? { usuarios: dados }
-        : { [nomeColecao]: dados },
-      { merge: true }
-    );
-
-    console.log(`✅ ${nomeColecao} salvos no Firestore com sucesso.`);
-  } catch (e) {
-    // 🔹 5. Caso dê erro, salva localmente
-    console.error("❌ Erro ao salvar no Firestore:", e);
-    salvarTodosLocal();
-  }
-}
 
 
 
@@ -6692,6 +6689,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
