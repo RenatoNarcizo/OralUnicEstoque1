@@ -4887,17 +4887,34 @@ function limparFiltroEstoque() {
 }
 
 // =============================================================
-// 🔄 Recalcula quantidades e último valor a partir de entradas/saídas
-//    ✅ Corrigida para zerar quando não há entradas
+// 🔄 Recalcula Estoque Geral — VERSÃO À PROVA DE ERROS
 // =============================================================
 function recalcularEstoqueGeral() {
   if (!Array.isArray(window.produtos)) window.produtos = [];
   if (!Array.isArray(window.entradas)) window.entradas = [];
   if (!Array.isArray(window.saidas)) window.saidas = [];
 
-  const mapa = {};
+  // ⚠️ Se não há entradas nem saídas → zera tudo e sai
+  if (window.entradas.length === 0 && window.saidas.length === 0) {
+    (window.produtos || []).forEach(p => {
+      p.quantidade = 0;
+      p.ultimoValor = 0;
+    });
+
+    salvarTodosLocal?.();
+    if (typeof salvarProdutosNoFirebase === "function") salvarProdutosNoFirebase(window.produtos);
+
+    atualizarTabelaEstoque?.();
+    atualizarDashboard?.();
+    atualizarPainelFinanceiro?.();
+
+    console.log("🧾 Nenhuma entrada/saída — estoque zerado automaticamente.");
+    mostrarMensagem?.("🧾 Estoque zerado (sem entradas/saídas registradas).", "info");
+    return;
+  }
 
   // 🔹 Inicializa mapa base dos produtos
+  const mapa = {};
   window.produtos.forEach(p => {
     mapa[p.nome?.toLowerCase() || p.id] = {
       quantidade: 0,
@@ -4929,26 +4946,22 @@ function recalcularEstoqueGeral() {
     }
   });
 
-  // ⚠️ Se NÃO há entradas e NÃO há saídas → zera estoque completamente
-  if ((window.entradas.length === 0) && (window.saidas.length === 0)) {
-    Object.values(mapa).forEach(entry => {
-      if (!entry.pRef) return;
-      entry.pRef.quantidade = 0;
-    });
-    console.log("🧾 Nenhuma entrada/saída encontrada — estoque zerado.");
-  } else {
-    // 🔄 Aplica resultados recalculados
-    Object.values(mapa).forEach(entry => {
-      if (!entry.pRef) return;
-      entry.pRef.quantidade = entry.quantidade;
-      entry.pRef.ultimoValor = entry.ultimoValor;
-      entry.pRef.lote = entry.lote;
-      entry.pRef.validade = entry.validade;
-    });
-  }
+  // 🔄 Aplica resultados recalculados
+  Object.values(mapa).forEach(entry => {
+    if (!entry.pRef) return;
+    entry.pRef.quantidade = Math.max(0, entry.quantidade); // evita negativos
+    entry.pRef.ultimoValor = entry.ultimoValor;
+    entry.pRef.lote = entry.lote;
+    entry.pRef.validade = entry.validade;
+  });
 
   salvarTodosLocal?.();
   if (typeof salvarProdutosNoFirebase === "function") salvarProdutosNoFirebase(window.produtos);
+
+  mostrarMensagem?.("✅ Estoque recalculado automaticamente.", "sucesso");
+  atualizarTabelaEstoque?.();
+  atualizarDashboard?.();
+  atualizarPainelFinanceiro?.();
 
   // 🆘 helper para localizar por código de barras ou id
   function mapById(cod) {
@@ -4956,30 +4969,27 @@ function recalcularEstoqueGeral() {
     const p = window.produtos.find(p => String(p.codigoBarras || p.codBarras || p.id) === String(cod));
     return p ? { ...p, pRef: p } : null;
   }
-
-  mostrarMensagem?.("✅ Estoque recalculado a partir de entradas/saídas.", "info");
-  atualizarTabelaEstoque?.();
-  atualizarDashboard?.(); // 🆕 adicionada para atualizar painel
-  atualizarPainelFinanceiro?.(); // 🆕 garante atualização de valores
 }
 
 
-
-
-
 // ============================================================
-// ⚡ ATUALIZAÇÃO AUTOMÁTICA APÓS MOVIMENTAÇÕES
+// ⚡ ATUALIZAÇÃO AUTOMÁTICA APÓS MOVIMENTAÇÕES (versão definitiva)
 // ============================================================
 ["registrarEntrada", "registrarSaida", "excluirEntrada", "excluirSaida"].forEach(nomeFunc => {
   const original = window[nomeFunc];
   if (typeof original === "function") {
-    window[nomeFunc] = function(...args) {
+    window[nomeFunc] = function (...args) {
       const resultado = original.apply(this, args);
-      setTimeout(() => atualizarTabelaEstoque(), 300); // pequeno delay para garantir salvamento
+      // pequeno delay para garantir que exclusões/salvamentos terminem
+      setTimeout(() => {
+        recalcularEstoqueGeral();   // 🔁 recalcula sempre após cada movimento
+        atualizarDashboard?.();     // 📊 atualiza painel principal
+      }, 300);
       return resultado;
     };
   }
 });
+
 
 
 // ============================================================
@@ -6658,6 +6668,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
