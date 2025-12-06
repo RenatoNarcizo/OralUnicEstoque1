@@ -4888,43 +4888,74 @@ function limparFiltroEstoque() {
 
 
 
-// ============================================================
-// 🔄 RE-CALCULAR ESTOQUE (botão manual, opcional)
-// ============================================================
-// Recalcula quantidades e último valor a partir de entradas/saidas
+// =============================================================
+// 🔄 Recalcula quantidades e informações do estoque a partir de entradas e saídas
+//    ✅ Versão final — garante dados 100% consistentes
+// =============================================================
 function recalcularEstoqueGeral() {
-  // zera quantidades
   if (!Array.isArray(window.produtos)) window.produtos = [];
+  if (!Array.isArray(window.entradas)) window.entradas = [];
+  if (!Array.isArray(window.saidas)) window.saidas = [];
+
+  // ⚠️ Se não há nenhuma entrada nem saída → zera tudo
+  if (window.entradas.length === 0 && window.saidas.length === 0) {
+    window.produtos.forEach(p => {
+      p.quantidade = 0;
+      p.ultimoValor = 0;
+      p.lote = "";
+      p.validade = "";
+    });
+
+    salvarTodosLocal?.();
+    if (typeof salvarProdutosNoFirebase === "function") salvarProdutosNoFirebase(window.produtos);
+
+    atualizarTabelaEstoque?.();
+    atualizarTabelaLimites?.();
+    atualizarDashboard?.();
+    atualizarPainelFinanceiro?.();
+
+    console.log("🧾 Nenhuma movimentação — estoque zerado e limpo.");
+    return;
+  }
+
+  // 🔹 Caso haja movimentações, recalcula tudo com base real
   const mapa = {};
+
   window.produtos.forEach(p => {
-    mapa[p.nome?.toLowerCase() || p.id] = { quantidade: 0, ultimoValor: p.ultimoValor || 0, lote: p.lote || "", validade: p.validade || "" , pRef: p };
+    mapa[p.nome?.toLowerCase() || p.id] = {
+      quantidade: 0,
+      ultimoValor: 0,
+      lote: "",
+      validade: "",
+      pRef: p
+    };
   });
 
-  // agrega entradas
-  (window.entradas || []).forEach(en => {
+  // 🧮 Soma entradas
+  window.entradas.forEach(en => {
     const chave = (en.produto || "").toLowerCase();
-    const m = mapa[chave] || mapById(en.codigoBarras) || null;
+    const m = mapa[chave];
     if (m) {
       m.quantidade += Number(en.qtd || 0);
-      if (en.valor || en.valor === 0) m.ultimoValor = Number(en.valor);
+      if (en.valor) m.ultimoValor = Number(en.valor);
       if (en.lote) m.lote = en.lote;
       if (en.validade) m.validade = en.validade;
     }
   });
 
-  // subtrai saidas
-  (window.saidas || []).forEach(s => {
+  // ➖ Subtrai saídas
+  window.saidas.forEach(s => {
     const chave = (s.produto || "").toLowerCase();
-    const m = mapa[chave] || mapById(s.codigoBarras) || null;
+    const m = mapa[chave];
     if (m) {
       m.quantidade -= Number(s.qtd || 0);
     }
   });
 
-  // aplica de volta
+  // 🔄 Aplica os resultados finais
   Object.values(mapa).forEach(entry => {
     if (!entry.pRef) return;
-    entry.pRef.quantidade = entry.quantidade;
+    entry.pRef.quantidade = Math.max(0, entry.quantidade);
     entry.pRef.ultimoValor = entry.ultimoValor;
     entry.pRef.lote = entry.lote;
     entry.pRef.validade = entry.validade;
@@ -4933,15 +4964,12 @@ function recalcularEstoqueGeral() {
   salvarTodosLocal?.();
   if (typeof salvarProdutosNoFirebase === "function") salvarProdutosNoFirebase(window.produtos);
 
-  // helper para localizar por código (caso use)
-  function mapById(cod) {
-    if (!cod) return null;
-    const p = window.produtos.find(p => String(p.codigoBarras || p.codBarras || p.id) === String(cod));
-    return p ? { ...p, pRef: p } : null;
-  }
-
-  mostrarMensagem && mostrarMensagem("🔁 Estoque recalculado a partir de entradas/saídas.", "info");
   atualizarTabelaEstoque?.();
+  atualizarTabelaLimites?.();
+  atualizarDashboard?.();
+  atualizarPainelFinanceiro?.();
+
+  console.log("✅ Estoque recalculado com base em entradas e saídas.");
 }
 
 
@@ -4961,16 +4989,15 @@ function recalcularEstoqueGeral() {
 
 
 // ============================================================
-// 📊 ESTOQUE MÍNIMO E MÁXIMO — Corrigido com regra de recomendação revisada
+// 📊 ESTOQUE MÍNIMO E MÁXIMO — sempre sincronizado com o estoque real
 // ============================================================
-
 function atualizarTabelaLimites(filtroTexto = "") {
   const tabela = document.querySelector("#tabelaLimites tbody");
   if (!tabela) return;
 
-  const produtos = window.produtos || [];
-  const entradas = window.entradas || [];
-  const saidas = window.saidas || [];
+  const produtos = Array.isArray(window.produtos) ? window.produtos : [];
+  const entradas = Array.isArray(window.entradas) ? window.entradas : [];
+  const saidas = Array.isArray(window.saidas) ? window.saidas : [];
   const resumoDiv = document.getElementById("resumoLimites");
 
   const filtro = filtroTexto.toLowerCase().trim() ||
@@ -4978,34 +5005,36 @@ function atualizarTabelaLimites(filtroTexto = "") {
 
   tabela.innerHTML = "";
 
-  if (!Array.isArray(produtos) || produtos.length === 0) {
-    tabela.innerHTML = `
-      <tr>
-        <td colspan="10" style="text-align:center; color:#888; padding: 20px;">
-          Nenhum produto cadastrado ou os dados ainda estão sendo carregados.
-        </td>
-      </tr>`;
-    if (resumoDiv)
-      resumoDiv.innerHTML = `
-        🧾 Total de Produtos: 0 |
-        ⚠️ Abaixo do Mínimo: 0 |
-        ✅ Dentro do Limite: 0 |
-        📦 Acima do Máximo: 0`;
-    return;
-  }
-
-  // 🔹 Cria mapa de estoque (entradas - saídas)
+  // 🧾 Recalcula quantidades baseado em entradas e saídas
   const mapaEstoque = {};
+  produtos.forEach(p => mapaEstoque[p.nome] = 0);
+
   entradas.forEach(e => {
-    const nome = e.produto || e.nomeProduto || "";
+    const nome = e.produto || "";
     if (!mapaEstoque[nome]) mapaEstoque[nome] = 0;
-    mapaEstoque[nome] += Number(e.qtd || e.quantidade || 0);
+    mapaEstoque[nome] += Number(e.qtd || 0);
   });
+
   saidas.forEach(s => {
-    const nome = s.produto || s.nomeProduto || "";
+    const nome = s.produto || "";
     if (!mapaEstoque[nome]) mapaEstoque[nome] = 0;
-    mapaEstoque[nome] -= Number(s.qtd || s.quantidade || 0);
+    mapaEstoque[nome] -= Number(s.qtd || 0);
   });
+
+  // 🔄 Atualiza produtos (mesmo que não haja movimentações)
+  produtos.forEach(p => {
+    const qtdReal = Math.max(0, mapaEstoque[p.nome] ?? 0);
+    p.quantidade = qtdReal;
+    if (entradas.length === 0 && saidas.length === 0) {
+      p.ultimoValor = 0;
+      p.lote = "";
+      p.validade = "";
+    }
+  });
+
+  salvarTodosLocal?.();
+  if (typeof salvarProdutosNoFirebase === "function") salvarProdutosNoFirebase(produtos);
+
 
   let total = 0, abaixo = 0, dentro = 0, acima = 0;
 
@@ -6656,4 +6685,5 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
