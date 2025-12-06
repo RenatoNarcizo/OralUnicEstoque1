@@ -5969,7 +5969,7 @@ function atualizarBlocoResumo(totalProdutos, qtdTotalEstoque, totalSaidas, valor
 }
 
 // ===============================================
-// FUNÇÃO PRINCIPAL DO DASHBOARD (VERSÃO FINAL E À PROVA DE ERROS)
+// FUNÇÃO PRINCIPAL DO DASHBOARD (VERSÃO CORRIGIDA)
 // ===============================================
 function atualizarDashboard() {
   try {
@@ -5977,43 +5977,10 @@ function atualizarDashboard() {
     const entradasLocal = Array.isArray(window.entradas) ? window.entradas : [];
     const saidasLocal = Array.isArray(window.saidas) ? window.saidas : [];
 
-    // 🧩 1️⃣ Se não há entradas e saídas, zera tudo e limpa o painel
-    if (entradasLocal.length === 0 && saidasLocal.length === 0) {
-      const resumoEl = document.getElementById("resumoGeral");
-      const listaVencer = document.getElementById("listaProximosVencer");
-      const listaMaisCarosEl = document.getElementById("listaMaisCaros");
-      const listaMaisSaidasEl = document.getElementById("listaMaisSaidas");
-      const listaMenosSaidasEl = document.getElementById("listaMenosSaidas");
-      const listaCriticos = document.getElementById("listaEstoqueCritico");
-
-      if (resumoEl) {
-        resumoEl.innerHTML = `
-          <div><b>Total de produtos:</b> ${produtosLocal.length}</div>
-          <div><b>Quantidade total em estoque:</b> 0</div>
-          <div><b>Total de saídas registradas:</b> 0</div>
-          <hr>
-          <div><b>💰 Valor total (Último valor de entrada):</b> R$ 0,00</div>
-          <div><b>💰 Valor total (Custo médio ponderado):</b> R$ 0,00</div>
-          <div><b>💰 Valor total do Estoque Atual (estimado):</b> R$ 0,00</div>
-          <div><b>⚠️ Produtos em Estoque Crítico:</b> <span style="color:green">0</span></div>
-        `;
-      }
-      if (listaVencer) listaVencer.innerHTML = "<li>Nenhum produto próximo do vencimento.</li>";
-      if (listaMaisCarosEl) listaMaisCarosEl.innerHTML = "<li>Nenhum custo registrado.</li>";
-      if (listaMaisSaidasEl) listaMaisSaidasEl.innerHTML = "<li>Nenhuma saída registrada.</li>";
-      if (listaMenosSaidasEl) listaMenosSaidasEl.innerHTML = "<li>Sem registros disponíveis.</li>";
-      if (listaCriticos) listaCriticos.innerHTML = "<li>Tudo OK!</li>";
-
-      console.log("🧾 Dashboard zerado automaticamente (sem entradas/saídas).");
-      return;
-    }
-
-    // ================================================================
-    // 🔹 CÁLCULOS NORMAIS DO DASHBOARD (só roda se há entradas/saídas)
-    // ================================================================
-
+    // helper: compara nomes ignorando case e trim
     const igualNome = (a, b) => String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase();
 
+    // Busca último valor unitário de entrada por nome do produto (case-insensitive)
     function buscarValorUnitario(nomeProduto) {
       if (!nomeProduto) return 0;
       const entradasDoProduto = entradasLocal
@@ -6022,6 +5989,7 @@ function atualizarDashboard() {
       return entradasDoProduto.length ? Number(entradasDoProduto[0].valor) : 0;
     }
 
+    // Contagem total de saídas por produto (nome)
     const contagemSaidas = saidasLocal.reduce((acc, s) => {
       const nome = s.produto || s.nomeProduto || "";
       const qtdSaida = Number(s.qtd || s.quantidade || 0) || 0;
@@ -6031,35 +5999,49 @@ function atualizarDashboard() {
       return acc;
     }, {});
 
+    // Monta detalhes por produto
     const estoqueDetalhado = produtosLocal.map(p => {
-      const qtdAtual = Number(p.quantidade || 0) || 0;
-      const nome = p.nome || p.descricao || "";
+      // tenta vários campos para quantidade
+      const qtdAtual = Number(p.quantidade || p.qtd || p.qtdEmbalagem || p.qtdAtual || 0) || 0;
+      const embalagem = p.embalagem || p.unidade || "un";
       const minimo = Number(p.minimo || 0) || 0;
+      const nome = p.nome || p.descricao || "";
 
+      // últimas entradas deste produto
       const entradasProduto = entradasLocal
         .filter(e => igualNome(e.produto, nome) && !isNaN(Number(e.valor)) && (Number(e.qtd || e.quantidade || 0) > 0))
-        .sort((a, b) => new Date(a.data) - new Date(b.data));
+        .sort((a, b) => new Date(a.data) - new Date(b.data)); // ordena asc por data
 
+      // custo total e qtd total para CMP
       const custoTotalProduto = entradasProduto.reduce((sum, e) => sum + ((Number(e.valor) || 0) * (Number(e.qtd || e.quantidade || 0) || 0)), 0);
       const qtdTotalEntradaProduto = entradasProduto.reduce((sum, e) => sum + (Number(e.qtd || e.quantidade || 0) || 0), 0);
       const CMP_produto = qtdTotalEntradaProduto > 0 ? (custoTotalProduto / qtdTotalEntradaProduto) : 0;
 
+      // ultimo custo (última entrada com valor)
       const ultimaComValor = entradasProduto.length ? entradasProduto[entradasProduto.length - 1] : null;
       const ultimoCusto = ultimaComValor ? Number(ultimaComValor.valor || 0) : 0;
 
-      const validadeMaisProxima = entradasProduto
-        .map(e => new Date(String(e.validade).trim()))
-        .filter(d => !isNaN(d.getTime()))
-        .sort((a, b) => a - b)[0] || null;
+      // validade mais próxima entre entradas com validade
+      let validadeMaisProxima = null;
+      entradasProduto.forEach(e => {
+        if (!e.validade) return;
+        // tenta normalizar strings tipo 'YYYY-MM-DD' ou já Date
+        const cand = new Date(String(e.validade).trim());
+        if (isNaN(cand.getTime())) return;
+        if (!validadeMaisProxima || cand < validadeMaisProxima) validadeMaisProxima = cand;
+      });
+      const hoje = new Date(); hoje.setHours(0,0,0,0);
+      const diasVencer = validadeMaisProxima ? Math.ceil((validadeMaisProxima.getTime() - hoje.getTime()) / (1000*60*60*24)) : Infinity;
 
-      const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-      const diasVencer = validadeMaisProxima ? Math.ceil((validadeMaisProxima.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24)) : Infinity;
       const qtdSaidas = contagemSaidas[nome] || 0;
       const isCritico = minimo > 0 && qtdAtual < minimo;
 
       return {
+        id: p.id || p.codigo || nome,
         nome,
         qtdAtual,
+        embalagem,
+        minimo,
         ultimoCusto,
         cmp: CMP_produto,
         qtdSaidas,
@@ -6069,41 +6051,42 @@ function atualizarDashboard() {
       };
     });
 
+    // --- Prepara listas do dashboard ---
     const criarLi = item => `<li>${item}</li>`;
 
-    // Produtos próximos do vencimento
+    // Produtos próximos do vencimento (mostra vencidos e próximos)
     const proximosVencer = estoqueDetalhado
-      .filter(p => isFinite(p.diasVencer) && p.qtdAtual > 0 && p.diasVencer <= 90)
-      .sort((a, b) => a.diasVencer - b.diasVencer)
+      .filter(p => isFinite(p.diasVencer) && p.qtdAtual > 0 && p.diasVencer <= 90) // limite 90 dias para não listar tudo
+      .sort((a,b) => a.diasVencer - b.diasVencer)
       .slice(0, 5);
 
     const listaVencer = document.getElementById("listaProximosVencer");
     if (listaVencer) {
-      listaVencer.innerHTML = proximosVencer.length
-        ? proximosVencer.map(p => {
-          const status = p.diasVencer <= 0
-            ? `<span style="color:red;font-weight:bold;">(VENCIDO)</span>`
-            : `(Vence em ${p.diasVencer} dias)`;
-          return criarLi(`${p.nome} — ${p.qtdAtual} un ${status}`);
-        }).join("")
-        : criarLi("Nenhum produto próximo do vencimento.");
+      if (proximosVencer.length === 0) {
+        listaVencer.innerHTML = criarLi("Nenhum produto próximo do vencimento.");
+      } else {
+        listaVencer.innerHTML = proximosVencer.map(p => {
+          const status = p.diasVencer <= 0 ? `<span style="color:red;font-weight:bold;">(VENCIDO)</span>` : `(Vence em ${p.diasVencer} dias)`;
+          return criarLi(`${p.nome} — ${p.qtdAtual} ${p.embalagem} ${status}`);
+        }).join("");
+      }
     }
 
-    // Produtos mais caros
+    // Produtos mais caros (pelo último custo)
     const maisCaros = estoqueDetalhado.filter(p => p.ultimoCusto > 0)
-      .sort((a, b) => b.ultimoCusto - a.ultimoCusto)
-      .slice(0, 5);
+      .sort((a,b) => b.ultimoCusto - a.ultimoCusto)
+      .slice(0,5);
     const listaMaisCarosEl = document.getElementById("listaMaisCaros");
     if (listaMaisCarosEl) {
       listaMaisCarosEl.innerHTML = maisCaros.length
-        ? maisCaros.map(p => criarLi(`${p.nome} (${formatarMoeda(p.ultimoCusto)})`)).join("")
+        ? maisCaros.map(p => criarLi(`${p.nome} (${formatarMoeda(p.ultimoCusto)}/${p.embalagem})`)).join("")
         : criarLi("Nenhum custo registrado.");
     }
 
     // Produtos mais utilizados (saídas)
     const maisSaidas = estoqueDetalhado.filter(p => p.qtdSaidas > 0)
-      .sort((a, b) => b.qtdSaidas - a.qtdSaidas)
-      .slice(0, 5);
+      .sort((a,b) => b.qtdSaidas - a.qtdSaidas)
+      .slice(0,5);
     const listaMaisSaidasEl = document.getElementById("listaMaisSaidas");
     if (listaMaisSaidasEl) {
       listaMaisSaidasEl.innerHTML = maisSaidas.length
@@ -6111,38 +6094,35 @@ function atualizarDashboard() {
         : criarLi("Nenhuma saída registrada.");
     }
 
-    // 🧹 Produtos com menos saídas — mostra apenas os que têm estoque e movimentação
-    const menosSaidas = estoqueDetalhado
-      .filter(p => p.qtdAtual > 0 && (p.qtdSaidas > 0))
-      .sort((a, b) => a.qtdSaidas - b.qtdSaidas)
-      .slice(0, 5);
-
+    // Menos saídas
+    const menosSaidas = estoqueDetalhado.filter(p => p.qtdAtual > 0)
+      .sort((a,b) => a.qtdSaidas - b.qtdSaidas)
+      .slice(0,5);
     const listaMenosSaidasEl = document.getElementById("listaMenosSaidas");
     if (listaMenosSaidasEl) {
       listaMenosSaidasEl.innerHTML = menosSaidas.length
         ? menosSaidas.map(p => criarLi(`${p.nome} (${p.qtdSaidas} saídas)`)).join("")
-        : criarLi("Sem registros disponíveis.");
+        : criarLi("Nenhum produto encontrado em estoque.");
     }
 
     // Estoque crítico
     const criticos = estoqueDetalhado.filter(p => p.isCritico)
-      .sort((a, b) => (a.qtdAtual - a.minimo) - (b.qtdAtual - b.minimo))
-      .slice(0, 5);
+      .sort((a,b) => (a.qtdAtual - a.minimo) - (b.qtdAtual - b.minimo))
+      .slice(0,5);
     const listaCriticos = document.getElementById("listaEstoqueCritico");
     if (listaCriticos) {
       listaCriticos.innerHTML = criticos.length
-        ? criticos.map(p => criarLi(`${p.nome} (${p.qtdAtual} un — Mín: ${p.minimo})`)).join("")
+        ? criticos.map(p => criarLi(`${p.nome} (${p.qtdAtual} ${p.embalagem} — Mín: ${p.minimo})`)).join("")
         : criarLi("Tudo OK!");
     }
 
     // --- Resumo Geral ---
-    const produtosComEstoque = estoqueDetalhado.filter(p => p.qtdAtual > 0);
     const totalProdutos = produtosLocal.length;
-    const qtdTotalEmEstoque = produtosComEstoque.reduce((s, p) => s + (p.qtdAtual || 0), 0);
+    const qtdTotalEmEstoque = estoqueDetalhado.reduce((s,p) => s + (Number(p.qtdAtual)||0), 0);
     const totalSaidasRegistradas = saidasLocal.reduce((s, r) => s + (Number(r.qtd || r.quantidade) || 0), 0);
     const criticosCount = criticos.length;
-    const valorUltimaEntrada = produtosComEstoque.reduce((s, p) => s + (Number(p.qtdAtual || 0) * Number(p.ultimoCusto || 0)), 0);
-    const valorEstoqueCustoMedio = produtosComEstoque.reduce((s, p) => s + (Number(p.qtdAtual || 0) * Number(p.cmp || 0)), 0);
+    const valorUltimaEntrada = estoqueDetalhado.reduce((s,p) => s + (Number(p.qtdAtual || 0) * Number(p.ultimoCusto || 0)), 0);
+    const valorEstoqueCustoMedio = estoqueDetalhado.reduce((s,p) => s + (Number(p.qtdAtual || 0) * Number(p.cmp || 0)), 0);
 
     const resumoEl = document.getElementById("resumoGeral");
     if (resumoEl) {
@@ -6152,12 +6132,13 @@ function atualizarDashboard() {
         <div><b>Total de saídas registradas:</b> ${totalSaidasRegistradas}</div>
         <hr>
         <div><b>💰 Valor total (Último valor de entrada):</b> ${formatarMoeda(valorUltimaEntrada)}</div>
-        <div><b>💰 Valor total (Custo médio ponderado):</b> ${formatarMoeda(valorEstoqueCustoMedio)}</div>
-        <div><b>💰 Valor total do Estoque Atual (estimado):</b> ${formatarMoeda(valorEstoqueCustoMedio)}</div>
+        <div><b>📊 Valor total (Custo médio ponderado):</b> ${formatarMoeda(valorEstoqueCustoMedio)}</div>
+        <div><b>⚖️ Valor total do Estoque Atual (estimado):</b> ${formatarMoeda(valorEstoqueCustoMedio)}</div>
         <div><b>⚠️ Produtos em Estoque Crítico:</b> <span style="color:${criticosCount>0?'red':'green'}">${criticosCount}</span></div>
       `;
     }
 
+    // Garante que painel financeiro também atualize (se disponível)
     if (typeof atualizarPainelFinanceiro === "function") {
       try { atualizarPainelFinanceiro(); } catch (e) { console.warn("Falha ao atualizar painel financeiro:", e); }
     }
@@ -6172,7 +6153,6 @@ function atualizarDashboard() {
     console.error("❌ Erro em atualizarDashboard():", err);
   }
 }
-
 
 
 // --- RELATÓRIOS ---
@@ -6655,3 +6635,4 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
+		
