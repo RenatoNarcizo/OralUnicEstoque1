@@ -1543,7 +1543,7 @@ window.salvarProdutosNoFirebase = async function(listaDeProdutos) {
 
       await batch.commit();
       console.log(`✅ Lote de produtos salvo (${i + chunk.length}/${listaDeProdutos.length})`);
-      await new Promise(r => setTimeout(r, 500)); // pausa 0.5 s
+      await new Promise(r => setTimeout(r, 1000)); // pausa de 1 segundo entre lotes
     }
   } catch (e) {
     console.error("❌ Erro ao salvar produtos (batch):", e);
@@ -1569,7 +1569,7 @@ window.salvarEntradasNoFirebase = async function(listaDeEntradas) {
 
       await batch.commit();
       console.log(`✅ Lote de entradas salvo (${i + chunk.length}/${listaDeEntradas.length})`);
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 1000)); // pausa de 1 segundo entre lotes
     }
   } catch (e) {
     console.error("❌ Erro ao salvar entradas (batch):", e);
@@ -1595,7 +1595,7 @@ window.salvarSaidasNoFirebase = async function(listaDeSaidas) {
 
       await batch.commit();
       console.log(`✅ Lote de saídas salvo (${i + chunk.length}/${listaDeSaidas.length})`);
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 1000)); // pausa de 1 segundo entre lotes
     }
   } catch (e) {
     console.error("❌ Erro ao salvar saídas (batch):", e);
@@ -1621,7 +1621,7 @@ window.salvarErrosProblemasNoFirebase = async function(listaDeErros) {
 
       await batch.commit();
       console.log(`✅ Lote de erros salvo (${i + chunk.length}/${listaDeErros.length})`);
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 1000)); // pausa de 1 segundo entre lotes
     }
   } catch (e) {
     console.error("❌ Erro ao salvar errosProblemas (batch):", e);
@@ -6722,6 +6722,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
