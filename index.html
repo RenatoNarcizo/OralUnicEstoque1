@@ -1554,16 +1554,17 @@ function ajustarPausaDinamica(taxaDocsPorSeg) {
 }
 
 // ============================================================
-// 💾 Função genérica para salvar em lotes
+// 💾 Função genérica para salvar em lotes — versão otimizada e segura
 // ============================================================
 async function salvarEmLotes(lista, refFn, nome = "coleção") {
   if (!Array.isArray(lista) || lista.length === 0) return;
 
   const inicio = performance.now();
   let totalGravados = 0;
+  const TAMANHO_LOTE = 40; // 🔹 máximo 40 docs por batch (seguro)
 
-  for (let i = 0; i < lista.length; i += 50) {
-    const chunk = lista.slice(i, i + 50);
+  for (let i = 0; i < lista.length; i += TAMANHO_LOTE) {
+    const chunk = lista.slice(i, i + TAMANHO_LOTE);
     const batch = writeBatch(db);
 
     chunk.forEach(obj => {
@@ -1580,13 +1581,24 @@ async function salvarEmLotes(lista, refFn, nome = "coleção") {
     const taxa = chunk.length / tempoLote;
     ajustarPausaDinamica(taxa);
 
-    console.log(`✅ ${nome}: lote ${i / 50 + 1} salvo (${i + chunk.length}/${lista.length}) — ${taxa.toFixed(1)} docs/s`);
-    await new Promise(r => setTimeout(r, window._pausaDinamica));
+    console.log(
+      `✅ ${nome}: lote ${i / TAMANHO_LOTE + 1} salvo (${i + chunk.length}/${lista.length}) — ${taxa.toFixed(1)} docs/s`
+    );
+
+    // 🕐 Pausa mínima obrigatória entre commits grandes
+    const pausaSegura = Math.max(window._pausaDinamica, 1500);
+    await new Promise(r => setTimeout(r, pausaSegura));
+
+    // 🔄 Delay adicional para garantir liberação do stream Firestore
+    await new Promise(r => setTimeout(r, 300));
   }
 
   const tempoTotal = (performance.now() - inicio) / 1000;
-  console.log(`🎯 ${nome}: ${totalGravados} docs em ${tempoTotal.toFixed(2)}s (${(totalGravados / tempoTotal).toFixed(1)} docs/s)`);
+  console.log(
+    `🎯 ${nome}: ${totalGravados} docs em ${tempoTotal.toFixed(2)}s (${(totalGravados / tempoTotal).toFixed(1)} docs/s)`
+  );
 }
+
 
 // ============================================================
 // 📦 Funções específicas de gravação
@@ -6786,6 +6798,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
