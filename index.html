@@ -1513,87 +1513,113 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-
 // ============================================================
-// 🔥 FIRESTORE – SALVAMENTO ESCALÁVEL E OTIMIZADO
+// 🔥 Funções otimizadas com gravação em lote (writeBatch)
 // ============================================================
+import { writeBatch } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-// 🧩 Salvar produtos individualmente na subcoleção
+// 🧩 Salvar produtos em lotes
 window.salvarProdutosNoFirebase = async function(listaDeProdutos) {
   try {
-    if (!Array.isArray(listaDeProdutos)) return;
+    if (!Array.isArray(listaDeProdutos) || listaDeProdutos.length === 0) return;
 
     const estoqueRef = doc(db, "estoqueGlobal", "estoque");
     const produtosCol = collection(estoqueRef, "produtos");
 
-    for (const p of listaDeProdutos) {
-      const id = String(p.id || Date.now() + Math.floor(Math.random() * 10000));
-      p.id = id; // garante id
-      const docRef = doc(produtosCol, id);
-      await setDoc(docRef, p, { merge: true });
-    }
+    // Divide em lotes de até 400 registros
+    for (let i = 0; i < listaDeProdutos.length; i += 400) {
+      const chunk = listaDeProdutos.slice(i, i + 400);
+      const batch = writeBatch(db);
 
-    console.log("✅ Produtos salvos individualmente na coleção estoque/produtos");
+      chunk.forEach(p => {
+        const id = String(p.id || Date.now() + Math.floor(Math.random() * 10000));
+        p.id = id;
+        const ref = doc(produtosCol, id);
+        batch.set(ref, p, { merge: true });
+      });
+
+      await batch.commit();
+      console.log(`✅ Lote de produtos salvo (${i + chunk.length}/${listaDeProdutos.length})`);
+      await new Promise(r => setTimeout(r, 300)); // pausa curta entre lotes
+    }
   } catch (e) {
-    console.error("❌ Erro ao salvar produtos individualmente:", e);
+    console.error("❌ Erro ao salvar produtos (batch):", e);
   }
 };
 
-// 🧩 Salvar entradas na subcoleção
+// 🧩 Salvar entradas em lotes
 window.salvarEntradasNoFirebase = async function(listaDeEntradas) {
   try {
-    if (!Array.isArray(listaDeEntradas)) return;
+    if (!Array.isArray(listaDeEntradas) || listaDeEntradas.length === 0) return;
 
     const entradasRef = collection(db, "estoqueGlobal", "estoque", "entradas");
-    for (const e of listaDeEntradas) {
-      const id = String(e.id || Date.now() + Math.floor(Math.random() * 10000));
-      e.id = id;
-      await setDoc(doc(entradasRef, id), e, { merge: true });
-    }
 
-    console.log("✅ Entradas salvas na coleção estoque/entradas");
+    for (let i = 0; i < listaDeEntradas.length; i += 400) {
+      const chunk = listaDeEntradas.slice(i, i + 400);
+      const batch = writeBatch(db);
+      chunk.forEach(e => {
+        const id = String(e.id || Date.now() + Math.floor(Math.random() * 10000));
+        e.id = id;
+        batch.set(doc(entradasRef, id), e, { merge: true });
+      });
+      await batch.commit();
+      console.log(`✅ Lote de entradas salvo (${i + chunk.length}/${listaDeEntradas.length})`);
+      await new Promise(r => setTimeout(r, 300));
+    }
   } catch (e) {
-    console.error("❌ Erro ao salvar entradas no Firestore:", e);
+    console.error("❌ Erro ao salvar entradas (batch):", e);
   }
 };
 
-// 🧩 Salvar saídas na subcoleção
+// 🧩 Salvar saídas em lotes
 window.salvarSaidasNoFirebase = async function(listaDeSaidas) {
   try {
-    if (!Array.isArray(listaDeSaidas)) return;
+    if (!Array.isArray(listaDeSaidas) || listaDeSaidas.length === 0) return;
 
     const saidasRef = collection(db, "estoqueGlobal", "estoque", "saidas");
-    for (const s of listaDeSaidas) {
-      const id = String(s.id || Date.now() + Math.floor(Math.random() * 10000));
-      s.id = id;
-      await setDoc(doc(saidasRef, id), s, { merge: true });
-    }
 
-    console.log("✅ Saídas salvas na coleção estoque/saidas");
+    for (let i = 0; i < listaDeSaidas.length; i += 400) {
+      const chunk = listaDeSaidas.slice(i, i + 400);
+      const batch = writeBatch(db);
+      chunk.forEach(s => {
+        const id = String(s.id || Date.now() + Math.floor(Math.random() * 10000));
+        s.id = id;
+        batch.set(doc(saidasRef, id), s, { merge: true });
+      });
+      await batch.commit();
+      console.log(`✅ Lote de saídas salvo (${i + chunk.length}/${listaDeSaidas.length})`);
+      await new Promise(r => setTimeout(r, 300));
+    }
   } catch (e) {
-    console.error("❌ Erro ao salvar saídas no Firestore:", e);
+    console.error("❌ Erro ao salvar saídas (batch):", e);
   }
 };
 
-// 🧩 Salvar erros e problemas na subcoleção
+// 🧩 Salvar erros e problemas em lotes
 window.salvarErrosProblemasNoFirebase = async function(listaDeErros) {
   try {
-    if (!Array.isArray(listaDeErros)) return;
+    if (!Array.isArray(listaDeErros) || listaDeErros.length === 0) return;
 
     const errosRef = collection(db, "estoqueGlobal", "estoque", "errosProblemas");
-    for (const err of listaDeErros) {
-      const id = String(err.id || Date.now() + Math.floor(Math.random() * 10000));
-      err.id = id;
-      await setDoc(doc(errosRef, id), err, { merge: true });
-    }
 
-    console.log("✅ Erros/Problemas salvos na coleção estoque/errosProblemas");
+    for (let i = 0; i < listaDeErros.length; i += 400) {
+      const chunk = listaDeErros.slice(i, i + 400);
+      const batch = writeBatch(db);
+      chunk.forEach(err => {
+        const id = String(err.id || Date.now() + Math.floor(Math.random() * 10000));
+        err.id = id;
+        batch.set(doc(errosRef, id), err, { merge: true });
+      });
+      await batch.commit();
+      console.log(`✅ Lote de erros salvo (${i + chunk.length}/${listaDeErros.length})`);
+      await new Promise(r => setTimeout(r, 300));
+    }
   } catch (e) {
-    console.error("❌ Erro ao salvar errosProblemas no Firestore:", e);
+    console.error("❌ Erro ao salvar errosProblemas (batch):", e);
   }
 };
 
-// 🧩 Salvar usuários (documento separado)
+// 🧩 Salvar usuários (sem alteração de estrutura)
 window.salvarUsuariosNoFirebase = async function(listaDeUsuarios) {
   try {
     const docRef = doc(db, "estoqueGlobal", "usuarios");
@@ -1604,7 +1630,7 @@ window.salvarUsuariosNoFirebase = async function(listaDeUsuarios) {
   }
 };
 
-// 🧩 Atualizar o documento principal com resumo leve
+// 🧩 Atualizar documento principal (mantido igual)
 window.salvarResumoDoEstoque = async function() {
   try {
     const docRef = doc(db, "estoqueGlobal", "estoque");
@@ -1619,14 +1645,14 @@ window.salvarResumoDoEstoque = async function() {
       usuarios: window.usuarios || []
     }, { merge: true });
 
-    console.log("📄 Documento principal 'estoque' atualizado (leve e resumido).");
+    console.log("✅ Documento principal 'estoque' atualizado (leve e resumido).");
   } catch (e) {
     console.error("❌ Erro ao atualizar documento principal:", e);
   }
 };
 
 // ============================================================
-// 🧩 Garante arrays válidos
+// ✅ Garante arrays válidos
 // ============================================================
 if (!Array.isArray(window.produtos)) window.produtos = [];
 if (!Array.isArray(window.entradas)) window.entradas = [];
@@ -1639,6 +1665,8 @@ console.log("📦 Dados carregados do localStorage:", {
   saidas: window.saidas.length,
   usuarios: window.usuarios.length
 });
+
+
 
 // ============================================================
 // 👥 Permissões (sem alterações)
@@ -6685,5 +6713,6 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
