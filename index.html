@@ -1514,53 +1514,104 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ============================================================
-// ✅ Funções otimizadas com gravação em lote (writeBatch) e controle global
+// 🤖 Controle inteligente de gravação Firestore — versão autoajustável
 // ============================================================
 import { writeBatch } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-// ✅ Salvar produtos em lotes menores (máx. 50 por batch)
+// ============================================================
+// 🧠 Controle global de gravações
+// ============================================================
+window._gravando = false;
+window._ultimaGravacao = 0;
+window._pausaDinamica = 1000; // pausa inicial entre lotes (1s)
+window._metaTaxa = 40;        // docs/s ideal (ajustável)
+window._minDelay = 500;       // mínima pausa entre lotes
+window._maxDelay = 4000;      // máxima pausa entre lotes
+
+async function aguardarGravacaoGlobal(minIntervaloMs = 3000) {
+  const agora = Date.now();
+  const tempoPassado = agora - window._ultimaGravacao;
+  if (tempoPassado < minIntervaloMs) {
+    const espera = minIntervaloMs - tempoPassado;
+    console.log(`⏳ Aguardando ${espera} ms para nova gravação global...`);
+    await new Promise(r => setTimeout(r, espera));
+  }
+  window._ultimaGravacao = Date.now();
+}
+
+// ============================================================
+// ⚙️ Função auxiliar para controle adaptativo de pausa
+// ============================================================
+function ajustarPausaDinamica(taxaDocsPorSeg) {
+  const meta = window._metaTaxa;
+  if (taxaDocsPorSeg > meta * 1.2) {
+    window._pausaDinamica = Math.min(window._pausaDinamica + 200, window._maxDelay);
+  } else if (taxaDocsPorSeg < meta * 0.8) {
+    window._pausaDinamica = Math.max(window._pausaDinamica - 200, window._minDelay);
+  }
+  console.log(`⏱️ Pausa ajustada: ${window._pausaDinamica}ms (taxa ${taxaDocsPorSeg.toFixed(1)} docs/s)`);
+}
+
+// ============================================================
+// 🔹 Função genérica para salvar lotes
+// ============================================================
+async function salvarEmLotes(lista, refFn, nome = "coleção") {
+  if (!Array.isArray(lista) || lista.length === 0) return;
+
+  const inicio = performance.now();
+  let totalGravados = 0;
+
+  for (let i = 0; i < lista.length; i += 50) {
+    const chunk = lista.slice(i, i + 50);
+    const batch = writeBatch(db);
+
+    chunk.forEach(obj => {
+      const id = String(obj.id || Date.now() + Math.floor(Math.random() * 10000));
+      obj.id = id;
+      batch.set(refFn(id), obj, { merge: true });
+    });
+
+    const t0 = performance.now();
+    await batch.commit();
+    const tempoLote = (performance.now() - t0) / 1000;
+    totalGravados += chunk.length;
+
+    const taxa = chunk.length / tempoLote;
+    ajustarPausaDinamica(taxa);
+
+    console.log(`✅ ${nome}: lote ${i / 50 + 1} salvo (${i + chunk.length}/${lista.length}) — ${taxa.toFixed(1)} docs/s`);
+    await new Promise(r => setTimeout(r, window._pausaDinamica));
+  }
+
+  const tempoTotal = (performance.now() - inicio) / 1000;
+  console.log(`🎯 ${nome}: ${totalGravados} docs em ${tempoTotal.toFixed(2)}s (${(totalGravados / tempoTotal).toFixed(1)} docs/s)`);
+}
+
+// ============================================================
+// ✅ Salvar produtos
+// ============================================================
 window.salvarProdutosNoFirebase = async function(listaDeProdutos) {
   try {
-    // 🔒 Controle global de gravação
     if (window._gravando) {
       console.warn("⏳ Esperando a gravação anterior terminar...");
       await new Promise(r => setTimeout(r, 2000));
     }
     window._gravando = true;
-
-    if (!Array.isArray(listaDeProdutos) || listaDeProdutos.length === 0) return;
+    await aguardarGravacaoGlobal();
 
     const estoqueRef = doc(db, "estoqueGlobal", "estoque");
     const produtosCol = collection(estoqueRef, "produtos");
-
-    for (let i = 0; i < listaDeProdutos.length; i += 50) {
-      const chunk = listaDeProdutos.slice(i, i + 50);
-      const batch = writeBatch(db);
-
-      const sizeBytes = new Blob([JSON.stringify(chunk)]).size;
-      console.log(`📦 Lote ${i / 50 + 1} - ${chunk.length} itens (${(sizeBytes / 1024).toFixed(1)} KB)`);
-
-      chunk.forEach(p => {
-        const id = String(p.id || Date.now() + Math.floor(Math.random() * 10000));
-        p.id = id;
-        const ref = doc(produtosCol, id);
-        batch.set(ref, p, { merge: true });
-      });
-
-      await batch.commit();
-      console.log(`✅ Lote de produtos salvo (${i + chunk.length}/${listaDeProdutos.length})`);
-      await new Promise(r => setTimeout(r, 1000)); // pausa entre lotes
-    }
-
-    await new Promise(r => setTimeout(r, 2000)); // pausa final após todos os lotes
+    await salvarEmLotes(listaDeProdutos, id => doc(produtosCol, id), "produtos");
   } catch (e) {
-    console.error("❌ Erro ao salvar produtos (batch):", e);
+    console.error("❌ Erro ao salvar produtos:", e);
   } finally {
-    window._gravando = false; // 🔓 Libera controle global
+    window._gravando = false;
   }
 };
 
+// ============================================================
 // ✅ Salvar entradas
+// ============================================================
 window.salvarEntradasNoFirebase = async function(listaDeEntradas) {
   try {
     if (window._gravando) {
@@ -1568,35 +1619,20 @@ window.salvarEntradasNoFirebase = async function(listaDeEntradas) {
       await new Promise(r => setTimeout(r, 2000));
     }
     window._gravando = true;
-
-    if (!Array.isArray(listaDeEntradas) || listaDeEntradas.length === 0) return;
+    await aguardarGravacaoGlobal();
 
     const entradasRef = collection(db, "estoqueGlobal", "estoque", "entradas");
-
-    for (let i = 0; i < listaDeEntradas.length; i += 50) {
-      const chunk = listaDeEntradas.slice(i, i + 50);
-      const batch = writeBatch(db);
-
-      chunk.forEach(e => {
-        const id = String(e.id || Date.now() + Math.floor(Math.random() * 10000));
-        e.id = id;
-        batch.set(doc(entradasRef, id), e, { merge: true });
-      });
-
-      await batch.commit();
-      console.log(`✅ Lote de entradas salvo (${i + chunk.length}/${listaDeEntradas.length})`);
-      await new Promise(r => setTimeout(r, 1000));
-    }
-
-    await new Promise(r => setTimeout(r, 2000));
+    await salvarEmLotes(listaDeEntradas, id => doc(entradasRef, id), "entradas");
   } catch (e) {
-    console.error("❌ Erro ao salvar entradas (batch):", e);
+    console.error("❌ Erro ao salvar entradas:", e);
   } finally {
     window._gravando = false;
   }
 };
 
+// ============================================================
 // ✅ Salvar saídas
+// ============================================================
 window.salvarSaidasNoFirebase = async function(listaDeSaidas) {
   try {
     if (window._gravando) {
@@ -1604,35 +1640,20 @@ window.salvarSaidasNoFirebase = async function(listaDeSaidas) {
       await new Promise(r => setTimeout(r, 2000));
     }
     window._gravando = true;
-
-    if (!Array.isArray(listaDeSaidas) || listaDeSaidas.length === 0) return;
+    await aguardarGravacaoGlobal();
 
     const saidasRef = collection(db, "estoqueGlobal", "estoque", "saidas");
-
-    for (let i = 0; i < listaDeSaidas.length; i += 50) {
-      const chunk = listaDeSaidas.slice(i, i + 50);
-      const batch = writeBatch(db);
-
-      chunk.forEach(s => {
-        const id = String(s.id || Date.now() + Math.floor(Math.random() * 10000));
-        s.id = id;
-        batch.set(doc(saidasRef, id), s, { merge: true });
-      });
-
-      await batch.commit();
-      console.log(`✅ Lote de saídas salvo (${i + chunk.length}/${listaDeSaidas.length})`);
-      await new Promise(r => setTimeout(r, 1000));
-    }
-
-    await new Promise(r => setTimeout(r, 2000));
+    await salvarEmLotes(listaDeSaidas, id => doc(saidasRef, id), "saídas");
   } catch (e) {
-    console.error("❌ Erro ao salvar saídas (batch):", e);
+    console.error("❌ Erro ao salvar saídas:", e);
   } finally {
     window._gravando = false;
   }
 };
 
-// ✅ Salvar erros e problemas
+// ============================================================
+// ✅ Salvar erros/problemas
+// ============================================================
 window.salvarErrosProblemasNoFirebase = async function(listaDeErros) {
   try {
     if (window._gravando) {
@@ -1640,46 +1661,33 @@ window.salvarErrosProblemasNoFirebase = async function(listaDeErros) {
       await new Promise(r => setTimeout(r, 2000));
     }
     window._gravando = true;
-
-    if (!Array.isArray(listaDeErros) || listaDeErros.length === 0) return;
+    await aguardarGravacaoGlobal();
 
     const errosRef = collection(db, "estoqueGlobal", "estoque", "errosProblemas");
-
-    for (let i = 0; i < listaDeErros.length; i += 50) {
-      const chunk = listaDeErros.slice(i, i + 50);
-      const batch = writeBatch(db);
-
-      chunk.forEach(err => {
-        const id = String(err.id || Date.now() + Math.floor(Math.random() * 10000));
-        err.id = id;
-        batch.set(doc(errosRef, id), err, { merge: true });
-      });
-
-      await batch.commit();
-      console.log(`✅ Lote de erros salvo (${i + chunk.length}/${listaDeErros.length})`);
-      await new Promise(r => setTimeout(r, 1000));
-    }
-
-    await new Promise(r => setTimeout(r, 2000));
+    await salvarEmLotes(listaDeErros, id => doc(errosRef, id), "errosProblemas");
   } catch (e) {
-    console.error("❌ Erro ao salvar errosProblemas (batch):", e);
+    console.error("❌ Erro ao salvar erros/problemas:", e);
   } finally {
     window._gravando = false;
   }
 };
 
-// ✅ Salvar usuários (sem alteração)
+// ============================================================
+// ✅ Salvar usuários (gravação leve)
+// ============================================================
 window.salvarUsuariosNoFirebase = async function(listaDeUsuarios) {
   try {
     const docRef = doc(db, "estoqueGlobal", "usuarios");
     await setDoc(docRef, { usuarios: listaDeUsuarios }, { merge: true });
     console.log("✅ Usuários salvos no documento estoqueGlobal/usuarios");
   } catch (e) {
-    console.error("❌ Erro ao salvar usuários no Firestore:", e);
+    console.error("❌ Erro ao salvar usuários:", e);
   }
 };
 
+// ============================================================
 // ✅ Atualizar documento principal
+// ============================================================
 window.salvarResumoDoEstoque = async function() {
   try {
     const docRef = doc(db, "estoqueGlobal", "estoque");
@@ -1714,6 +1722,7 @@ console.log("📦 Dados carregados do localStorage:", {
   saidas: window.saidas.length,
   usuarios: window.usuarios.length
 });
+
 
 
 
@@ -6763,6 +6772,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
