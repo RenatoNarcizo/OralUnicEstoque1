@@ -1514,12 +1514,12 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ============================================================
-// 🤖 Controle inteligente de gravação Firestore — versão autoajustável
+// ✅ Controle inteligente de gravação Firestore — versão autoajustável e com bloqueio de snapshot
 // ============================================================
 import { writeBatch } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // ============================================================
-// 🧠 Controle global de gravações
+// 🔒 Controle global de gravações e sincronização
 // ============================================================
 window._gravando = false;
 window._ultimaGravacao = 0;
@@ -1527,6 +1527,7 @@ window._pausaDinamica = 1000; // pausa inicial entre lotes (1s)
 window._metaTaxa = 40;        // docs/s ideal (ajustável)
 window._minDelay = 500;       // mínima pausa entre lotes
 window._maxDelay = 4000;      // máxima pausa entre lotes
+window.bloquearAtualizacaoSnapshot = false; // 🔒 novo controle global
 
 async function aguardarGravacaoGlobal(minIntervaloMs = 3000) {
   const agora = Date.now();
@@ -1540,7 +1541,7 @@ async function aguardarGravacaoGlobal(minIntervaloMs = 3000) {
 }
 
 // ============================================================
-// ⚙️ Função auxiliar para controle adaptativo de pausa
+// 🔄 Ajuste automático da pausa conforme taxa real
 // ============================================================
 function ajustarPausaDinamica(taxaDocsPorSeg) {
   const meta = window._metaTaxa;
@@ -1553,7 +1554,7 @@ function ajustarPausaDinamica(taxaDocsPorSeg) {
 }
 
 // ============================================================
-// 🔹 Função genérica para salvar lotes
+// 💾 Função genérica para salvar em lotes
 // ============================================================
 async function salvarEmLotes(lista, refFn, nome = "coleção") {
   if (!Array.isArray(lista) || lista.length === 0) return;
@@ -1588,8 +1589,10 @@ async function salvarEmLotes(lista, refFn, nome = "coleção") {
 }
 
 // ============================================================
-// ✅ Salvar produtos
+// 📦 Funções específicas de gravação
 // ============================================================
+
+// ✅ Produtos
 window.salvarProdutosNoFirebase = async function(listaDeProdutos) {
   try {
     if (window._gravando) {
@@ -1597,6 +1600,7 @@ window.salvarProdutosNoFirebase = async function(listaDeProdutos) {
       await new Promise(r => setTimeout(r, 2000));
     }
     window._gravando = true;
+    window.bloquearAtualizacaoSnapshot = true; // 🚫 bloqueia snapshot
     await aguardarGravacaoGlobal();
 
     const estoqueRef = doc(db, "estoqueGlobal", "estoque");
@@ -1606,12 +1610,14 @@ window.salvarProdutosNoFirebase = async function(listaDeProdutos) {
     console.error("❌ Erro ao salvar produtos:", e);
   } finally {
     window._gravando = false;
+    setTimeout(() => {
+      window.bloquearAtualizacaoSnapshot = false;
+      console.log("🔓 Snapshot reativado.");
+    }, 3000);
   }
 };
 
-// ============================================================
-// ✅ Salvar entradas
-// ============================================================
+// ✅ Entradas
 window.salvarEntradasNoFirebase = async function(listaDeEntradas) {
   try {
     if (window._gravando) {
@@ -1619,6 +1625,7 @@ window.salvarEntradasNoFirebase = async function(listaDeEntradas) {
       await new Promise(r => setTimeout(r, 2000));
     }
     window._gravando = true;
+    window.bloquearAtualizacaoSnapshot = true;
     await aguardarGravacaoGlobal();
 
     const entradasRef = collection(db, "estoqueGlobal", "estoque", "entradas");
@@ -1627,12 +1634,14 @@ window.salvarEntradasNoFirebase = async function(listaDeEntradas) {
     console.error("❌ Erro ao salvar entradas:", e);
   } finally {
     window._gravando = false;
+    setTimeout(() => {
+      window.bloquearAtualizacaoSnapshot = false;
+      console.log("🔓 Snapshot reativado.");
+    }, 3000);
   }
 };
 
-// ============================================================
-// ✅ Salvar saídas
-// ============================================================
+// ✅ Saídas
 window.salvarSaidasNoFirebase = async function(listaDeSaidas) {
   try {
     if (window._gravando) {
@@ -1640,6 +1649,7 @@ window.salvarSaidasNoFirebase = async function(listaDeSaidas) {
       await new Promise(r => setTimeout(r, 2000));
     }
     window._gravando = true;
+    window.bloquearAtualizacaoSnapshot = true;
     await aguardarGravacaoGlobal();
 
     const saidasRef = collection(db, "estoqueGlobal", "estoque", "saidas");
@@ -1648,12 +1658,14 @@ window.salvarSaidasNoFirebase = async function(listaDeSaidas) {
     console.error("❌ Erro ao salvar saídas:", e);
   } finally {
     window._gravando = false;
+    setTimeout(() => {
+      window.bloquearAtualizacaoSnapshot = false;
+      console.log("🔓 Snapshot reativado.");
+    }, 3000);
   }
 };
 
-// ============================================================
-// ✅ Salvar erros/problemas
-// ============================================================
+// ✅ Erros e Problemas
 window.salvarErrosProblemasNoFirebase = async function(listaDeErros) {
   try {
     if (window._gravando) {
@@ -1661,6 +1673,7 @@ window.salvarErrosProblemasNoFirebase = async function(listaDeErros) {
       await new Promise(r => setTimeout(r, 2000));
     }
     window._gravando = true;
+    window.bloquearAtualizacaoSnapshot = true;
     await aguardarGravacaoGlobal();
 
     const errosRef = collection(db, "estoqueGlobal", "estoque", "errosProblemas");
@@ -1669,12 +1682,14 @@ window.salvarErrosProblemasNoFirebase = async function(listaDeErros) {
     console.error("❌ Erro ao salvar erros/problemas:", e);
   } finally {
     window._gravando = false;
+    setTimeout(() => {
+      window.bloquearAtualizacaoSnapshot = false;
+      console.log("🔓 Snapshot reativado.");
+    }, 3000);
   }
 };
 
-// ============================================================
-// ✅ Salvar usuários (gravação leve)
-// ============================================================
+// ✅ Usuários
 window.salvarUsuariosNoFirebase = async function(listaDeUsuarios) {
   try {
     const docRef = doc(db, "estoqueGlobal", "usuarios");
@@ -1685,9 +1700,7 @@ window.salvarUsuariosNoFirebase = async function(listaDeUsuarios) {
   }
 };
 
-// ============================================================
-// ✅ Atualizar documento principal
-// ============================================================
+// ✅ Documento principal
 window.salvarResumoDoEstoque = async function() {
   try {
     const docRef = doc(db, "estoqueGlobal", "estoque");
@@ -1709,7 +1722,7 @@ window.salvarResumoDoEstoque = async function() {
 };
 
 // ============================================================
-// ✅ Garante arrays válidos
+// 🧩 Garante arrays válidos e log inicial
 // ============================================================
 if (!Array.isArray(window.produtos)) window.produtos = [];
 if (!Array.isArray(window.entradas)) window.entradas = [];
@@ -1722,6 +1735,7 @@ console.log("📦 Dados carregados do localStorage:", {
   saidas: window.saidas.length,
   usuarios: window.usuarios.length
 });
+
 
 
 
@@ -6772,6 +6786,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
