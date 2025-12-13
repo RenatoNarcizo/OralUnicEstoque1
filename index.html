@@ -1514,29 +1514,33 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ============================================================
-// ✅ Controle definitivo de gravação Firestore (fila sequencial + autoajuste + snapshot lock)
+// ✅ Firestore — Controle definitivo de gravação (fila + autoajuste + snapshot lock)
 // ============================================================
 import { writeBatch } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // ============================================================
-// 🔒 Controle global e fila de gravações
+// 🔒 Controle global e fila sequencial
 // ============================================================
 window._filaDeGravacoes = [];
 window._processandoFila = false;
-window._delayEntreLotes = 2000; // pausa segura entre commits
+window._delayEntreLotes = 3000; // 🔹 pausa segura entre commits
 window.bloquearAtualizacaoSnapshot = false;
 
 // ============================================================
-// ⚙️ Executor da fila — 1 commit por vez
+// ⚙️ Executor da fila — garante 1 commit por vez
 // ============================================================
 async function processarFila() {
   if (window._processandoFila) return;
   window._processandoFila = true;
 
+  console.log("🚀 Iniciando processamento da fila de gravações...");
+
   while (window._filaDeGravacoes.length > 0) {
     const tarefa = window._filaDeGravacoes.shift();
+
     try {
       await tarefa();
+      console.log(`⏸️ Aguardando ${window._delayEntreLotes / 1000}s antes do próximo commit...`);
       await new Promise(r => setTimeout(r, window._delayEntreLotes));
     } catch (e) {
       if (e.code === "resource-exhausted") {
@@ -1549,16 +1553,19 @@ async function processarFila() {
     }
   }
 
+  console.log("✅ Todas as gravações na fila foram concluídas.");
   window._processandoFila = false;
 }
 
 // ============================================================
-// 💾 Adiciona lotes à fila
+// 💾 Adiciona lotes à fila — garante execução ordenada e segura
 // ============================================================
 function adicionarLotesNaFila(lista, refFn, nome = "coleção") {
   if (!Array.isArray(lista) || lista.length === 0) return;
 
-  const TAMANHO_LOTE = 30; // 🔹 segurança máxima
+  const TAMANHO_LOTE = 20; // 🔹 seguro para Firestore (evita resource-exhausted)
+  const totalLotes = Math.ceil(lista.length / TAMANHO_LOTE);
+
   for (let i = 0; i < lista.length; i += TAMANHO_LOTE) {
     const chunk = lista.slice(i, i + TAMANHO_LOTE);
     const loteIndex = i / TAMANHO_LOTE + 1;
@@ -1573,13 +1580,13 @@ function adicionarLotesNaFila(lista, refFn, nome = "coleção") {
         batch.set(refFn(id), obj, { merge: true });
       });
 
-      console.log(`📦 Gravando ${nome} - lote ${loteIndex} (${chunk.length} docs)...`);
+      console.log(`📦 Gravando ${nome} — lote ${loteIndex}/${totalLotes} (${chunk.length} docs)...`);
       const t0 = performance.now();
       await batch.commit();
-      const tempo = (performance.now() - t0) / 1000;
-      console.log(`✅ ${nome}: lote ${loteIndex} salvo em ${tempo.toFixed(2)}s`);
+      const tempo = ((performance.now() - t0) / 1000).toFixed(2);
+      console.log(`✅ ${nome}: lote ${loteIndex}/${totalLotes} salvo em ${tempo}s`);
 
-      // 🔓 Reativa snapshot depois de 3s
+      // 🔓 Reativa snapshot depois de 3s (seguro e leve)
       setTimeout(() => {
         window.bloquearAtualizacaoSnapshot = false;
         console.log("🔓 Snapshot reativado.");
@@ -1587,11 +1594,11 @@ function adicionarLotesNaFila(lista, refFn, nome = "coleção") {
     });
   }
 
-  processarFila(); // inicia execução
+  processarFila(); // inicia execução da fila
 }
 
 // ============================================================
-// 📦 Funções específicas (mantém compatibilidade com seu código)
+// 📦 Funções específicas (mantém compatibilidade total)
 // ============================================================
 window.salvarProdutosNoFirebase = async lista => {
   const estoqueRef = doc(db, "estoqueGlobal", "estoque");
@@ -1615,7 +1622,7 @@ window.salvarErrosProblemasNoFirebase = async lista => {
 };
 
 // ============================================================
-// 👤 Usuários e documento principal (gravação leve)
+// 👤 Usuários e documento principal — gravações leves
 // ============================================================
 window.salvarUsuariosNoFirebase = async lista => {
   const ref = doc(db, "estoqueGlobal", "usuarios");
@@ -1639,7 +1646,7 @@ window.salvarResumoDoEstoque = async () => {
 };
 
 // ============================================================
-// 🧩 Arrays válidos e log inicial
+// 🧩 Inicialização segura e log inicial
 // ============================================================
 if (!Array.isArray(window.produtos)) window.produtos = [];
 if (!Array.isArray(window.entradas)) window.entradas = [];
@@ -6704,6 +6711,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
