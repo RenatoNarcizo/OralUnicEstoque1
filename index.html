@@ -1514,23 +1514,29 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ============================================================
-// ✅ Funções otimizadas com gravação em lote (writeBatch) e limite de tamanho
+// ✅ Funções otimizadas com gravação em lote (writeBatch) e controle global
 // ============================================================
 import { writeBatch } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // ✅ Salvar produtos em lotes menores (máx. 50 por batch)
 window.salvarProdutosNoFirebase = async function(listaDeProdutos) {
   try {
+    // 🔒 Controle global de gravação
+    if (window._gravando) {
+      console.warn("⏳ Esperando a gravação anterior terminar...");
+      await new Promise(r => setTimeout(r, 2000));
+    }
+    window._gravando = true;
+
     if (!Array.isArray(listaDeProdutos) || listaDeProdutos.length === 0) return;
 
     const estoqueRef = doc(db, "estoqueGlobal", "estoque");
     const produtosCol = collection(estoqueRef, "produtos");
 
-    for (let i = 0; i < listaDeProdutos.length; i += 50) { // 🔹 50 por lote
+    for (let i = 0; i < listaDeProdutos.length; i += 50) {
       const chunk = listaDeProdutos.slice(i, i + 50);
       const batch = writeBatch(db);
 
-      // opcional: checa o tamanho do payload
       const sizeBytes = new Blob([JSON.stringify(chunk)]).size;
       console.log(`📦 Lote ${i / 50 + 1} - ${chunk.length} itens (${(sizeBytes / 1024).toFixed(1)} KB)`);
 
@@ -1543,16 +1549,26 @@ window.salvarProdutosNoFirebase = async function(listaDeProdutos) {
 
       await batch.commit();
       console.log(`✅ Lote de produtos salvo (${i + chunk.length}/${listaDeProdutos.length})`);
-      await new Promise(r => setTimeout(r, 1000)); // pausa de 1 segundo entre lotes
+      await new Promise(r => setTimeout(r, 1000)); // pausa entre lotes
     }
+
+    await new Promise(r => setTimeout(r, 2000)); // pausa final após todos os lotes
   } catch (e) {
     console.error("❌ Erro ao salvar produtos (batch):", e);
+  } finally {
+    window._gravando = false; // 🔓 Libera controle global
   }
 };
 
 // ✅ Salvar entradas
 window.salvarEntradasNoFirebase = async function(listaDeEntradas) {
   try {
+    if (window._gravando) {
+      console.warn("⏳ Esperando a gravação anterior terminar...");
+      await new Promise(r => setTimeout(r, 2000));
+    }
+    window._gravando = true;
+
     if (!Array.isArray(listaDeEntradas) || listaDeEntradas.length === 0) return;
 
     const entradasRef = collection(db, "estoqueGlobal", "estoque", "entradas");
@@ -1569,16 +1585,26 @@ window.salvarEntradasNoFirebase = async function(listaDeEntradas) {
 
       await batch.commit();
       console.log(`✅ Lote de entradas salvo (${i + chunk.length}/${listaDeEntradas.length})`);
-      await new Promise(r => setTimeout(r, 1000)); // pausa de 1 segundo entre lotes
+      await new Promise(r => setTimeout(r, 1000));
     }
+
+    await new Promise(r => setTimeout(r, 2000));
   } catch (e) {
     console.error("❌ Erro ao salvar entradas (batch):", e);
+  } finally {
+    window._gravando = false;
   }
 };
 
 // ✅ Salvar saídas
 window.salvarSaidasNoFirebase = async function(listaDeSaidas) {
   try {
+    if (window._gravando) {
+      console.warn("⏳ Esperando a gravação anterior terminar...");
+      await new Promise(r => setTimeout(r, 2000));
+    }
+    window._gravando = true;
+
     if (!Array.isArray(listaDeSaidas) || listaDeSaidas.length === 0) return;
 
     const saidasRef = collection(db, "estoqueGlobal", "estoque", "saidas");
@@ -1595,16 +1621,26 @@ window.salvarSaidasNoFirebase = async function(listaDeSaidas) {
 
       await batch.commit();
       console.log(`✅ Lote de saídas salvo (${i + chunk.length}/${listaDeSaidas.length})`);
-      await new Promise(r => setTimeout(r, 1000)); // pausa de 1 segundo entre lotes
+      await new Promise(r => setTimeout(r, 1000));
     }
+
+    await new Promise(r => setTimeout(r, 2000));
   } catch (e) {
     console.error("❌ Erro ao salvar saídas (batch):", e);
+  } finally {
+    window._gravando = false;
   }
 };
 
 // ✅ Salvar erros e problemas
 window.salvarErrosProblemasNoFirebase = async function(listaDeErros) {
   try {
+    if (window._gravando) {
+      console.warn("⏳ Esperando a gravação anterior terminar...");
+      await new Promise(r => setTimeout(r, 2000));
+    }
+    window._gravando = true;
+
     if (!Array.isArray(listaDeErros) || listaDeErros.length === 0) return;
 
     const errosRef = collection(db, "estoqueGlobal", "estoque", "errosProblemas");
@@ -1621,10 +1657,14 @@ window.salvarErrosProblemasNoFirebase = async function(listaDeErros) {
 
       await batch.commit();
       console.log(`✅ Lote de erros salvo (${i + chunk.length}/${listaDeErros.length})`);
-      await new Promise(r => setTimeout(r, 1000)); // pausa de 1 segundo entre lotes
+      await new Promise(r => setTimeout(r, 1000));
     }
+
+    await new Promise(r => setTimeout(r, 2000));
   } catch (e) {
     console.error("❌ Erro ao salvar errosProblemas (batch):", e);
+  } finally {
+    window._gravando = false;
   }
 };
 
@@ -1674,6 +1714,7 @@ console.log("📦 Dados carregados do localStorage:", {
   saidas: window.saidas.length,
   usuarios: window.usuarios.length
 });
+
 
 
 
@@ -6722,6 +6763,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
