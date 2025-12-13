@@ -1514,243 +1514,132 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ============================================================
-// ✅ Controle inteligente de gravação Firestore — versão autoajustável e com bloqueio de snapshot
+// ✅ Controle definitivo de gravação Firestore (fila sequencial + autoajuste + snapshot lock)
 // ============================================================
 import { writeBatch } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // ============================================================
-// 🔒 Controle global de gravações e sincronização
+// 🔒 Controle global e fila de gravações
 // ============================================================
-window._gravando = false;
-window._ultimaGravacao = 0;
-window._pausaDinamica = 1000; // pausa inicial entre lotes (1s)
-window._metaTaxa = 40;        // docs/s ideal (ajustável)
-window._minDelay = 500;       // mínima pausa entre lotes
-window._maxDelay = 4000;      // máxima pausa entre lotes
-window.bloquearAtualizacaoSnapshot = false; // 🔒 novo controle global
-
-async function aguardarGravacaoGlobal(minIntervaloMs = 3000) {
-  const agora = Date.now();
-  const tempoPassado = agora - window._ultimaGravacao;
-  if (tempoPassado < minIntervaloMs) {
-    const espera = minIntervaloMs - tempoPassado;
-    console.log(`⏳ Aguardando ${espera} ms para nova gravação global...`);
-    await new Promise(r => setTimeout(r, espera));
-  }
-  window._ultimaGravacao = Date.now();
-}
+window._filaDeGravacoes = [];
+window._processandoFila = false;
+window._delayEntreLotes = 2000; // pausa segura entre commits
+window.bloquearAtualizacaoSnapshot = false;
 
 // ============================================================
-// 🔄 Ajuste automático da pausa conforme taxa real
+// ⚙️ Executor da fila — 1 commit por vez
 // ============================================================
-function ajustarPausaDinamica(taxaDocsPorSeg) {
-  const meta = window._metaTaxa;
-  if (taxaDocsPorSeg > meta * 1.2) {
-    window._pausaDinamica = Math.min(window._pausaDinamica + 200, window._maxDelay);
-  } else if (taxaDocsPorSeg < meta * 0.8) {
-    window._pausaDinamica = Math.max(window._pausaDinamica - 200, window._minDelay);
-  }
-  console.log(`⏱️ Pausa ajustada: ${window._pausaDinamica}ms (taxa ${taxaDocsPorSeg.toFixed(1)} docs/s)`);
-}
+async function processarFila() {
+  if (window._processandoFila) return;
+  window._processandoFila = true;
 
-// ============================================================
-// 💾 Função genérica para salvar em lotes — versão resiliente com auto-recuperação
-// ============================================================
-async function salvarEmLotes(lista, refFn, nome = "coleção") {
-  if (!Array.isArray(lista) || lista.length === 0) return;
-
-  const inicio = performance.now();
-  let totalGravados = 0;
-  const TAMANHO_LOTE = 40; // 🔹 tamanho seguro
-
-  for (let i = 0; i < lista.length; i += TAMANHO_LOTE) {
-    const chunk = lista.slice(i, i + TAMANHO_LOTE);
-    const batch = writeBatch(db);
-
-    chunk.forEach(obj => {
-      const id = String(obj.id || Date.now() + Math.floor(Math.random() * 10000));
-      obj.id = id;
-      batch.set(refFn(id), obj, { merge: true });
-    });
-
-    let sucesso = false;
-    let tentativas = 0;
-
-    while (!sucesso && tentativas < 5) { // tenta até 5 vezes
-      try {
-        tentativas++;
-        const t0 = performance.now();
-        await batch.commit();
-        const tempoLote = (performance.now() - t0) / 1000;
-        totalGravados += chunk.length;
-
-        const taxa = chunk.length / tempoLote;
-        ajustarPausaDinamica(taxa);
-
-        console.log(
-          `✅ ${nome}: lote ${i / TAMANHO_LOTE + 1} salvo (${i + chunk.length}/${lista.length}) — ${taxa.toFixed(1)} docs/s`
-        );
-
-        sucesso = true;
-
-        // 🕐 Pausa mínima segura entre commits
-        const pausaSegura = Math.max(window._pausaDinamica, 1500);
-        await new Promise(r => setTimeout(r, pausaSegura + 300));
-
-      } catch (e) {
-        if (e.code === "resource-exhausted") {
-          console.warn(`⚠️ Firestore limit reached! Pausando 5s e tentando novamente (tentativa ${tentativas})...`);
-          await new Promise(r => setTimeout(r, 5000));
-        } else {
-          console.error(`❌ Erro inesperado ao salvar lote ${i / TAMANHO_LOTE + 1}:`, e);
-          sucesso = true; // sai do loop para evitar travamento
-        }
+  while (window._filaDeGravacoes.length > 0) {
+    const tarefa = window._filaDeGravacoes.shift();
+    try {
+      await tarefa();
+      await new Promise(r => setTimeout(r, window._delayEntreLotes));
+    } catch (e) {
+      if (e.code === "resource-exhausted") {
+        console.warn("⚠️ Firestore sobrecarregado. Aguardando 5s e repondo tarefa na fila...");
+        window._filaDeGravacoes.unshift(tarefa);
+        await new Promise(r => setTimeout(r, 5000));
+      } else {
+        console.error("❌ Erro inesperado na gravação:", e);
       }
     }
   }
 
-  const tempoTotal = (performance.now() - inicio) / 1000;
-  console.log(
-    `🎯 ${nome}: ${totalGravados} docs em ${tempoTotal.toFixed(2)}s (${(totalGravados / tempoTotal).toFixed(1)} docs/s)`
-  );
+  window._processandoFila = false;
 }
 
+// ============================================================
+// 💾 Adiciona lotes à fila
+// ============================================================
+function adicionarLotesNaFila(lista, refFn, nome = "coleção") {
+  if (!Array.isArray(lista) || lista.length === 0) return;
+
+  const TAMANHO_LOTE = 30; // 🔹 segurança máxima
+  for (let i = 0; i < lista.length; i += TAMANHO_LOTE) {
+    const chunk = lista.slice(i, i + TAMANHO_LOTE);
+    const loteIndex = i / TAMANHO_LOTE + 1;
+
+    window._filaDeGravacoes.push(async () => {
+      window.bloquearAtualizacaoSnapshot = true;
+      const batch = writeBatch(db);
+
+      chunk.forEach(obj => {
+        const id = String(obj.id || Date.now() + Math.floor(Math.random() * 10000));
+        obj.id = id;
+        batch.set(refFn(id), obj, { merge: true });
+      });
+
+      console.log(`📦 Gravando ${nome} - lote ${loteIndex} (${chunk.length} docs)...`);
+      const t0 = performance.now();
+      await batch.commit();
+      const tempo = (performance.now() - t0) / 1000;
+      console.log(`✅ ${nome}: lote ${loteIndex} salvo em ${tempo.toFixed(2)}s`);
+
+      // 🔓 Reativa snapshot depois de 3s
+      setTimeout(() => {
+        window.bloquearAtualizacaoSnapshot = false;
+        console.log("🔓 Snapshot reativado.");
+      }, 3000);
+    });
+  }
+
+  processarFila(); // inicia execução
+}
 
 // ============================================================
-// 📦 Funções específicas de gravação
+// 📦 Funções específicas (mantém compatibilidade com seu código)
 // ============================================================
-
-// ✅ Produtos
-window.salvarProdutosNoFirebase = async function(listaDeProdutos) {
-  try {
-    if (window._gravando) {
-      console.warn("⏳ Esperando a gravação anterior terminar...");
-      await new Promise(r => setTimeout(r, 2000));
-    }
-    window._gravando = true;
-    window.bloquearAtualizacaoSnapshot = true; // 🚫 bloqueia snapshot
-    await aguardarGravacaoGlobal();
-
-    const estoqueRef = doc(db, "estoqueGlobal", "estoque");
-    const produtosCol = collection(estoqueRef, "produtos");
-    await salvarEmLotes(listaDeProdutos, id => doc(produtosCol, id), "produtos");
-  } catch (e) {
-    console.error("❌ Erro ao salvar produtos:", e);
-  } finally {
-    window._gravando = false;
-    setTimeout(() => {
-      window.bloquearAtualizacaoSnapshot = false;
-      console.log("🔓 Snapshot reativado.");
-    }, 3000);
-  }
+window.salvarProdutosNoFirebase = async lista => {
+  const estoqueRef = doc(db, "estoqueGlobal", "estoque");
+  const col = collection(estoqueRef, "produtos");
+  adicionarLotesNaFila(lista, id => doc(col, id), "produtos");
 };
 
-// ✅ Entradas
-window.salvarEntradasNoFirebase = async function(listaDeEntradas) {
-  try {
-    if (window._gravando) {
-      console.warn("⏳ Esperando a gravação anterior terminar...");
-      await new Promise(r => setTimeout(r, 2000));
-    }
-    window._gravando = true;
-    window.bloquearAtualizacaoSnapshot = true;
-    await aguardarGravacaoGlobal();
-
-    const entradasRef = collection(db, "estoqueGlobal", "estoque", "entradas");
-    await salvarEmLotes(listaDeEntradas, id => doc(entradasRef, id), "entradas");
-  } catch (e) {
-    console.error("❌ Erro ao salvar entradas:", e);
-  } finally {
-    window._gravando = false;
-    setTimeout(() => {
-      window.bloquearAtualizacaoSnapshot = false;
-      console.log("🔓 Snapshot reativado.");
-    }, 3000);
-  }
+window.salvarEntradasNoFirebase = async lista => {
+  const col = collection(db, "estoqueGlobal", "estoque", "entradas");
+  adicionarLotesNaFila(lista, id => doc(col, id), "entradas");
 };
 
-// ✅ Saídas
-window.salvarSaidasNoFirebase = async function(listaDeSaidas) {
-  try {
-    if (window._gravando) {
-      console.warn("⏳ Esperando a gravação anterior terminar...");
-      await new Promise(r => setTimeout(r, 2000));
-    }
-    window._gravando = true;
-    window.bloquearAtualizacaoSnapshot = true;
-    await aguardarGravacaoGlobal();
-
-    const saidasRef = collection(db, "estoqueGlobal", "estoque", "saidas");
-    await salvarEmLotes(listaDeSaidas, id => doc(saidasRef, id), "saídas");
-  } catch (e) {
-    console.error("❌ Erro ao salvar saídas:", e);
-  } finally {
-    window._gravando = false;
-    setTimeout(() => {
-      window.bloquearAtualizacaoSnapshot = false;
-      console.log("🔓 Snapshot reativado.");
-    }, 3000);
-  }
+window.salvarSaidasNoFirebase = async lista => {
+  const col = collection(db, "estoqueGlobal", "estoque", "saidas");
+  adicionarLotesNaFila(lista, id => doc(col, id), "saídas");
 };
 
-// ✅ Erros e Problemas
-window.salvarErrosProblemasNoFirebase = async function(listaDeErros) {
-  try {
-    if (window._gravando) {
-      console.warn("⏳ Esperando a gravação anterior terminar...");
-      await new Promise(r => setTimeout(r, 2000));
-    }
-    window._gravando = true;
-    window.bloquearAtualizacaoSnapshot = true;
-    await aguardarGravacaoGlobal();
-
-    const errosRef = collection(db, "estoqueGlobal", "estoque", "errosProblemas");
-    await salvarEmLotes(listaDeErros, id => doc(errosRef, id), "errosProblemas");
-  } catch (e) {
-    console.error("❌ Erro ao salvar erros/problemas:", e);
-  } finally {
-    window._gravando = false;
-    setTimeout(() => {
-      window.bloquearAtualizacaoSnapshot = false;
-      console.log("🔓 Snapshot reativado.");
-    }, 3000);
-  }
-};
-
-// ✅ Usuários
-window.salvarUsuariosNoFirebase = async function(listaDeUsuarios) {
-  try {
-    const docRef = doc(db, "estoqueGlobal", "usuarios");
-    await setDoc(docRef, { usuarios: listaDeUsuarios }, { merge: true });
-    console.log("✅ Usuários salvos no documento estoqueGlobal/usuarios");
-  } catch (e) {
-    console.error("❌ Erro ao salvar usuários:", e);
-  }
-};
-
-// ✅ Documento principal
-window.salvarResumoDoEstoque = async function() {
-  try {
-    const docRef = doc(db, "estoqueGlobal", "estoque");
-    await setDoc(docRef, {
-      resumo: {
-        totalProdutos: (window.produtos || []).length,
-        totalEntradas: (window.entradas || []).length,
-        totalSaidas: (window.saidas || []).length,
-        ultimaAtualizacao: new Date().toISOString()
-      },
-      limites: window.limites || [],
-      usuarios: window.usuarios || []
-    }, { merge: true });
-
-    console.log("✅ Documento principal 'estoque' atualizado (leve e resumido).");
-  } catch (e) {
-    console.error("❌ Erro ao atualizar documento principal:", e);
-  }
+window.salvarErrosProblemasNoFirebase = async lista => {
+  const col = collection(db, "estoqueGlobal", "estoque", "errosProblemas");
+  adicionarLotesNaFila(lista, id => doc(col, id), "errosProblemas");
 };
 
 // ============================================================
-// 🧩 Garante arrays válidos e log inicial
+// 👤 Usuários e documento principal (gravação leve)
+// ============================================================
+window.salvarUsuariosNoFirebase = async lista => {
+  const ref = doc(db, "estoqueGlobal", "usuarios");
+  await setDoc(ref, { usuarios: lista }, { merge: true });
+  console.log("✅ Usuários salvos (documento leve).");
+};
+
+window.salvarResumoDoEstoque = async () => {
+  const ref = doc(db, "estoqueGlobal", "estoque");
+  await setDoc(ref, {
+    resumo: {
+      totalProdutos: (window.produtos || []).length,
+      totalEntradas: (window.entradas || []).length,
+      totalSaidas: (window.saidas || []).length,
+      ultimaAtualizacao: new Date().toISOString()
+    },
+    limites: window.limites || [],
+    usuarios: window.usuarios || []
+  }, { merge: true });
+  console.log("✅ Documento principal 'estoque' atualizado.");
+};
+
+// ============================================================
+// 🧩 Arrays válidos e log inicial
 // ============================================================
 if (!Array.isArray(window.produtos)) window.produtos = [];
 if (!Array.isArray(window.entradas)) window.entradas = [];
@@ -1763,6 +1652,7 @@ console.log("📦 Dados carregados do localStorage:", {
   saidas: window.saidas.length,
   usuarios: window.usuarios.length
 });
+
 
 
 
@@ -6814,6 +6704,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
