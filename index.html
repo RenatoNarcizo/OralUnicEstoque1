@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sistema de Controle de Estoque – Oral Unic Campo Grande</title>
 
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>??</text></svg>">
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
@@ -26,7 +26,7 @@
       color: #222;
     }
     
-    /* 🔹 Centralização estável da tela de login */
+    /* ?? Centralização estável da tela de login */
     #loginView {
       display: flex;
       justify-content: center;
@@ -141,7 +141,7 @@
     padding: 10px 0;
     box-shadow: 2px 0 5px rgba(0,0,0,0.2);
 
-    /* 👈 ADICIONE ESTA LINHA: Transição suave de 0.3 segundos */
+    /* ?? ADICIONE ESTA LINHA: Transição suave de 0.3 segundos */
     transition: left 0.3s ease; 
     
 }
@@ -298,7 +298,7 @@
       background-color: #f9f9f9;
     }
 
-    /* 🔹 Scrollbar estilizada */
+    /* ?? Scrollbar estilizada */
     .table-wrap::-webkit-scrollbar {
       width: 8px;
       height: 8px;
@@ -427,7 +427,7 @@
   /* ... outras seções como entrada, saída, estoque ... */
 
   /* ==============================================
-     🐞 SEÇÃO: ERROS E PROBLEMAS
+     ?? SEÇÃO: ERROS E PROBLEMAS
      ============================================== */
   .situacao-vermelha { color: #dc3545; font-weight: bold; }
   .situacao-laranja { color: #fd7e14; font-weight: bold; }
@@ -562,11 +562,11 @@
       <input id="senhaLogin" type="password" placeholder="Senha" />
       <button onclick="fazerLogin()"><i class="fa fa-right-to-bracket"></i> Entrar</button>
 	  <p id="loginMsg" style="display:none; color:red; font-weight:bold; text-align:center;"></p>
-    <!-- ✅ Marca AtendeTudo no canto inferior direito (Login) -->
+    <!-- ? Marca AtendeTudo no canto inferior direito (Login) -->
     </div> <!-- Fecha .login-card -->
   </div> <!-- Fecha #loginView -->
 
-  <!-- ✅ Marca AtendeTudo no canto inferior direito (Login) -->
+  <!-- ? Marca AtendeTudo no canto inferior direito (Login) -->
   <div id="marcaLogin"
        style="
          position: fixed;
@@ -598,12 +598,12 @@
   <div id="userName" style="font-weight:700">Visitante</div>
   <div id="perfilBadge" style="background:rgba(255,255,255,0.12);padding:6px 10px;border-radius:8px;font-size:13px;">PERFIL</div>
 
-  <!-- 🐞 Botão de Erros e Problemas -->
+  <!-- ?? Botão de Erros e Problemas -->
 <button id="btnErrosProblemas" class="botao-erro" title="Erros e Problemas" onclick="abrirErrosProblemas()">
   <i class="fa fa-bug"></i>
 </button>
 
-  <!-- 🚪 Botão Sair -->
+  <!-- ?? Botão Sair -->
   <button onclick="logout()" title="Sair"><i class="fa fa-sign-out-alt"></i></button>
 </div>
 
@@ -658,38 +658,38 @@
 
     <main>
 		<section id="boasVindas" class="section active" style="text-align:center; padding:100px 20px;">
-		  <h1 style="color:#003b88;">👋 Bem-vindo(a) <span id="nomeUsuarioBemVindo"></span>!</h1>
+		  <h1 style="color:#003b88;">?? Bem-vindo(a) <span id="nomeUsuarioBemVindo"></span>!</h1>
 		  <h2 style="color:#0d6efd;">ao Sistema de Controle de Estoque – Oral Unic Campo Grande</h2>
 		  <p style="margin-top:20px; color:#555;">Use o menu lateral para iniciar suas atividades.</p>
 		</section>
 		
 <section id="dashboard" class="section">
-    <h2>📊 Dashboard do Sistema</h2>
+    <h2>?? Dashboard do Sistema</h2>
     <div class="dash-container">
         <div class="dash-card">
-            <h3>🕒 Produtos Próximos do Vencimento</h3>
+            <h3>?? Produtos Próximos do Vencimento</h3>
             <ul id="listaProximosVencer"></ul>
         </div>
         <div class="dash-card">
-            <h3>💰 Produtos Mais Caros</h3>
+            <h3>?? Produtos Mais Caros</h3>
             <ul id="listaMaisCaros"></ul>
         </div>
         <div class="dash-card">
-            <h3>📦 Produtos Mais Utilizados</h3>
+            <h3>?? Produtos Mais Utilizados</h3>
             <ul id="listaMaisSaidas"></ul>
         </div>
         <div class="dash-card">
-            <h3>💤 Produtos com Menos Saídas</h3>
+            <h3>?? Produtos com Menos Saídas</h3>
             <ul id="listaMenosSaidas"></ul>
         </div>
 
         <div class="dash-card">
-            <h3>⚠️ Estoque Crítico</h3>
+            <h3>?? Estoque Crítico</h3>
             <ul id="listaEstoqueCritico"></ul>
         </div>
 
         <div class="dash-card">
-            <h3>📈 Resumo Geral</h3>
+            <h3>?? Resumo Geral</h3>
             <div id="resumoGeral"></div>
         </div>
     </div>
@@ -704,7 +704,7 @@
 
   <div class="input-row" style="margin-bottom:10px;gap:8px;">
 
-    <!-- 🆕 CÓDIGO DO PRODUTO (NOVO CAMPO) -->
+    <!-- ?? CÓDIGO DO PRODUTO (NOVO CAMPO) -->
     <input id="produtoCodigo" type="text" placeholder="Cód. Produto" style="width:150px;" />
 
     <input id="produtoNome" type="text" placeholder="Nome do produto" class="flex" />
@@ -742,14 +742,14 @@
 
     <input id="produtoQtdEmbalagem" type="number" placeholder="Qtd por embalagem" style="width:140px" />
 
-    <input id="produtoCodigoBarras" type="text" placeholder="📷Código de Barras (opcional)" style="width:220px" />
+    <input id="produtoCodigoBarras" type="text" placeholder="??Código de Barras (opcional)" style="width:220px" />
 
     <!-- Botão para foto -->
     <div style="display:flex; flex-direction:column; align-items:flex-start; gap:4px;">
       <div style="display:flex; align-items:center; gap:6px;">
         <label for="produtoFoto" 
                style="background:#007bff; color:white; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
-          📸 Insira foto do produto
+          ?? Insira foto do produto
         </label>
         <input id="produtoFoto" type="file" accept="image/*" style="display:none;">
       </div>
@@ -765,7 +765,7 @@
   </div>
 
   <div style="margin-bottom:10px;">
-    <input id="filtroProduto" type="text" placeholder="🔍 Filtrar por nome ou categoria" style="width:98%" oninput="filtrarProdutos()" />
+    <input id="filtroProduto" type="text" placeholder="?? Filtrar por nome ou categoria" style="width:98%" oninput="filtrarProdutos()" />
   </div>
 
   <div class="table-wrap">
@@ -775,7 +775,7 @@
           <th>#</th>
           <th>Foto</th>
 
-          <!-- 🆕 CÓDIGO DO PRODUTO NA NOVA ORDEM -->
+          <!-- ?? CÓDIGO DO PRODUTO NA NOVA ORDEM -->
           <th>Cód. Produto</th>
 
           <th>Nome</th>
@@ -797,7 +797,7 @@
       <h2><i class="fa fa-arrow-down"></i> Entrada de Materiais</h2>
       <div class="input-row" style="margin-bottom:10px;gap:8px;">
       
-        <input id="entradaCodigoBarras" type="text" placeholder="📷 Ler código de barras" style="min-width:200px;" oninput="buscarProdutoPorCodigo('entrada')" />
+        <input id="entradaCodigoBarras" type="text" placeholder="?? Ler código de barras" style="min-width:200px;" oninput="buscarProdutoPorCodigo('entrada')" />
         <input id="entradaCodigoProduto" type="text" placeholder="Cód. Produto" style="min-width:140px;" oninput="buscarProdutoPorCodigoProduto()" />
         <input id="entradaProduto" type="text" placeholder="Nome do produto" list="listaProdutos" style="min-width:220px" />
         <datalist id="listaProdutos"></datalist>
@@ -835,7 +835,7 @@
         </select>
 
         <button onclick="registrarEntrada()"><i class="fa fa-save"></i> Registrar Entrada</button>
-		<!-- 🧹 Botão de limpar -->
+		<!-- ?? Botão de limpar -->
 <button onclick="limparCamposEntrada()" title="Limpar campos" style="background:#6c757d; color:#fff;">
   <i class="fa fa-broom"></i>
 </button>
@@ -843,7 +843,7 @@
       </div>
 
       <div style="margin-bottom:10px;">
-        <input id="filtroEntrada" type="text" placeholder="🔍 Buscar por produto, fornecedor ou NF" style="width:98%" oninput="filtrarEntradas()" />
+        <input id="filtroEntrada" type="text" placeholder="?? Buscar por produto, fornecedor ou NF" style="width:98%" oninput="filtrarEntradas()" />
       </div>
 
       <div class="table-wrap">
@@ -872,33 +872,48 @@
 
     </section>
 
-     <section id="saida" class="section" style="display:none;">
+    <section id="saida" class="section" style="display:none;">
   <h2><i class="fa fa-arrow-up"></i> Saída de Materiais</h2>
 
- <div class="input-row" style="margin-bottom:10px;gap:8px;">
-        <input id="saidaCodigoBarras" type="text" placeholder="📷 Ler código de barras" oninput="buscarProdutoPorCodigoSaida()" />
-<input id="saidaCodigoProduto" type="text" placeholder="Cód. Produto" style="width:150px;" />
-           
+  <div class="input-row" style="margin-bottom:10px;gap:8px;">
+    <input id="saidaCodigoBarras" type="text" placeholder="?? Ler código de barras" oninput="buscarProdutoPorCodigoSaida()" />
+    <input id="saidaCodigoProduto" type="text" placeholder="Cód. Produto" style="width:150px;" />
+
     <input id="saidaProduto" type="text" placeholder="Nome do produto" style="min-width:220px" oninput="atualizarSetorAutomatico()" />
     <input id="saidaQuantidade" type="number" placeholder="Quantidade" style="width:120px" />
     <input id="saidaResponsavel" type="text" placeholder="Responsável" />
     <input id="saidaObservacao" type="text" placeholder="Observação (opcional)" />
+
+    <!-- ? Campo de seleção de setor atualizado -->
     <select id="saidaSetor">
       <option value="">Selecione o Setor</option>
+      <option>Centro Cirúrgico</option>
+      <option>Cesta paciente</option>
+      <option>Componentes</option>
+      <option>Copa e Cozinha</option>
+      <option>Escritório</option>
+      <option>Implante</option>
+      <option>Insumo Dental</option>
+      <option>Insumo Laboratório</option>
+      <option>Material de Uso e Consumo</option>
+      <option>Medicamentos</option>
+      <option>Material de Limpeza</option>
     </select>
-    <input id="saidaData" type="date" style="width:160px" />
-    <button onclick="registrarSaida()"><i class="fa fa-save"></i> Registrar Saída</button>
-	<!-- 🧹 Botão de limpar -->
-<button onclick="limparCamposSaida()" 
-        title="Limpar campos" 
-        style="background:#6c757d; color:#fff; border:none; border-radius:5px; padding:6px 10px; margin-left:10px; cursor:pointer; font-size:14px;">
-  <i class="fa fa-broom"></i>
-</button>
 
+    <input id="saidaData" type="date" style="width:160px;" />
+
+    <button onclick="registrarSaida()"><i class="fa fa-save"></i> Registrar Saída</button>
+
+    <!-- ?? Botão de limpar -->
+    <button onclick="limparCamposSaida()" 
+            title="Limpar campos" 
+            style="background:#6c757d; color:#fff; border:none; border-radius:5px; padding:6px 10px; margin-left:10px; cursor:pointer; font-size:14px;">
+      <i class="fa fa-broom"></i>
+    </button>
   </div>
 
   <div style="margin-bottom:10px;">
-    <input id="filtroSaida" type="text" placeholder="🔍 Buscar por produto, setor ou responsável" style="width:98%" oninput="filtrarSaidas()" />
+    <input id="filtroSaida" type="text" placeholder="?? Buscar por produto, setor ou responsável" style="width:98%" oninput="filtrarSaidas()" />
   </div>
 
   <div class="table-wrap">
@@ -907,8 +922,8 @@
         <tr>
           <th>#</th>
           <th>Produto</th>
-		  <th>Cód. Produto</th>
-		   <th>Código de Barras</th>
+          <th>Cód. Produto</th>
+          <th>Código de Barras</th>
           <th>Qtd</th>
           <th>Data</th>
           <th>Setor</th>
@@ -921,12 +936,13 @@
     </table>
   </div>
 </section>
+
   
   <section id="estoque" class="section">
   <h2><i class="fa fa-warehouse"></i> Estoque Atual</h2>
-  <!-- 🔹 Resumo de contagem -->
+  <!-- ?? Resumo de contagem -->
    <div style="margin-bottom:10px;">
-    <input id="filtroEstoque" type="text" placeholder="🔍 Filtrar por produto ou categoria" style="width:98%" oninput="filtrarEstoque()" />
+    <input id="filtroEstoque" type="text" placeholder="?? Filtrar por produto ou categoria" style="width:98%" oninput="filtrarEstoque()" />
 	<button onclick="limparFiltroEstoque()" title="Limpar filtro" 
     style="background:#0d6efd; color:#fff; border:none; padding:6px 12px; border-radius:5px; cursor:pointer;">
     <i class="fa fa-broom"></i>
@@ -963,25 +979,25 @@
 <section id="limites" class="section" style="display:none;">
   <h2><i class="fa fa-boxes"></i> Estoque Mínimo e Máximo</h2>
 
-  <!-- 📊 Resumo correto -->
+  <!-- ?? Resumo correto -->
  <div id="resumoLimites" style="margin-top:10px; font-weight:bold; color:#333;">
-  🧾 Total de Produtos: 0 |
-  ⚠️ Abaixo do Mínimo: 0 |
-  ✅ Dentro do Limite: 0 |
-  📦 Acima do Máximo: 0
+  ?? Total de Produtos: 0 |
+  ?? Abaixo do Mínimo: 0 |
+  ? Dentro do Limite: 0 |
+  ?? Acima do Máximo: 0
 </div>
 
-  <!-- 🔍 Filtros -->
+  <!-- ?? Filtros -->
   <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px; align-items:center;">
     <input
       id="filtroLimites"
       type="text"
-      placeholder="🔍 Buscar por produto"
+      placeholder="?? Buscar por produto"
       style="flex:1; min-width:220px"
       oninput="filtrarLimites()"
     />
 
-    <!-- 🧹 Botão de limpar filtro (igual aos outros painéis) -->
+    <!-- ?? Botão de limpar filtro (igual aos outros painéis) -->
     <button onclick="limparFiltroLimites()" title="Limpar filtro"
       style="background:#6c757d; color:#fff;">
       <i class="fa fa-broom"></i>
@@ -1012,7 +1028,7 @@
     </button>
   </div>
 
-  <!-- 📋 Tabela principal -->
+  <!-- ?? Tabela principal -->
   <div class="table-wrap">
     <table id="tabelaLimites">
       <thead>
@@ -1034,7 +1050,7 @@
     </table>
   </div>
 
-  <!-- 🛒 Lista de compra -->
+  <!-- ?? Lista de compra -->
   <div id="listaCompraContainer" style="display:none; margin-top:20px;">
     <h3><i class="fa fa-shopping-cart"></i> Lista de Compra Gerada</h3>
     <div class="table-wrap" style="max-height:400px; overflow-y:auto; overflow-x:auto;">
@@ -1060,7 +1076,7 @@
 
     </div>
 
-    <!-- ⚙️ Botões de ação -->
+    <!-- ?? Botões de ação -->
     <div style="margin-top:10px;">
       <button onclick="exportarListaExcel()">
         <i class="fa fa-file-excel"></i> Exportar para Excel
@@ -1072,7 +1088,7 @@
   </div>
 </section>
 
-<!-- 📊 NOVA SEÇÃO: VALOR HISTÓRICO -->
+<!-- ?? NOVA SEÇÃO: VALOR HISTÓRICO -->
 <section id="valorHistorico" class="section" style="display:none;">
   <h2><i class="fa fa-chart-line"></i> Valor Histórico de Produtos</h2>
 
@@ -1080,12 +1096,12 @@
   <p style="color:#555; margin-bottom:10px;">
     Acompanhe aqui a evolução dos valores de entrada mês a mês para cada produto. As setas indicam a variação de preço.
   </p>
-<!-- 🔹 Filtro -->
+<!-- ?? Filtro -->
 <div style="margin-bottom:10px; display:flex; gap:8px; align-items:center;">
   <input
     id="filtroValorHistorico"
     type="text"
-    placeholder="🔍 Buscar produto..."
+    placeholder="?? Buscar produto..."
     style="flex:1; max-width:400px;"
     oninput="filtrarValorHistorico()"
   />
@@ -1126,42 +1142,42 @@
     <section id="financeiro" class="section" style="display:none;">
   <h2><i class="fa fa-chart-line"></i> Painel Financeiro</h2>
 
-  <!-- 🔸 Indicadores financeiros detalhados -->
+  <!-- ?? Indicadores financeiros detalhados -->
   <div style="display:flex; flex-wrap:wrap; gap:15px; margin-bottom:20px;">
 
     <!-- Último valor de entrada -->
     <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-      <h3>💰 Último Valor de Entrada</h3>
+      <h3>?? Último Valor de Entrada</h3>
       <p id="valorUltimaEntrada" style="font-size:1.4em; font-weight:bold; color:#007bff;">R$ 0,00</p>
     </div>
 
     <!-- Custo médio ponderado -->
     <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-      <h3>📊 Custo Médio Ponderado</h3>
+      <h3>?? Custo Médio Ponderado</h3>
       <p id="valorCustoMedio" style="font-size:1.4em; font-weight:bold; color:#6f42c1;">R$ 0,00</p>
     </div>
 
     <!-- Valor total do estoque atual -->
     <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-      <h3>📦 Valor Total do Estoque Atual</h3>
+      <h3>?? Valor Total do Estoque Atual</h3>
       <p id="valorEstoqueAtualPainel" style="font-size:1.4em; font-weight:bold; color:#28a745;">R$ 0,00</p>
     </div>
   </div>
 
-  <!-- 🔸 Indicadores principais existentes -->
+  <!-- ?? Indicadores principais existentes -->
   <div style="display:flex; flex-wrap:wrap; gap:15px; margin-bottom:20px;">
     <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-      <h3>💰 Valor Total do Estoque Atual (Contábil)</h3>
+      <h3>?? Valor Total do Estoque Atual (Contábil)</h3>
       <p id="valorEstoque" style="font-size:1.4em; font-weight:bold; color:#28a745;">R$ 0,00</p>
     </div>
 
     <div style="flex:1; min-width:250px; background:#f8f9fa; border-radius:8px; padding:15px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-      <h3>💸 Valor Total das Saídas (Estimado)</h3>
+      <h3>?? Valor Total das Saídas (Estimado)</h3>
       <p id="valorSaidas" style="font-size:1.4em; font-weight:bold; color:#dc3545;">R$ 0,00</p>
     </div>
   </div>
 
-  <!-- 🔸 Entradas agrupadas -->
+  <!-- ?? Entradas agrupadas -->
   <h3 style="margin-top:25px;"><i class="fa fa-file-invoice"></i> Entradas Agrupadas por Nota Fiscal</h3>
   <div class="table-wrap">
     <table id="tabelaFinanceiro">
@@ -1216,11 +1232,11 @@
    <section id="usuarios" class="section" style="display:none;">
   <h2><i class="fa fa-users"></i> Gerenciar Usuários e Perfis</h2>
   <p style="color:#555; font-size:14px;">
-    ⚠️ <b>Funcionalidade Firebase:</b> A criação e autenticação de e-mails/senhas são feitas diretamente no Firebase.
+    ?? <b>Funcionalidade Firebase:</b> A criação e autenticação de e-mails/senhas são feitas diretamente no Firebase.
     Aqui você gerencia apenas perfis e metadados locais.
   </p>
 
-  <!-- 🧍 Cadastro / Edição -->
+  <!-- ?? Cadastro / Edição -->
   <div class="input-row" style="margin-top:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
     <input id="usuarioNome" type="text" placeholder="Nome Completo" class="flex" />
     <input id="usuarioEmail" type="email" placeholder="E-mail (ID do Firebase)" class="flex" />
@@ -1238,12 +1254,12 @@
     </button>
   </div>
 
-  <!-- 🔍 Campo de busca + botão 🧹 -->
+  <!-- ?? Campo de busca + botão ?? -->
   <div style="display:flex; align-items:center; gap:8px; margin-top:10px; margin-bottom:10px;">
     <input
       id="filtroUsuarios"
       type="text"
-      placeholder="🔍 Buscar por nome ou e-mail"
+      placeholder="?? Buscar por nome ou e-mail"
       oninput="filtrarUsuarios()"
       style="flex:1; min-width:250px;"
     />
@@ -1253,7 +1269,7 @@
     </button>
   </div>
 
-  <!-- 📋 Tabela de usuários -->
+  <!-- ?? Tabela de usuários -->
   <div class="table-wrap">
     <table id="tabelaUsuarios">
       <thead>
@@ -1275,18 +1291,18 @@
 <section id="errosProblemas" class="section" style="display:none;">
   <h2><i class="fa fa-bug"></i> Registro de Melhorias, Erros ou Problemas</h2>
 
-  <!-- 🔸 Formulário de novo relato -->
+  <!-- ?? Formulário de novo relato -->
   <div class="input-row" style="margin-bottom:10px; gap:8px; flex-wrap:wrap;">
     <input id="erroData" type="date" style="width:160px;" readonly />
     <input id="erroTitulo" type="text" placeholder="Título do Erro ou Problema" style="flex:1; min-width:300px;" />
 
     <select id="erroSituacao" style="min-width:180px;">
       <option value="">Selecione a Situação</option>
-      <option>🔴 Emergência</option>
-      <option>🟠 Muito Urgente</option>
-      <option>🟡 Urgente</option>
-      <option>🟢 Pouco Urgente</option>
-      <option>🔵 Não Urgente</option>
+      <option>?? Emergência</option>
+      <option>?? Muito Urgente</option>
+      <option>?? Urgente</option>
+      <option>?? Pouco Urgente</option>
+      <option>?? Não Urgente</option>
     </select>
 
     <input id="erroPrevisao" type="date" placeholder="Previsão de Conclusão" style="width:180px;" />
@@ -1298,18 +1314,18 @@
 
   <textarea
   id="erroDescricao"
-  placeholder="Relate aqui qualquer erro, falha ou ideia para aprimorar o sistema ✨"
+  placeholder="Relate aqui qualquer erro, falha ou ideia para aprimorar o sistema ?"
   rows="3"
   style="width:98%; margin-bottom:10px; border-radius:6px; padding:8px;"
 ></textarea>
 
 
-  <!-- 🔹 Filtro -->
+  <!-- ?? Filtro -->
   <div style="margin-bottom:10px; display:flex; gap:8px; align-items:center;">
     <input
       id="filtroErros"
       type="text"
-      placeholder="🔍 Buscar por título, situação ou parecer"
+      placeholder="?? Buscar por título, situação ou parecer"
       style="flex:1;"
       oninput="filtrarErros()"
     />
@@ -1318,7 +1334,7 @@
     </button>
   </div>
 
-  <!-- 🔸 Tabela de Erros -->
+  <!-- ?? Tabela de Erros -->
   <div class="table-wrap">
     <table id="tabelaErros">
       <thead>
@@ -1341,7 +1357,7 @@
 
 
 
-<!-- === 🔥 FIREBASE LOGIN E SINCRONIZAÇÃO === -->
+<!-- === ?? FIREBASE LOGIN E SINCRONIZAÇÃO === -->
 <script type="module" defer>
   import {
     initializeApp
@@ -1361,12 +1377,12 @@
     setDoc,
     getDoc,
     onSnapshot,
-    collection,     // 👈 ADICIONADO
-    getDocs,        // 👈 ADICIONADO
+    collection,     // ?? ADICIONADO
+    getDocs,        // ?? ADICIONADO
 	deleteDoc
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  // 🔐 Configuração do Firebase
+  // ?? Configuração do Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyCxhDaVIiLuNCagXOkyOSYC0El8KzbGfDw",
     authDomain: "oralunicestoque.firebaseapp.com",
@@ -1376,20 +1392,20 @@
     appId: "1:660233908877:web:2a6c9cd10b056b41bde8c4"
   };
 
-  // 🚀 Inicializa Firebase e Firestore
+  // ?? Inicializa Firebase e Firestore
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  // 🔹 Torna acessível globalmente para funções fora do módulo
+  // ?? Torna acessível globalmente para funções fora do módulo
   window.db = db;
   window.auth = auth;
   window.doc = doc;
   window.setDoc = setDoc;
   window.getDoc = getDoc;
   window.onSnapshot = onSnapshot;
-  window.collection = collection;   // 👈 ADICIONADO
-  window.getDocs = getDocs;         // 👈 ADICIONADO
+  window.collection = collection;   // ?? ADICIONADO
+  window.getDocs = getDocs;         // ?? ADICIONADO
   window.deleteDoc = deleteDoc;
 
   const estoqueRef = doc(db, "estoqueGlobal", "estoque");
@@ -1442,7 +1458,7 @@ async function carregarProdutosMesclados() {
     // salva e atualiza UI
     if (typeof salvarTodosLocal === "function") salvarTodosLocal();
     if (typeof atualizarTabelaProdutos === "function") atualizarTabelaProdutos();
-    console.log("✅ carregarProdutosMesclados: produtos carregados =", window.produtos.length);
+    console.log("? carregarProdutosMesclados: produtos carregados =", window.produtos.length);
     return window.produtos;
   } catch (err) {
     console.error("Erro em carregarProdutosMesclados:", err);
@@ -1451,7 +1467,7 @@ async function carregarProdutosMesclados() {
 }
 
 // ===================================================
-// 🔐 LOGIN E AUTENTICAÇÃO (100% COMPATÍVEL COM SEU SCRIPT)
+// ?? LOGIN E AUTENTICAÇÃO (100% COMPATÍVEL COM SEU SCRIPT)
 // ===================================================
 
 // === FUNÇÃO DE LOGIN (garante que está sempre definida) ===
@@ -1466,7 +1482,7 @@ window.fazerLogin = async function () {
   const senha = senhaEl?.value?.trim() || "";
 
   if (!usuario || !senha) {
-    if (msgEl) { msgEl.style.display = "block"; msgEl.style.color = "red"; msgEl.textContent = "⚠️ Preencha e-mail e senha!"; }
+    if (msgEl) { msgEl.style.display = "block"; msgEl.style.color = "red"; msgEl.textContent = "?? Preencha e-mail e senha!"; }
     return;
   }
 
@@ -1476,26 +1492,26 @@ window.fazerLogin = async function () {
     // signInWithEmailAndPassword deve existir (importado)
     const userCredential = await signInWithEmailAndPassword(auth, email, senha);
     const user = userCredential.user;
-    if (msgEl) { msgEl.style.display = "block"; msgEl.style.color = "green"; msgEl.textContent = "✅ Login realizado com sucesso!"; }
-    console.log("✅ Usuário logado:", user.email);
+    if (msgEl) { msgEl.style.display = "block"; msgEl.style.color = "green"; msgEl.textContent = "? Login realizado com sucesso!"; }
+    console.log("? Usuário logado:", user.email);
 
     if (typeof mostrarSistema === "function") mostrarSistema(user);
   } catch (error) {
-    console.error("❌ Erro ao logar:", error);
+    console.error("? Erro ao logar:", error);
     if (msgEl) { msgEl.style.display = "block"; msgEl.style.color = "red"; }
     const code = error?.code || "";
     if (msgEl) {
-      if (code === "auth/wrong-password" || code === "auth/invalid-credential") msgEl.textContent = "❌ Senha incorreta ou inválida!";
-      else if (code === "auth/user-not-found") msgEl.textContent = "❌ Usuário não encontrado!";
-      else if (code === "auth/too-many-requests") msgEl.textContent = "⚠️ Muitas tentativas. Tente mais tarde.";
-      else msgEl.textContent = "❌ Erro ao fazer login.";
+      if (code === "auth/wrong-password" || code === "auth/invalid-credential") msgEl.textContent = "? Senha incorreta ou inválida!";
+      else if (code === "auth/user-not-found") msgEl.textContent = "? Usuário não encontrado!";
+      else if (code === "auth/too-many-requests") msgEl.textContent = "?? Muitas tentativas. Tente mais tarde.";
+      else msgEl.textContent = "? Erro ao fazer login.";
     }
   }
 };
 
 
 
-// 🔹 Permite login com tecla Enter
+// ?? Permite login com tecla Enter
 document.addEventListener("DOMContentLoaded", () => {
   const usuarioEl = document.getElementById("usuarioLogin");
   const senhaEl = document.getElementById("senhaLogin");
@@ -1514,56 +1530,56 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ============================================================
-// ✅ Firestore — Controle definitivo de gravação (fila + autoajuste + snapshot lock)
+// ? Firestore — Controle definitivo de gravação (fila + autoajuste + snapshot lock)
 // ============================================================
 import { writeBatch } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // ============================================================
-// 🔒 Controle global e fila sequencial
+// ?? Controle global e fila sequencial
 // ============================================================
 window._filaDeGravacoes = [];
 window._processandoFila = false;
-window._delayEntreLotes = 3000; // 🔹 pausa segura entre commits
+window._delayEntreLotes = 3000; // ?? pausa segura entre commits
 window.bloquearAtualizacaoSnapshot = false;
 
 // ============================================================
-// ⚙️ Executor da fila — garante 1 commit por vez
+// ?? Executor da fila — garante 1 commit por vez
 // ============================================================
 async function processarFila() {
   if (window._processandoFila) return;
   window._processandoFila = true;
 
-  console.log("🚀 Iniciando processamento da fila de gravações...");
+  console.log("?? Iniciando processamento da fila de gravações...");
 
   while (window._filaDeGravacoes.length > 0) {
     const tarefa = window._filaDeGravacoes.shift();
 
     try {
       await tarefa();
-      console.log(`⏸️ Aguardando ${window._delayEntreLotes / 1000}s antes do próximo commit...`);
+      console.log(`?? Aguardando ${window._delayEntreLotes / 1000}s antes do próximo commit...`);
       await new Promise(r => setTimeout(r, window._delayEntreLotes));
     } catch (e) {
       if (e.code === "resource-exhausted") {
-        console.warn("⚠️ Firestore sobrecarregado. Aguardando 5s e repondo tarefa na fila...");
+        console.warn("?? Firestore sobrecarregado. Aguardando 5s e repondo tarefa na fila...");
         window._filaDeGravacoes.unshift(tarefa);
         await new Promise(r => setTimeout(r, 5000));
       } else {
-        console.error("❌ Erro inesperado na gravação:", e);
+        console.error("? Erro inesperado na gravação:", e);
       }
     }
   }
 
-  console.log("✅ Todas as gravações na fila foram concluídas.");
+  console.log("? Todas as gravações na fila foram concluídas.");
   window._processandoFila = false;
 }
 
 // ============================================================
-// 💾 Adiciona lotes à fila — garante execução ordenada e segura
+// ?? Adiciona lotes à fila — garante execução ordenada e segura
 // ============================================================
 function adicionarLotesNaFila(lista, refFn, nome = "coleção") {
   if (!Array.isArray(lista) || lista.length === 0) return;
 
-  const TAMANHO_LOTE = 20; // 🔹 seguro para Firestore (evita resource-exhausted)
+  const TAMANHO_LOTE = 20; // ?? seguro para Firestore (evita resource-exhausted)
   const totalLotes = Math.ceil(lista.length / TAMANHO_LOTE);
 
   for (let i = 0; i < lista.length; i += TAMANHO_LOTE) {
@@ -1580,16 +1596,16 @@ function adicionarLotesNaFila(lista, refFn, nome = "coleção") {
         batch.set(refFn(id), obj, { merge: true });
       });
 
-      console.log(`📦 Gravando ${nome} — lote ${loteIndex}/${totalLotes} (${chunk.length} docs)...`);
+      console.log(`?? Gravando ${nome} — lote ${loteIndex}/${totalLotes} (${chunk.length} docs)...`);
       const t0 = performance.now();
       await batch.commit();
       const tempo = ((performance.now() - t0) / 1000).toFixed(2);
-      console.log(`✅ ${nome}: lote ${loteIndex}/${totalLotes} salvo em ${tempo}s`);
+      console.log(`? ${nome}: lote ${loteIndex}/${totalLotes} salvo em ${tempo}s`);
 
-      // 🔓 Reativa snapshot depois de 3s (seguro e leve)
+      // ?? Reativa snapshot depois de 3s (seguro e leve)
       setTimeout(() => {
         window.bloquearAtualizacaoSnapshot = false;
-        console.log("🔓 Snapshot reativado.");
+        console.log("?? Snapshot reativado.");
       }, 3000);
     });
   }
@@ -1598,7 +1614,7 @@ function adicionarLotesNaFila(lista, refFn, nome = "coleção") {
 }
 
 // ============================================================
-// 📦 Funções específicas (mantém compatibilidade total)
+// ?? Funções específicas (mantém compatibilidade total)
 // ============================================================
 window.salvarProdutosNoFirebase = async lista => {
   const estoqueRef = doc(db, "estoqueGlobal", "estoque");
@@ -1622,12 +1638,12 @@ window.salvarErrosProblemasNoFirebase = async lista => {
 };
 
 // ============================================================
-// 👤 Usuários e documento principal — gravações leves
+// ?? Usuários e documento principal — gravações leves
 // ============================================================
 window.salvarUsuariosNoFirebase = async lista => {
   const ref = doc(db, "estoqueGlobal", "usuarios");
   await setDoc(ref, { usuarios: lista }, { merge: true });
-  console.log("✅ Usuários salvos (documento leve).");
+  console.log("? Usuários salvos (documento leve).");
 };
 
 window.salvarResumoDoEstoque = async () => {
@@ -1642,18 +1658,18 @@ window.salvarResumoDoEstoque = async () => {
     limites: window.limites || [],
     usuarios: window.usuarios || []
   }, { merge: true });
-  console.log("✅ Documento principal 'estoque' atualizado.");
+  console.log("? Documento principal 'estoque' atualizado.");
 };
 
 // ============================================================
-// 🧩 Inicialização segura e log inicial
+// ?? Inicialização segura e log inicial
 // ============================================================
 if (!Array.isArray(window.produtos)) window.produtos = [];
 if (!Array.isArray(window.entradas)) window.entradas = [];
 if (!Array.isArray(window.saidas)) window.saidas = [];
 if (!Array.isArray(window.usuarios)) window.usuarios = [];
 
-console.log("📦 Dados carregados do localStorage:", {
+console.log("?? Dados carregados do localStorage:", {
   produtos: window.produtos.length,
   entradas: window.entradas.length,
   saidas: window.saidas.length,
@@ -1667,7 +1683,7 @@ console.log("📦 Dados carregados do localStorage:", {
 
 
 // ============================================================
-// 👥 Permissões (sem alterações)
+// ?? Permissões (sem alterações)
 // ============================================================
 window.PERMISSOES = {
   "ADMIN": { canView: ["boasVindas","dashboard","cadastro","entrada","saida","estoque","limites","valorHistorico","financeiro","relatorios","usuarios","errosProblemas"] },
@@ -1684,7 +1700,7 @@ window.PERMISSOES = {
 // -----------------------------
 function salvarTodosLocal() {
   try {
-    // 🔹 Cria uma cópia leve dos dados (amostra, não o banco inteiro)
+    // ?? Cria uma cópia leve dos dados (amostra, não o banco inteiro)
     const dadosSistema = {
       produtos: (window.produtos || []).slice(0, 20),
       entradas: (window.entradas || []).slice(0, 10),
@@ -1696,7 +1712,7 @@ function salvarTodosLocal() {
 
     localStorage.setItem("dadosSistema", JSON.stringify(dadosSistema));
 
-    console.log("💾 Cache local leve salvo:", {
+    console.log("?? Cache local leve salvo:", {
       produtos: dadosSistema.produtos.length,
       entradas: dadosSistema.entradas.length,
       saidas: dadosSistema.saidas.length,
@@ -1704,7 +1720,7 @@ function salvarTodosLocal() {
       errosProblemas: dadosSistema.errosProblemas.length
     });
   } catch (e) {
-    console.warn("⚠️ Cache local ignorado (QuotaExceededError prevenido):", e);
+    console.warn("?? Cache local ignorado (QuotaExceededError prevenido):", e);
   }
 }
 window.salvarTodosLocal = salvarTodosLocal;
@@ -1723,9 +1739,9 @@ function carregarTodosLocal() {
     window.usuarios = Array.isArray(dadosLocais.usuarios) ? dadosLocais.usuarios : (window.usuarios || []);
     window.errosProblemas = Array.isArray(dadosLocais.errosProblemas) ? dadosLocais.errosProblemas : (window.errosProblemas || []);
 
-    console.log("📦 Dados locais restaurados. Produtos:", window.produtos.length, "Erros:", window.errosProblemas.length);
+    console.log("?? Dados locais restaurados. Produtos:", window.produtos.length, "Erros:", window.errosProblemas.length);
   } catch (e) {
-    console.error("❌ Erro ao carregar dados locais:", e);
+    console.error("? Erro ao carregar dados locais:", e);
     window.produtos = window.produtos || [];
     window.entradas = window.entradas || [];
     window.saidas = window.saidas || [];
@@ -1737,20 +1753,20 @@ function carregarTodosLocal() {
 carregarTodosLocal(); // chame uma vez na inicialização
 
 
-// ✅ Torna a função acessível globalmente
+// ? Torna a função acessível globalmente
 window.salvarTodosLocal = salvarTodosLocal;
 
 
 // ===================================================
-// 🌐 CARREGAMENTO E SINCRONIZAÇÃO EM TEMPO REAL (VERSÃO FINAL)
+// ?? CARREGAMENTO E SINCRONIZAÇÃO EM TEMPO REAL (VERSÃO FINAL)
 // ===================================================
 async function carregarDadosDoFirestore() {
-  console.log("🔄 Iniciando carregamento e sincronização do Firestore...");
+  console.log("?? Iniciando carregamento e sincronização do Firestore...");
 
   try {
     const estoqueRef = doc(db, "estoqueGlobal", "estoque");
 
-    // ======== 1️⃣ Escuta o documento principal (dados gerais) ========
+    // ======== 1?? Escuta o documento principal (dados gerais) ========
     onSnapshot(estoqueRef, async (docSnap) => {
       try {
         if (!docSnap.exists()) {
@@ -1760,37 +1776,37 @@ async function carregarDadosDoFirestore() {
             usuarios: []
           }, { merge: true });
 
-          console.log("📄 Documento 'estoque' criado (inicial).");
+          console.log("?? Documento 'estoque' criado (inicial).");
           return;
         }
 
         if (window.bloquearAtualizacaoSnapshot) {
-          console.log("⏸️ Snapshot ignorado (bloqueio ativo).");
+          console.log("?? Snapshot ignorado (bloqueio ativo).");
           return;
         }
 
         const data = docSnap.data() || {};
 
-        // 🔹 Atualiza dados gerais (que ficam no documento)
+        // ?? Atualiza dados gerais (que ficam no documento)
         window.limites = Array.isArray(data.limites) ? data.limites : [];
         window.resumo = data.resumo || {};
 
-        // 🔹 Atualiza cache local (somente dados leves)
+        // ?? Atualiza cache local (somente dados leves)
         salvarTodosLocal?.();
 
-        // 🔹 Atualiza interface leve
+        // ?? Atualiza interface leve
         atualizarTabelaLimites?.();
         atualizarTabelaUsuarios?.();
         atualizarDashboard?.();
         atualizarPainelFinanceiro?.();
 
-        console.log("✅ Documento principal sincronizado com sucesso.");
+        console.log("? Documento principal sincronizado com sucesso.");
       } catch (err) {
-        console.error("❌ Erro no snapshot do documento principal:", err);
+        console.error("? Erro no snapshot do documento principal:", err);
       }
     });
 
-    // ======== 2️⃣ Escuta a subcoleção de produtos em tempo real ========
+    // ======== 2?? Escuta a subcoleção de produtos em tempo real ========
     const produtosCol = collection(estoqueRef, "produtos");
     onSnapshot(produtosCol, (snap) => {
       try {
@@ -1802,22 +1818,22 @@ async function carregarDadosDoFirestore() {
         atualizarDashboard?.();
         atualizarPainelFinanceiro?.();
 
-        console.log(`🔥 Produtos sincronizados em tempo real: ${window.produtos.length}`);
+        console.log(`?? Produtos sincronizados em tempo real: ${window.produtos.length}`);
       } catch (err) {
-        console.error("❌ Erro ao processar produtos:", err);
+        console.error("? Erro ao processar produtos:", err);
       }
     });
 
-    // ======== 3️⃣ Escuta subcoleções de entradas, saídas e erros ========
+    // ======== 3?? Escuta subcoleções de entradas, saídas e erros ========
     const escutarColecao = (nome, destino, atualizarFn) => {
       onSnapshot(collection(estoqueRef, nome), (snap) => {
         try {
           window[destino] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
           salvarTodosLocal?.();
           atualizarFn?.();
-          console.log(`📦 ${nome} sincronizados (${window[destino].length})`);
+          console.log(`?? ${nome} sincronizados (${window[destino].length})`);
         } catch (e) {
-          console.error(`❌ Erro ao sincronizar ${nome}:`, e);
+          console.error(`? Erro ao sincronizar ${nome}:`, e);
         }
       });
     };
@@ -1826,10 +1842,10 @@ async function carregarDadosDoFirestore() {
     escutarColecao("saidas", "saidas", atualizarTabelaSaidas);
     escutarColecao("errosProblemas", "errosProblemas", atualizarTabelaErros);
 
-    console.log("🟢 Escutas em tempo real configuradas com sucesso.");
+    console.log("?? Escutas em tempo real configuradas com sucesso.");
 
   } catch (erro) {
-    console.error("❌ Erro ao iniciar sincronização:", erro);
+    console.error("? Erro ao iniciar sincronização:", erro);
     mostrarMensagem?.("Erro ao conectar ao Firestore!", "erro");
   }
 }
@@ -1838,7 +1854,7 @@ async function carregarDadosDoFirestore() {
 
 
 // ============================================================
-// 🔁 SINCRONIZAÇÃO SEM PERMITIR PERFIL “USUARIO”
+// ?? SINCRONIZAÇÃO SEM PERMITIR PERFIL “USUARIO”
 // ============================================================
 async function sincronizarUsuariosDoAuth() {
   try {
@@ -1855,7 +1871,7 @@ async function sincronizarUsuariosDoAuth() {
     );
 
     if (usuarioLocal) {
-      console.log("✔ Usuário encontrado localmente com perfil:", usuarioLocal.perfil);
+      console.log("? Usuário encontrado localmente com perfil:", usuarioLocal.perfil);
       return; // NÃO ALTERA PERFIL
     }
 
@@ -1871,22 +1887,22 @@ async function sincronizarUsuariosDoAuth() {
     );
 
     if (usuarioFS) {
-      console.log("✔ Encontrado no Firestore com perfil:", usuarioFS.perfil);
+      console.log("? Encontrado no Firestore com perfil:", usuarioFS.perfil);
       window.usuarios.push(usuarioFS);
       salvarTodosLocal?.();
       return;
     }
 
-    // 3) SE NÃO EXISTE EM NENHUM LUGAR → CRIAR SEM PERFIL
+    // 3) SE NÃO EXISTE EM NENHUM LUGAR ? CRIAR SEM PERFIL
     const novo = {
       uid: userAtual.uid,
       nome: userAtual.displayName || userAtual.email.split("@")[0],
       email: userAtual.email,
-      perfil: "", // 🔥 nunca colocar "USUARIO"
+      perfil: "", // ?? nunca colocar "USUARIO"
       criadoEm: new Date().toISOString()
     };
 
-    console.warn("⚠ Usuário criado sem perfil. Defina no Gerenciar Usuários:", novo.email);
+    console.warn("? Usuário criado sem perfil. Defina no Gerenciar Usuários:", novo.email);
 
     window.usuarios.push(novo);
     salvarTodosLocal?.();
@@ -1941,11 +1957,11 @@ async function sincronizarUsuariosDoAuth() {
 // =================================================================================
 
 window.salvarUsuarioLocal = async function() {
-  // 🚨 PASSO 1: Guarda o contexto atual do administrador logado
+  // ?? PASSO 1: Guarda o contexto atual do administrador logado
   const adminUser = auth.currentUser;
   const adminEmailLogado = adminUser ? adminUser.email.toLowerCase() : null;
 
-  // 1️⃣ Coleta e validação dos campos
+  // 1?? Coleta e validação dos campos
   const nomeEl = document.getElementById("usuarioNome");
   const emailEl = document.getElementById("usuarioEmail");
   const senhaEl = document.getElementById("usuarioSenha");
@@ -1969,7 +1985,7 @@ window.salvarUsuarioLocal = async function() {
         return mostrarMensagem("A senha é obrigatória (mín. 6 caracteres) para um novo usuário.", "erro");
       }
 
-      // ✅ Guarda o admin atual antes da criação
+      // ? Guarda o admin atual antes da criação
       const userBefore = auth.currentUser;
 
       // Cria o novo usuário no Firebase Auth (isso faz login automático)
@@ -1980,7 +1996,7 @@ window.salvarUsuarioLocal = async function() {
         return;
       }
 
-      // 🔁 Reautentica o admin original imediatamente após criar o novo usuário
+      // ?? Reautentica o admin original imediatamente após criar o novo usuário
       if (userBefore) {
         await auth.updateCurrentUser(userBefore);
       }
@@ -1996,19 +2012,19 @@ window.salvarUsuarioLocal = async function() {
 
       window.usuarios.push(novoUsuarioPerfil);
 
-      mostrarMensagem(`✅ Usuário "${nome}" criado no Firebase Auth e perfil salvo!`, "sucesso");
+      mostrarMensagem(`? Usuário "${nome}" criado no Firebase Auth e perfil salvo!`, "sucesso");
     } else {
-      // ✏️ Atualiza perfil existente
+      // ?? Atualiza perfil existente
       window.usuarios[index].nome = nome;
       window.usuarios[index].perfil = perfil;
       if (senha) {
-        mostrarMensagem("⚠️ Senha não pode ser alterada aqui. Use o painel do Firebase.", "info");
+        mostrarMensagem("?? Senha não pode ser alterada aqui. Use o painel do Firebase.", "info");
       } else {
-        mostrarMensagem(`✏️ Perfil de "${nome}" atualizado com sucesso!`, "sucesso");
+        mostrarMensagem(`?? Perfil de "${nome}" atualizado com sucesso!`, "sucesso");
       }
     }
 
-    // 🧹 Remove duplicatas
+    // ?? Remove duplicatas
     const uidsUnicos = new Set();
     window.usuarios = window.usuarios.filter(u => {
       if (uidsUnicos.has(u.uid)) return false;
@@ -2016,18 +2032,18 @@ window.salvarUsuarioLocal = async function() {
       return true;
     });
 
-    // 💾 Salva local e envia para o Firestore
+    // ?? Salva local e envia para o Firestore
     if (typeof salvarTodosLocal === "function") salvarTodosLocal();
     if (typeof window.salvarUsuariosNoFirebase === "function") {
       await window.salvarUsuariosNoFirebase(window.usuarios);
     }
 
-    // 🔄 Mantém o admin original autenticado
+    // ?? Mantém o admin original autenticado
     if (adminUser && auth.currentUser?.uid !== adminUser.uid) {
       await auth.updateCurrentUser(adminUser);
     }
 
-    // 🔁 Atualiza tabela e limpa campos
+    // ?? Atualiza tabela e limpa campos
     if (typeof atualizarTabelaUsuarios === "function") atualizarTabelaUsuarios();
 
     nomeEl.value = "";
@@ -2036,7 +2052,7 @@ window.salvarUsuarioLocal = async function() {
     perfilEl.value = "";
 
   } catch (e) {
-    console.error("❌ Erro ao salvar usuário:", e);
+    console.error("? Erro ao salvar usuário:", e);
     mostrarMensagem("Erro ao salvar usuário. Veja o console para detalhes.", "erro");
 
     // Caso ocorra algum erro, reautentica o admin para segurança
@@ -2051,7 +2067,7 @@ window.salvarUsuarioLocal = async function() {
 };
 
 /**
- * 🔹 Função utilitária para preencher os campos para EDIÇÃO (Exposta no window)
+ * ?? Função utilitária para preencher os campos para EDIÇÃO (Exposta no window)
  */
 window.editarUsuarioLocal = function(i) {
     const usuario = window.usuarios[i];
@@ -2069,10 +2085,10 @@ window.editarUsuarioLocal = function(i) {
 }
 
 /**
- * 🔹 Função para EXCLUIR APENAS O PERFIL LOCAL (Exposta no window)
+ * ?? Função para EXCLUIR APENAS O PERFIL LOCAL (Exposta no window)
  */
 window.excluirUsuarioLocal = function(i) {
-    // 🚨 VERIFICAÇÃO DE SEGURANÇA
+    // ?? VERIFICAÇÃO DE SEGURANÇA
     if (!window.usuarios[i]) {
         console.warn("Usuário com índice inválido, recarregando tabela.");
         window.atualizarTabelaUsuarios();
@@ -2095,7 +2111,7 @@ window.excluirUsuarioLocal = function(i) {
 }
 
 /**
- * 🔹 Função para ATUALIZAR A TABELA de Usuários na interface (Exposta no window)
+ * ?? Função para ATUALIZAR A TABELA de Usuários na interface (Exposta no window)
  */
 window.atualizarTabelaUsuarios = function() {
     const tbody = document.querySelector("#tabelaUsuarios tbody");
@@ -2129,14 +2145,14 @@ window.atualizarTabelaUsuarios = function() {
 };
 
 /**
- * 🔹 Função auxiliar de filtro (Exposta no window)
+ * ?? Função auxiliar de filtro (Exposta no window)
  */
 window.filtrarUsuarios = function() {
     window.atualizarTabelaUsuarios();
 }
 
 /**
- * 🔹 Limpa o filtro de busca E os campos do formulário de usuário
+ * ?? Limpa o filtro de busca E os campos do formulário de usuário
  */
 window.limparFiltroUsuarios = function() {
   const nome = document.getElementById("usuarioNome");
@@ -2148,7 +2164,7 @@ window.limparFiltroUsuarios = function() {
   if (nome) nome.value = "";
   if (email) {
     email.value = "";
-    email.disabled = false; // ✅ Desbloqueia o campo SEMPRE
+    email.disabled = false; // ? Desbloqueia o campo SEMPRE
   }
   if (senha) senha.value = "";
   if (perfil) perfil.value = "";
@@ -2158,7 +2174,7 @@ window.limparFiltroUsuarios = function() {
     window.atualizarTabelaUsuarios();
   }
 
-  // 💬 Muda apenas a mensagem para clareza
+  // ?? Muda apenas a mensagem para clareza
   if (typeof mostrarMensagem === "function") {
     mostrarMensagem("Campos limpos. Pronto para cadastrar novo usuário.", "info");
   }
@@ -2190,7 +2206,7 @@ async function mostrarSistema(user) {
   loginView.style.display = "none";
   mainApp.style.display = "block";
 
-  // 🔵 Aguarda Firestore trazer o perfil verdadeiro (EVITA PERFIL = USUARIO)
+  // ?? Aguarda Firestore trazer o perfil verdadeiro (EVITA PERFIL = USUARIO)
   const dados = await carregarPerfilAntesDeMostrar(user);
 
   let nome, perfil;
@@ -2199,7 +2215,7 @@ async function mostrarSistema(user) {
     nome = dados.nome;
     perfil = normalizarPerfil(dados.perfil);
   } else {
-    // ⚠️ Se não encontrar perfil, usa GERENCIA PARA NÃO BLOQUEAR O SISTEMA
+    // ?? Se não encontrar perfil, usa GERENCIA PARA NÃO BLOQUEAR O SISTEMA
     nome = user.email.split("@")[0];
     perfil = "GERENCIA";
   }
@@ -2222,14 +2238,14 @@ async function mostrarSistema(user) {
   // aplica as permissões
   aplicarPermissoesNoMenu();
 
-  console.log("✔ Perfil carregado corretamente:", window.usuarioAtual);
+  console.log("? Perfil carregado corretamente:", window.usuarioAtual);
 }
 
 
 
 
   // ==========================================================
-  // ⚙️ RECARREGA TABELAS E DASHBOARDS
+  // ?? RECARREGA TABELAS E DASHBOARDS
   // ==========================================================
   if (typeof carregarDadosDoFirestore === "function") {
     carregarDadosDoFirestore().then(() => {
@@ -2247,33 +2263,33 @@ async function mostrarSistema(user) {
 
 
 // ====================================================
-// 🔐 AUTENTICAÇÃO E SINCRONIZAÇÃO EM TEMPO REAL (CORREÇÃO FINAL)
+// ?? AUTENTICAÇÃO E SINCRONIZAÇÃO EM TEMPO REAL (CORREÇÃO FINAL)
 // ====================================================
 // ====================================================
-// 🔐 AUTENTICAÇÃO E SINCRONIZAÇÃO EM TEMPO REAL (VERSÃO FINAL)
+// ?? AUTENTICAÇÃO E SINCRONIZAÇÃO EM TEMPO REAL (VERSÃO FINAL)
 // ====================================================
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    console.warn("👋 Nenhum usuário logado — aguardando login...");
+    console.warn("?? Nenhum usuário logado — aguardando login...");
     return;
   }
 
-  console.log(`✅ Usuário logado: ${user.email}`);
-  console.log("🔄 Iniciando carregamento e sincronização do Firestore...");
+  console.log(`? Usuário logado: ${user.email}`);
+  console.log("?? Iniciando carregamento e sincronização do Firestore...");
 
   try {
-    // 🔹 1) Carrega dados iniciais e ativa listener principal
+    // ?? 1) Carrega dados iniciais e ativa listener principal
     await carregarDadosDoFirestore();
 
-    // 🔹 2) Sincroniza usuários do Auth (se existir função)
+    // ?? 2) Sincroniza usuários do Auth (se existir função)
     if (typeof sincronizarUsuariosDoAuth === "function") {
       await sincronizarUsuariosDoAuth();
     }
 
-    console.log("🟢 Escutas em tempo real configuradas com sucesso.");
+    console.log("?? Escutas em tempo real configuradas com sucesso.");
 
   } catch (erroGeral) {
-    console.error("❌ Erro durante a inicialização da sincronização:", erroGeral);
+    console.error("? Erro durante a inicialização da sincronização:", erroGeral);
     if (typeof mostrarMensagem === "function") {
       mostrarMensagem("Erro ao conectar e sincronizar com Firestore!", "erro");
     }
@@ -2285,7 +2301,7 @@ onAuthStateChanged(auth, async (user) => {
   // === LOGOUT ===
 window.logout = async function () {
   try {
-    console.log("🚪 Iniciando logout...");
+    console.log("?? Iniciando logout...");
 
     // Se estiver autenticado no Firebase
     if (typeof signOut === "function" && typeof auth !== "undefined") {
@@ -2315,9 +2331,9 @@ window.logout = async function () {
       mostrarMensagem("Sessão encerrada com sucesso!", "info");
     }
 
-    console.log("✅ Logout concluído com sucesso.");
+    console.log("? Logout concluído com sucesso.");
   } catch (err) {
-    console.error("❌ Erro ao sair:", err);
+    console.error("? Erro ao sair:", err);
     if (typeof mostrarMensagem === "function") {
       mostrarMensagem("Erro ao sair da conta!", "erro");
     }
@@ -2332,7 +2348,7 @@ window.auth = auth;
 window.showSection = function (id) {
 
   if (!window.validarPermissao(id)) {
-    mostrarMensagem("❌ Você não tem permissão para acessar esta seção!", "erro");
+    mostrarMensagem("? Você não tem permissão para acessar esta seção!", "erro");
     return;
   }
 
@@ -2403,7 +2419,7 @@ window.validarPermissao = function (secao) {
 
 
 // =============================
-// ✅ CONTROLE DO MENU LATERAL (VERSÃO FINAL FUNCIONAL)
+// ? CONTROLE DO MENU LATERAL (VERSÃO FINAL FUNCIONAL)
 // =============================
 window.toggleSidebar = function () {
   const sidebar = document.getElementById("sidebar");
@@ -2487,7 +2503,7 @@ window.aplicarPermissoesNoMenu = function () {
 };
 
 
-// 🔹 Abre a seção "Erros e Problemas"
+// ?? Abre a seção "Erros e Problemas"
 window.abrirErrosProblemas = function() {
   // Oculta todas as seções
   document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
@@ -2504,17 +2520,17 @@ window.abrirErrosProblemas = function() {
     atualizarTabelaErros();
   }
 
-  console.log("🐞 Seção de Erros e Problemas aberta com sucesso.");
+  console.log("?? Seção de Erros e Problemas aberta com sucesso.");
 };
 
-// 🔹 Abre a seção "Valor Histórico"
+// ?? Abre a seção "Valor Histórico"
 window.abrirValorHistorico = function () {
   document.querySelectorAll(".section").forEach(sec => (sec.style.display = "none"));
   const sec = document.getElementById("valorHistorico");
   if (sec) sec.style.display = "block";
   atualizarTabelaValorHistorico();
 };
-// 🔍 Filtra produtos pelo nome digitado
+// ?? Filtra produtos pelo nome digitado
 window.filtrarValorHistorico = function() {
   const filtro = document.getElementById("filtroValorHistorico").value.toLowerCase();
   const linhas = document.querySelectorAll("#tabelaValorHistorico tbody tr");
@@ -2525,7 +2541,7 @@ window.filtrarValorHistorico = function() {
   });
 };
 
-// 🧹 Limpa o campo de busca e mostra todos os produtos
+// ?? Limpa o campo de busca e mostra todos os produtos
 window.limparFiltroValorHistorico = function() {
   const campo = document.getElementById("filtroValorHistorico");
   if (campo) campo.value = "";
@@ -2558,7 +2574,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-// 🚨 CORREÇÃO DO EVENT LISTENER (para fechar ao clicar fora)
+// ?? CORREÇÃO DO EVENT LISTENER (para fechar ao clicar fora)
 document.addEventListener('click', (event) => {
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menuToggle');
@@ -2588,7 +2604,7 @@ document.addEventListener('click', (event) => {
 
 
 // =============================
-// ✅ MOSTRAR SEÇÕES DO SISTEMA
+// ? MOSTRAR SEÇÕES DO SISTEMA
 // =============================
 function showSection(id) {
   // Esconde todas as seções
@@ -2620,7 +2636,7 @@ function showSection(id) {
 }
 
 // =============================
-// ✅ MOSTRAR TELA DE BOAS-VINDAS APÓS LOGIN
+// ? MOSTRAR TELA DE BOAS-VINDAS APÓS LOGIN
 // =============================
 // Dentro do onAuthStateChanged (lá no seu script type="module"),
 // troque qualquer chamada "showSection('dashboard')" por isto:
@@ -2628,7 +2644,7 @@ showSection('boasVindas');
 
 
 /**
- * 🔹 Exibe uma notificação de "toast" no rodapé
+ * ?? Exibe uma notificação de "toast" no rodapé
  */
 function mostrarMensagem(texto, tipo = "info") {
   const box = document.getElementById("toastMessage");
@@ -2653,7 +2669,7 @@ function mostrarMensagem(texto, tipo = "info") {
 }
 
 /**
- * 🔹 Destaca o campo com erro
+ * ?? Destaca o campo com erro
  */
 function destacarErro(el, msg) {
   el.style.border = "2px solid red";
@@ -2662,7 +2678,7 @@ function destacarErro(el, msg) {
 }
 
 /**
- * 🔹 Remove marcações de erro
+ * ?? Remove marcações de erro
  */
 function limparErros(secaoId) {
     document.querySelectorAll(`#${secaoId} input, #${secaoId} select`).forEach(el => {
@@ -2672,7 +2688,7 @@ function limparErros(secaoId) {
 }
 
 /**
- * 🔹 Função genérica — limpa todos os inputs e selects dentro de uma seção
+ * ?? Função genérica — limpa todos os inputs e selects dentro de uma seção
  */
 function limparCampos(secaoId) {
   const secao = document.getElementById(secaoId);
@@ -2689,7 +2705,7 @@ function limparCampos(secaoId) {
 }
 
 /**
- * 🔹 Amplia a imagem do produto no modal
+ * ?? Amplia a imagem do produto no modal
  */
 function ampliarImagem(src) {
   const modal = document.getElementById("imagemAmpliada");
@@ -2698,14 +2714,14 @@ function ampliarImagem(src) {
 }
 
 /**
- * 🔹 Função utilitária: busca código de barras do produto
+ * ?? Função utilitária: busca código de barras do produto
  */
 function buscarCodigoBarrasDoProduto(nome) {
     const p = produtos.find(p => p.nome === nome);
     return p ? p.codigoBarras : "-";
 }
 /**
- * 🔹 Leitor de QR Code integrado ao campo de código de barras
+ * ?? Leitor de QR Code integrado ao campo de código de barras
  * Compatível com leitor físico (USB) e câmera (QR)
  */
 function iniciarLeitorQRCode() {
@@ -2771,7 +2787,7 @@ function iniciarLeitorQRCode() {
           campoCodigo.dispatchEvent(new Event("input")); // dispara mudança
         }
 
-        // 🔹 NOVO: preenche automaticamente o nome, se existir no catálogo
+        // ?? NOVO: preenche automaticamente o nome, se existir no catálogo
         const produto = window.produtos?.find(p =>
           String(p.codBarras || p.codigoBarras || "").trim() === codigoLido
         );
@@ -2782,9 +2798,9 @@ function iniciarLeitorQRCode() {
             document.getElementById("saidaProduto");
 
           if (campoNome) campoNome.value = produto.nome || "";
-          mostrarMensagem(`✅ Produto identificado: ${produto.nome}`, "sucesso");
+          mostrarMensagem(`? Produto identificado: ${produto.nome}`, "sucesso");
         } else {
-          mostrarMensagem("⚠️ Código não encontrado no catálogo de produtos!", "erro");
+          mostrarMensagem("?? Código não encontrado no catálogo de produtos!", "erro");
         }
 
       } else if (scanning) {
@@ -2799,7 +2815,7 @@ function iniciarLeitorQRCode() {
 
 
 /**
- * 🔹 Atualiza o campo 'quantidade' no estoque global
+ * ?? Atualiza o campo 'quantidade' no estoque global
  */
 function atualizarEstoque(nomeProduto, quantidadeDelta, ultimoValor = null, lote = "", validade = "") {
   const produtoRef = produtos.find(
@@ -2811,7 +2827,7 @@ function atualizarEstoque(nomeProduto, quantidadeDelta, ultimoValor = null, lote
     qtdAtual += quantidadeDelta;
     produtoRef.quantidade = Math.max(0, qtdAtual);
 
-    // 🔹 Atualiza campos adicionais com dados da última entrada
+    // ?? Atualiza campos adicionais com dados da última entrada
     if (ultimoValor !== null && !isNaN(ultimoValor)) produtoRef.ultimoValor = Number(ultimoValor);
     if (lote) produtoRef.lote = lote;
     if (validade) produtoRef.validade = validade;
@@ -2827,7 +2843,7 @@ function atualizarEstoque(nomeProduto, quantidadeDelta, ultimoValor = null, lote
 // --- PADRONIZAÇÃO DE DADOS ---
 
 /**
- * 🔹 Formata o texto para padrão (Primeira Letra Maiúscula)
+ * ?? Formata o texto para padrão (Primeira Letra Maiúscula)
  */
 function formatarTextoPadrao(texto) {
   if (!texto) return "";
@@ -2840,7 +2856,7 @@ function formatarTextoPadrao(texto) {
 }
 
 /**
- * 🔸 Aplica automaticamente a padronização ao sair de campos de texto
+ * ?? Aplica automaticamente a padronização ao sair de campos de texto
  */
 document.addEventListener("blur", (e) => {
   const el = e.target;
@@ -2858,7 +2874,7 @@ document.addEventListener("blur", (e) => {
 }, true);
 
 /**
- * 🔸 Garante padronização em todos os campos antes de salvar/cadastrar
+ * ?? Garante padronização em todos os campos antes de salvar/cadastrar
  */
 function padronizarCamposAntesDeSalvar() {
   document.querySelectorAll('input[type="text"]').forEach(el => {
@@ -2874,7 +2890,7 @@ function padronizarCamposAntesDeSalvar() {
   });
 }
 // ============================================================
-// 🔄 CARREGA DADOS SALVOS LOCALMENTE (INCLUSIVE REGISTRO DE ERROS)
+// ?? CARREGA DADOS SALVOS LOCALMENTE (INCLUSIVE REGISTRO DE ERROS)
 // ============================================================
 (function restaurarDadosLocais() {
   try {
@@ -2885,11 +2901,11 @@ function padronizarCamposAntesDeSalvar() {
     window.saidas = Array.isArray(dadosLocais.saidas) ? dadosLocais.saidas : [];
     window.limites = Array.isArray(dadosLocais.limites) ? dadosLocais.limites : [];
     window.usuarios = Array.isArray(dadosLocais.usuarios) ? dadosLocais.usuarios : [];
-    window.errosProblemas = Array.isArray(dadosLocais.errosProblemas) ? dadosLocais.errosProblemas : []; // ✅ restaura o histórico
+    window.errosProblemas = Array.isArray(dadosLocais.errosProblemas) ? dadosLocais.errosProblemas : []; // ? restaura o histórico
 
-    console.log(`📦 Dados locais restaurados. Produtos: ${window.produtos.length}, Erros: ${window.errosProblemas.length}`);
+    console.log(`?? Dados locais restaurados. Produtos: ${window.produtos.length}, Erros: ${window.errosProblemas.length}`);
   } catch (e) {
-    console.error("⚠️ Falha ao carregar dados locais:", e);
+    console.error("?? Falha ao carregar dados locais:", e);
     window.produtos = [];
     window.entradas = [];
     window.saidas = [];
@@ -2959,7 +2975,7 @@ window.cadastrarProduto = async function () {
     return false;
   });
   if (produtoDuplicado)
-    return mostrarMensagem("❌ Já existe este nome/código!", "erro");
+    return mostrarMensagem("? Já existe este nome/código!", "erro");
 
   // Helper
   async function salvarUmProduto(prod) {
@@ -2996,7 +3012,7 @@ window.cadastrarProduto = async function () {
 
     try {
       await salvarUmProduto(prod);
-      mostrarMensagem(`✅ Produto "${nome}" atualizado!`, "sucesso");
+      mostrarMensagem(`? Produto "${nome}" atualizado!`, "sucesso");
       indiceEdicaoProduto = null;
       mostrarBotaoCancelar?.(false);
     } finally {
@@ -3027,7 +3043,7 @@ window.cadastrarProduto = async function () {
 
   try {
     await salvarUmProduto(novoProduto);
-    mostrarMensagem(`✅ Produto "${nome}" cadastrado!`, "sucesso");
+    mostrarMensagem(`? Produto "${nome}" cadastrado!`, "sucesso");
   } finally {
     setTimeout(() => {
       window.bloquearAtualizacaoSnapshot = false;
@@ -3057,7 +3073,7 @@ window.cadastrarProduto = async function () {
 
 
 // ===============================================
-// ✅ Torna função de cancelar edição global
+// ? Torna função de cancelar edição global
 // ===============================================
 window.cancelarEdicaoProduto = function () {
   indiceEdicaoProduto = null;
@@ -3074,16 +3090,16 @@ if (typeof window.mostrarBotaoCancelar === "function") {
   window.mostrarBotaoCancelar(false);
 }
 
-// 🟢 Limpa o preview da foto ao cancelar a edição
+// ?? Limpa o preview da foto ao cancelar a edição
 const fotoPreview = document.getElementById("fotoPreview");
 if (fotoPreview) fotoPreview.innerHTML = "";
 
-mostrarMensagem("🚫 Edição cancelada.", "info");
+mostrarMensagem("?? Edição cancelada.", "info");
 };
 
 
 // ===============================================
-// ✅ Função global para atualizar referências de produtos
+// ? Função global para atualizar referências de produtos
 // ===============================================
 window.atualizarReferenciasProduto = function (nomeAntigo, nomeNovo) {
   if (!nomeAntigo || !nomeNovo || nomeAntigo === nomeNovo) return;
@@ -3107,11 +3123,11 @@ window.atualizarReferenciasProduto = function (nomeAntigo, nomeNovo) {
     window.salvarTodosLocal();
   }
 
-  mostrarMensagem("🔄 Referências atualizadas em todo o sistema.", "info");
+  mostrarMensagem("?? Referências atualizadas em todo o sistema.", "info");
 };
 
 // ===============================================
-// 📋 COPIAR CÓDIGO DE BARRAS (Entrada de Materiais)
+// ?? COPIAR CÓDIGO DE BARRAS (Entrada de Materiais)
 // ===============================================
 window.copiarCodigoBarras = function (codigo) {
   if (!codigo || codigo === "-") return;
@@ -3119,12 +3135,12 @@ window.copiarCodigoBarras = function (codigo) {
   navigator.clipboard.writeText(codigo)
     .then(() => {
       mostrarMensagem
-        ? mostrarMensagem("📋 Código copiado!", "sucesso")
+        ? mostrarMensagem("?? Código copiado!", "sucesso")
         : alert("Código copiado!");
     })
     .catch(() => {
       mostrarMensagem
-        ? mostrarMensagem("❌ Não foi possível copiar.", "erro")
+        ? mostrarMensagem("? Não foi possível copiar.", "erro")
         : alert("Erro ao copiar.");
     });
 };
@@ -3167,7 +3183,7 @@ window.atualizarTabelaProdutos = function () {
     const foto = produto.foto || "";
     const fotoHtml = foto
       ? `<img src="${foto}" class="thumb" onclick="ampliarImagem('${foto}')" alt="Foto do produto">`
-      : `<span style="color:red;font-weight:bold;">❌</span>`;
+      : `<span style="color:red;font-weight:bold;">?</span>`;
 
     const codigoBarras = produto.codBarras || "-";
 
@@ -3213,7 +3229,7 @@ window.atualizarTabelaProdutos = function () {
     tbody.appendChild(row);
   });
 
-  console.log("✅ Tabela de produtos atualizada sem snapshot gigante.");
+  console.log("? Tabela de produtos atualizada sem snapshot gigante.");
 };
 
 
@@ -3245,7 +3261,7 @@ window.editarProdutoPorId = function(id) {
   const produto = window.produtos[idx];
   indiceEdicaoProduto = idx;
 
-  // 🟢 AGORA SIM: apenas preencher o formulário — sem alterar o objeto!
+  // ?? AGORA SIM: apenas preencher o formulário — sem alterar o objeto!
   document.getElementById("produtoCodigo").value = produto.codigo || "";
   document.getElementById("produtoNome").value = produto.nome || "";
   document.getElementById("produtoCategoria").value = produto.categoria || "";
@@ -3260,7 +3276,7 @@ window.editarProdutoPorId = function(id) {
       fotoPreview.innerHTML = `
         <div style="display:flex;align-items:center;gap:8px">
           <img src="${produto.foto}" alt="Foto atual" style="width:60px;height:60px;object-fit:cover;border:1px solid #ccc;border-radius:5px;">
-          <span style="font-size:13px;color:#444">📸 Foto atual — será mantida se não escolher outra.</span>
+          <span style="font-size:13px;color:#444">?? Foto atual — será mantida se não escolher outra.</span>
         </div>`;
     } else {
       fotoPreview.innerHTML = `<span style="color:#888">Nenhuma foto cadastrada para este produto.</span>`;
@@ -3273,7 +3289,7 @@ window.editarProdutoPorId = function(id) {
   });
 
   mostrarBotaoCancelar?.(true);
-  mostrarMensagem && mostrarMensagem(`✏️ Editando: ${produto.nome}`, "info");
+  mostrarMensagem && mostrarMensagem(`?? Editando: ${produto.nome}`, "info");
 };
 
 
@@ -3289,39 +3305,39 @@ window.excluirProdutoPorId = async function(id) {
   if (!confirm(`Excluir o produto "${produto.nome}"?`)) return;
 
   try {
-    // 🔒 1️⃣ Bloqueia atualização via snapshot durante o processo
+    // ?? 1?? Bloqueia atualização via snapshot durante o processo
     window.bloquearAtualizacaoSnapshot = true;
 
-    // 🧭 2️⃣ Caminho correto no Firestore
+    // ?? 2?? Caminho correto no Firestore
     const estoqueRef = doc(db, "estoqueGlobal", "estoque");
     const produtoRef = doc(collection(estoqueRef, "produtos"), id);
 
     await deleteDoc(produtoRef);
 
-    console.log(`🗑️ Produto ${id} removido do Firestore com sucesso.`);
+    console.log(`??? Produto ${id} removido do Firestore com sucesso.`);
 
-    // 🧹 3️⃣ Remove localmente
+    // ?? 3?? Remove localmente
     window.produtos.splice(idx, 1);
 
-    // 💾 4️⃣ Atualiza cache local
+    // ?? 4?? Atualiza cache local
     salvarTodosLocal?.();
 
-    // 🔄 5️⃣ Atualiza interface
+    // ?? 5?? Atualiza interface
     atualizarTabelaProdutos?.();
     atualizarTabelaEstoque?.();
     atualizarDashboard?.();
     atualizarPainelFinanceiro?.();
 
-    mostrarMensagem(`✅ Produto "${produto.nome}" excluído com sucesso!`, "sucesso");
+    mostrarMensagem(`? Produto "${produto.nome}" excluído com sucesso!`, "sucesso");
 
   } catch (e) {
-    console.error("❌ Erro ao excluir produto:", e);
-    mostrarMensagem("❌ Falha ao excluir produto.", "erro");
+    console.error("? Erro ao excluir produto:", e);
+    mostrarMensagem("? Falha ao excluir produto.", "erro");
   } finally {
-    // 🔓 6️⃣ Reativa o snapshot
+    // ?? 6?? Reativa o snapshot
     setTimeout(() => {
       window.bloquearAtualizacaoSnapshot = false;
-      console.log("🔓 Snapshot reativado após exclusão.");
+      console.log("?? Snapshot reativado após exclusão.");
     }, 2000);
   }
 };
@@ -3357,7 +3373,7 @@ window.excluirProdutoPorIndice = function(indexNaLista) {
 
 
 // ===============================================
-// ✅ Preview de imagem com visual moderno (redondo e centralizado)
+// ? Preview de imagem com visual moderno (redondo e centralizado)
 // ===============================================
 document.getElementById("produtoFoto").addEventListener("change", (e) => {
   const file = e.target.files[0];
@@ -3372,7 +3388,7 @@ document.getElementById("produtoFoto").addEventListener("change", (e) => {
           <img src="${ev.target.result}" 
                alt="Nova foto" 
                style="width:80px; height:80px; object-fit:cover; border:2px solid #ccc; border-radius:50%; box-shadow:0 0 6px rgba(0,0,0,0.15);">
-          <span>🖼️ Nova foto: <strong>${file.name}</strong></span>
+          <span>??? Nova foto: <strong>${file.name}</strong></span>
         </div>
       `;
     };
@@ -3387,7 +3403,7 @@ document.getElementById("produtoFoto").addEventListener("change", (e) => {
           <img src="${produto.foto}" 
                alt="Foto atual" 
                style="width:80px; height:80px; object-fit:cover; border:2px solid #ccc; border-radius:50%; box-shadow:0 0 6px rgba(0,0,0,0.15);">
-          <span>📸 Foto atual — será mantida se você não escolher outra.</span>
+          <span>?? Foto atual — será mantida se você não escolher outra.</span>
         </div>
       `;
     } else {
@@ -3398,7 +3414,7 @@ document.getElementById("produtoFoto").addEventListener("change", (e) => {
 
 
 // ===============================================
-// 🔄 Função para limpar todos os campos do cadastro
+// ?? Função para limpar todos os campos do cadastro
 // ===============================================
 window.limparCamposProduto = function () {
   const codigoEl = document.getElementById("produtoCodigo");
@@ -3411,7 +3427,7 @@ window.limparCamposProduto = function () {
   const fotoPreview = document.getElementById("fotoPreview");
   const filtro = document.getElementById("filtroProduto");
 
-  // 🔄 Limpa todos os campos de cadastro
+  // ?? Limpa todos os campos de cadastro
   if (codigoEl) codigoEl.value = "";
   if (nomeEl) nomeEl.value = "";
   if (categoriaEl) categoriaEl.value = "";
@@ -3421,22 +3437,22 @@ window.limparCamposProduto = function () {
   if (fotoEl) fotoEl.value = "";
   if (fotoPreview) fotoPreview.innerHTML = "";
 
-  // 🧽 Remove produto em edição
+  // ?? Remove produto em edição
   if (typeof indiceEdicaoProduto !== "undefined") {
     indiceEdicaoProduto = null;
   }
 
-  // 🧹 Limpa destaque da tabela
+  // ?? Limpa destaque da tabela
   document.querySelectorAll("#tabelaProdutos tbody tr").forEach((tr) => {
     tr.style.background = "";
   });
 
-  // 🔙 Esconde botão de cancelar edição
+  // ?? Esconde botão de cancelar edição
   if (typeof window.mostrarBotaoCancelar === "function") {
     window.mostrarBotaoCancelar(false);
   }
 
-  // 🔍 Limpa campo de filtro
+  // ?? Limpa campo de filtro
   if (filtro) {
     filtro.value = "";
     if (typeof window.filtrarProdutos === "function") {
@@ -3444,10 +3460,10 @@ window.limparCamposProduto = function () {
     }
   }
 
-  // 👉 Foca novamente no primeiro campo
+  // ?? Foca novamente no primeiro campo
   if (codigoEl) codigoEl.focus();
 
-  // 📢 Feedback
+  // ?? Feedback
   if (typeof mostrarMensagem === "function") {
     mostrarMensagem("Campos do produto limpos.", "info");
   } else {
@@ -3458,7 +3474,7 @@ window.limparCamposProduto = function () {
 
 
 // ===============================================
-// ✅ Torna função de mostrar/ocultar botão global
+// ? Torna função de mostrar/ocultar botão global
 // ===============================================
 window.mostrarBotaoCancelar = function (exibir) {
   let botaoCancelar = document.getElementById("botaoCancelarEdicao");
@@ -3483,8 +3499,8 @@ window.mostrarBotaoCancelar = function (exibir) {
     if (botaoCancelar) botaoCancelar.remove();
   }
 };
-// 🔹 Função de filtro de produtos (corrigida e segura)
-// 🔹 Função de filtro de produtos (corrigida e segura) 
+// ?? Função de filtro de produtos (corrigida e segura)
+// ?? Função de filtro de produtos (corrigida e segura) 
 window.filtrarProdutos = function () {
   const filtro = document.getElementById("filtroProduto").value.toLowerCase().trim();
   const tabela = document.getElementById("tabelaProdutos").querySelector("tbody");
@@ -3496,18 +3512,18 @@ window.filtrarProdutos = function () {
   // Lista REAL de produtos
   const lista = Array.isArray(window.produtos) ? [...window.produtos] : [];
 
-  // 🔎 FILTRO COMPLETO (Cód. Produto, Nome, Categoria, Cód. Barras)
+  // ?? FILTRO COMPLETO (Cód. Produto, Nome, Categoria, Cód. Barras)
   const filtrados = lista.filter(p => {
     const nome = (p.nome || "").toLowerCase();
     const categoria = (p.categoria || "").toLowerCase();
-    const codigoProduto = (p.codigo || "").toLowerCase();           // 🆕 CÓD PRODUTO
+    const codigoProduto = (p.codigo || "").toLowerCase();           // ?? CÓD PRODUTO
     const codigoBarras = (p.codBarras || p.codigoBarras || "").toLowerCase();
 
     return (
       nome.includes(filtro) ||
       categoria.includes(filtro) ||
-      codigoProduto.includes(filtro) ||   // 🆕 FILTRO PELO CÓD PRODUTO
-      codigoBarras.includes(filtro)       // 🆕 FILTRO PELO CÓD BARRAS
+      codigoProduto.includes(filtro) ||   // ?? FILTRO PELO CÓD PRODUTO
+      codigoBarras.includes(filtro)       // ?? FILTRO PELO CÓD BARRAS
     );
   });
 
@@ -3515,9 +3531,9 @@ window.filtrarProdutos = function () {
   filtrados.forEach((p, i) => {
     const foto = p.foto
       ? `<img src="${p.foto}" class="thumb">`
-      : `<span style="color:red;font-weight:bold;">❌</span>`;
+      : `<span style="color:red;font-weight:bold;">?</span>`;
 
-    const codigoProduto = p.codigo || "";   // 🆕 CÓD PRODUTO
+    const codigoProduto = p.codigo || "";   // ?? CÓD PRODUTO
     const codigoBarras = p.codBarras || p.codigoBarras || "-";
 
     const row = document.createElement("tr");
@@ -3525,7 +3541,7 @@ window.filtrarProdutos = function () {
       <td>${i + 1}</td>
       <td>${foto}</td>
 
-      <!-- 🆕 CÓDIGO DO PRODUTO -->
+      <!-- ?? CÓDIGO DO PRODUTO -->
       <td>${codigoProduto}</td>
 
       <td>${p.nome || "-"}</td>
@@ -3599,7 +3615,7 @@ function buscarProdutoPorCodigo(contexto) {
 
   const produto = (window.produtos || []).find(p =>
     String(p.codBarras || p.codigoBarras || "").trim().toLowerCase() === codigoDigitado ||
-    String(p.codigo || "").trim().toLowerCase() === codigoDigitado   // 🟢 AGORA FUNCIONA
+    String(p.codigo || "").trim().toLowerCase() === codigoDigitado   // ?? AGORA FUNCIONA
   );
 
   if (!produto) {
@@ -3635,7 +3651,7 @@ function buscarProdutoPorCodigoProduto() {
 
   if (!codigoDigitado) return;
 
-  // ✅ CORREÇÃO: agora compara corretamente o código digitado com o código salvo
+  // ? CORREÇÃO: agora compara corretamente o código digitado com o código salvo
   const produto = (window.produtos || []).find(p =>
     String(p.codigo || "").trim().toLowerCase() === codigoDigitado
   );
@@ -3728,7 +3744,7 @@ function registrarEntrada() {
       setor,
       codigoBarras
     });
-    mostrarMensagem(`✅ Entrada de "${produto}" atualizada com sucesso!`, "sucesso");
+    mostrarMensagem(`? Entrada de "${produto}" atualizada com sucesso!`, "sucesso");
     indiceEdicaoEntrada = null;
     if (typeof window.mostrarBotaoCancelarEntrada === "function") window.mostrarBotaoCancelarEntrada(false);
   } else {
@@ -3751,7 +3767,7 @@ function registrarEntrada() {
 
     if (!Array.isArray(window.entradas)) window.entradas = [];
     window.entradas.push(novaEntrada);
-    mostrarMensagem(`✅ Entrada registrada para "${produto}"`, "sucesso");
+    mostrarMensagem(`? Entrada registrada para "${produto}"`, "sucesso");
   }
 
   // Atualiza produto no catálogo — busca por nome, cód. barras ou cód. produto
@@ -3806,7 +3822,7 @@ function registrarEntrada() {
   });
 
   document.getElementById("entradaCodigoBarras")?.focus();
-  mostrarMensagem("✅ Entrada salva, sincronizada e campos limpos.", "sucesso");
+  mostrarMensagem("? Entrada salva, sincronizada e campos limpos.", "sucesso");
 }
 
 
@@ -3815,26 +3831,26 @@ function registrarEntrada() {
 
 
 // ===============================================
-// ✅ LIMPAR CAMPOS DE ENTRADA (função global)
+// ? LIMPAR CAMPOS DE ENTRADA (função global)
 // ===============================================
 window.limparCamposEntrada = function () {
-  // 🔹 Limpa todos os campos de input, select e textarea dentro da seção de entrada
+  // ?? Limpa todos os campos de input, select e textarea dentro da seção de entrada
   const formElements = document.querySelectorAll('#entrada input, #entrada select, #entrada textarea');
   formElements.forEach(el => {
     if (el.type === "checkbox" || el.type === "radio") el.checked = false;
     else el.value = "";
   });
 
-  // 🔹 Remove destaque visual de edição
+  // ?? Remove destaque visual de edição
   document.querySelectorAll("#tabelaEntradas tbody tr").forEach(tr => tr.style.background = "");
 
-  // 🔹 Reseta modo de edição e oculta botão "Cancelar Edição"
+  // ?? Reseta modo de edição e oculta botão "Cancelar Edição"
   if (typeof indiceEdicaoEntrada !== "undefined") indiceEdicaoEntrada = null;
   if (typeof window.mostrarBotaoCancelarEntrada === "function") {
     window.mostrarBotaoCancelarEntrada(false);
   }
 
-  // 🔹 Limpa o filtro e recarrega a tabela de entradas
+  // ?? Limpa o filtro e recarrega a tabela de entradas
   const filtroEl = document.getElementById("filtroEntrada");
   if (filtroEl) filtroEl.value = "";
 
@@ -3844,19 +3860,19 @@ window.limparCamposEntrada = function () {
     window.filtrarEntradas(); // fallback, caso a função tenha outro nome
   }
 
-  // 🔹 Atualiza também o painel financeiro, se houver
+  // ?? Atualiza também o painel financeiro, se houver
   if (typeof window.atualizarPainelFinanceiro === "function") {
     window.atualizarPainelFinanceiro();
   }
 
-  // ✅ Feedback visual
+  // ? Feedback visual
   if (typeof mostrarMensagem === "function") {
-    mostrarMensagem("🧹 Campos e filtro de entrada limpos. Tabela recarregada.", "info");
+    mostrarMensagem("?? Campos e filtro de entrada limpos. Tabela recarregada.", "info");
   } else {
-    console.log("🧹 Campos e filtro de entrada limpos. Tabela recarregada.");
+    console.log("?? Campos e filtro de entrada limpos. Tabela recarregada.");
   }
 
-  // 🔹 Foco de volta no leitor de código de barras
+  // ?? Foco de volta no leitor de código de barras
   document.getElementById("entradaCodigoBarras")?.focus();
 };
 
@@ -3956,12 +3972,12 @@ function atualizarTabelaEntradas() {
    row.innerHTML = `
   <td>${idxOriginal + 1}</td>
 
-  <!-- 🆕 Cód. Produto (Correção DEFINITIVA) -->
+  <!-- ?? Cód. Produto (Correção DEFINITIVA) -->
   <td title="${e.codigoProduto || (window.produtos.find(p => p.nome === e.produto)?.codigo) || '-'}">
     ${e.codigoProduto || (window.produtos.find(p => p.nome === e.produto)?.codigo) || "-"}
   </td>
 
-  <!-- 🔥 PRODUTO — coluna ampliada para melhor leitura -->
+  <!-- ?? PRODUTO — coluna ampliada para melhor leitura -->
   <td 
     title="${e.produto || '-'}"
     style="max-width:260px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
@@ -4008,14 +4024,14 @@ function atualizarTabelaEntradas() {
   }
 }
 // =============================
-// ✅ EDIÇÃO DE ENTRADAS DE MATERIAIS
+// ? EDIÇÃO DE ENTRADAS DE MATERIAIS
 // =============================
 
 // Índice global para controle da entrada em edição
 let indiceEdicaoEntrada = null;
 
 /**
- * 🔹 Inicia a edição de uma entrada
+ * ?? Inicia a edição de uma entrada
  */
 function editarEntrada(index) {
   const entrada = window.entradas[index];
@@ -4049,11 +4065,11 @@ function editarEntrada(index) {
   // mostra botão cancelar
   mostrarBotaoCancelarEntrada(true);
 
-  mostrarMensagem(`✏️ Editando entrada do produto: ${entrada.produto}`, "info");
+  mostrarMensagem(`?? Editando entrada do produto: ${entrada.produto}`, "info");
 }
 
 /**
- * 🔹 Cancela a edição da entrada atual
+ * ?? Cancela a edição da entrada atual
  */
 function cancelarEdicaoEntrada() {
   indiceEdicaoEntrada = null;
@@ -4067,13 +4083,13 @@ function cancelarEdicaoEntrada() {
   // Esconde o botão de cancelar
   mostrarBotaoCancelarEntrada(false);
 
-  mostrarMensagem("🚫 Edição de entrada cancelada.", "info");
+  mostrarMensagem("?? Edição de entrada cancelada.", "info");
 }
 
 
 
 /* =====================================================
-   🔹 AUTO-COMPLETE DINÂMICO — ENTRADA DE MATERIAIS (VERSÃO FINAL)
+   ?? AUTO-COMPLETE DINÂMICO — ENTRADA DE MATERIAIS (VERSÃO FINAL)
    ===================================================== */
 function iniciarAutoCompleteEntrada() {
 
@@ -4082,11 +4098,11 @@ function iniciarAutoCompleteEntrada() {
     const cnpjInput = document.getElementById("entradaCNPJ");
 
     if (!produtoInput || !fornecedorInput || !cnpjInput) {
-        console.warn("⚠️ Campos de entrada não encontrados para autocomplete.");
+        console.warn("?? Campos de entrada não encontrados para autocomplete.");
         return;
     }
 
-    // 👉 Garante contêineres
+    // ?? Garante contêineres
     const criarContainer = (id, parent) => {
         if (!document.getElementById(id)) {
             const div = document.createElement("div");
@@ -4110,7 +4126,7 @@ function iniciarAutoCompleteEntrada() {
 
             if (!texto) return;
 
-            // 👉 Agora a lista é sempre atualizada na hora
+            // ?? Agora a lista é sempre atualizada na hora
             const lista = listaFn();
 
             const filtrados = lista
@@ -4137,7 +4153,7 @@ function iniciarAutoCompleteEntrada() {
         });
     }
 
-    // 🔥 Agora as listas são APENAS funções (sempre atualizadas)
+    // ?? Agora as listas são APENAS funções (sempre atualizadas)
     const nomesProdutos = () =>
         [...new Set((window.produtos || []).map(p => p.nome).filter(Boolean))];
 
@@ -4152,11 +4168,11 @@ function iniciarAutoCompleteEntrada() {
     configurarCampo(fornecedorInput, fornecedores, "sugestoesFornecedor");
     configurarCampo(cnpjInput, cnpjs, "sugestoesCNPJ");
 
-    console.log("✨ AutoComplete Iniciado (versão atualizada)");
+    console.log("? AutoComplete Iniciado (versão atualizada)");
 }
 
 /* =====================================================
-   🔹 Estilos (mantidos)
+   ?? Estilos (mantidos)
    ===================================================== */
 const estiloAuto = document.createElement("style");
 estiloAuto.textContent = `
@@ -4187,8 +4203,8 @@ estiloAuto.textContent = `
 document.head.appendChild(estiloAuto);
 
 /* =====================================================
-   🔹 Inicialização INTELIGENTE
-   🔥 Agora funciona mesmo com snapshots e carregamento tardio dos produtos
+   ?? Inicialização INTELIGENTE
+   ?? Agora funciona mesmo com snapshots e carregamento tardio dos produtos
    ===================================================== */
 function esperarDadosEIniciarAutoComplete() {
     const tentar = setInterval(() => {
@@ -4207,12 +4223,12 @@ esperarDadosEIniciarAutoComplete();
 
 
 // =============================
-// ✅ SAÍDA DE MATERIAIS (UNIFICADA)
+// ? SAÍDA DE MATERIAIS (UNIFICADA)
 // =============================
 
 let indiceEdicaoSaida = null;
 
-// 🔹 Registrar nova saída ou atualizar uma existente
+// ?? Registrar nova saída ou atualizar uma existente
 function registrarSaida() {
   limparErros("saida");
 
@@ -4244,7 +4260,7 @@ function registrarSaida() {
     if (!s) return;
 
     Object.assign(s, { produto, qtd, data, setor, responsavel, observacao, codigoBarras });
-    mostrarMensagem(`✅ Saída de "${produto}" atualizada com sucesso!`, "sucesso");
+    mostrarMensagem(`? Saída de "${produto}" atualizada com sucesso!`, "sucesso");
     indiceEdicaoSaida = null;
     mostrarBotaoCancelarSaida(false);
   } else {
@@ -4254,7 +4270,7 @@ function registrarSaida() {
       timestamp: new Date().toISOString(),
     };
     window.saidas.push(novaSaida);
-    mostrarMensagem(`✅ Saída registrada para "${produto}"`, "sucesso");
+    mostrarMensagem(`? Saída registrada para "${produto}"`, "sucesso");
   }
 
   // Atualiza estoque e salva
@@ -4278,7 +4294,7 @@ function registrarSaida() {
   document.getElementById("saidaCodigoBarras")?.focus();
 }
 
-// 🔹 Atualiza a tabela de saídas
+// ?? Atualiza a tabela de saídas
 function atualizarTabelaSaidas() {
   const tbody = document.querySelector("#tabelaSaidas tbody");
   const filtro = document.getElementById("filtroSaida")?.value.toLowerCase() || "";
@@ -4337,7 +4353,7 @@ function atualizarTabelaSaidas() {
   });
 }
 
-// 🔹 Editar, cancelar e excluir
+// ?? Editar, cancelar e excluir
 function editarSaida(index) {
   const s = window.saidas[index];
   if (!s) return;
@@ -4359,9 +4375,9 @@ function editarSaida(index) {
   });
 
   mostrarBotaoCancelarSaida(true);
-  mostrarMensagem(`✏️ Editando saída de: ${s.produto}`, "info");
+  mostrarMensagem(`?? Editando saída de: ${s.produto}`, "info");
 }
-// 🔹 Alias para permitir que o campo de filtro funcione corretamente
+// ?? Alias para permitir que o campo de filtro funcione corretamente
 function filtrarSaidas() {
   // apenas reaproveita a função existente
   if (typeof atualizarTabelaSaidas === "function") {
@@ -4375,7 +4391,7 @@ function cancelarEdicaoSaida() {
   limparCampos("saida");
   document.querySelectorAll("#tabelaSaidas tbody tr").forEach(tr => tr.style.background = "");
   mostrarBotaoCancelarSaida(false);
-  mostrarMensagem("🚫 Edição de saída cancelada.", "info");
+  mostrarMensagem("?? Edição de saída cancelada.", "info");
 }
 
 function mostrarBotaoCancelarSaida(exibir) {
@@ -4408,16 +4424,16 @@ function excluirSaida(i) {
   salvarSaidasNoFirebase(window.saidas);
   salvarTodosLocal();
 
-  mostrarMensagem(`🗑️ Saída de "${s.produto}" excluída.`, "sucesso");
+  mostrarMensagem(`??? Saída de "${s.produto}" excluída.`, "sucesso");
 
-  // 🔁 Atualiza tudo
+  // ?? Atualiza tudo
   if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
   if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
   if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
   if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
 }
 
-// 🔹 Função para limpar todos os campos da Saída de Materiais
+// ?? Função para limpar todos os campos da Saída de Materiais
 function limparCamposSaida() {
   const formElements = document.querySelectorAll('#saida input, #saida select, #saida textarea');
 
@@ -4436,17 +4452,17 @@ function limparCamposSaida() {
     mostrarBotaoCancelarSaida(false);
   }
 
-  mostrarMensagem("🧹 Campos da saída limpos!", "info");
+  mostrarMensagem("?? Campos da saída limpos!", "info");
   document.getElementById("saidaCodigoBarras")?.focus();
 }
 
 
-// 🔹 Setor automático
+// ?? Setor automático
 function atualizarSetorAutomatico() {
   const produtoInput = document.getElementById("saidaProduto");
   const setorSelect = document.getElementById("saidaSetor");
   const codigoInput = document.getElementById("saidaCodigoBarras");
-  
+
   if (!produtoInput || !setorSelect) return;
 
   const nomeProduto = produtoInput.value.trim();
@@ -4455,14 +4471,44 @@ function atualizarSetorAutomatico() {
 
   if (codigo && Array.isArray(produtos)) {
     const produto = produtos.find(p => p.codigoBarras === codigo);
-    if (produto) entradaEncontrada = entradas.slice().reverse().find(e => e.produto === produto.nome);
+    if (produto)
+      entradaEncontrada = entradas
+        .slice()
+        .reverse()
+        .find(e => e.produto === produto.nome);
   }
 
   if (!entradaEncontrada && nomeProduto) {
-    entradaEncontrada = entradas.slice().reverse().find(e => e.produto.toLowerCase() === nomeProduto.toLowerCase());
+    entradaEncontrada = entradas
+      .slice()
+      .reverse()
+      .find(e => e.produto.toLowerCase() === nomeProduto.toLowerCase());
   }
 
-  const setoresUnicos = Array.from(new Set(entradas.map(e => e.setor).filter(s => s)));
+  // ? Lista completa de setores (fixa + dinâmica)
+  const setoresFixos = [
+    "Centro Cirúrgico",
+    "Cesta paciente",
+    "Componentes",
+    "Copa e Cozinha",
+    "Escritório",
+    "Implante",
+    "Insumo Dental",
+    "Insumo Laboratório",
+    "Material de Uso e Consumo",
+    "Medicamentos",
+    "Material de Limpeza"
+  ];
+
+  // ?? Adiciona setores já usados em entradas (dinâmico)
+  const setoresUsados = Array.from(
+    new Set(entradas.map(e => e.setor).filter(s => s))
+  );
+
+  // ?? Combina ambos sem duplicar
+  const setoresUnicos = Array.from(new Set([...setoresFixos, ...setoresUsados]));
+
+  // ?? Atualiza o campo select
   setorSelect.innerHTML = '<option value="">Selecione o Setor</option>';
   setoresUnicos.forEach(setor => {
     const option = document.createElement("option");
@@ -4470,7 +4516,8 @@ function atualizarSetorAutomatico() {
     option.textContent = setor;
     setorSelect.appendChild(option);
   });
-  
+
+  // ?? Pré-seleciona o setor correspondente, se houver
   if (entradaEncontrada && entradaEncontrada.setor) {
     setorSelect.value = entradaEncontrada.setor;
   }
@@ -4479,35 +4526,52 @@ function atualizarSetorAutomatico() {
 function atualizarSetoresPorProduto() {
   const produtoNome = document.getElementById("saidaProduto").value.trim();
   const setorSelect = document.getElementById("saidaSetor");
-  setorSelect.innerHTML = `<option value="">Selecione o Setor</option>`;
 
-  if (!produtoNome) return;
+  if (!setorSelect) return;
 
+  // ? Sempre começa com todos os setores liberados
   const setoresCompletos = [
-    "Limpeza da Clínica",
-    "Laboratório",
-    "Escritório",
+    "Centro Cirúrgico",
+    "Cesta paciente",
+    "Componentes",
     "Copa e Cozinha",
-    "Clínico Geral",
-    "Centro Cirúrgico"
+    "Escritório",
+    "Implante",
+    "Insumo Dental",
+    "Insumo Laboratório",
+    "Material de Uso e Consumo",
+    "Medicamentos",
+    "Material de Limpeza"
   ];
 
-  setorSelect.innerHTML = setoresCompletos
-    .map(s => `<option value="${s}">${s}</option>`)
-    .join("");
+  setorSelect.innerHTML =
+    '<option value="">Selecione o Setor</option>' +
+    setoresCompletos.map(s => `<option value="${s}">${s}</option>`).join("");
+
+  // ?? Mantém compatibilidade: se o produto já tem um setor em entradas, mantém
+  if (produtoNome && Array.isArray(entradas)) {
+    const ultimaEntrada = entradas
+      .slice()
+      .reverse()
+      .find(e => e.produto.toLowerCase() === produtoNome.toLowerCase());
+    if (ultimaEntrada && ultimaEntrada.setor) {
+      setorSelect.value = ultimaEntrada.setor;
+    }
+  }
 }
+
 /* =====================================================
-   🔹 AUTO-COMPLETE DINÂMICO — SAÍDA DE MATERIAIS
+   ?? AUTO-COMPLETE DINÂMICO — SAÍDA DE MATERIAIS
    ===================================================== */
 function iniciarAutoCompleteSaida() {
   const saidaProdutoInput = document.getElementById("saidaProduto");
 
   if (!saidaProdutoInput) {
-    console.warn("⚠️ Campo de produto da saída não encontrado.");
+    console.warn("?? Campo de produto da saída não encontrado.");
     return;
   }
 
-  // 🟢 Cria o container de sugestões se não existir
+  // ?? Cria o container de sugestões se não existir
   if (!document.getElementById("sugestoesSaidaProduto")) {
     const sug = document.createElement("div");
     sug.id = "sugestoesSaidaProduto";
@@ -4516,10 +4580,10 @@ function iniciarAutoCompleteSaida() {
     saidaProdutoInput.parentNode.appendChild(sug);
   }
 
-  // 🔹 Dados únicos de produtos
+  // ?? Dados únicos de produtos
   const nomesProdutos = [...new Set((window.produtos || []).map(p => p.nome).filter(Boolean))];
 
-  // 🧠 Evento de digitação
+  // ?? Evento de digitação
   saidaProdutoInput.addEventListener("input", () => {
     const texto = saidaProdutoInput.value.trim().toLowerCase();
     const container = document.getElementById("sugestoesSaidaProduto");
@@ -4542,7 +4606,7 @@ function iniciarAutoCompleteSaida() {
     });
   });
 
-  // 🔹 Fecha sugestões ao clicar fora
+  // ?? Fecha sugestões ao clicar fora
   document.addEventListener("click", (e) => {
     if (!saidaProdutoInput.contains(e.target)) {
       const sug = document.getElementById("sugestoesSaidaProduto");
@@ -4550,10 +4614,10 @@ function iniciarAutoCompleteSaida() {
     }
   });
 
-  console.log("✨ AutoComplete dinâmico de Saída iniciado com sucesso.");
+  console.log("? AutoComplete dinâmico de Saída iniciado com sucesso.");
 }
 /* =====================================================
-   🔹 ESTILO DO AUTO-COMPLETE (caso ainda não exista)
+   ?? ESTILO DO AUTO-COMPLETE (caso ainda não exista)
    ===================================================== */
 if (!document.getElementById("estiloAutoCompleteSaida")) {
   const estiloAuto = document.createElement("style");
@@ -4650,7 +4714,7 @@ function buscarSaidaPorNomeProduto() {
   campoProduto.style.border = "1px solid #ccc";
 }
 
-// 📌 COLE AQUI OS EVENTOS AUTOMÁTICOS
+// ?? COLE AQUI OS EVENTOS AUTOMÁTICOS
 document.getElementById("saidaCodigoBarras")
   ?.addEventListener("blur", buscarSaidaPorCodigoBarras);
 document.getElementById("saidaCodigoProduto")
@@ -4658,11 +4722,11 @@ document.getElementById("saidaCodigoProduto")
 document.getElementById("saidaProduto")
   ?.addEventListener("blur", buscarSaidaPorNomeProduto);
   
-// 🔁 Inicializa o autocompletar após 1 segundo (garante que os produtos já foram carregados)
+// ?? Inicializa o autocompletar após 1 segundo (garante que os produtos já foram carregados)
 setTimeout(iniciarAutoCompleteSaida, 1000);
 
 // ============================================================
-// 📦 ESTOQUE ATUAL — Versão corrigida (não sobrescreve dados)
+// ?? ESTOQUE ATUAL — Versão corrigida (não sobrescreve dados)
 // ============================================================
 window.atualizarTabelaEstoque = function (filtroTexto = "") {
   const tabela = document.querySelector("#tabelaEstoque tbody");
@@ -4808,7 +4872,7 @@ function formatarDataBR(dataISO) {
  tr.innerHTML = `
   <td>${i + 1}</td>
 
-  <!-- 🟦 CÓD. PRODUTO — agora REALMENTE PEQUENO -->
+  <!-- ?? CÓD. PRODUTO — agora REALMENTE PEQUENO -->
   <td 
     style="max-width:45px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
     title="${p._orig?.codigo || '-'}"
@@ -4816,7 +4880,7 @@ function formatarDataBR(dataISO) {
     ${p._orig?.codigo || "-"}
   </td>
 
-  <!-- 🟩 PRODUTO (mantido grande para leitura) -->
+  <!-- ?? PRODUTO (mantido grande para leitura) -->
   <td 
     style="max-width:280px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
     title="${p.nome || '-'}"
@@ -4824,7 +4888,7 @@ function formatarDataBR(dataISO) {
     ${p.nome || "-"}
   </td>
 
-  <!-- 🟫 CÓDIGO DE BARRAS -->
+  <!-- ?? CÓDIGO DE BARRAS -->
   <td 
     style="max-width:90px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
     title="${p.codigoBarras || '-'}"
@@ -4832,7 +4896,7 @@ function formatarDataBR(dataISO) {
     ${p.codigoBarras || "-"}
   </td>
 
-  <!-- 🟨 CATEGORIA — ampliada para mostrar nomes completos -->
+  <!-- ?? CATEGORIA — ampliada para mostrar nomes completos -->
   <td 
     style="max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
     title="${p.categoria || '-'}"
@@ -4840,13 +4904,13 @@ function formatarDataBR(dataISO) {
     ${p.categoria || "-"}
   </td>
 
-  <!-- 🟥 QUANTIDADE -->
+  <!-- ?? QUANTIDADE -->
   <td style="text-align:center;">${p.quantidade}</td>
 
   <!-- LOTE -->
   <td>${p.lote || "-"}</td>
 
-  <!-- 🟪 ÚLTIMO VALOR — centralizado -->
+  <!-- ?? ÚLTIMO VALOR — centralizado -->
   <td 
     style="max-width:85px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
     title="${valor ? valor.toFixed(2) : '-'}"
@@ -4865,7 +4929,7 @@ function formatarDataBR(dataISO) {
 
   <!-- STATUS -->
   <td style="font-weight:bold; color:${p.statusOk ? '#198754' : '#dc3545'};">
-    ${p.statusOk ? "✅ Em Estoque" : "❌ Zerado"}
+    ${p.statusOk ? "? Em Estoque" : "? Zerado"}
   </td>
 `;
 
@@ -4883,7 +4947,7 @@ function formatarDataBR(dataISO) {
 
 
 // ============================================================
-// 🔍 FILTRO DINÂMICO — executa enquanto o usuário digita
+// ?? FILTRO DINÂMICO — executa enquanto o usuário digita
 // ============================================================
 function filtrarEstoque() {
   const campo = document.getElementById("filtroEstoque");
@@ -4893,37 +4957,37 @@ function filtrarEstoque() {
 }
 
 // ============================================================
-// 🧹 LIMPAR FILTRO — botão “Limpar”
+// ?? LIMPAR FILTRO — botão “Limpar”
 // ============================================================
 function limparFiltroEstoque() {
   const campoTexto = document.getElementById("filtroEstoque");
   const campoCategoria = document.getElementById("filtroCategoria"); // ID do select de categorias
 
-  // 1️⃣ Limpa o texto digitado no filtro
+  // 1?? Limpa o texto digitado no filtro
   if (campoTexto) campoTexto.value = "";
 
-  // 2️⃣ Volta o select para "Todas as Categorias"
+  // 2?? Volta o select para "Todas as Categorias"
   if (campoCategoria) campoCategoria.value = "";
 
-  // 3️⃣ Recarrega a tabela completa
+  // 3?? Recarrega a tabela completa
   atualizarTabelaEstoque();
 
-  // 4️⃣ Foco no campo de busca
+  // 4?? Foco no campo de busca
   campoTexto?.focus();
 }
 
 
 
 // =============================================================
-// 🔄 Recalcula quantidades e informações do estoque a partir de entradas e saídas
-//    ✅ Versão final — garante dados 100% consistentes
+// ?? Recalcula quantidades e informações do estoque a partir de entradas e saídas
+//    ? Versão final — garante dados 100% consistentes
 // =============================================================
 function recalcularEstoqueGeral() {
   if (!Array.isArray(window.produtos)) window.produtos = [];
   if (!Array.isArray(window.entradas)) window.entradas = [];
   if (!Array.isArray(window.saidas)) window.saidas = [];
 
-  // ⚠️ Se não há nenhuma entrada nem saída → zera tudo
+  // ?? Se não há nenhuma entrada nem saída ? zera tudo
   if (window.entradas.length === 0 && window.saidas.length === 0) {
     window.produtos.forEach(p => {
       p.quantidade = 0;
@@ -4940,11 +5004,11 @@ function recalcularEstoqueGeral() {
     atualizarDashboard?.();
     atualizarPainelFinanceiro?.();
 
-    console.log("🧾 Nenhuma movimentação — estoque zerado e limpo.");
+    console.log("?? Nenhuma movimentação — estoque zerado e limpo.");
     return;
   }
 
-  // 🔹 Caso haja movimentações, recalcula tudo com base real
+  // ?? Caso haja movimentações, recalcula tudo com base real
   const mapa = {};
 
   window.produtos.forEach(p => {
@@ -4957,7 +5021,7 @@ function recalcularEstoqueGeral() {
     };
   });
 
-  // 🧮 Soma entradas
+  // ?? Soma entradas
   window.entradas.forEach(en => {
     const chave = (en.produto || "").toLowerCase();
     const m = mapa[chave];
@@ -4969,7 +5033,7 @@ function recalcularEstoqueGeral() {
     }
   });
 
-  // ➖ Subtrai saídas
+  // ? Subtrai saídas
   window.saidas.forEach(s => {
     const chave = (s.produto || "").toLowerCase();
     const m = mapa[chave];
@@ -4978,7 +5042,7 @@ function recalcularEstoqueGeral() {
     }
   });
 
-  // 🔄 Aplica os resultados finais
+  // ?? Aplica os resultados finais
   Object.values(mapa).forEach(entry => {
     if (!entry.pRef) return;
     entry.pRef.quantidade = Math.max(0, entry.quantidade);
@@ -4995,12 +5059,12 @@ function recalcularEstoqueGeral() {
   atualizarDashboard?.();
   atualizarPainelFinanceiro?.();
 
-  console.log("✅ Estoque recalculado com base em entradas e saídas.");
+  console.log("? Estoque recalculado com base em entradas e saídas.");
 }
 
 
 // ============================================================
-// ⚡ ATUALIZAÇÃO AUTOMÁTICA APÓS MOVIMENTAÇÕES
+// ? ATUALIZAÇÃO AUTOMÁTICA APÓS MOVIMENTAÇÕES
 // ============================================================
 ["registrarEntrada", "registrarSaida", "excluirEntrada", "excluirSaida"].forEach(nomeFunc => {
   const original = window[nomeFunc];
@@ -5015,7 +5079,7 @@ function recalcularEstoqueGeral() {
 
 
 // ============================================================
-// 📊 ESTOQUE MÍNIMO E MÁXIMO — sempre sincronizado com o estoque real
+// ?? ESTOQUE MÍNIMO E MÁXIMO — sempre sincronizado com o estoque real
 // ============================================================
 function atualizarTabelaLimites(filtroTexto = "") {
   const tabela = document.querySelector("#tabelaLimites tbody");
@@ -5031,7 +5095,7 @@ function atualizarTabelaLimites(filtroTexto = "") {
 
   tabela.innerHTML = "";
 
-  // 🧾 Recalcula quantidades baseado em entradas e saídas
+  // ?? Recalcula quantidades baseado em entradas e saídas
   const mapaEstoque = {};
   produtos.forEach(p => mapaEstoque[p.nome] = 0);
 
@@ -5047,7 +5111,7 @@ function atualizarTabelaLimites(filtroTexto = "") {
     mapaEstoque[nome] -= Number(s.qtd || 0);
   });
 
-  // 🔄 Atualiza produtos (mesmo que não haja movimentações)
+  // ?? Atualiza produtos (mesmo que não haja movimentações)
   produtos.forEach(p => {
     const qtdReal = Math.max(0, mapaEstoque[p.nome] ?? 0);
     p.quantidade = qtdReal;
@@ -5064,7 +5128,7 @@ function atualizarTabelaLimites(filtroTexto = "") {
 
   let total = 0, abaixo = 0, dentro = 0, acima = 0;
 
-  // 🔍 Filtro + status + recomendação
+  // ?? Filtro + status + recomendação
   let produtosFiltrados = produtos.filter(p => {
     const filtroTxt = filtro.toLowerCase();
 
@@ -5079,14 +5143,14 @@ function atualizarTabelaLimites(filtroTexto = "") {
     const minimo = Number(p.minimo || 0);
     const maximo = Number(p.maximo || 0);
 
-    let status = "✅ Dentro do Limite";
+    let status = "? Dentro do Limite";
     let recomendacao = "Estoque ideal";
 
     if (qtd < minimo) {
-      status = "⚠️ Abaixo do Mínimo";
+      status = "?? Abaixo do Mínimo";
       recomendacao = `Comprar ${maximo - qtd}`;
     } else if (maximo > 0 && qtd > maximo) {
-      status = "📦 Acima do Máximo";
+      status = "?? Acima do Máximo";
       recomendacao = `Reduzir novas entradas (${qtd - maximo} excedentes)`;
     }
 
@@ -5106,18 +5170,18 @@ function atualizarTabelaLimites(filtroTexto = "") {
     );
   });
 
-  // 🟦 FILTRO DE CATEGORIA — MOSTRA APENAS OS PRODUTOS DA CATEGORIA ESCOLHIDA
+  // ?? FILTRO DE CATEGORIA — MOSTRA APENAS OS PRODUTOS DA CATEGORIA ESCOLHIDA
   const categoriaSelecionada = document.getElementById("filtroCategoria")?.value || "";
   if (categoriaSelecionada) {
     produtosFiltrados = produtosFiltrados.filter(p =>
       (p.categoria || "") === categoriaSelecionada
     );
   }
-// ✅ ORDENAR PRODUTOS POR NOME (A → Z)
+// ? ORDENAR PRODUTOS POR NOME (A ? Z)
 produtosFiltrados.sort((a, b) =>
   (a.nome || "").localeCompare(b.nome || "", "pt-BR", { sensitivity: "base" })
 );
-  // 🔸 Monta a tabela
+  // ?? Monta a tabela
   produtosFiltrados.forEach((p, i) => {
     total++;
 
@@ -5127,15 +5191,15 @@ produtosFiltrados.sort((a, b) =>
     const minimo = Number(p.minimo || 0);
     const maximo = Number(p.maximo || 0);
 
-    let status = "✅ Dentro do Limite";
+    let status = "? Dentro do Limite";
     let recomendacao = "Estoque ideal";
 
     if (qtd < minimo) {
-      status = "⚠️ Abaixo do Mínimo";
+      status = "?? Abaixo do Mínimo";
       recomendacao = `Comprar ${maximo - qtd}`;
       abaixo++;
     } else if (maximo > 0 && qtd > maximo) {
-      status = "📦 Acima do Máximo";
+      status = "?? Acima do Máximo";
       recomendacao = `Reduzir novas entradas (${qtd - maximo} excedentes)`;
       acima++;
     } else {
@@ -5150,7 +5214,7 @@ produtosFiltrados.sort((a, b) =>
   linha.innerHTML = `
   <td>${i + 1}</td>
 
- <!-- 🆕 CÓD. PRODUTO — agora menor e alinhado à esquerda -->
+ <!-- ?? CÓD. PRODUTO — agora menor e alinhado à esquerda -->
 <td 
   style="max-width:30px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:left;"
   title="${p.codigo || '-'}"
@@ -5220,20 +5284,20 @@ produtosFiltrados.sort((a, b) =>
     tabela.appendChild(linha);
   });
 
-  // 🔸 Atualiza o resumo
+  // ?? Atualiza o resumo
   if (resumoDiv) {
     resumoDiv.innerHTML = `
-      🧾 Total de Produtos: ${total} |
-      ⚠️ Abaixo do Mínimo: ${abaixo} |
-      ✅ Dentro do Limite: ${dentro} |
-      📦 Acima do Máximo: ${acima}
+      ?? Total de Produtos: ${total} |
+      ?? Abaixo do Mínimo: ${abaixo} |
+      ? Dentro do Limite: ${dentro} |
+      ?? Acima do Máximo: ${acima}
     `;
   }
 }
 
 
 // ============================================================
-// 🔍 Filtro dinâmico — ao digitar
+// ?? Filtro dinâmico — ao digitar
 // ============================================================
 function filtrarLimites() {
   const campo = document.getElementById("filtroLimites");
@@ -5243,7 +5307,7 @@ function filtrarLimites() {
 }
 
 // ============================================================
-// 🧹 Limpar filtro — botão “Limpar”
+// ?? Limpar filtro — botão “Limpar”
 // ============================================================
 function limparFiltroLimites() {
   const campo = document.getElementById("filtroLimites");
@@ -5256,7 +5320,7 @@ function limparFiltroLimites() {
 
 
 // ====================================================
-// 🛒 GERAR LISTA DE COMPRA — sincronizada com Estoque Mín/Máx
+// ?? GERAR LISTA DE COMPRA — sincronizada com Estoque Mín/Máx
 // ====================================================
 function gerarListaCompra() {
   const container = document.getElementById("listaCompraContainer");
@@ -5265,9 +5329,9 @@ function gerarListaCompra() {
   const totalSpan = document.getElementById("totalItensCompra");
   const filtroCategoria = document.getElementById("filtroCategoria")?.value || "";
 
-  // 🔍 Segurança: elementos obrigatórios
+  // ?? Segurança: elementos obrigatórios
   if (!container || !tabela || !tbody || !totalSpan) {
-    console.error("⚠️ Elementos da lista de compra não encontrados no DOM.");
+    console.error("?? Elementos da lista de compra não encontrados no DOM.");
     mostrarMensagem("Erro: tabela da lista de compra não encontrada.", "erro");
     return;
   }
@@ -5276,7 +5340,7 @@ function gerarListaCompra() {
   const entradas = Array.isArray(window.entradas) ? window.entradas : [];
   const saidas = Array.isArray(window.saidas) ? window.saidas : [];
 
-  // 🔹 1. Mapa de estoque real (entradas - saídas)
+  // ?? 1. Mapa de estoque real (entradas - saídas)
   const mapaEstoque = {};
   entradas.forEach(e => {
     const nome = (e.produto || e.nomeProduto || "").trim().toLowerCase();
@@ -5289,7 +5353,7 @@ function gerarListaCompra() {
     mapaEstoque[nome] = (mapaEstoque[nome] || 0) - Number(s.qtd || s.quantidade || 0);
   });
 
-  // 🔹 2. Identifica produtos abaixo do mínimo (usando a mesma lógica do Estoque Mín/Máx)
+  // ?? 2. Identifica produtos abaixo do mínimo (usando a mesma lógica do Estoque Mín/Máx)
   const produtosAbaixo = produtos
     .map(p => {
       const nome = (p.nome || "").trim().toLowerCase();
@@ -5300,7 +5364,7 @@ function gerarListaCompra() {
 
       let recomendacao = "";
 
-      // 🟢 Mesma regra da tabela de limites
+      // ?? Mesma regra da tabela de limites
       if (qtdAtual < minimo) {
         const qtdComprar = maximo > 0 ? (maximo - qtdAtual) : (minimo - qtdAtual);
         recomendacao = `Comprar ${qtdComprar}`;
@@ -5318,7 +5382,7 @@ function gerarListaCompra() {
     .filter(p => !filtroCategoria || p.categoria === filtroCategoria)
     .sort((a, b) => a.nome.localeCompare(b.nome));
 
-  // 🔹 3. Monta a tabela
+  // ?? 3. Monta a tabela
   tbody.innerHTML = "";
 
   if (produtosAbaixo.length === 0) {
@@ -5338,7 +5402,7 @@ function gerarListaCompra() {
     return;
   }
 
-  // 🔹 4. Preenche linhas da tabela
+  // ?? 4. Preenche linhas da tabela
   produtosAbaixo.forEach((p, i) => {
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -5352,7 +5416,7 @@ function gerarListaCompra() {
     tbody.appendChild(row);
   });
 
-  // 🔹 5. Exibe resumo
+  // ?? 5. Exibe resumo
   totalSpan.textContent = produtosAbaixo.length.toString();
   container.style.display = "block";
   container.scrollIntoView({ behavior: "smooth" });
@@ -5362,7 +5426,7 @@ function gerarListaCompra() {
 
 
 // ============================================================
-// 🟩 REGISTRAR NOVO ERRO / PROBLEMA
+// ?? REGISTRAR NOVO ERRO / PROBLEMA
 // ============================================================
 window.registrarErro = async function () {
   try {
@@ -5410,9 +5474,9 @@ window.registrarErro = async function () {
     if (previsaoEl) previsaoEl.value = "";
     if (dataEl) dataEl.value = dataLocalYYYYMMDD();
 
-    mostrarMensagem("✔️ Registro criado com sucesso!", "sucesso");
+    mostrarMensagem("?? Registro criado com sucesso!", "sucesso");
   } catch (e) {
-    console.error("❌ Erro ao registrar erro:", e);
+    console.error("? Erro ao registrar erro:", e);
     mostrarMensagem("Erro ao registrar. Veja o console.", "erro");
   }
 };
@@ -5420,14 +5484,14 @@ window.registrarErro = async function () {
 
 
 /* ============================================================
-   🧩 REGISTRO DE ERROS E PROBLEMAS — VERSÃO CORRIGIDA
+   ?? REGISTRO DE ERROS E PROBLEMAS — VERSÃO CORRIGIDA
    ============================================================ */
 
 // Linha em edição
 window.indiceErroEditando = null;
 
 
-// 🔹 Atualiza a tabela
+// ?? Atualiza a tabela
 window.atualizarTabelaErros = function () {
   const tbody = document.querySelector("#tabelaErros tbody");
   if (!tbody) return;
@@ -5517,14 +5581,14 @@ window.mostrarDescricaoCompleta = function(texto) {
 
 
 
-// 🔹 Entrar no modo edição
+// ?? Entrar no modo edição
 window.editarErro = function (i) {
   window.indiceErroEditando = i;
   atualizarTabelaErros();
 };
 
 
-// 🔹 Salvar edição (parecer + data)
+// ?? Salvar edição (parecer + data)
 window.salvarEdicaoErro = async function (i) {
   const item = window.errosProblemas[i];
   if (!item) return;
@@ -5537,19 +5601,19 @@ window.salvarEdicaoErro = async function (i) {
   item.bloqueado = true;
   window.indiceErroEditando = null;
 
-  // 🔒 BLOQUEIA O SNAPSHOT
+  // ?? BLOQUEIA O SNAPSHOT
   window.bloquearAtualizacaoSnapshot = true;
 
-  // 💾 SALVAR LOCAL
+  // ?? SALVAR LOCAL
   salvarTodosLocal();
 
-  // ☁️ SALVAR FIRESTORE
+  // ?? SALVAR FIRESTORE
   await window.salvarErrosProblemasNoFirebase(window.errosProblemas);
 
-  // ⏳ LIBERA SNAPSHOT APÓS O SALVAMENTO
+  // ? LIBERA SNAPSHOT APÓS O SALVAMENTO
   setTimeout(() => window.bloquearAtualizacaoSnapshot = false, 800);
 
-  mostrarMensagem("✔️ Parecer salvo e registro concluído!", "sucesso");
+  mostrarMensagem("?? Parecer salvo e registro concluído!", "sucesso");
   atualizarTabelaErros();
 };
 
@@ -5582,44 +5646,44 @@ window.abrirErrosProblemas = function () {
 };
 
 // ====================================================
-// 🧹 LIMPAR E GERENCIAR LISTA DE COMPRA (CORREÇÃO FINAL)
+// ?? LIMPAR E GERENCIAR LISTA DE COMPRA (CORREÇÃO FINAL)
 // ====================================================
 function limparListaCompra() {
-  console.log("🔄 Limpando lista de compra...");
+  console.log("?? Limpando lista de compra...");
 
-  // 1️⃣ Limpa a tabela da lista gerada
+  // 1?? Limpa a tabela da lista gerada
   const tabela = document.querySelector("#tabelaListaCompra tbody");
   if (tabela) tabela.innerHTML = "";
 
-  // 2️⃣ Zera o total de itens
+  // 2?? Zera o total de itens
   const totalSpan = document.getElementById("totalItensCompra");
   if (totalSpan) totalSpan.textContent = "0";
 
-  // 3️⃣ Esconde o container da lista gerada
+  // 3?? Esconde o container da lista gerada
   const container = document.getElementById("listaCompraContainer");
   if (container) container.style.display = "none";
 
-  // 4️⃣ *** VOLTAR O SELECT PARA “TODAS AS CATEGORIAS” ***
+  // 4?? *** VOLTAR O SELECT PARA “TODAS AS CATEGORIAS” ***
   const selectCategoria = document.getElementById("filtroCategoria");
   if (selectCategoria) {
     selectCategoria.value = ""; // <-- ESSA LINHA É A PRINCIPAL
   }
 
-  // 5️⃣ *** RESETAR o filtro de texto ***
+  // 5?? *** RESETAR o filtro de texto ***
   const filtroTexto = document.getElementById("filtroLimites");
   if (filtroTexto) filtroTexto.value = "";
 
-  // 6️⃣ *** Resetar filtros globais ***
+  // 6?? *** Resetar filtros globais ***
   window.filtroLimites = "";
   window.filtroCategoria = "";
 
-  // 7️⃣ *** RECARREGAR A TABELA COMPLETA — SEM FILTROS ***
+  // 7?? *** RECARREGAR A TABELA COMPLETA — SEM FILTROS ***
   if (typeof atualizarTabelaLimites === "function") {
     atualizarTabelaLimites();
   }
 
-  // 8️⃣ Mensagem final
-  mostrarMensagem("🧹 Lista de compra limpa! Tabela restaurada.", "info");
+  // 8?? Mensagem final
+  mostrarMensagem("?? Lista de compra limpa! Tabela restaurada.", "info");
 }
 
 
@@ -5632,11 +5696,11 @@ function removerItemListaCompra(botao) {
       const novoTotal = Math.max(0, Number(totalSpan.textContent) - 1);
       totalSpan.textContent = novoTotal.toString();
     }
-    mostrarMensagem("🗑️ Item removido da lista.", "info");
+    mostrarMensagem("??? Item removido da lista.", "info");
   }
 }
 
-// 🧾 Mensagem visual (reutiliza o mesmo estilo das suas mensagens existentes)
+// ?? Mensagem visual (reutiliza o mesmo estilo das suas mensagens existentes)
 function mostrarMensagem(texto, tipo = "info") {
   const div = document.createElement("div");
   div.textContent = texto;
@@ -5682,7 +5746,7 @@ function atualizarTabelaErros() {
 
 function concluirErro(index) {
   window.errosProblemas[index].concluidoEm = new Date().toLocaleDateString();
-  mostrarMensagem("✔️ Erro concluído com sucesso!", "sucesso");
+  mostrarMensagem("?? Erro concluído com sucesso!", "sucesso");
   atualizarTabelaErros();
 }
 
@@ -5690,7 +5754,7 @@ function excluirErro(index) {
   if (confirm("Deseja realmente excluir este registro?")) {
     window.errosProblemas.splice(index, 1);
     atualizarTabelaErros();
-    mostrarMensagem("🗑️ Registro excluído com sucesso.", "sucesso");
+    mostrarMensagem("??? Registro excluído com sucesso.", "sucesso");
   }
 }
 
@@ -5710,7 +5774,7 @@ function limparFiltroErros() {
   mostrarMensagem("Filtro limpo.", "info");
 }
 // ====================================================
-// 💾 SALVAR / LIMPAR / FILTRAR LIMITES
+// ?? SALVAR / LIMPAR / FILTRAR LIMITES
 // ====================================================
 
 function salvarLimites(idProduto) {
@@ -5781,31 +5845,31 @@ async function salvarParecer(index) {
   window.errosProblemas[index].parecer = parecer;
   window.errosProblemas[index].concluidoEm = dataConclusao;
 
-  // 🔒 BLOQUEIA SNAPSHOT PARA NÃO SOBRESCREVER OS DADOS ENVIADOS
+  // ?? BLOQUEIA SNAPSHOT PARA NÃO SOBRESCREVER OS DADOS ENVIADOS
   window.bloquearAtualizacaoSnapshot = true;
 
-  // 💾 SALVA EM LOCALSTORAGE
+  // ?? SALVA EM LOCALSTORAGE
   try {
     salvarTodosLocal();
   } catch (e) {
     console.error("Erro ao salvar localmente:", e);
   }
 
-  // ☁️ SALVA NO FIRESTORE APENAS UMA VEZ
+  // ?? SALVA NO FIRESTORE APENAS UMA VEZ
   try {
     await window.salvarErrosProblemasNoFirebase(window.errosProblemas);
-    mostrarMensagem("✅ Parecer e data de conclusão salvos com sucesso!", "sucesso");
+    mostrarMensagem("? Parecer e data de conclusão salvos com sucesso!", "sucesso");
   } catch (e) {
-    mostrarMensagem("❌ Erro ao salvar no servidor!", "erro");
+    mostrarMensagem("? Erro ao salvar no servidor!", "erro");
     console.error("Erro ao salvar no Firestore:", e);
   }
 
-  // ⏳ LIBERA SNAPSHOT (pequeno delay garante sincronização)
+  // ? LIBERA SNAPSHOT (pequeno delay garante sincronização)
   setTimeout(() => {
     window.bloquearAtualizacaoSnapshot = false;
   }, 800);
 
-  // 🔄 Atualiza tabela
+  // ?? Atualiza tabela
   atualizarTabelaErros();
 }
 
@@ -5814,18 +5878,18 @@ async function salvarParecer(index) {
 
 
 // ====================================================
-// 💰 PAINEL FINANCEIRO — Correção completa e automática
+// ?? PAINEL FINANCEIRO — Correção completa e automática
 // ====================================================
 function atualizarPainelFinanceiro() {
   try {
-    // 🔹 Garante que os dados existam e sejam arrays válidos
+    // ?? Garante que os dados existam e sejam arrays válidos
     const entradas = Array.isArray(window.entradas) ? window.entradas : [];
     const saidas = Array.isArray(window.saidas) ? window.saidas : [];
     const produtos = Array.isArray(window.produtos) ? window.produtos : [];
 
-    // ⚠️ Se ainda não há dados, interrompe a atualização
+    // ?? Se ainda não há dados, interrompe a atualização
     if (entradas.length === 0 && saidas.length === 0 && produtos.length === 0) {
-      console.warn("⚠️ Dados ainda não prontos para atualizar painel financeiro.");
+      console.warn("?? Dados ainda não prontos para atualizar painel financeiro.");
       return;
     }
 
@@ -5937,15 +6001,15 @@ function atualizarPainelFinanceiro() {
       }
     }
 
-    console.log("✅ Painel Financeiro atualizado com sucesso!");
+    console.log("? Painel Financeiro atualizado com sucesso!");
   } catch (e) {
-    console.error("❌ Erro ao atualizar painel financeiro:", e);
+    console.error("? Erro ao atualizar painel financeiro:", e);
   }
 }
 
 window.addEventListener("load", () => {
   setTimeout(() => {
-    console.log("🧩 Teste — produtos atuais:", window.produtos);
+    console.log("?? Teste — produtos atuais:", window.produtos);
   }, 3000);
 });
 
@@ -6032,7 +6096,7 @@ function atualizarDashboard() {
     const entradasLocal = Array.isArray(window.entradas) ? window.entradas : [];
     const saidasLocal = Array.isArray(window.saidas) ? window.saidas : [];
 
-    // 🧩 1️⃣ Se não há entradas e saídas, zera tudo e limpa o painel
+    // ?? 1?? Se não há entradas e saídas, zera tudo e limpa o painel
     if (entradasLocal.length === 0 && saidasLocal.length === 0) {
       const resumoEl = document.getElementById("resumoGeral");
       const listaVencer = document.getElementById("listaProximosVencer");
@@ -6047,10 +6111,10 @@ function atualizarDashboard() {
           <div><b>Quantidade total em estoque:</b> 0</div>
           <div><b>Total de saídas registradas:</b> 0</div>
           <hr>
-          <div><b>💰 Valor total (Último valor de entrada):</b> R$ 0,00</div>
-          <div><b>💰 Valor total (Custo médio ponderado):</b> R$ 0,00</div>
-          <div><b>💰 Valor total do Estoque Atual (estimado):</b> R$ 0,00</div>
-          <div><b>⚠️ Produtos em Estoque Crítico:</b> <span style="color:green">0</span></div>
+          <div><b>?? Valor total (Último valor de entrada):</b> R$ 0,00</div>
+          <div><b>?? Valor total (Custo médio ponderado):</b> R$ 0,00</div>
+          <div><b>?? Valor total do Estoque Atual (estimado):</b> R$ 0,00</div>
+          <div><b>?? Produtos em Estoque Crítico:</b> <span style="color:green">0</span></div>
         `;
       }
       if (listaVencer) listaVencer.innerHTML = "<li>Nenhum produto próximo do vencimento.</li>";
@@ -6059,12 +6123,12 @@ function atualizarDashboard() {
       if (listaMenosSaidasEl) listaMenosSaidasEl.innerHTML = "<li>Sem registros disponíveis.</li>";
       if (listaCriticos) listaCriticos.innerHTML = "<li>Tudo OK!</li>";
 
-      console.log("🧾 Dashboard zerado automaticamente (sem entradas/saídas).");
+      console.log("?? Dashboard zerado automaticamente (sem entradas/saídas).");
       return;
     }
 
     // ================================================================
-    // 🔹 CÁLCULOS NORMAIS DO DASHBOARD (só roda se há entradas/saídas)
+    // ?? CÁLCULOS NORMAIS DO DASHBOARD (só roda se há entradas/saídas)
     // ================================================================
 
     const igualNome = (a, b) => String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase();
@@ -6166,7 +6230,7 @@ function atualizarDashboard() {
         : criarLi("Nenhuma saída registrada.");
     }
 
-    // 🧹 Produtos com menos saídas — mostra apenas os que têm estoque e movimentação
+    // ?? Produtos com menos saídas — mostra apenas os que têm estoque e movimentação
     const menosSaidas = estoqueDetalhado
       .filter(p => p.qtdAtual > 0 && (p.qtdSaidas > 0))
       .sort((a, b) => a.qtdSaidas - b.qtdSaidas)
@@ -6206,10 +6270,10 @@ function atualizarDashboard() {
         <div><b>Quantidade total em estoque:</b> ${qtdTotalEmEstoque}</div>
         <div><b>Total de saídas registradas:</b> ${totalSaidasRegistradas}</div>
         <hr>
-        <div><b>💰 Valor total (Último valor de entrada):</b> ${formatarMoeda(valorUltimaEntrada)}</div>
-        <div><b>💰 Valor total (Custo médio ponderado):</b> ${formatarMoeda(valorEstoqueCustoMedio)}</div>
-        <div><b>💰 Valor total do Estoque Atual (estimado):</b> ${formatarMoeda(valorEstoqueCustoMedio)}</div>
-        <div><b>⚠️ Produtos em Estoque Crítico:</b> <span style="color:${criticosCount>0?'red':'green'}">${criticosCount}</span></div>
+        <div><b>?? Valor total (Último valor de entrada):</b> ${formatarMoeda(valorUltimaEntrada)}</div>
+        <div><b>?? Valor total (Custo médio ponderado):</b> ${formatarMoeda(valorEstoqueCustoMedio)}</div>
+        <div><b>?? Valor total do Estoque Atual (estimado):</b> ${formatarMoeda(valorEstoqueCustoMedio)}</div>
+        <div><b>?? Produtos em Estoque Crítico:</b> <span style="color:${criticosCount>0?'red':'green'}">${criticosCount}</span></div>
       `;
     }
 
@@ -6217,14 +6281,14 @@ function atualizarDashboard() {
       try { atualizarPainelFinanceiro(); } catch (e) { console.warn("Falha ao atualizar painel financeiro:", e); }
     }
 
-    console.log("✅ Dashboard atualizado:", {
+    console.log("? Dashboard atualizado:", {
       produtos: totalProdutos,
       qtdEstoque: qtdTotalEmEstoque,
       valorUltimaEntrada,
       valorEstoqueCustoMedio
     });
   } catch (err) {
-    console.error("❌ Erro em atualizarDashboard():", err);
+    console.error("? Erro em atualizarDashboard():", err);
   }
 }
 
@@ -6262,7 +6326,7 @@ function limparPeriodo() {
 }
 
 /**
- * 🔹 Função genérica para exportar qualquer tabela para Excel (CSV)
+ * ?? Função genérica para exportar qualquer tabela para Excel (CSV)
  */
 function exportarTabelaExcel(idTabela, nomeArquivoBase, prefixo) {
   const tabela = document.getElementById(idTabela);
@@ -6354,7 +6418,7 @@ function exportarListaExcel() {
 }
 
 /**
- * 🔹 Função para gerar Pedido de Orçamento em PDF (usando jspdf e autotable)
+ * ?? Função para gerar Pedido de Orçamento em PDF (usando jspdf e autotable)
  */
 function gerarPedidoPDF() {
     if (typeof jspdf === 'undefined' || typeof jspdf.jsPDF === 'undefined') {
@@ -6366,7 +6430,7 @@ function gerarPedidoPDF() {
     const tabela = document.getElementById("tabelaListaCompra");
     const tbody = tabela ? tabela.querySelector("tbody") : null;
     if (!tbody || tbody.textContent.includes("Nenhum item abaixo")) {
-        alert("⚠️ Nenhuma Lista de Compra gerada para exportar!");
+        alert("?? Nenhuma Lista de Compra gerada para exportar!");
         return;
     }
     
@@ -6502,7 +6566,7 @@ document.addEventListener('click', (event) => {
 });
 
 // =============================================
-// 📊 FUNÇÃO: Atualizar Tabela de Valor Histórico
+// ?? FUNÇÃO: Atualizar Tabela de Valor Histórico
 // =============================================
 window.atualizarTabelaValorHistorico = function() {
   const tabela = document.querySelector("#tabelaValorHistorico tbody");
@@ -6517,7 +6581,7 @@ window.atualizarTabelaValorHistorico = function() {
     return;
   }
 
-  // 🔹 Agrupa valores por produto e mês
+  // ?? Agrupa valores por produto e mês
   const historico = {};
 
   entradas.forEach(ent => {
@@ -6532,12 +6596,12 @@ window.atualizarTabelaValorHistorico = function() {
     historico[produto][mes] = valor;
   });
 
-  // 🔹 Ordena produtos em ordem alfabética
+  // ?? Ordena produtos em ordem alfabética
 const historicoOrdenado = Object.entries(historico).sort(([a], [b]) =>
   a.localeCompare(b, 'pt-BR')
 );
 
-// 🔹 Preenche a tabela com lista ordenada
+// ?? Preenche a tabela com lista ordenada
 historicoOrdenado.forEach(([produto, valores], index) => {
     const cadastrado = window.produtos.find(p => p.nome === produto);
     const codigoProduto = cadastrado?.codigo || "-";
@@ -6555,7 +6619,7 @@ historicoOrdenado.forEach(([produto, valores], index) => {
     `;
 
 
-    // 🗓️ 12 meses
+    // ??? 12 meses
     for (let i = 0; i < 12; i++) {
       const valor = valores[i];
 
@@ -6580,7 +6644,7 @@ historicoOrdenado.forEach(([produto, valores], index) => {
               line-height:18px;
               font-size:12px;
               text-align:center;
-            ">▲</span>`;
+            ">?</span>`;
           }
 
           else if (valor < anterior) {
@@ -6595,7 +6659,7 @@ historicoOrdenado.forEach(([produto, valores], index) => {
               font-size:12px;
               text-align:center;
               transform:rotate(180deg);
-            ">▲</span>`;
+            ">?</span>`;
           }
 
           else {
@@ -6622,7 +6686,7 @@ historicoOrdenado.forEach(([produto, valores], index) => {
     tabela.appendChild(row);
   });
 
-  // 🔍 Filtro CORRIGIDO de busca — procura em toda a linha
+  // ?? Filtro CORRIGIDO de busca — procura em toda a linha
 window.filtrarValorHistorico = function() {
   const filtro = (document.getElementById("filtroValorHistorico").value || "")
     .toLowerCase()
@@ -6636,7 +6700,7 @@ window.filtrarValorHistorico = function() {
   });
 };
 
-// 🔄 Limpar filtro
+// ?? Limpar filtro
 window.limparFiltroValorHistorico = function() {
   const campo = document.getElementById("filtroValorHistorico");
   if (campo) campo.value = "";
@@ -6645,29 +6709,29 @@ window.limparFiltroValorHistorico = function() {
 
 }
 
-// 🔄 Atualiza a tabela automaticamente ao abrir a seção
+// ?? Atualiza a tabela automaticamente ao abrir a seção
 document
   .querySelector("#sidebar button[onclick=\"showSection('valorHistorico')\"]")
   ?.addEventListener("click", atualizarTabelaValorHistorico);
 
 
 /* =====================================================
-   ✨ CORREÇÃO ORTOGRÁFICA AUTOMÁTICA — RELATOS DE ERROS
+   ? CORREÇÃO ORTOGRÁFICA AUTOMÁTICA — RELATOS DE ERROS
    ===================================================== */
 function habilitarCorrecaoOrtografica() {
   const campoRelato = document.getElementById("erroDescricao");
   if (!campoRelato) {
-    console.warn("⚠️ Campo de relato não encontrado.");
+    console.warn("?? Campo de relato não encontrado.");
     return;
   }
 
-  // 🔹 Ativa correção nativa do navegador
+  // ?? Ativa correção nativa do navegador
   campoRelato.setAttribute("spellcheck", "true");
   campoRelato.setAttribute("autocomplete", "on");
   campoRelato.setAttribute("autocorrect", "on");
   campoRelato.setAttribute("autocapitalize", "sentences");
 
-  // 🔹 Correções simples automáticas (acentos e pontuação básica)
+  // ?? Correções simples automáticas (acentos e pontuação básica)
   campoRelato.addEventListener("input", () => {
     let texto = campoRelato.value;
 
@@ -6682,7 +6746,7 @@ function habilitarCorrecaoOrtografica() {
       .replace(/\bpq\b/gi, "porque")
       .replace(/\bq\b/gi, "que")
       .replace(/\bvc\b/gi, "você")
-      .replace(/\bnem sei\b/gi, "nem sei 😅");
+      .replace(/\bnem sei\b/gi, "nem sei ??");
 
     // Corrige espaços duplos e capitaliza o início da frase
     texto = texto.replace(/\s{2,}/g, " ");
@@ -6691,10 +6755,10 @@ function habilitarCorrecaoOrtografica() {
     campoRelato.value = texto;
   });
 
-  console.log("📝 Correção ortográfica leve ativada para relatos de erros.");
+  console.log("?? Correção ortográfica leve ativada para relatos de erros.");
 }
 
-// 🔁 Ativa após 1 segundo (garantindo que o campo já existe no DOM)
+// ?? Ativa após 1 segundo (garantindo que o campo já existe no DOM)
 setTimeout(habilitarCorrecaoOrtografica, 1000);
 
 
@@ -6711,7 +6775,6 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
-
 
 
 
