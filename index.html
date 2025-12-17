@@ -1643,17 +1643,26 @@ async function executarNaFilaFirebase(tarefa) {
 }
 
 // ------------------------------------------------------------
-// 💾 Produtos
+// 💾 Usuários (corrigido — salva 1 documento por UID)
 // ------------------------------------------------------------
-window.salvarProdutosNoFirebase = async lista => {
+window.salvarUsuariosNoFirebase = async lista => {
   if (!Array.isArray(lista) || lista.length === 0) return;
-  const estoqueRef = doc(db, "estoqueGlobal", "estoque");
-  const col = collection(estoqueRef, "produtos");
+  
+  const usuariosCol = collection(db, "estoqueGlobal", "usuarios");
+  
   await executarNaFilaFirebase(async () => {
-    console.log(`💾 Gravando ${lista.length} produtos...`);
-    adicionarLotesNaFila(lista, id => doc(col, id), "produtos");
+    console.log(`💾 Gravando ${lista.length} usuários...`);
+
+    for (const u of lista) {
+      if (!u.uid) continue; // ignora usuários sem UID
+      const ref = doc(usuariosCol, u.uid);
+      await setDoc(ref, u, { merge: true });
+    }
+
+    console.log("✅ Usuários salvos corretamente em /estoqueGlobal/usuarios/{uid}");
   });
 };
+
 
 // ------------------------------------------------------------
 // 💾 Entradas
@@ -6686,6 +6695,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
