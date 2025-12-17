@@ -1542,17 +1542,38 @@ window.fazerLogin = async function () {
 
       console.log("✅ Perfil carregado corretamente:", dadosUsuario);
     }
-// ===================================================
-// ✅ GARANTE QUE O MENU LATERAL APAREÇA E MOSTRA O SISTEMA
-// ===================================================
-localStorage.setItem("perfil", dadosUsuario.perfil || "ESTOQUISTA");
 
-// Mostra o sistema completo (menu lateral + dashboard)
-if (typeof mostrarSistema === "function") {
-  mostrarSistema(user);
-} else {
-  console.warn("⚠️ Função 'mostrarSistema' não encontrada — verifique se ela está definida no seu código principal.");
-}
+    // ===================================================
+    // ✅ GARANTE QUE O MENU LATERAL APAREÇA E MOSTRA O SISTEMA
+    // ===================================================
+    localStorage.setItem("perfil", dadosUsuario.perfil || "ESTOQUISTA");
+
+    // Mostra o sistema completo (menu lateral + dashboard)
+    if (typeof mostrarSistema === "function") {
+      mostrarSistema(user);
+    } else {
+      console.warn("⚠️ Função 'mostrarSistema' não encontrada — verifique se ela está definida no seu código principal.");
+    }
+
+  } catch (error) {
+    console.error("❌ Erro ao logar:", error);
+    if (msgEl) {
+      msgEl.style.display = "block";
+      msgEl.style.color = "red";
+    }
+    const code = error?.code || "";
+    if (msgEl) {
+      if (code === "auth/wrong-password" || code === "auth/invalid-credential")
+        msgEl.textContent = "❌ Senha incorreta ou inválida!";
+      else if (code === "auth/user-not-found")
+        msgEl.textContent = "⚠️ Usuário não encontrado!";
+      else if (code === "auth/too-many-requests")
+        msgEl.textContent = "⏳ Muitas tentativas. Tente mais tarde.";
+      else msgEl.textContent = "❌ Erro ao fazer login.";
+    }
+  }
+};
+
 
     
 
@@ -6732,6 +6753,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
