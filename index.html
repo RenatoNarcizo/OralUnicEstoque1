@@ -660,42 +660,47 @@
 
     <main>
 		<section id="boasVindas" class="section active" style="text-align:center; padding:100px 20px;">
-		  <h1 style="color:#003b88;">?? Bem-vindo(a) <span id="nomeUsuarioBemVindo"></span>!</h1>
-		  <h2 style="color:#0d6efd;">ao Sistema de Controle de Estoque – Oral Unic Campo Grande</h2>
-		  <p style="margin-top:20px; color:#555;">Use o menu lateral para iniciar suas atividades.</p>
-		</section>
+  <h1 style="color:#003b88;">
+    <i class="fa fa-hand-sparkles" style="color:#0073e6;"></i>
+    Bem-vindo(a) <span id="nomeUsuarioBemVindo"></span>!
+  </h1>
+  <h2 style="color:#0d6efd;">
+    <i class="fa fa-boxes-stacked"></i> Sistema de Controle de Estoque – Oral Unic Campo Grande
+  </h2>
+  <p style="margin-top:20px; color:#555;">Use o menu lateral para iniciar suas atividades.</p>
+</section>
+
 		
 <section id="dashboard" class="section">
-    <h2>?? Dashboard do Sistema</h2>
-    <div class="dash-container">
-        <div class="dash-card">
-            <h3>?? Produtos Próximos do Vencimento</h3>
-            <ul id="listaProximosVencer"></ul>
-        </div>
-        <div class="dash-card">
-            <h3>?? Produtos Mais Caros</h3>
-            <ul id="listaMaisCaros"></ul>
-        </div>
-        <div class="dash-card">
-            <h3>?? Produtos Mais Utilizados</h3>
-            <ul id="listaMaisSaidas"></ul>
-        </div>
-        <div class="dash-card">
-            <h3>?? Produtos com Menos Saídas</h3>
-            <ul id="listaMenosSaidas"></ul>
-        </div>
-
-        <div class="dash-card">
-            <h3>?? Estoque Crítico</h3>
-            <ul id="listaEstoqueCritico"></ul>
-        </div>
-
-        <div class="dash-card">
-            <h3>?? Resumo Geral</h3>
-            <div id="resumoGeral"></div>
-        </div>
+  <h2><i class="fa fa-chart-pie"></i> Dashboard do Sistema</h2>
+  <div class="dash-container">
+    <div class="dash-card">
+      <h3><i class="fa fa-hourglass-half" style="color:#ff9800;"></i> Produtos Próximos do Vencimento</h3>
+      <ul id="listaProximosVencer"></ul>
     </div>
+    <div class="dash-card">
+      <h3><i class="fa fa-dollar-sign" style="color:#28a745;"></i> Produtos Mais Caros</h3>
+      <ul id="listaMaisCaros"></ul>
+    </div>
+    <div class="dash-card">
+      <h3><i class="fa fa-arrow-up" style="color:#17a2b8;"></i> Produtos Mais Utilizados</h3>
+      <ul id="listaMaisSaidas"></ul>
+    </div>
+    <div class="dash-card">
+      <h3><i class="fa fa-arrow-down" style="color:#dc3545;"></i> Produtos com Menos Saídas</h3>
+      <ul id="listaMenosSaidas"></ul>
+    </div>
+    <div class="dash-card">
+      <h3><i class="fa fa-triangle-exclamation" style="color:#ff5722;"></i> Estoque Crítico</h3>
+      <ul id="listaEstoqueCritico"></ul>
+    </div>
+    <div class="dash-card">
+      <h3><i class="fa fa-clipboard-list" style="color:#6f42c1;"></i> Resumo Geral</h3>
+      <div id="resumoGeral"></div>
+    </div>
+  </div>
 </section>
+
 
 
       
@@ -744,15 +749,15 @@
 
     <input id="produtoQtdEmbalagem" type="number" placeholder="Qtd por embalagem" style="width:140px" />
 
-    <input id="produtoCodigoBarras" type="text" placeholder="??Código de Barras (opcional)" style="width:220px" />
+    <input id="produtoCodigoBarras" type="text" placeholder="📦 Código de Barras (opcional)" style="width:220px" />
 
     <!-- Botão para foto -->
     <div style="display:flex; flex-direction:column; align-items:flex-start; gap:4px;">
       <div style="display:flex; align-items:center; gap:6px;">
-        <label for="produtoFoto" 
-               style="background:#007bff; color:white; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
-          ?? Insira foto do produto
-        </label>
+        <label for="produtoFoto"
+  style="background:#007bff; color:white; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+  <i class="fa fa-camera"></i> Inserir foto do produto
+</label>
         <input id="produtoFoto" type="file" accept="image/*" style="display:none;">
       </div>
       <div id="fotoPreview" style="margin-top:6px; font-size:13px; color:#555; text-align:center;"></div>
@@ -767,7 +772,7 @@
   </div>
 
   <div style="margin-bottom:10px;">
-    <input id="filtroProduto" type="text" placeholder="?? Filtrar por nome ou categoria" style="width:98%" oninput="filtrarProdutos()" />
+    <input id="filtroProduto" type="text" placeholder="🔍 Filtrar por nome ou categoria" style="width:98%" oninput="filtrarProdutos()" />
   </div>
 
   <div class="table-wrap">
@@ -982,12 +987,13 @@
   <h2><i class="fa fa-boxes"></i> Estoque Mínimo e Máximo</h2>
 
   <!-- ?? Resumo correto -->
- <div id="resumoLimites" style="margin-top:10px; font-weight:bold; color:#333;">
-  ?? Total de Produtos: 0 |
-  ?? Abaixo do Mínimo: 0 |
-  ? Dentro do Limite: 0 |
-  ?? Acima do Máximo: 0
+<div id="resumoLimites" style="margin-top:10px; font-weight:bold; color:#333;">
+  <i class="fa fa-cubes"></i> Total de Produtos: 0 |
+  <i class="fa fa-angle-down" style="color:red;"></i> Abaixo do Mínimo: 0 |
+  <i class="fa fa-equals" style="color:#28a745;"></i> Dentro do Limite: 0 |
+  <i class="fa fa-angle-up" style="color:#ff9800;"></i> Acima do Máximo: 0
 </div>
+
 
   <!-- ?? Filtros -->
   <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px; align-items:center;">
@@ -1299,13 +1305,14 @@
     <input id="erroTitulo" type="text" placeholder="Título do Erro ou Problema" style="flex:1; min-width:300px;" />
 
     <select id="erroSituacao" style="min-width:180px;">
-      <option value="">Selecione a Situação</option>
-      <option>?? Emergência</option>
-      <option>?? Muito Urgente</option>
-      <option>?? Urgente</option>
-      <option>?? Pouco Urgente</option>
-      <option>?? Não Urgente</option>
-    </select>
+  <option value="">Selecione a Situação</option>
+  <option>🚨 Emergência</option>
+  <option>⚠️ Muito Urgente</option>
+  <option>⏰ Urgente</option>
+  <option>🕒 Pouco Urgente</option>
+  <option>✅ Não Urgente</option>
+</select>
+
 
     <input id="erroPrevisao" type="date" placeholder="Previsão de Conclusão" style="width:180px;" />
 
@@ -6679,6 +6686,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
