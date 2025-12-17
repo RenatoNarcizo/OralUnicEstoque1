@@ -1515,7 +1515,7 @@ window.fazerLogin = async function () {
     // ===================================================
     // 🔍 GARANTE QUE O USUÁRIO TENHA PERFIL NO FIRESTORE
     // ===================================================
-    const userRef = doc(db, "estoqueGlobal", "usuarios", user.uid);
+    const userRef = doc(db, "estoqueGlobal", "estoque", "usuarios", user.uid);
     const snap = await getDoc(userRef);
 
     let dadosUsuario;
@@ -6754,6 +6754,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
