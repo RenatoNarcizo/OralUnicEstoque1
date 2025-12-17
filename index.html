@@ -4217,13 +4217,8 @@ function esperarDadosEIniciarAutoComplete() {
 
 esperarDadosEIniciarAutoComplete();
 
-
-
-
-
-
-// =============================
-// ? SAÍDA DE MATERIAIS (UNIFICADA)
+	// =============================
+// ✅ SAÍDA DE MATERIAIS (UNIFICADA e CORRIGIDA)
 // =============================
 
 let indiceEdicaoSaida = null;
@@ -4260,17 +4255,24 @@ function registrarSaida() {
     if (!s) return;
 
     Object.assign(s, { produto, qtd, data, setor, responsavel, observacao, codigoBarras });
-    mostrarMensagem(`? Saída de "${produto}" atualizada com sucesso!`, "sucesso");
+    mostrarMensagem(`✏️ Saída de "${produto}" atualizada com sucesso!`, "sucesso");
     indiceEdicaoSaida = null;
     mostrarBotaoCancelarSaida(false);
   } else {
     const novaSaida = {
-      produto, qtd, data, setor, responsavel, observacao, codigoBarras,
+      id: String(Date.now() + Math.floor(Math.random() * 10000)), // 🔑 gera ID único
+      produto,
+      qtd,
+      data,
+      setor,
+      responsavel,
+      observacao,
+      codigoBarras,
       usuario: auth.currentUser ? auth.currentUser.email : "desconhecido",
       timestamp: new Date().toISOString(),
     };
     window.saidas.push(novaSaida);
-    mostrarMensagem(`? Saída registrada para "${produto}"`, "sucesso");
+    mostrarMensagem(`✅ Saída registrada para "${produto}"`, "sucesso");
   }
 
   // Atualiza estoque e salva
@@ -4309,46 +4311,31 @@ function atualizarTabelaSaidas() {
     if (filtro && !produto.includes(filtro) && !responsavel.includes(filtro) && !setor.includes(filtro)) return;
 
     const row = document.createElement("tr");
-  row.innerHTML = `
-  <td>${idxOriginal + 1}</td>
-
-  <!-- Cód. Produto (usa o valor salvo na saída ou busca no cadastro pelo nome) -->
-  <td title="${s.codigoProduto || (window.produtos.find(p => p.nome === s.produto)?.codigo) || '-'}">
-    ${s.codigoProduto || (window.produtos.find(p => p.nome === s.produto)?.codigo) || "-"}
-  </td>
-
-  <!-- Produto (coluna maior para leitura) -->
-  <td 
-    title="${s.produto || '-'}"
-    style="max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
-  >
-    ${s.produto || "-"}
-  </td>
-
-  <!-- Código de Barras (coluna reduzida) -->
-  <td
-    title="${s.codigoBarras || '-'}"
-    onclick="copiarCodigoBarras('${s.codigoBarras || ''}')"
-    style="cursor:pointer; color:#444; max-width:100px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
-  >
-    ${s.codigoBarras || "-"}
-  </td>
-
-  <td>${s.qtd || 0}</td>
-  <td title="${s.data || '-'}">${s.data || "-"}</td>
-  <td title="${s.setor || '-'}">${s.setor || "-"}</td>
-  <td title="${s.responsavel || '-'}">${s.responsavel || "-"}</td>
-  <td title="${s.observacao || '-'}" style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-    ${s.observacao || "-"}
-  </td>
-
-  <td>
-    <button onclick="editarSaida(${idxOriginal})" title="Editar Saída"><i class="fa fa-edit"></i></button>
-    <button onclick="excluirSaida(${idxOriginal})" title="Excluir Saída"><i class="fa fa-trash"></i></button>
-  </td>
-`;
-
-
+    row.innerHTML = `
+      <td>${idxOriginal + 1}</td>
+      <td title="${s.codigoProduto || (window.produtos.find(p => p.nome === s.produto)?.codigo) || '-'}">
+        ${s.codigoProduto || (window.produtos.find(p => p.nome === s.produto)?.codigo) || "-"}
+      </td>
+      <td title="${s.produto || '-'}" style="max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+        ${s.produto || "-"}
+      </td>
+      <td title="${s.codigoBarras || '-'}"
+          onclick="copiarCodigoBarras('${s.codigoBarras || ''}')"
+          style="cursor:pointer; color:#444; max-width:100px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+        ${s.codigoBarras || "-"}
+      </td>
+      <td>${s.qtd || 0}</td>
+      <td title="${s.data || '-'}">${s.data || "-"}</td>
+      <td title="${s.setor || '-'}">${s.setor || "-"}</td>
+      <td title="${s.responsavel || '-'}">${s.responsavel || "-"}</td>
+      <td title="${s.observacao || '-'}" style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+        ${s.observacao || "-"}
+      </td>
+      <td>
+        <button onclick="editarSaida(${idxOriginal})" title="Editar Saída"><i class="fa fa-edit"></i></button>
+        <button onclick="excluirSaida(${idxOriginal})" title="Excluir Saída"><i class="fa fa-trash"></i></button>
+      </td>
+    `;
     tbody.appendChild(row);
   });
 }
@@ -4368,30 +4355,28 @@ function editarSaida(index) {
   document.getElementById("saidaData").value = s.data || "";
   document.getElementById("saidaCodigoBarras").value = s.codigoBarras || "";
 
-   const total = window.saidas.length;
+  const total = window.saidas.length;
   document.querySelectorAll("#tabelaSaidas tbody tr").forEach((tr, i) => {
     const idxOriginal = total - 1 - i;
     tr.style.background = idxOriginal === index ? "#fff3cd" : "";
   });
 
   mostrarBotaoCancelarSaida(true);
-  mostrarMensagem(`?? Editando saída de: ${s.produto}`, "info");
+  mostrarMensagem(`✏️ Editando saída de: ${s.produto}`, "info");
 }
-// ?? Alias para permitir que o campo de filtro funcione corretamente
+
 function filtrarSaidas() {
-  // apenas reaproveita a função existente
   if (typeof atualizarTabelaSaidas === "function") {
     atualizarTabelaSaidas();
   }
 }
-
 
 function cancelarEdicaoSaida() {
   indiceEdicaoSaida = null;
   limparCampos("saida");
   document.querySelectorAll("#tabelaSaidas tbody tr").forEach(tr => tr.style.background = "");
   mostrarBotaoCancelarSaida(false);
-  mostrarMensagem("?? Edição de saída cancelada.", "info");
+  mostrarMensagem("🟡 Edição de saída cancelada.", "info");
 }
 
 function mostrarBotaoCancelarSaida(exibir) {
@@ -4413,153 +4398,45 @@ function mostrarBotaoCancelarSaida(exibir) {
   } else if (botaoCancelar) botaoCancelar.remove();
 }
 
+// 🔥 Remove saída no Firestore
+async function excluirSaidaNoFirebase(idSaida) {
+  try {
+    const colRef = collection(db, "estoqueGlobal", "estoque", "saidas");
+    const ref = doc(colRef, idSaida);
+    await deleteDoc(ref);
+    console.log("🗑️ Saída excluída do Firestore:", idSaida);
+  } catch (e) {
+    console.error("❌ Erro ao excluir saída do Firestore:", e);
+  }
+}
+
+// ?? Excluir saída (local + Firestore)
 function excluirSaida(i) {
   const s = window.saidas[i];
   if (!s) return;
 
   if (!confirm(`Excluir saída do produto "${s.produto}" (Qtd: ${s.qtd || s.quantidade})?`)) return;
 
-  window.saidas.splice(i, 1);
-
-  salvarSaidasNoFirebase(window.saidas);
+  const saidaRemovida = window.saidas.splice(i, 1)[0];
   salvarTodosLocal();
 
-  mostrarMensagem(`??? Saída de "${s.produto}" excluída.`, "sucesso");
-
-  // ?? Atualiza tudo
-  if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-  if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-  if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-  if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
-}
-
-// ?? Função para limpar todos os campos da Saída de Materiais
-function limparCamposSaida() {
-  const formElements = document.querySelectorAll('#saida input, #saida select, #saida textarea');
-
-  formElements.forEach(el => {
-    if (el.type === "checkbox" || el.type === "radio") {
-      el.checked = false;
-    } else {
-      el.value = "";
-    }
-  });
-
-  // Remove destaque da tabela e reseta edição
-  document.querySelectorAll("#tabelaSaidas tbody tr").forEach(tr => tr.style.background = "");
-  indiceEdicaoSaida = null;
-  if (typeof mostrarBotaoCancelarSaida === "function") {
-    mostrarBotaoCancelarSaida(false);
+  if (saidaRemovida.id) {
+    excluirSaidaNoFirebase(saidaRemovida.id);
+  } else {
+    console.warn("⚠️ Saída sem ID — apenas removida localmente.");
   }
 
-  mostrarMensagem("?? Campos da saída limpos!", "info");
-  document.getElementById("saidaCodigoBarras")?.focus();
+  mostrarMensagem(`✅ Saída de "${s.produto}" excluída permanentemente.`, "sucesso");
+
+  atualizarTabelaSaidas?.();
+  atualizarTabelaEstoque?.();
+  atualizarTabelaLimites?.();
+  atualizarPainelFinanceiro?.();
 }
 
 
-// ?? Setor automático
-function atualizarSetorAutomatico() {
-  const produtoInput = document.getElementById("saidaProduto");
-  const setorSelect = document.getElementById("saidaSetor");
-  const codigoInput = document.getElementById("saidaCodigoBarras");
 
-  if (!produtoInput || !setorSelect) return;
-
-  const nomeProduto = produtoInput.value.trim();
-  const codigo = codigoInput ? codigoInput.value.trim() : "";
-  let entradaEncontrada = null;
-
-  if (codigo && Array.isArray(produtos)) {
-    const produto = produtos.find(p => p.codigoBarras === codigo);
-    if (produto)
-      entradaEncontrada = entradas
-        .slice()
-        .reverse()
-        .find(e => e.produto === produto.nome);
-  }
-
-  if (!entradaEncontrada && nomeProduto) {
-    entradaEncontrada = entradas
-      .slice()
-      .reverse()
-      .find(e => e.produto.toLowerCase() === nomeProduto.toLowerCase());
-  }
-
-  // ? Lista completa de setores (fixa + dinâmica)
-  const setoresFixos = [
-    "Centro Cirúrgico",
-    "Cesta paciente",
-    "Componentes",
-    "Copa e Cozinha",
-    "Escritório",
-    "Implante",
-    "Insumo Dental",
-    "Insumo Laboratório",
-    "Material de Uso e Consumo",
-    "Medicamentos",
-    "Material de Limpeza"
-  ];
-
-  // ?? Adiciona setores já usados em entradas (dinâmico)
-  const setoresUsados = Array.from(
-    new Set(entradas.map(e => e.setor).filter(s => s))
-  );
-
-  // ?? Combina ambos sem duplicar
-  const setoresUnicos = Array.from(new Set([...setoresFixos, ...setoresUsados]));
-
-  // ?? Atualiza o campo select
-  setorSelect.innerHTML = '<option value="">Selecione o Setor</option>';
-  setoresUnicos.forEach(setor => {
-    const option = document.createElement("option");
-    option.value = setor;
-    option.textContent = setor;
-    setorSelect.appendChild(option);
-  });
-
-  // ?? Pré-seleciona o setor correspondente, se houver
-  if (entradaEncontrada && entradaEncontrada.setor) {
-    setorSelect.value = entradaEncontrada.setor;
-  }
-}
-
-function atualizarSetoresPorProduto() {
-  const produtoNome = document.getElementById("saidaProduto").value.trim();
-  const setorSelect = document.getElementById("saidaSetor");
-
-  if (!setorSelect) return;
-
-  // ? Sempre começa com todos os setores liberados
-  const setoresCompletos = [
-    "Centro Cirúrgico",
-    "Cesta paciente",
-    "Componentes",
-    "Copa e Cozinha",
-    "Escritório",
-    "Implante",
-    "Insumo Dental",
-    "Insumo Laboratório",
-    "Material de Uso e Consumo",
-    "Medicamentos",
-    "Material de Limpeza"
-  ];
-
-  setorSelect.innerHTML =
-    '<option value="">Selecione o Setor</option>' +
-    setoresCompletos.map(s => `<option value="${s}">${s}</option>`).join("");
-
-  // ?? Mantém compatibilidade: se o produto já tem um setor em entradas, mantém
-  if (produtoNome && Array.isArray(entradas)) {
-    const ultimaEntrada = entradas
-      .slice()
-      .reverse()
-      .find(e => e.produto.toLowerCase() === produtoNome.toLowerCase());
-    if (ultimaEntrada && ultimaEntrada.setor) {
-      setorSelect.value = ultimaEntrada.setor;
-    }
-  }
-}
-
+ 
 /* =====================================================
    ?? AUTO-COMPLETE DINÂMICO — SAÍDA DE MATERIAIS
    ===================================================== */
@@ -6775,6 +6652,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
