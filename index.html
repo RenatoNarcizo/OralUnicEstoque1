@@ -1542,41 +1542,19 @@ window.fazerLogin = async function () {
 
       console.log("✅ Perfil carregado corretamente:", dadosUsuario);
     }
+// ===================================================
+// ✅ GARANTE QUE O MENU LATERAL APAREÇA E MOSTRA O SISTEMA
+// ===================================================
+localStorage.setItem("perfil", dadosUsuario.perfil || "ESTOQUISTA");
 
-    // ===================================================
-    // 🧭 GARANTE QUE O MENU LATERAL APAREÇA
-    // ===================================================
-    localStorage.setItem("perfil", dadosUsuario.perfil || "ESTOQUISTA");
+// Mostra o sistema completo (menu lateral + dashboard)
+if (typeof mostrarSistema === "function") {
+  mostrarSistema(user);
+} else {
+  console.warn("⚠️ Função 'mostrarSistema' não encontrada — verifique se ela está definida no seu código principal.");
+}
 
-    if (typeof mostrarMenuLateral === "function") {
-      mostrarMenuLateral(dadosUsuario.perfil || "ESTOQUISTA");
-    } else if (typeof mostrarMenu === "function") {
-      mostrarMenu(dadosUsuario.perfil || "ESTOQUISTA");
-    } else {
-      console.warn("⚠️ Nenhuma função de menu encontrada. Adicione 'mostrarMenuLateral' ou 'mostrarMenu'.");
-    }
-
-    // Exibe o restante do sistema
-    if (typeof mostrarSistema === "function") mostrarSistema(user);
-
-  } catch (error) {
-    console.error("❌ Erro ao logar:", error);
-    if (msgEl) {
-      msgEl.style.display = "block";
-      msgEl.style.color = "red";
-    }
-    const code = error?.code || "";
-    if (msgEl) {
-      if (code === "auth/wrong-password" || code === "auth/invalid-credential")
-        msgEl.textContent = "❌ Senha incorreta ou inválida!";
-      else if (code === "auth/user-not-found")
-        msgEl.textContent = "⚠️ Usuário não encontrado!";
-      else if (code === "auth/too-many-requests")
-        msgEl.textContent = "⏳ Muitas tentativas. Tente mais tarde.";
-      else msgEl.textContent = "❌ Erro ao fazer login.";
-    }
-  }
-};
+    
 
 // ===================================================
 // ⌨️ Permite login com tecla Enter
@@ -6754,6 +6732,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
