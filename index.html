@@ -1614,52 +1614,69 @@ function adicionarLotesNaFila(lista, refFn, nome = "coleção") {
 }
 
 // ============================================================
-// ?? Funções específicas (mantém compatibilidade total)
+// ✅ Funções específicas (versão otimizada com controle de carga)
 // ============================================================
+
+// Controle global de fila para evitar gravações simultâneas em excesso
+if (!window.filaDeGravacaoFirebase) window.filaDeGravacaoFirebase = Promise.resolve();
+
+async function executarNaFilaFirebase(tarefa) {
+  window.filaDeGravacaoFirebase = window.filaDeGravacaoFirebase
+    .then(() => tarefa())
+    .then(() => new Promise(res => setTimeout(res, 200))) // pausa entre lotes
+    .catch(e => console.error("❌ Erro na fila de gravação Firebase:", e));
+  return window.filaDeGravacaoFirebase;
+}
+
+// ------------------------------------------------------------
+// 💾 Produtos
+// ------------------------------------------------------------
 window.salvarProdutosNoFirebase = async lista => {
+  if (!Array.isArray(lista) || lista.length === 0) return;
   const estoqueRef = doc(db, "estoqueGlobal", "estoque");
   const col = collection(estoqueRef, "produtos");
-  adicionarLotesNaFila(lista, id => doc(col, id), "produtos");
+  await executarNaFilaFirebase(async () => {
+    console.log(`💾 Gravando ${lista.length} produtos...`);
+    adicionarLotesNaFila(lista, id => doc(col, id), "produtos");
+  });
 };
 
+// ------------------------------------------------------------
+// 💾 Entradas
+// ------------------------------------------------------------
 window.salvarEntradasNoFirebase = async lista => {
+  if (!Array.isArray(lista) || lista.length === 0) return;
   const col = collection(db, "estoqueGlobal", "estoque", "entradas");
-  adicionarLotesNaFila(lista, id => doc(col, id), "entradas");
+  await executarNaFilaFirebase(async () => {
+    console.log(`💾 Gravando ${lista.length} entradas...`);
+    adicionarLotesNaFila(lista, id => doc(col, id), "entradas");
+  });
 };
 
+// ------------------------------------------------------------
+// 💾 Saídas
+// ------------------------------------------------------------
 window.salvarSaidasNoFirebase = async lista => {
+  if (!Array.isArray(lista) || lista.length === 0) return;
   const col = collection(db, "estoqueGlobal", "estoque", "saidas");
-  adicionarLotesNaFila(lista, id => doc(col, id), "saídas");
+  await executarNaFilaFirebase(async () => {
+    console.log(`💾 Gravando ${lista.length} saídas...`);
+    adicionarLotesNaFila(lista, id => doc(col, id), "saídas");
+  });
 };
 
+// ------------------------------------------------------------
+// 💾 Erros e Problemas
+// ------------------------------------------------------------
 window.salvarErrosProblemasNoFirebase = async lista => {
+  if (!Array.isArray(lista) || lista.length === 0) return;
   const col = collection(db, "estoqueGlobal", "estoque", "errosProblemas");
-  adicionarLotesNaFila(lista, id => doc(col, id), "errosProblemas");
+  await executarNaFilaFirebase(async () => {
+    console.log(`💾 Gravando ${lista.length} erros/problemas...`);
+    adicionarLotesNaFila(lista, id => doc(col, id), "errosProblemas");
+  });
 };
 
-// ============================================================
-// ?? Usuários e documento principal — gravações leves
-// ============================================================
-window.salvarUsuariosNoFirebase = async lista => {
-  const ref = doc(db, "estoqueGlobal", "usuarios");
-  await setDoc(ref, { usuarios: lista }, { merge: true });
-  console.log("? Usuários salvos (documento leve).");
-};
-
-window.salvarResumoDoEstoque = async () => {
-  const ref = doc(db, "estoqueGlobal", "estoque");
-  await setDoc(ref, {
-    resumo: {
-      totalProdutos: (window.produtos || []).length,
-      totalEntradas: (window.entradas || []).length,
-      totalSaidas: (window.saidas || []).length,
-      ultimaAtualizacao: new Date().toISOString()
-    },
-    limites: window.limites || [],
-    usuarios: window.usuarios || []
-  }, { merge: true });
-  console.log("? Documento principal 'estoque' atualizado.");
-};
 
 // ============================================================
 // ?? Inicialização segura e log inicial
@@ -4401,14 +4418,17 @@ function mostrarBotaoCancelarSaida(exibir) {
 // 🔥 Remove saída no Firestore
 async function excluirSaidaNoFirebase(idSaida) {
   try {
+    if (!idSaida) return;
     const colRef = collection(db, "estoqueGlobal", "estoque", "saidas");
     const ref = doc(colRef, idSaida);
     await deleteDoc(ref);
     console.log("🗑️ Saída excluída do Firestore:", idSaida);
+    await new Promise(res => setTimeout(res, 100)); // ⏱️ pequeno intervalo
   } catch (e) {
     console.error("❌ Erro ao excluir saída do Firestore:", e);
   }
 }
+
 
 // ?? Excluir saída (local + Firestore)
 function excluirSaida(i) {
@@ -6652,6 +6672,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
