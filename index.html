@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sistema de Controle de Estoque – Oral Unic Campo Grande</title>
 
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>??</text></svg>">
+  <link rel="icon" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/svgs/solid/boxes-stacked.svg" type="image/svg+xml">
+
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
   <style>
     /* ========================= VARIÁVEIS DE CORES ========================= */
@@ -658,42 +660,47 @@
 
     <main>
 		<section id="boasVindas" class="section active" style="text-align:center; padding:100px 20px;">
-		  <h1 style="color:#003b88;">?? Bem-vindo(a) <span id="nomeUsuarioBemVindo"></span>!</h1>
-		  <h2 style="color:#0d6efd;">ao Sistema de Controle de Estoque – Oral Unic Campo Grande</h2>
-		  <p style="margin-top:20px; color:#555;">Use o menu lateral para iniciar suas atividades.</p>
-		</section>
+  <h1 style="color:#003b88;">
+    <i class="fa fa-hand-sparkles" style="color:#0073e6;"></i>
+    Bem-vindo(a) <span id="nomeUsuarioBemVindo"></span>!
+  </h1>
+  <h2 style="color:#0d6efd;">
+    <i class="fa fa-boxes-stacked"></i> Sistema de Controle de Estoque – Oral Unic Campo Grande
+  </h2>
+  <p style="margin-top:20px; color:#555;">Use o menu lateral para iniciar suas atividades.</p>
+</section>
+
 		
 <section id="dashboard" class="section">
-    <h2>?? Dashboard do Sistema</h2>
-    <div class="dash-container">
-        <div class="dash-card">
-            <h3>?? Produtos Próximos do Vencimento</h3>
-            <ul id="listaProximosVencer"></ul>
-        </div>
-        <div class="dash-card">
-            <h3>?? Produtos Mais Caros</h3>
-            <ul id="listaMaisCaros"></ul>
-        </div>
-        <div class="dash-card">
-            <h3>?? Produtos Mais Utilizados</h3>
-            <ul id="listaMaisSaidas"></ul>
-        </div>
-        <div class="dash-card">
-            <h3>?? Produtos com Menos Saídas</h3>
-            <ul id="listaMenosSaidas"></ul>
-        </div>
-
-        <div class="dash-card">
-            <h3>?? Estoque Crítico</h3>
-            <ul id="listaEstoqueCritico"></ul>
-        </div>
-
-        <div class="dash-card">
-            <h3>?? Resumo Geral</h3>
-            <div id="resumoGeral"></div>
-        </div>
+  <h2><i class="fa fa-chart-pie"></i> Dashboard do Sistema</h2>
+  <div class="dash-container">
+    <div class="dash-card">
+      <h3><i class="fa fa-hourglass-half" style="color:#ff9800;"></i> Produtos Próximos do Vencimento</h3>
+      <ul id="listaProximosVencer"></ul>
     </div>
+    <div class="dash-card">
+      <h3><i class="fa fa-dollar-sign" style="color:#28a745;"></i> Produtos Mais Caros</h3>
+      <ul id="listaMaisCaros"></ul>
+    </div>
+    <div class="dash-card">
+      <h3><i class="fa fa-arrow-up" style="color:#17a2b8;"></i> Produtos Mais Utilizados</h3>
+      <ul id="listaMaisSaidas"></ul>
+    </div>
+    <div class="dash-card">
+      <h3><i class="fa fa-arrow-down" style="color:#dc3545;"></i> Produtos com Menos Saídas</h3>
+      <ul id="listaMenosSaidas"></ul>
+    </div>
+    <div class="dash-card">
+      <h3><i class="fa fa-triangle-exclamation" style="color:#ff5722;"></i> Estoque Crítico</h3>
+      <ul id="listaEstoqueCritico"></ul>
+    </div>
+    <div class="dash-card">
+      <h3><i class="fa fa-clipboard-list" style="color:#6f42c1;"></i> Resumo Geral</h3>
+      <div id="resumoGeral"></div>
+    </div>
+  </div>
 </section>
+
 
 
       
@@ -742,15 +749,15 @@
 
     <input id="produtoQtdEmbalagem" type="number" placeholder="Qtd por embalagem" style="width:140px" />
 
-    <input id="produtoCodigoBarras" type="text" placeholder="??Código de Barras (opcional)" style="width:220px" />
+    <input id="produtoCodigoBarras" type="text" placeholder="?? Código de Barras (opcional)" style="width:220px" />
 
     <!-- Botão para foto -->
     <div style="display:flex; flex-direction:column; align-items:flex-start; gap:4px;">
       <div style="display:flex; align-items:center; gap:6px;">
-        <label for="produtoFoto" 
-               style="background:#007bff; color:white; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
-          ?? Insira foto do produto
-        </label>
+        <label for="produtoFoto"
+  style="background:#007bff; color:white; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+  <i class="fa fa-camera"></i> Inserir foto do produto
+</label>
         <input id="produtoFoto" type="file" accept="image/*" style="display:none;">
       </div>
       <div id="fotoPreview" style="margin-top:6px; font-size:13px; color:#555; text-align:center;"></div>
@@ -980,12 +987,13 @@
   <h2><i class="fa fa-boxes"></i> Estoque Mínimo e Máximo</h2>
 
   <!-- ?? Resumo correto -->
- <div id="resumoLimites" style="margin-top:10px; font-weight:bold; color:#333;">
-  ?? Total de Produtos: 0 |
-  ?? Abaixo do Mínimo: 0 |
-  ? Dentro do Limite: 0 |
-  ?? Acima do Máximo: 0
+<div id="resumoLimites" style="margin-top:10px; font-weight:bold; color:#333;">
+  <i class="fa fa-cubes"></i> Total de Produtos: 0 |
+  <i class="fa fa-angle-down" style="color:red;"></i> Abaixo do Mínimo: 0 |
+  <i class="fa fa-equals" style="color:#28a745;"></i> Dentro do Limite: 0 |
+  <i class="fa fa-angle-up" style="color:#ff9800;"></i> Acima do Máximo: 0
 </div>
+
 
   <!-- ?? Filtros -->
   <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px; align-items:center;">
@@ -1297,13 +1305,14 @@
     <input id="erroTitulo" type="text" placeholder="Título do Erro ou Problema" style="flex:1; min-width:300px;" />
 
     <select id="erroSituacao" style="min-width:180px;">
-      <option value="">Selecione a Situação</option>
-      <option>?? Emergência</option>
-      <option>?? Muito Urgente</option>
-      <option>?? Urgente</option>
-      <option>?? Pouco Urgente</option>
-      <option>?? Não Urgente</option>
-    </select>
+  <option value="">Selecione a Situação</option>
+  <option>?? Emergência</option>
+  <option>?? Muito Urgente</option>
+  <option>? Urgente</option>
+  <option>?? Pouco Urgente</option>
+  <option>? Não Urgente</option>
+</select>
+
 
     <input id="erroPrevisao" type="date" placeholder="Previsão de Conclusão" style="width:180px;" />
 
@@ -1467,10 +1476,9 @@ async function carregarProdutosMesclados() {
 }
 
 // ===================================================
-// ?? LOGIN E AUTENTICAÇÃO (100% COMPATÍVEL COM SEU SCRIPT)
+// ?? LOGIN E AUTENTICAÇÃO (com verificação automática de perfil)
 // ===================================================
 
-// === FUNÇÃO DE LOGIN (garante que está sempre definida) ===
 window.fazerLogin = async function () {
   const usuarioEl = document.getElementById("usuarioLogin");
   const senhaEl = document.getElementById("senhaLogin");
@@ -1482,36 +1490,96 @@ window.fazerLogin = async function () {
   const senha = senhaEl?.value?.trim() || "";
 
   if (!usuario || !senha) {
-    if (msgEl) { msgEl.style.display = "block"; msgEl.style.color = "red"; msgEl.textContent = "?? Preencha e-mail e senha!"; }
+    if (msgEl) {
+      msgEl.style.display = "block";
+      msgEl.style.color = "red";
+      msgEl.textContent = "?? Preencha e-mail e senha!";
+    }
     return;
   }
 
   const email = usuario.toLowerCase();
 
   try {
-    // signInWithEmailAndPassword deve existir (importado)
+    // === LOGIN ===
     const userCredential = await signInWithEmailAndPassword(auth, email, senha);
     const user = userCredential.user;
-    if (msgEl) { msgEl.style.display = "block"; msgEl.style.color = "green"; msgEl.textContent = "? Login realizado com sucesso!"; }
+
+    if (msgEl) {
+      msgEl.style.display = "block";
+      msgEl.style.color = "green";
+      msgEl.textContent = "? Login realizado com sucesso!";
+    }
     console.log("? Usuário logado:", user.email);
 
-    if (typeof mostrarSistema === "function") mostrarSistema(user);
+    // ===================================================
+    // ?? GARANTE QUE O USUÁRIO TENHA PERFIL NO FIRESTORE
+    // ===================================================
+    const userRef = doc(db, "estoqueGlobal", "estoque", "usuarios", user.uid);
+    const snap = await getDoc(userRef);
+
+    let dadosUsuario;
+    if (!snap.exists()) {
+      // Se o usuário ainda não existe, cria com perfil padrão
+      dadosUsuario = {
+        criadoEm: new Date().toISOString(),
+        email: user.email,
+        nome: user.displayName || user.email.split("@")[0] || "Usuário",
+        perfil: "ESTOQUISTA",
+        uid: user.uid
+      };
+      await setDoc(userRef, dadosUsuario);
+      console.log("?? Novo perfil criado automaticamente:", dadosUsuario);
+    } else {
+      dadosUsuario = snap.data();
+
+      // Se o perfil estiver vazio, corrige automaticamente
+      if (!dadosUsuario.perfil || dadosUsuario.perfil.trim() === "") {
+        dadosUsuario.perfil = "ESTOQUISTA";
+        await setDoc(userRef, { perfil: "ESTOQUISTA" }, { merge: true });
+        console.log("?? Perfil vazio corrigido automaticamente para 'ESTOQUISTA'");
+      }
+
+      console.log("? Perfil carregado corretamente:", dadosUsuario);
+    }
+
+    // ===================================================
+    // ? GARANTE QUE O MENU LATERAL APAREÇA E MOSTRA O SISTEMA
+    // ===================================================
+    localStorage.setItem("perfil", dadosUsuario.perfil || "ESTOQUISTA");
+
+    // Mostra o sistema completo (menu lateral + dashboard)
+    if (typeof mostrarSistema === "function") {
+      mostrarSistema(user);
+    } else {
+      console.warn("?? Função 'mostrarSistema' não encontrada — verifique se ela está definida no seu código principal.");
+    }
+
   } catch (error) {
     console.error("? Erro ao logar:", error);
-    if (msgEl) { msgEl.style.display = "block"; msgEl.style.color = "red"; }
+    if (msgEl) {
+      msgEl.style.display = "block";
+      msgEl.style.color = "red";
+    }
     const code = error?.code || "";
     if (msgEl) {
-      if (code === "auth/wrong-password" || code === "auth/invalid-credential") msgEl.textContent = "? Senha incorreta ou inválida!";
-      else if (code === "auth/user-not-found") msgEl.textContent = "? Usuário não encontrado!";
-      else if (code === "auth/too-many-requests") msgEl.textContent = "?? Muitas tentativas. Tente mais tarde.";
+      if (code === "auth/wrong-password" || code === "auth/invalid-credential")
+        msgEl.textContent = "? Senha incorreta ou inválida!";
+      else if (code === "auth/user-not-found")
+        msgEl.textContent = "?? Usuário não encontrado!";
+      else if (code === "auth/too-many-requests")
+        msgEl.textContent = "? Muitas tentativas. Tente mais tarde.";
       else msgEl.textContent = "? Erro ao fazer login.";
     }
   }
 };
 
 
+    
 
+// ===================================================
 // ?? Permite login com tecla Enter
+// ===================================================
 document.addEventListener("DOMContentLoaded", () => {
   const usuarioEl = document.getElementById("usuarioLogin");
   const senhaEl = document.getElementById("senhaLogin");
@@ -1529,6 +1597,30 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+// ===================================================
+// ? Função responsável por exibir o sistema e o menu lateral
+// ===================================================
+window.mostrarSistema = async function(user) {
+  const loginView = document.getElementById("loginView");
+  const mainApp = document.getElementById("mainApp");
+  const sidebar = document.getElementById("sidebar");
+  const userName = document.getElementById("userName");
+  const perfilBadge = document.getElementById("perfilBadge");
+  const nomeBemVindo = document.getElementById("nomeUsuarioBemVindo");
+
+  if (loginView) loginView.style.display = "none";
+  if (mainApp) mainApp.style.display = "block";
+  if (sidebar) sidebar.classList.add("active");
+
+  const perfil = localStorage.getItem("perfil") || "ESTOQUISTA";
+  if (userName) userName.textContent = user?.displayName || user?.email?.split("@")[0] || "Usuário";
+  if (perfilBadge) perfilBadge.textContent = perfil;
+  if (nomeBemVindo) nomeBemVindo.textContent = user?.displayName || user?.email?.split("@")[0] || "Usuário";
+
+  console.log(`? Sistema exibido para ${perfil}`);
+};
+
+	
 // ============================================================
 // ? Firestore — Controle definitivo de gravação (fila + autoajuste + snapshot lock)
 // ============================================================
@@ -1541,6 +1633,126 @@ window._filaDeGravacoes = [];
 window._processandoFila = false;
 window._delayEntreLotes = 3000; // ?? pausa segura entre commits
 window.bloquearAtualizacaoSnapshot = false;
+
+
+
+
+// ============================================================
+// ?? Função otimizada para gravação em lotes no Firestore
+// ============================================================
+function adicionarLotesNaFila(lista, refFn, nome = "coleção") {
+  if (!Array.isArray(lista) || lista.length === 0) return;
+
+  const TAMANHO_LOTE = 400; // ?? Firestore permite até 500
+  const totalLotes = Math.ceil(lista.length / TAMANHO_LOTE);
+
+  for (let i = 0; i < lista.length; i += TAMANHO_LOTE) {
+    const chunk = lista.slice(i, i + TAMANHO_LOTE);
+    const loteIndex = i / TAMANHO_LOTE + 1;
+
+    window._filaDeGravacoes.push(async () => {
+      window.bloquearAtualizacaoSnapshot = true;
+      const batch = writeBatch(db);
+
+      chunk.forEach(obj => {
+        const id = String(obj.id || Date.now() + Math.floor(Math.random() * 10000));
+        obj.id = id;
+        batch.set(refFn(id), obj, { merge: true });
+      });
+
+      console.log(`?? Gravando ${nome} — lote ${loteIndex}/${totalLotes} (${chunk.length} docs)...`);
+      const t0 = performance.now();
+      await batch.commit();
+      const tempo = ((performance.now() - t0) / 1000).toFixed(2);
+      console.log(`? ${nome}: lote ${loteIndex}/${totalLotes} salvo em ${tempo}s`);
+
+      // ?? Atraso curto antes de liberar o snapshot
+      setTimeout(() => {
+        window.bloquearAtualizacaoSnapshot = false;
+        console.log("?? Snapshot reativado.");
+      }, 2000);
+
+      // ?? Espera 200ms antes de enviar o próximo lote (protege o stream)
+      await new Promise(res => setTimeout(res, 200));
+    });
+  }
+
+  processarFila(); // inicia execução da fila
+}
+
+
+// ============================================================
+// ? Funções específicas (versão otimizada com controle de carga)
+// ============================================================
+
+// Controle global de fila para evitar gravações simultâneas em excesso
+if (!window.filaDeGravacaoFirebase) window.filaDeGravacaoFirebase = Promise.resolve();
+
+async function executarNaFilaFirebase(tarefa) {
+  window.filaDeGravacaoFirebase = window.filaDeGravacaoFirebase
+    .then(() => tarefa())
+    .then(() => new Promise(res => setTimeout(res, 200))) // pausa entre lotes
+    .catch(e => console.error("? Erro na fila de gravação Firebase:", e));
+  return window.filaDeGravacaoFirebase;
+}
+
+// ------------------------------------------------------------
+// ?? Usuários (corrigido — salva 1 documento por UID)
+// ------------------------------------------------------------
+window.salvarUsuariosNoFirebase = async lista => {
+  if (!Array.isArray(lista) || lista.length === 0) return;
+  
+  const usuariosCol = collection(db, "estoqueGlobal", "usuarios");
+  
+  await executarNaFilaFirebase(async () => {
+    console.log(`?? Gravando ${lista.length} usuários...`);
+
+    for (const u of lista) {
+      if (!u.uid) continue; // ignora usuários sem UID
+      const ref = doc(usuariosCol, u.uid);
+      await setDoc(ref, u, { merge: true });
+    }
+
+    console.log("? Usuários salvos corretamente em /estoqueGlobal/usuarios/{uid}");
+  });
+};
+
+
+// ------------------------------------------------------------
+// ?? Entradas
+// ------------------------------------------------------------
+window.salvarEntradasNoFirebase = async lista => {
+  if (!Array.isArray(lista) || lista.length === 0) return;
+  const col = collection(db, "estoqueGlobal", "estoque", "entradas");
+  await executarNaFilaFirebase(async () => {
+    console.log(`?? Gravando ${lista.length} entradas...`);
+    adicionarLotesNaFila(lista, id => doc(col, id), "entradas");
+  });
+};
+
+// ------------------------------------------------------------
+// ?? Saídas
+// ------------------------------------------------------------
+window.salvarSaidasNoFirebase = async lista => {
+  if (!Array.isArray(lista) || lista.length === 0) return;
+  const col = collection(db, "estoqueGlobal", "estoque", "saidas");
+  await executarNaFilaFirebase(async () => {
+    console.log(`?? Gravando ${lista.length} saídas...`);
+    adicionarLotesNaFila(lista, id => doc(col, id), "saídas");
+  });
+};
+
+// ------------------------------------------------------------
+// ?? Erros e Problemas
+// ------------------------------------------------------------
+window.salvarErrosProblemasNoFirebase = async lista => {
+  if (!Array.isArray(lista) || lista.length === 0) return;
+  const col = collection(db, "estoqueGlobal", "estoque", "errosProblemas");
+  await executarNaFilaFirebase(async () => {
+    console.log(`?? Gravando ${lista.length} erros/problemas...`);
+    adicionarLotesNaFila(lista, id => doc(col, id), "errosProblemas");
+  });
+};
 
 // ============================================================
 // ?? Executor da fila — garante 1 commit por vez
@@ -1572,95 +1784,6 @@ async function processarFila() {
   console.log("? Todas as gravações na fila foram concluídas.");
   window._processandoFila = false;
 }
-
-// ============================================================
-// ?? Adiciona lotes à fila — garante execução ordenada e segura
-// ============================================================
-function adicionarLotesNaFila(lista, refFn, nome = "coleção") {
-  if (!Array.isArray(lista) || lista.length === 0) return;
-
-  const TAMANHO_LOTE = 20; // ?? seguro para Firestore (evita resource-exhausted)
-  const totalLotes = Math.ceil(lista.length / TAMANHO_LOTE);
-
-  for (let i = 0; i < lista.length; i += TAMANHO_LOTE) {
-    const chunk = lista.slice(i, i + TAMANHO_LOTE);
-    const loteIndex = i / TAMANHO_LOTE + 1;
-
-    window._filaDeGravacoes.push(async () => {
-      window.bloquearAtualizacaoSnapshot = true;
-      const batch = writeBatch(db);
-
-      chunk.forEach(obj => {
-        const id = String(obj.id || Date.now() + Math.floor(Math.random() * 10000));
-        obj.id = id;
-        batch.set(refFn(id), obj, { merge: true });
-      });
-
-      console.log(`?? Gravando ${nome} — lote ${loteIndex}/${totalLotes} (${chunk.length} docs)...`);
-      const t0 = performance.now();
-      await batch.commit();
-      const tempo = ((performance.now() - t0) / 1000).toFixed(2);
-      console.log(`? ${nome}: lote ${loteIndex}/${totalLotes} salvo em ${tempo}s`);
-
-      // ?? Reativa snapshot depois de 3s (seguro e leve)
-      setTimeout(() => {
-        window.bloquearAtualizacaoSnapshot = false;
-        console.log("?? Snapshot reativado.");
-      }, 3000);
-    });
-  }
-
-  processarFila(); // inicia execução da fila
-}
-
-// ============================================================
-// ?? Funções específicas (mantém compatibilidade total)
-// ============================================================
-window.salvarProdutosNoFirebase = async lista => {
-  const estoqueRef = doc(db, "estoqueGlobal", "estoque");
-  const col = collection(estoqueRef, "produtos");
-  adicionarLotesNaFila(lista, id => doc(col, id), "produtos");
-};
-
-window.salvarEntradasNoFirebase = async lista => {
-  const col = collection(db, "estoqueGlobal", "estoque", "entradas");
-  adicionarLotesNaFila(lista, id => doc(col, id), "entradas");
-};
-
-window.salvarSaidasNoFirebase = async lista => {
-  const col = collection(db, "estoqueGlobal", "estoque", "saidas");
-  adicionarLotesNaFila(lista, id => doc(col, id), "saídas");
-};
-
-window.salvarErrosProblemasNoFirebase = async lista => {
-  const col = collection(db, "estoqueGlobal", "estoque", "errosProblemas");
-  adicionarLotesNaFila(lista, id => doc(col, id), "errosProblemas");
-};
-
-// ============================================================
-// ?? Usuários e documento principal — gravações leves
-// ============================================================
-window.salvarUsuariosNoFirebase = async lista => {
-  const ref = doc(db, "estoqueGlobal", "usuarios");
-  await setDoc(ref, { usuarios: lista }, { merge: true });
-  console.log("? Usuários salvos (documento leve).");
-};
-
-window.salvarResumoDoEstoque = async () => {
-  const ref = doc(db, "estoqueGlobal", "estoque");
-  await setDoc(ref, {
-    resumo: {
-      totalProdutos: (window.produtos || []).length,
-      totalEntradas: (window.entradas || []).length,
-      totalSaidas: (window.saidas || []).length,
-      ultimaAtualizacao: new Date().toISOString()
-    },
-    limites: window.limites || [],
-    usuarios: window.usuarios || []
-  }, { merge: true });
-  console.log("? Documento principal 'estoque' atualizado.");
-};
-
 // ============================================================
 // ?? Inicialização segura e log inicial
 // ============================================================
@@ -1675,7 +1798,6 @@ console.log("?? Dados carregados do localStorage:", {
   saidas: window.saidas.length,
   usuarios: window.usuarios.length
 });
-
 
 
 
@@ -4217,13 +4339,8 @@ function esperarDadosEIniciarAutoComplete() {
 
 esperarDadosEIniciarAutoComplete();
 
-
-
-
-
-
-// =============================
-// ? SAÍDA DE MATERIAIS (UNIFICADA)
+	// =============================
+// ? SAÍDA DE MATERIAIS (UNIFICADA e CORRIGIDA)
 // =============================
 
 let indiceEdicaoSaida = null;
@@ -4260,12 +4377,19 @@ function registrarSaida() {
     if (!s) return;
 
     Object.assign(s, { produto, qtd, data, setor, responsavel, observacao, codigoBarras });
-    mostrarMensagem(`? Saída de "${produto}" atualizada com sucesso!`, "sucesso");
+    mostrarMensagem(`?? Saída de "${produto}" atualizada com sucesso!`, "sucesso");
     indiceEdicaoSaida = null;
     mostrarBotaoCancelarSaida(false);
   } else {
     const novaSaida = {
-      produto, qtd, data, setor, responsavel, observacao, codigoBarras,
+      id: String(Date.now() + Math.floor(Math.random() * 10000)), // ?? gera ID único
+      produto,
+      qtd,
+      data,
+      setor,
+      responsavel,
+      observacao,
+      codigoBarras,
       usuario: auth.currentUser ? auth.currentUser.email : "desconhecido",
       timestamp: new Date().toISOString(),
     };
@@ -4309,46 +4433,31 @@ function atualizarTabelaSaidas() {
     if (filtro && !produto.includes(filtro) && !responsavel.includes(filtro) && !setor.includes(filtro)) return;
 
     const row = document.createElement("tr");
-  row.innerHTML = `
-  <td>${idxOriginal + 1}</td>
-
-  <!-- Cód. Produto (usa o valor salvo na saída ou busca no cadastro pelo nome) -->
-  <td title="${s.codigoProduto || (window.produtos.find(p => p.nome === s.produto)?.codigo) || '-'}">
-    ${s.codigoProduto || (window.produtos.find(p => p.nome === s.produto)?.codigo) || "-"}
-  </td>
-
-  <!-- Produto (coluna maior para leitura) -->
-  <td 
-    title="${s.produto || '-'}"
-    style="max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
-  >
-    ${s.produto || "-"}
-  </td>
-
-  <!-- Código de Barras (coluna reduzida) -->
-  <td
-    title="${s.codigoBarras || '-'}"
-    onclick="copiarCodigoBarras('${s.codigoBarras || ''}')"
-    style="cursor:pointer; color:#444; max-width:100px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
-  >
-    ${s.codigoBarras || "-"}
-  </td>
-
-  <td>${s.qtd || 0}</td>
-  <td title="${s.data || '-'}">${s.data || "-"}</td>
-  <td title="${s.setor || '-'}">${s.setor || "-"}</td>
-  <td title="${s.responsavel || '-'}">${s.responsavel || "-"}</td>
-  <td title="${s.observacao || '-'}" style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-    ${s.observacao || "-"}
-  </td>
-
-  <td>
-    <button onclick="editarSaida(${idxOriginal})" title="Editar Saída"><i class="fa fa-edit"></i></button>
-    <button onclick="excluirSaida(${idxOriginal})" title="Excluir Saída"><i class="fa fa-trash"></i></button>
-  </td>
-`;
-
-
+    row.innerHTML = `
+      <td>${idxOriginal + 1}</td>
+      <td title="${s.codigoProduto || (window.produtos.find(p => p.nome === s.produto)?.codigo) || '-'}">
+        ${s.codigoProduto || (window.produtos.find(p => p.nome === s.produto)?.codigo) || "-"}
+      </td>
+      <td title="${s.produto || '-'}" style="max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+        ${s.produto || "-"}
+      </td>
+      <td title="${s.codigoBarras || '-'}"
+          onclick="copiarCodigoBarras('${s.codigoBarras || ''}')"
+          style="cursor:pointer; color:#444; max-width:100px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+        ${s.codigoBarras || "-"}
+      </td>
+      <td>${s.qtd || 0}</td>
+      <td title="${s.data || '-'}">${s.data || "-"}</td>
+      <td title="${s.setor || '-'}">${s.setor || "-"}</td>
+      <td title="${s.responsavel || '-'}">${s.responsavel || "-"}</td>
+      <td title="${s.observacao || '-'}" style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+        ${s.observacao || "-"}
+      </td>
+      <td>
+        <button onclick="editarSaida(${idxOriginal})" title="Editar Saída"><i class="fa fa-edit"></i></button>
+        <button onclick="excluirSaida(${idxOriginal})" title="Excluir Saída"><i class="fa fa-trash"></i></button>
+      </td>
+    `;
     tbody.appendChild(row);
   });
 }
@@ -4368,7 +4477,7 @@ function editarSaida(index) {
   document.getElementById("saidaData").value = s.data || "";
   document.getElementById("saidaCodigoBarras").value = s.codigoBarras || "";
 
-   const total = window.saidas.length;
+  const total = window.saidas.length;
   document.querySelectorAll("#tabelaSaidas tbody tr").forEach((tr, i) => {
     const idxOriginal = total - 1 - i;
     tr.style.background = idxOriginal === index ? "#fff3cd" : "";
@@ -4377,14 +4486,12 @@ function editarSaida(index) {
   mostrarBotaoCancelarSaida(true);
   mostrarMensagem(`?? Editando saída de: ${s.produto}`, "info");
 }
-// ?? Alias para permitir que o campo de filtro funcione corretamente
+
 function filtrarSaidas() {
-  // apenas reaproveita a função existente
   if (typeof atualizarTabelaSaidas === "function") {
     atualizarTabelaSaidas();
   }
 }
-
 
 function cancelarEdicaoSaida() {
   indiceEdicaoSaida = null;
@@ -4413,153 +4520,48 @@ function mostrarBotaoCancelarSaida(exibir) {
   } else if (botaoCancelar) botaoCancelar.remove();
 }
 
+// ?? Remove saída no Firestore
+async function excluirSaidaNoFirebase(idSaida) {
+  try {
+    if (!idSaida) return;
+    const colRef = collection(db, "estoqueGlobal", "estoque", "saidas");
+    const ref = doc(colRef, idSaida);
+    await deleteDoc(ref);
+    console.log("??? Saída excluída do Firestore:", idSaida);
+    await new Promise(res => setTimeout(res, 100)); // ?? pequeno intervalo
+  } catch (e) {
+    console.error("? Erro ao excluir saída do Firestore:", e);
+  }
+}
+
+
+// ?? Excluir saída (local + Firestore)
 function excluirSaida(i) {
   const s = window.saidas[i];
   if (!s) return;
 
   if (!confirm(`Excluir saída do produto "${s.produto}" (Qtd: ${s.qtd || s.quantidade})?`)) return;
 
-  window.saidas.splice(i, 1);
-
-  salvarSaidasNoFirebase(window.saidas);
+  const saidaRemovida = window.saidas.splice(i, 1)[0];
   salvarTodosLocal();
 
-  mostrarMensagem(`??? Saída de "${s.produto}" excluída.`, "sucesso");
-
-  // ?? Atualiza tudo
-  if (typeof atualizarTabelaSaidas === "function") atualizarTabelaSaidas();
-  if (typeof atualizarTabelaEstoque === "function") atualizarTabelaEstoque();
-  if (typeof atualizarTabelaLimites === "function") atualizarTabelaLimites();
-  if (typeof atualizarPainelFinanceiro === "function") atualizarPainelFinanceiro();
-}
-
-// ?? Função para limpar todos os campos da Saída de Materiais
-function limparCamposSaida() {
-  const formElements = document.querySelectorAll('#saida input, #saida select, #saida textarea');
-
-  formElements.forEach(el => {
-    if (el.type === "checkbox" || el.type === "radio") {
-      el.checked = false;
-    } else {
-      el.value = "";
-    }
-  });
-
-  // Remove destaque da tabela e reseta edição
-  document.querySelectorAll("#tabelaSaidas tbody tr").forEach(tr => tr.style.background = "");
-  indiceEdicaoSaida = null;
-  if (typeof mostrarBotaoCancelarSaida === "function") {
-    mostrarBotaoCancelarSaida(false);
+  if (saidaRemovida.id) {
+    excluirSaidaNoFirebase(saidaRemovida.id);
+  } else {
+    console.warn("?? Saída sem ID — apenas removida localmente.");
   }
 
-  mostrarMensagem("?? Campos da saída limpos!", "info");
-  document.getElementById("saidaCodigoBarras")?.focus();
+  mostrarMensagem(`? Saída de "${s.produto}" excluída permanentemente.`, "sucesso");
+
+  atualizarTabelaSaidas?.();
+  atualizarTabelaEstoque?.();
+  atualizarTabelaLimites?.();
+  atualizarPainelFinanceiro?.();
 }
 
 
-// ?? Setor automático
-function atualizarSetorAutomatico() {
-  const produtoInput = document.getElementById("saidaProduto");
-  const setorSelect = document.getElementById("saidaSetor");
-  const codigoInput = document.getElementById("saidaCodigoBarras");
 
-  if (!produtoInput || !setorSelect) return;
-
-  const nomeProduto = produtoInput.value.trim();
-  const codigo = codigoInput ? codigoInput.value.trim() : "";
-  let entradaEncontrada = null;
-
-  if (codigo && Array.isArray(produtos)) {
-    const produto = produtos.find(p => p.codigoBarras === codigo);
-    if (produto)
-      entradaEncontrada = entradas
-        .slice()
-        .reverse()
-        .find(e => e.produto === produto.nome);
-  }
-
-  if (!entradaEncontrada && nomeProduto) {
-    entradaEncontrada = entradas
-      .slice()
-      .reverse()
-      .find(e => e.produto.toLowerCase() === nomeProduto.toLowerCase());
-  }
-
-  // ? Lista completa de setores (fixa + dinâmica)
-  const setoresFixos = [
-    "Centro Cirúrgico",
-    "Cesta paciente",
-    "Componentes",
-    "Copa e Cozinha",
-    "Escritório",
-    "Implante",
-    "Insumo Dental",
-    "Insumo Laboratório",
-    "Material de Uso e Consumo",
-    "Medicamentos",
-    "Material de Limpeza"
-  ];
-
-  // ?? Adiciona setores já usados em entradas (dinâmico)
-  const setoresUsados = Array.from(
-    new Set(entradas.map(e => e.setor).filter(s => s))
-  );
-
-  // ?? Combina ambos sem duplicar
-  const setoresUnicos = Array.from(new Set([...setoresFixos, ...setoresUsados]));
-
-  // ?? Atualiza o campo select
-  setorSelect.innerHTML = '<option value="">Selecione o Setor</option>';
-  setoresUnicos.forEach(setor => {
-    const option = document.createElement("option");
-    option.value = setor;
-    option.textContent = setor;
-    setorSelect.appendChild(option);
-  });
-
-  // ?? Pré-seleciona o setor correspondente, se houver
-  if (entradaEncontrada && entradaEncontrada.setor) {
-    setorSelect.value = entradaEncontrada.setor;
-  }
-}
-
-function atualizarSetoresPorProduto() {
-  const produtoNome = document.getElementById("saidaProduto").value.trim();
-  const setorSelect = document.getElementById("saidaSetor");
-
-  if (!setorSelect) return;
-
-  // ? Sempre começa com todos os setores liberados
-  const setoresCompletos = [
-    "Centro Cirúrgico",
-    "Cesta paciente",
-    "Componentes",
-    "Copa e Cozinha",
-    "Escritório",
-    "Implante",
-    "Insumo Dental",
-    "Insumo Laboratório",
-    "Material de Uso e Consumo",
-    "Medicamentos",
-    "Material de Limpeza"
-  ];
-
-  setorSelect.innerHTML =
-    '<option value="">Selecione o Setor</option>' +
-    setoresCompletos.map(s => `<option value="${s}">${s}</option>`).join("");
-
-  // ?? Mantém compatibilidade: se o produto já tem um setor em entradas, mantém
-  if (produtoNome && Array.isArray(entradas)) {
-    const ultimaEntrada = entradas
-      .slice()
-      .reverse()
-      .find(e => e.produto.toLowerCase() === produtoNome.toLowerCase());
-    if (ultimaEntrada && ultimaEntrada.setor) {
-      setorSelect.value = ultimaEntrada.setor;
-    }
-  }
-}
-
+ 
 /* =====================================================
    ?? AUTO-COMPLETE DINÂMICO — SAÍDA DE MATERIAIS
    ===================================================== */
@@ -6775,6 +6777,17 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
+
+
+
+
+
+
+
+
+
+
 
 
 
