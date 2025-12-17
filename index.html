@@ -1476,10 +1476,9 @@ async function carregarProdutosMesclados() {
 }
 
 // ===================================================
-// ?? LOGIN E AUTENTICAÇÃO (100% COMPATÍVEL COM SEU SCRIPT)
+// 🔐 LOGIN E AUTENTICAÇÃO (com verificação automática de perfil)
 // ===================================================
 
-// === FUNÇÃO DE LOGIN (garante que está sempre definida) ===
 window.fazerLogin = async function () {
   const usuarioEl = document.getElementById("usuarioLogin");
   const senhaEl = document.getElementById("senhaLogin");
@@ -1491,36 +1490,97 @@ window.fazerLogin = async function () {
   const senha = senhaEl?.value?.trim() || "";
 
   if (!usuario || !senha) {
-    if (msgEl) { msgEl.style.display = "block"; msgEl.style.color = "red"; msgEl.textContent = "?? Preencha e-mail e senha!"; }
+    if (msgEl) {
+      msgEl.style.display = "block";
+      msgEl.style.color = "red";
+      msgEl.textContent = "⚠️ Preencha e-mail e senha!";
+    }
     return;
   }
 
   const email = usuario.toLowerCase();
 
   try {
-    // signInWithEmailAndPassword deve existir (importado)
+    // === LOGIN ===
     const userCredential = await signInWithEmailAndPassword(auth, email, senha);
     const user = userCredential.user;
-    if (msgEl) { msgEl.style.display = "block"; msgEl.style.color = "green"; msgEl.textContent = "? Login realizado com sucesso!"; }
-    console.log("? Usuário logado:", user.email);
 
+    if (msgEl) {
+      msgEl.style.display = "block";
+      msgEl.style.color = "green";
+      msgEl.textContent = "✅ Login realizado com sucesso!";
+    }
+    console.log("✅ Usuário logado:", user.email);
+
+    // ===================================================
+    // 🔍 GARANTE QUE O USUÁRIO TENHA PERFIL NO FIRESTORE
+    // ===================================================
+    const userRef = doc(db, "estoqueGlobal", "usuarios", user.uid);
+    const snap = await getDoc(userRef);
+
+    let dadosUsuario;
+    if (!snap.exists()) {
+      // Se o usuário ainda não existe, cria com perfil padrão
+      dadosUsuario = {
+        criadoEm: new Date().toISOString(),
+        email: user.email,
+        nome: user.displayName || user.email.split("@")[0] || "Usuário",
+        perfil: "ESTOQUISTA",
+        uid: user.uid
+      };
+      await setDoc(userRef, dadosUsuario);
+      console.log("👤 Novo perfil criado automaticamente:", dadosUsuario);
+    } else {
+      dadosUsuario = snap.data();
+
+      // Se o perfil estiver vazio, corrige automaticamente
+      if (!dadosUsuario.perfil || dadosUsuario.perfil.trim() === "") {
+        dadosUsuario.perfil = "ESTOQUISTA";
+        await setDoc(userRef, { perfil: "ESTOQUISTA" }, { merge: true });
+        console.log("⚙️ Perfil vazio corrigido automaticamente para 'ESTOQUISTA'");
+      }
+
+      console.log("✅ Perfil carregado corretamente:", dadosUsuario);
+    }
+
+    // ===================================================
+    // 🧭 GARANTE QUE O MENU LATERAL APAREÇA
+    // ===================================================
+    localStorage.setItem("perfil", dadosUsuario.perfil || "ESTOQUISTA");
+
+    if (typeof mostrarMenuLateral === "function") {
+      mostrarMenuLateral(dadosUsuario.perfil || "ESTOQUISTA");
+    } else if (typeof mostrarMenu === "function") {
+      mostrarMenu(dadosUsuario.perfil || "ESTOQUISTA");
+    } else {
+      console.warn("⚠️ Nenhuma função de menu encontrada. Adicione 'mostrarMenuLateral' ou 'mostrarMenu'.");
+    }
+
+    // Exibe o restante do sistema
     if (typeof mostrarSistema === "function") mostrarSistema(user);
+
   } catch (error) {
-    console.error("? Erro ao logar:", error);
-    if (msgEl) { msgEl.style.display = "block"; msgEl.style.color = "red"; }
+    console.error("❌ Erro ao logar:", error);
+    if (msgEl) {
+      msgEl.style.display = "block";
+      msgEl.style.color = "red";
+    }
     const code = error?.code || "";
     if (msgEl) {
-      if (code === "auth/wrong-password" || code === "auth/invalid-credential") msgEl.textContent = "? Senha incorreta ou inválida!";
-      else if (code === "auth/user-not-found") msgEl.textContent = "? Usuário não encontrado!";
-      else if (code === "auth/too-many-requests") msgEl.textContent = "?? Muitas tentativas. Tente mais tarde.";
-      else msgEl.textContent = "? Erro ao fazer login.";
+      if (code === "auth/wrong-password" || code === "auth/invalid-credential")
+        msgEl.textContent = "❌ Senha incorreta ou inválida!";
+      else if (code === "auth/user-not-found")
+        msgEl.textContent = "⚠️ Usuário não encontrado!";
+      else if (code === "auth/too-many-requests")
+        msgEl.textContent = "⏳ Muitas tentativas. Tente mais tarde.";
+      else msgEl.textContent = "❌ Erro ao fazer login.";
     }
   }
 };
 
-
-
-// ?? Permite login com tecla Enter
+// ===================================================
+// ⌨️ Permite login com tecla Enter
+// ===================================================
 document.addEventListener("DOMContentLoaded", () => {
   const usuarioEl = document.getElementById("usuarioLogin");
   const senhaEl = document.getElementById("senhaLogin");
@@ -6694,6 +6754,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
