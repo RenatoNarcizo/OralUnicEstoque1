@@ -1612,7 +1612,11 @@ window.mostrarSistema = async function(user) {
 
   if (loginView) loginView.style.display = "none";
   if (mainApp) mainApp.style.display = "block";
-  if (sidebar) sidebar.classList.add("active");
+  if (sidebar) {
+  sidebar.style.display = "block";
+  sidebar.classList.add("active");
+}
+
 
   const perfil = localStorage.getItem("perfil") || "ESTOQUISTA";
   if (userName) userName.textContent = user?.displayName || user?.email?.split("@")[0] || "Usuário";
@@ -1621,8 +1625,15 @@ window.mostrarSistema = async function(user) {
 
   console.log(`? Sistema exibido para ${perfil}`);
 };
+	/* =========================
+   MENU LATERAL — CONTROLE
+   ========================= */
+function toggleSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  if (!sidebar) return;
 
-	
+  sidebar.classList.toggle("active");
+}
 // ============================================================
 // ? Firestore — Controle definitivo de gravação (fila + autoajuste + snapshot lock)
 // ============================================================
@@ -6779,6 +6790,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
