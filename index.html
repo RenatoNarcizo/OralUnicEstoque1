@@ -1512,38 +1512,50 @@ window.fazerLogin = async function () {
     }
     console.log("? Usuário logado:", user.email);
 
-    // ===================================================
-    // ?? GARANTE QUE O USUÁRIO TENHA PERFIL NO FIRESTORE
-    // ===================================================
-    const userRef = doc(db, "estoqueGlobal", "usuarios", "usuarios", user.uid);
+   // ===================================================
+// 🔐 GARANTE QUE O USUÁRIO TENHA PERFIL NO FIRESTORE
+// ===================================================
+const userRef = doc(db, "estoqueGlobal", "usuarios", "usuarios", user.uid);
+const snap = await getDoc(userRef);
 
+let dadosUsuario;
 
-    const snap = await getDoc(userRef);
+if (!snap.exists()) {
+  dadosUsuario = {
+    criadoEm: new Date().toISOString(),
+    email: user.email,
+    nome: user.displayName || user.email.split("@")[0] || "Usuário",
+    perfil: "ESTOQUISTA",
+    uid: user.uid
+  };
+  await setDoc(userRef, dadosUsuario);
+  console.log("🆕 Novo perfil criado:", dadosUsuario);
+} else {
+  dadosUsuario = snap.data();
 
-    let dadosUsuario;
-    if (!snap.exists()) {
-      // Se o usuário ainda não existe, cria com perfil padrão
-      dadosUsuario = {
-        criadoEm: new Date().toISOString(),
-        email: user.email,
-        nome: user.displayName || user.email.split("@")[0] || "Usuário",
-        perfil: "ESTOQUISTA",
-        uid: user.uid
-      };
-      await setDoc(userRef, dadosUsuario);
-      console.log("?? Novo perfil criado automaticamente:", dadosUsuario);
-    } else {
-      dadosUsuario = snap.data();
+  if (!dadosUsuario.perfil || dadosUsuario.perfil.trim() === "") {
+    dadosUsuario.perfil = "ESTOQUISTA";
+    await setDoc(userRef, { perfil: "ESTOQUISTA" }, { merge: true });
+    console.log("🛠 Perfil vazio corrigido para ESTOQUISTA");
+  }
 
-      // Se o perfil estiver vazio, corrige automaticamente
-      if (!dadosUsuario.perfil || dadosUsuario.perfil.trim() === "") {
-        dadosUsuario.perfil = "ESTOQUISTA";
-        await setDoc(userRef, { perfil: "ESTOQUISTA" }, { merge: true });
-        console.log("?? Perfil vazio corrigido automaticamente para 'ESTOQUISTA'");
-      }
+  console.log("✅ Perfil carregado corretamente:", dadosUsuario);
+}
 
-      console.log("? Perfil carregado corretamente:", dadosUsuario);
-    }
+// ===================================================
+// 👤 DEFINE USUÁRIO ATUAL
+// ===================================================
+window.usuarioAtual = {
+  nome: dadosUsuario.nome,
+  email: dadosUsuario.email,
+  perfil: dadosUsuario.perfil
+};
+
+// ===================================================
+// 🚀 MOSTRA O SISTEMA
+// ===================================================
+mostrarSistema(user);
+
  } catch (error) {
     console.error("? Erro ao logar:", error);
     if (msgEl) {
@@ -6693,6 +6705,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
