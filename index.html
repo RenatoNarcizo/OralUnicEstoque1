@@ -4355,10 +4355,28 @@ function atualizarTabelaSaidas() {
   window.saidas.slice().reverse().forEach((s, i) => {
     const idxOriginal = window.saidas.length - 1 - i;
     const produto = (s.produto || "").toLowerCase();
-    const responsavel = (s.responsavel || "").toLowerCase();
-    const setor = (s.setor || "").toLowerCase();
+const responsavel = (s.responsavel || "").toLowerCase();
+const setor = (s.setor || "").toLowerCase();
+const observacao = (s.observacao || "").toLowerCase();
+const data = (s.data || "").toLowerCase();
 
-    if (filtro && !produto.includes(filtro) && !responsavel.includes(filtro) && !setor.includes(filtro)) return;
+// Código do produto (saída ou cadastro)
+const codigo = (
+  s.codigoProduto ||
+  (window.produtos.find(p => p.nome === s.produto)?.codigo) ||
+  ""
+).toString().toLowerCase();
+
+if (
+  filtro &&
+  !produto.includes(filtro) &&
+  !responsavel.includes(filtro) &&
+  !setor.includes(filtro) &&
+  !observacao.includes(filtro) &&
+  !data.includes(filtro) &&
+  !codigo.includes(filtro)
+) return;
+
 
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -6705,6 +6723,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
