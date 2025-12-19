@@ -1865,6 +1865,19 @@ window.PERMISSOES = {
   "ESTOQUISTA": { canView: ["boasVindas","cadastro","entrada","saida","estoque","limites","valorHistorico","relatorios"] }
 };
 
+function abrirSecao(view) {
+  if (!temPermissao(view)) {
+    alert("Você não tem permissão para acessar esta seção!");
+    return;
+  }
+
+  document.querySelectorAll("section").forEach(sec => {
+    sec.style.display = "none";
+  });
+
+  const alvo = document.getElementById(view);
+  if (alvo) alvo.style.display = "block";
+}
 
 
 
@@ -6844,6 +6857,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
