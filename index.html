@@ -1544,7 +1544,15 @@ window.fazerLogin = async function () {
 
       console.log("? Perfil carregado corretamente:", dadosUsuario);
     }
-
+ } catch (error) {
+    console.error("? Erro ao logar:", error);
+    if (msgEl) {
+      msgEl.style.display = "block";
+      msgEl.style.color = "red";
+      msgEl.textContent = "? Erro ao fazer login.";
+    }
+  }
+};
    
 
 
@@ -6689,6 +6697,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
