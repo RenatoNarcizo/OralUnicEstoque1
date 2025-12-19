@@ -1554,13 +1554,6 @@ window.fazerLogin = async function () {
   }
 };
    
-
-
-    
-
-// ===================================================
-// ?? Permite login com tecla Enter
-// ===================================================
 document.addEventListener("DOMContentLoaded", () => {
   const usuarioEl = document.getElementById("usuarioLogin");
   const senhaEl = document.getElementById("senhaLogin");
@@ -1570,13 +1563,16 @@ document.addEventListener("DOMContentLoaded", () => {
     el.addEventListener("keypress", event => {
       if (event.key === "Enter") {
         event.preventDefault();
-        if (typeof window.fazerLogin === "function") {
-          window.fazerLogin();
-        }
+        window.fazerLogin();
       }
     });
   });
 });
+
+
+    
+
+
 
 
 
@@ -6697,6 +6693,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
