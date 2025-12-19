@@ -2397,39 +2397,54 @@ async function mostrarSistema(user) {
 
 
 
+
 // ====================================================
-// ?? AUTENTICAÇÃO E SINCRONIZAÇÃO EM TEMPO REAL (CORREÇÃO FINAL)
-// ====================================================
-// ====================================================
-// ?? AUTENTICAÇÃO E SINCRONIZAÇÃO EM TEMPO REAL (VERSÃO FINAL)
+// 🔐 AUTENTICAÇÃO E SINCRONIZAÇÃO EM TEMPO REAL (VERSÃO FINAL CORRIGIDA)
 // ====================================================
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    console.warn("?? Nenhum usuário logado — aguardando login...");
+    console.warn("⚠️ Nenhum usuário logado — aguardando login...");
     return;
   }
 
-  console.log(`? Usuário logado: ${user.email}`);
-  console.log("?? Iniciando carregamento e sincronização do Firestore...");
+  console.log(`👤 Usuário logado: ${user.email}`);
 
-  try {
-    // ?? 1) Carrega dados iniciais e ativa listener principal
-    await carregarDadosDoFirestore();
-
-    // ?? 2) Sincroniza usuários do Auth (se existir função)
-    if (typeof sincronizarUsuariosDoAuth === "function") {
-      await sincronizarUsuariosDoAuth();
-    }
-
-    console.log("?? Escutas em tempo real configuradas com sucesso.");
-
-  } catch (erroGeral) {
-    console.error("? Erro durante a inicialização da sincronização:", erroGeral);
-    if (typeof mostrarMensagem === "function") {
-      mostrarMensagem("Erro ao conectar e sincronizar com Firestore!", "erro");
-    }
+  // ✅ 1) MOSTRA O SISTEMA E O MENU IMEDIATAMENTE
+  if (typeof window.mostrarSistema === "function") {
+    window.mostrarSistema(user);
+  } else {
+    console.error("❌ Função mostrarSistema não encontrada!");
   }
+
+  console.log("⏳ Iniciando carregamento e sincronização do Firestore...");
+
+  // ⏳ 2) Firestore roda DEPOIS (não bloqueia a UI)
+  setTimeout(async () => {
+    try {
+      // 🔄 Carrega dados iniciais e ativa listeners
+      await carregarDadosDoFirestore();
+
+      // 👥 Sincroniza usuários do Auth (se existir)
+      if (typeof sincronizarUsuariosDoAuth === "function") {
+        await sincronizarUsuariosDoAuth();
+      }
+
+      console.log("✅ Escutas em tempo real configuradas com sucesso.");
+
+    } catch (erroGeral) {
+      console.error("❌ Erro durante a sincronização com Firestore:", erroGeral);
+
+      // ⚠️ Importante: sistema CONTINUA visível
+      if (typeof mostrarMensagem === "function") {
+        mostrarMensagem(
+          "Falha ao sincronizar com o Firestore. O sistema continua disponível.",
+          "aviso"
+        );
+      }
+    }
+  }, 0);
 });
+
 
 
  
@@ -6790,6 +6805,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
