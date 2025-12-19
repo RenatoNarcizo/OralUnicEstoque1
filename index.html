@@ -3845,12 +3845,14 @@ function registrarEntrada() {
   }
 
   // Atualiza estoque e informações do produto
-  produtoRef.quantidade = (produtoRef.quantidade || 0) + qtd;
-  produtoRef.ultimoValor = valor;
-  produtoRef.lote = lote || produtoRef.lote;
-  produtoRef.validade = validade || produtoRef.validade;
-  produtoRef.codigoBarras = produtoRef.codigoBarras || codigoBarras;
-  if (codigoProduto) produtoRef.codigo = codigoProduto;
+produtoRef.quantidade = (produtoRef.quantidade || 0) + qtd;
+produtoRef.ultimoValor = valor;
+produtoRef.dataUltimaEntrada = data; // ✅ LINHA OBRIGATÓRIA (corrige o histórico)
+produtoRef.lote = lote || produtoRef.lote;
+produtoRef.validade = validade || produtoRef.validade;
+produtoRef.codigoBarras = produtoRef.codigoBarras || codigoBarras;
+if (codigoProduto) produtoRef.codigo = codigoProduto;
+
 
 
 
@@ -6752,6 +6754,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
