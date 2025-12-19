@@ -3844,14 +3844,26 @@ function registrarEntrada() {
     if (codigoBarras && !produtoRef.codBarras) produtoRef.codBarras = codigoBarras;
   }
 
-  // Atualiza estoque e informações do produto
+  // ===============================
+// 🔥 ATUALIZA ESTOQUE E HISTÓRICO
+// ===============================
 produtoRef.quantidade = (produtoRef.quantidade || 0) + qtd;
-produtoRef.ultimoValor = valor;
-produtoRef.dataUltimaEntrada = data; // ✅ LINHA OBRIGATÓRIA (corrige o histórico)
 produtoRef.lote = lote || produtoRef.lote;
 produtoRef.validade = validade || produtoRef.validade;
 produtoRef.codigoBarras = produtoRef.codigoBarras || codigoBarras;
 if (codigoProduto) produtoRef.codigo = codigoProduto;
+
+// 🔹 HISTÓRICO DE VALORES POR MÊS (REGRA DEFINITIVA)
+if (!produtoRef.historicoValores) {
+  produtoRef.historicoValores = {};
+}
+
+// Usa A DATA DA ENTRADA (NÃO new Date())
+const [ano, mes] = data.split("-"); // data = "2025-09-01"
+const chaveMes = `${ano}-${mes}`;
+
+// Sempre sobrescreve → pega a ÚLTIMA entrada do mês
+produtoRef.historicoValores[chaveMes] = valor;
 
 
 
@@ -6754,6 +6766,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
