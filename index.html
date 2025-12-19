@@ -1634,6 +1634,22 @@ function toggleSidebar() {
 
   sidebar.classList.toggle("active");
 }
+
+// =============================
+// 🔐 APLICA PERMISSÕES NO MENU LATERAL (VERSÃO OFICIAL)
+// =============================
+function aplicarPermissoesMenu(perfil) {
+  const permissoes = window.PERMISSOES[perfil];
+  if (!permissoes) return;
+
+  document.querySelectorAll("#sidebar [data-view]").forEach(item => {
+    const view = item.dataset.view;
+    item.style.display = permissoes.canView.includes(view)
+      ? "block"
+      : "none";
+  });
+}
+
 // ============================================================
 // ? Firestore — Controle definitivo de gravação (fila + autoajuste + snapshot lock)
 // ============================================================
@@ -6805,6 +6821,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
