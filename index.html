@@ -4328,7 +4328,7 @@ function registrarSaida() {
   // Atualiza estoque e salva
   produtoRef.quantidade = (produtoRef.quantidade || 0) - qtd;
   salvarTodosLocal();
-  salvarProdutosNoFirebase(window.produtos);
+  
   salvarSaidasNoFirebase(window.saidas);
 
   // Atualiza interface
@@ -4927,7 +4927,7 @@ function recalcularEstoqueGeral() {
     });
 
     salvarTodosLocal?.();
-    if (typeof salvarProdutosNoFirebase === "function") salvarProdutosNoFirebase(window.produtos);
+   
 
     atualizarTabelaEstoque?.();
     atualizarTabelaLimites?.();
@@ -4982,7 +4982,7 @@ function recalcularEstoqueGeral() {
   });
 
   salvarTodosLocal?.();
-  if (typeof salvarProdutosNoFirebase === "function") salvarProdutosNoFirebase(window.produtos);
+  
 
   atualizarTabelaEstoque?.();
   atualizarTabelaLimites?.();
@@ -5724,7 +5724,7 @@ function salvarLimites(idProduto) {
   produtoRef.minimo = Number(minEl?.value || 0);
   produtoRef.maximo = Number(maxEl?.value || 0);
 
-  salvarProdutosNoFirebase(window.produtos);
+ 
   salvarTodosLocal();
 
   mostrarMensagem(`Limites do produto "${produtoRef.nome}" salvos com sucesso!`, "sucesso");
@@ -5741,7 +5741,7 @@ function removerLimites(nome) {
   if (confirm(`Remover limites do produto "${nome}"?`)) {
     produtoRef.minimo = 0;
     produtoRef.maximo = 0;
-    salvarProdutosNoFirebase(window.produtos);
+    
     salvarTodosLocal();
     atualizarTabelaLimites();
     mostrarMensagem(`Limites de "${nome}" removidos com sucesso.`, "sucesso");
@@ -6705,6 +6705,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
