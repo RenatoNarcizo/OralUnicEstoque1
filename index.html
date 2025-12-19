@@ -1598,9 +1598,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
-
 // ===================================================
-// ? Função responsável por exibir o sistema e o menu lateral
+// 👤 Função responsável por exibir o sistema e o menu lateral (CORRIGIDA)
 // ===================================================
 window.mostrarSistema = async function(user) {
   const loginView = document.getElementById("loginView");
@@ -1610,21 +1609,45 @@ window.mostrarSistema = async function(user) {
   const perfilBadge = document.getElementById("perfilBadge");
   const nomeBemVindo = document.getElementById("nomeUsuarioBemVindo");
 
+  // ✅ Mostra sistema
   if (loginView) loginView.style.display = "none";
   if (mainApp) mainApp.style.display = "block";
+
+  // ✅ Garante sidebar visível SEM depender de perfil
   if (sidebar) {
-  sidebar.style.display = "block";
-  sidebar.classList.add("active");
-}
+    sidebar.style.display = "block";
+    sidebar.classList.add("active");
+  }
 
+  // 🔐 PERFIL — sempre normalizado
+  const perfil =
+    (localStorage.getItem("perfil") || "ESTOQUISTA")
+      .toUpperCase()
+      .trim();
 
-  const perfil = localStorage.getItem("perfil") || "ESTOQUISTA";
-  if (userName) userName.textContent = user?.displayName || user?.email?.split("@")[0] || "Usuário";
-  if (perfilBadge) perfilBadge.textContent = perfil;
-  if (nomeBemVindo) nomeBemVindo.textContent = user?.displayName || user?.email?.split("@")[0] || "Usuário";
+  // ✅ Aplica permissões do menu (ESSENCIAL)
+  if (typeof aplicarPermissoesMenu === "function") {
+    aplicarPermissoesMenu(perfil);
+  } else {
+    console.error("❌ aplicarPermissoesMenu não está definida");
+  }
 
-  console.log(`? Sistema exibido para ${perfil}`);
+  // ✅ Atualiza UI
+  if (userName)
+    userName.textContent =
+      user?.displayName || user?.email?.split("@")[0] || "Usuário";
+
+  if (perfilBadge)
+    perfilBadge.textContent = perfil;
+
+  if (nomeBemVindo)
+    nomeBemVindo.textContent =
+      user?.displayName || user?.email?.split("@")[0] || "Usuário";
+
+  console.log(`✅ Sistema exibido para perfil: ${perfil}`);
 };
+
+
 	/* =========================
    MENU LATERAL — CONTROLE
    ========================= */
@@ -6821,6 +6844,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
