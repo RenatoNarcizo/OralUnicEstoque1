@@ -4505,6 +4505,35 @@ function excluirSaida(i) {
   atualizarPainelFinanceiro?.();
 }
 
+function limparCamposSaida() {
+  // Limpa inputs, selects e textarea da seção SAÍDA
+  document.querySelectorAll("#saida input, #saida select, #saida textarea").forEach(el => {
+    if (el.type === "checkbox" || el.type === "radio") {
+      el.checked = false;
+    } else {
+      el.value = "";
+    }
+  });
+
+  // Limpa campo de busca
+  const filtro = document.getElementById("filtroSaida");
+  if (filtro) filtro.value = "";
+
+  // Remove seleção visual da tabela
+  document.querySelectorAll("#tabelaSaidas tbody tr").forEach(tr => {
+    tr.style.background = "";
+  });
+
+  // Reseta edição
+  if (typeof indiceEdicaoSaida !== "undefined") {
+    indiceEdicaoSaida = null;
+  }
+
+  // Recarrega tabela completa
+  atualizarTabelaSaidas();
+
+  console.log("🧹 Campos de saída e busca limpos com sucesso");
+}
 
 
  
@@ -6723,6 +6752,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
