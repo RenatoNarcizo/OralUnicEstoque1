@@ -1598,54 +1598,38 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
+
+	// ===================================================
+// ✅ Exibe o sistema APENAS com perfil válido
 // ===================================================
-// 👤 Função responsável por exibir o sistema e o menu lateral (CORRIGIDA)
-// ===================================================
-window.mostrarSistema = async function(user) {
+window.mostrarSistema = function (user, perfil) {
+  if (!perfil) {
+    console.warn("⏳ Perfil ainda não carregado — sistema não exibido");
+    return;
+  }
+
   const loginView = document.getElementById("loginView");
   const mainApp = document.getElementById("mainApp");
   const sidebar = document.getElementById("sidebar");
-  const userName = document.getElementById("userName");
-  const perfilBadge = document.getElementById("perfilBadge");
-  const nomeBemVindo = document.getElementById("nomeUsuarioBemVindo");
 
-  // ✅ Mostra sistema
   if (loginView) loginView.style.display = "none";
   if (mainApp) mainApp.style.display = "block";
 
-  // ✅ Garante sidebar visível SEM depender de perfil
   if (sidebar) {
     sidebar.style.display = "block";
     sidebar.classList.add("active");
   }
 
-  // 🔐 PERFIL — sempre normalizado
-  const perfil =
-    (localStorage.getItem("perfil") || "ESTOQUISTA")
-      .toUpperCase()
-      .trim();
+  aplicarPermissoesMenu(perfil);
 
-  // ✅ Aplica permissões do menu (ESSENCIAL)
-  if (typeof aplicarPermissoesMenu === "function") {
-    aplicarPermissoesMenu(perfil);
-  } else {
-    console.error("❌ aplicarPermissoesMenu não está definida");
-  }
+  document.getElementById("perfilBadge").textContent = perfil;
+  document.getElementById("userName").textContent =
+    user?.displayName || user?.email?.split("@")[0] || "Usuário";
 
-  // ✅ Atualiza UI
-  if (userName)
-    userName.textContent =
-      user?.displayName || user?.email?.split("@")[0] || "Usuário";
-
-  if (perfilBadge)
-    perfilBadge.textContent = perfil;
-
-  if (nomeBemVindo)
-    nomeBemVindo.textContent =
-      user?.displayName || user?.email?.split("@")[0] || "Usuário";
-
-  console.log(`✅ Sistema exibido para perfil: ${perfil}`);
+  console.log(`✅ Sistema exibido com perfil REAL: ${perfil}`);
 };
+
 
 
 	/* =========================
@@ -6857,6 +6841,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
