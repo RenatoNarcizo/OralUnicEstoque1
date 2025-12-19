@@ -3776,49 +3776,95 @@ function registrarEntrada() {
   if (!validade) return destacarErro(validadeEl, "Informe a data de vencimento do material!");
   if (!setor) return destacarErro(setorEl, "Selecione o setor utilizado!");
 
-  // Edição de registro existente
-  if (typeof indiceEdicaoEntrada === "number" && indiceEdicaoEntrada !== null) {
-    const e = window.entradas[indiceEdicaoEntrada];
-    if (!e) return;
-    Object.assign(e, {
-      codigoProduto,
-      produto,
-      qtd,
-      valor,
-      data,
-      nota,
-      fornecedor,
-      cnpj,
-      lote,
-      validade,
-      setor,
-      codigoBarras
-    });
-    mostrarMensagem(`? Entrada de "${produto}" atualizada com sucesso!`, "sucesso");
-    indiceEdicaoEntrada = null;
-    if (typeof window.mostrarBotaoCancelarEntrada === "function") window.mostrarBotaoCancelarEntrada(false);
-  } else {
-    // Nova entrada
-    const novaEntrada = { 
-  produto, 
-  qtd,
-  valor,
-  data,
-  nota,
-  fornecedor,
-  cnpj,
-  lote,
-  validade,
-  setor,
-  codigoBarras,
-  codigoProduto, // <-- ADICIONE
-  id: Date.now()
-};
+  // ===================================================
+// ✅ EDIÇÃO ou NOVA ENTRADA (versão corrigida)
+// ===================================================
+if (typeof indiceEdicaoEntrada === "number" && indiceEdicaoEntrada !== null) {
 
-    if (!Array.isArray(window.entradas)) window.entradas = [];
-    window.entradas.push(novaEntrada);
-    mostrarMensagem(`? Entrada registrada para "${produto}"`, "sucesso");
-  }
+  // =========================
+  // ✏️ EDIÇÃO DE ENTRADA
+  // =========================
+  const e = window.entradas[indiceEdicaoEntrada];
+  if (!e) return;
+
+  Object.assign(e, {
+    codigoProduto,
+    produto,
+    qtd,
+    valor,
+    data,
+    nota,
+    fornecedor,
+    cnpj,
+    lote,
+    validade,
+    setor,
+    codigoBarras
+  });
+
+  // 🔒 Sai do modo edição
+  indiceEdicaoEntrada = null;
+
+  // 🔄 Salva e sincroniza
+  salvarTodosLocal?.();
+  window.salvarEntradasNoFirebase?.(window.entradas);
+
+  // 🔄 Atualiza telas
+  atualizarTabelaEntradas?.();
+  atualizarTabelaEstoque?.();
+  atualizarPainelFinanceiro?.();
+  atualizarDashboard?.();
+
+  // 🧹 Limpa formulário e estado visual
+  limparCamposEntrada();
+  document.querySelectorAll("#tabelaEntradas tbody tr").forEach(tr => tr.style.background = "");
+  window.mostrarBotaoCancelarEntrada?.(false);
+
+  mostrarMensagem(`✅ Entrada de "${produto}" atualizada com sucesso!`, "sucesso");
+
+  // ⚠️ IMPORTANTE: encerra aqui
+  return;
+
+} else {
+
+  // =========================
+  // ➕ NOVA ENTRADA
+  // =========================
+  const novaEntrada = {
+    produto,
+    qtd,
+    valor,
+    data,
+    nota,
+    fornecedor,
+    cnpj,
+    lote,
+    validade,
+    setor,
+    codigoBarras,
+    codigoProduto,
+    id: Date.now()
+  };
+
+  if (!Array.isArray(window.entradas)) window.entradas = [];
+  window.entradas.push(novaEntrada);
+
+  // 🔄 Salva e sincroniza
+  salvarTodosLocal?.();
+  window.salvarEntradasNoFirebase?.(window.entradas);
+
+  // 🔄 Atualiza telas
+  atualizarTabelaEntradas?.();
+  atualizarTabelaEstoque?.();
+  atualizarPainelFinanceiro?.();
+  atualizarDashboard?.();
+
+  // 🧹 Limpa formulário
+  limparCamposEntrada();
+
+  mostrarMensagem(`✅ Entrada registrada para "${produto}"`, "sucesso");
+}
+
 
   // Atualiza produto no catálogo — busca por nome, cód. barras ou cód. produto
   let produtoRef = (window.produtos || []).find(p =>
@@ -6766,6 +6812,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
