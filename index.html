@@ -1263,12 +1263,12 @@
     </button>
   </div>
 
-  <!-- ?? Campo de busca + botão ?? -->
+  <!-- 🔍 Campo de busca + botão 🧹 -->
   <div style="display:flex; align-items:center; gap:8px; margin-top:10px; margin-bottom:10px;">
     <input
       id="filtroUsuarios"
       type="text"
-      placeholder="?? Buscar por nome ou e-mail"
+      placeholder="🔍 Buscar por nome ou e-mail"
       oninput="filtrarUsuarios()"
       style="flex:1; min-width:250px;"
     />
@@ -1278,7 +1278,7 @@
     </button>
   </div>
 
-  <!-- ?? Tabela de usuários -->
+  <!-- 📋 Tabela de usuários -->
   <div class="table-wrap">
     <table id="tabelaUsuarios">
       <thead>
@@ -1300,18 +1300,18 @@
 <section id="errosProblemas" class="section" style="display:none;">
   <h2><i class="fa fa-bug"></i> Registro de Melhorias, Erros ou Problemas</h2>
 
-  <!-- ?? Formulário de novo relato -->
+  <!-- 🔸Formulário de novo relato -->
   <div class="input-row" style="margin-bottom:10px; gap:8px; flex-wrap:wrap;">
     <input id="erroData" type="date" style="width:160px;" readonly />
     <input id="erroTitulo" type="text" placeholder="Título do Erro ou Problema" style="flex:1; min-width:300px;" />
 
     <select id="erroSituacao" style="min-width:180px;">
   <option value="">Selecione a Situação</option>
-  <option>?? Emergência</option>
-  <option>?? Muito Urgente</option>
-  <option>? Urgente</option>
-  <option>?? Pouco Urgente</option>
-  <option>? Não Urgente</option>
+  <option>🔴 Emergência</option>
+  <option>🟠 Muito Urgente</option>
+  <option>🟡 Urgente</option>
+  <option>🟢 Pouco Urgente</option>
+  <option>🔵 Não Urgente</option>
 </select>
 
 
@@ -1330,12 +1330,12 @@
 ></textarea>
 
 
-  <!-- ?? Filtro -->
+  <!-- 🔹 Filtro -->
   <div style="margin-bottom:10px; display:flex; gap:8px; align-items:center;">
     <input
       id="filtroErros"
       type="text"
-      placeholder="?? Buscar por título, situação ou parecer"
+      placeholder="🔍Buscar por título, situação ou parecer"
       style="flex:1;"
       oninput="filtrarErros()"
     />
@@ -1344,7 +1344,7 @@
     </button>
   </div>
 
-  <!-- ?? Tabela de Erros -->
+  <!-- 🔸 Tabela de Erros -->
   <div class="table-wrap">
     <table id="tabelaErros">
       <thead>
@@ -1367,7 +1367,7 @@
 
 
 
-<!-- === ?? FIREBASE LOGIN E SINCRONIZAÇÃO === -->
+<!-- === 🔥 FIREBASE LOGIN E SINCRONIZAÇÃO === -->
 <script type="module" defer>
   import {
     initializeApp
@@ -6841,6 +6841,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
