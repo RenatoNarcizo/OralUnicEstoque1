@@ -5372,8 +5372,9 @@ function limparFiltroLimites() {
 
 
 
+
 // ====================================================
-// 🛒 GERAR LISTA DE COMPRA — sincronizada com Estoque Mín/Máx
+// 🛒  GERAR LISTA DE COMPRA — versão com cabeçalho + ajustes
 // ====================================================
 function gerarListaCompra() {
   const container = document.getElementById("listaCompraContainer");
@@ -5382,9 +5383,9 @@ function gerarListaCompra() {
   const totalSpan = document.getElementById("totalItensCompra");
   const filtroCategoria = document.getElementById("filtroCategoria")?.value || "";
 
-  // 🔍 Segurança: elementos obrigatórios
+  // ✅ Segurança
   if (!container || !tabela || !tbody || !totalSpan) {
-    console.error("⚠️ Elementos da lista de compra não encontrados no DOM.");
+    console.error("❌ Elementos da lista de compra não encontrados no DOM.");
     mostrarMensagem("Erro: tabela da lista de compra não encontrada.", "erro");
     return;
   }
@@ -5393,7 +5394,7 @@ function gerarListaCompra() {
   const entradas = Array.isArray(window.entradas) ? window.entradas : [];
   const saidas = Array.isArray(window.saidas) ? window.saidas : [];
 
-  // 🔹 1. Mapa de estoque real (entradas - saídas)
+  // ✅ Estoque real (entradas - saídas)
   const mapaEstoque = {};
   entradas.forEach(e => {
     const nome = (e.produto || e.nomeProduto || "").trim().toLowerCase();
@@ -5406,7 +5407,7 @@ function gerarListaCompra() {
     mapaEstoque[nome] = (mapaEstoque[nome] || 0) - Number(s.qtd || s.quantidade || 0);
   });
 
-  // 🔹 2. Identifica produtos abaixo do mínimo (usando a mesma lógica do Estoque Mín/Máx)
+  // ✅ Produtos abaixo do mínimo
   const produtosAbaixo = produtos
     .map(p => {
       const nome = (p.nome || "").trim().toLowerCase();
@@ -5416,8 +5417,6 @@ function gerarListaCompra() {
       const categoria = p.categoria || "-";
 
       let recomendacao = "";
-
-      // 🟢 Mesma regra da tabela de limites
       if (qtdAtual < minimo) {
         const qtdComprar = maximo > 0 ? (maximo - qtdAtual) : (minimo - qtdAtual);
         recomendacao = `Comprar ${qtdComprar}`;
@@ -5425,9 +5424,7 @@ function gerarListaCompra() {
 
       return {
         nome: p.nome,
-        codigoBarras: p.codigoBarras || "-",
         categoria,
-        qtd: qtdAtual,
         recomendacao
       };
     })
@@ -5435,8 +5432,18 @@ function gerarListaCompra() {
     .filter(p => !filtroCategoria || p.categoria === filtroCategoria)
     .sort((a, b) => a.nome.localeCompare(b.nome));
 
-  // 🔹 3. Monta a tabela
+  // ✅ Limpa a tabela
   tbody.innerHTML = "";
+
+  // ✅ Cabeçalho da empresa (exibido antes da tabela)
+  const cabecalhoHTML = `
+    <div style="margin-bottom: 15px; text-align: left; font-size: 14px;">
+      <strong>Empresa:</strong> Oral Unic Campo Grande<br>
+      <strong>CNPJ:</strong> 30.882.538/0001-38<br>
+      <strong>Endereço:</strong> Av. Afonso Pena n° 2728, Bairro Centro, Campo Grande - MS
+    </div>
+  `;
+  container.insertAdjacentHTML("afterbegin", cabecalhoHTML);
 
   if (produtosAbaixo.length === 0) {
     const mensagem = filtroCategoria
@@ -5445,31 +5452,29 @@ function gerarListaCompra() {
 
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" style="text-align:center; color:#777;">${mensagem}</td>
+        <td colspan="4" style="text-align:center; color:#777;">${mensagem}</td>
       </tr>
     `;
-
     totalSpan.textContent = "0";
     container.style.display = "block";
     mostrarMensagem("Nenhum produto abaixo do estoque mínimo encontrado.", "info");
     return;
   }
 
-  // 🔹 4. Preenche linhas da tabela
+  // ✅ Monta tabela com colunas ajustadas
+  tbody.innerHTML = "";
   produtosAbaixo.forEach((p, i) => {
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${i + 1}</td>
       <td>${p.nome}</td>
-      <td>${p.codigoBarras}</td>
       <td>${p.categoria}</td>
-      <td style="text-align:center;">${p.qtd}</td>
       <td style="font-weight:bold; color:#0d6efd;">${p.recomendacao}</td>
     `;
     tbody.appendChild(row);
   });
 
-  // 🔹 5. Exibe resumo
+  // ✅ Atualiza contador
   totalSpan.textContent = produtosAbaixo.length.toString();
   container.style.display = "block";
   container.scrollIntoView({ behavior: "smooth" });
@@ -6841,6 +6846,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
