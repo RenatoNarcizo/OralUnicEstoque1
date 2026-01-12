@@ -5369,12 +5369,8 @@ function limparFiltroLimites() {
   campo?.focus();
 }
 
-
-
-
-
 // ====================================================
-// 🛒  GERAR LISTA DE COMPRA — versão com cabeçalho + ajustes
+// 🛒 GERAR LISTA DE COMPRA — sincronizada com Estoque Mín/Máx
 // ====================================================
 function gerarListaCompra() {
   const container = document.getElementById("listaCompraContainer");
@@ -5383,9 +5379,9 @@ function gerarListaCompra() {
   const totalSpan = document.getElementById("totalItensCompra");
   const filtroCategoria = document.getElementById("filtroCategoria")?.value || "";
 
-  // ✅ Segurança
+  // 🔍 Segurança: elementos obrigatórios
   if (!container || !tabela || !tbody || !totalSpan) {
-    console.error("❌ Elementos da lista de compra não encontrados no DOM.");
+    console.error("⚠️ Elementos da lista de compra não encontrados no DOM.");
     mostrarMensagem("Erro: tabela da lista de compra não encontrada.", "erro");
     return;
   }
@@ -5394,7 +5390,7 @@ function gerarListaCompra() {
   const entradas = Array.isArray(window.entradas) ? window.entradas : [];
   const saidas = Array.isArray(window.saidas) ? window.saidas : [];
 
-  // ✅ Estoque real (entradas - saídas)
+  // 🔹 1. Mapa de estoque real (entradas - saídas)
   const mapaEstoque = {};
   entradas.forEach(e => {
     const nome = (e.produto || e.nomeProduto || "").trim().toLowerCase();
@@ -5407,7 +5403,7 @@ function gerarListaCompra() {
     mapaEstoque[nome] = (mapaEstoque[nome] || 0) - Number(s.qtd || s.quantidade || 0);
   });
 
-  // ✅ Produtos abaixo do mínimo
+  // 🔹 2. Identifica produtos abaixo do mínimo (usando a mesma lógica do Estoque Mín/Máx)
   const produtosAbaixo = produtos
     .map(p => {
       const nome = (p.nome || "").trim().toLowerCase();
@@ -5417,6 +5413,8 @@ function gerarListaCompra() {
       const categoria = p.categoria || "-";
 
       let recomendacao = "";
+
+      // 🟢 Mesma regra da tabela de limites
       if (qtdAtual < minimo) {
         const qtdComprar = maximo > 0 ? (maximo - qtdAtual) : (minimo - qtdAtual);
         recomendacao = `Comprar ${qtdComprar}`;
@@ -5424,7 +5422,9 @@ function gerarListaCompra() {
 
       return {
         nome: p.nome,
+        codigoBarras: p.codigoBarras || "-",
         categoria,
+        qtd: qtdAtual,
         recomendacao
       };
     })
@@ -5432,18 +5432,8 @@ function gerarListaCompra() {
     .filter(p => !filtroCategoria || p.categoria === filtroCategoria)
     .sort((a, b) => a.nome.localeCompare(b.nome));
 
-  // ✅ Limpa a tabela
+  // 🔹 3. Monta a tabela
   tbody.innerHTML = "";
-
-  // ✅ Cabeçalho da empresa (exibido antes da tabela)
-  const cabecalhoHTML = `
-    <div style="margin-bottom: 15px; text-align: left; font-size: 14px;">
-      <strong>Empresa:</strong> Oral Unic Campo Grande<br>
-      <strong>CNPJ:</strong> 30.882.538/0001-38<br>
-      <strong>Endereço:</strong> Av. Afonso Pena n° 2728, Bairro Centro, Campo Grande - MS
-    </div>
-  `;
-  container.insertAdjacentHTML("afterbegin", cabecalhoHTML);
 
   if (produtosAbaixo.length === 0) {
     const mensagem = filtroCategoria
@@ -5452,34 +5442,40 @@ function gerarListaCompra() {
 
     tbody.innerHTML = `
       <tr>
-        <td colspan="4" style="text-align:center; color:#777;">${mensagem}</td>
+        <td colspan="6" style="text-align:center; color:#777;">${mensagem}</td>
       </tr>
     `;
+
     totalSpan.textContent = "0";
     container.style.display = "block";
     mostrarMensagem("Nenhum produto abaixo do estoque mínimo encontrado.", "info");
     return;
   }
 
-  // ✅ Monta tabela com colunas ajustadas
-  tbody.innerHTML = "";
+  // 🔹 4. Preenche linhas da tabela
   produtosAbaixo.forEach((p, i) => {
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${i + 1}</td>
       <td>${p.nome}</td>
+      <td>${p.codigoBarras}</td>
       <td>${p.categoria}</td>
+      <td style="text-align:center;">${p.qtd}</td>
       <td style="font-weight:bold; color:#0d6efd;">${p.recomendacao}</td>
     `;
     tbody.appendChild(row);
   });
 
-  // ✅ Atualiza contador
+  // 🔹 5. Exibe resumo
   totalSpan.textContent = produtosAbaixo.length.toString();
   container.style.display = "block";
   container.scrollIntoView({ behavior: "smooth" });
   mostrarMensagem(`Lista de compra gerada com ${produtosAbaixo.length} item(ns).`, "sucesso");
 }
+
+
+
+
 
 
 
@@ -6397,29 +6393,76 @@ function limparPeriodo() {
 }
 
 /**
- * 🔹 Função genérica para exportar qualquer tabela para Excel (CSV)
+ * ✅ Função genérica para exportar qualquer tabela para Excel (CSV)
+ * 🔹 Agora com exceção segura para a tabela de Lista de Compra
  */
 function exportarTabelaExcel(idTabela, nomeArquivoBase, prefixo) {
   const tabela = document.getElementById(idTabela);
   if (!tabela) return alert("Tabela não encontrada.");
   
-  const dataInicio = document.getElementById("dataInicioRelatorio").value;
-  const dataFim = document.getElementById("dataFimRelatorio").value;
+  const dataInicio = document.getElementById("dataInicioRelatorio")?.value || "";
+  const dataFim = document.getElementById("dataFimRelatorio")?.value || "";
   
   let dadosFiltrados = [];
   let cabecalho = [];
 
-  // 1. Obtém o cabeçalho
+  // 🔹 EXCEÇÃO: Lista de Compra (gera CSV com cabeçalho da empresa)
+  if (idTabela === "tabelaListaCompra") {
+    console.log("🧾 Exportando Lista de Compra personalizada...");
+    
+    // Cabeçalho da empresa
+    cabecalho.push(
+      "Empresa: Oral Unic Campo Grande",
+      "CNPJ: 30.882.538/0001-38",
+      "Endereço: Av. Afonso Pena n° 2728, Bairro Centro, Campo Grande - MS",
+      "",
+      "#;Produto;Categoria;Recomendação de Compra"
+    );
+
+    // Linhas da tabela
+    tabela.querySelectorAll("tbody tr").forEach(row => {
+      const cols = row.querySelectorAll("td");
+      if (cols.length >= 6) {
+        const linha = [
+          cols[0].innerText.trim(),   // #
+          cols[1].innerText.trim(),   // Produto
+          cols[3].innerText.trim(),   // Categoria
+          cols[5].innerText.trim()    // Recomendação
+        ];
+        dadosFiltrados.push(linha.join(";"));
+      }
+    });
+
+    if (dadosFiltrados.length === 0) {
+      alert("Nenhum item para exportar na lista de compra.");
+      return;
+    }
+
+    const csvContent = cabecalho.join("\n") + "\n" + dadosFiltrados.join("\n");
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+
+    const nomeCompleto = `${prefixo || ""}${nomeArquivoBase}_${new Date().toISOString().split("T")[0]}.csv`;
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", nomeCompleto);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    mostrarMensagem("📄 Lista de compra exportada com sucesso para Excel!", "sucesso");
+    return; // ✅ Impede que o código padrão dos relatórios rode
+  }
+
+  // 🔹 CASO PADRÃO (Entradas, Saídas, etc.) — continua igual
   tabela.querySelectorAll('thead th').forEach(th => {
-    // Ignora colunas de Ações e Foto para um CSV mais limpo
     if (th.textContent.trim() !== "Ações" && th.textContent.trim() !== "Foto") {
       cabecalho.push(th.textContent.trim());
     }
   });
 
-  // 2. Obtém os dados e filtra por data (se for tabela de Entradas ou Saídas)
   const isEntradaOuSaida = idTabela === 'tabelaEntradas' || idTabela === 'tabelaSaidas';
-  const dataColuna = isEntradaOuSaida ? 5 : -1; // Coluna 5 é a 'Data' em Entradas e Saídas (índice 0)
+  const dataColuna = isEntradaOuSaida ? 5 : -1;
 
   tabela.querySelectorAll('tbody tr').forEach(row => {
     let rowData = [];
@@ -6427,7 +6470,6 @@ function exportarTabelaExcel(idTabela, nomeArquivoBase, prefixo) {
     let dataDaLinha = "";
     
     row.querySelectorAll('td').forEach((td, index) => {
-      // Ignora a última coluna (Ações) e a segunda (Foto)
       if (index === row.cells.length - 1 || td.querySelector('.thumb')) return;
       
       const texto = td.textContent.trim();
@@ -6438,12 +6480,10 @@ function exportarTabelaExcel(idTabela, nomeArquivoBase, prefixo) {
       }
     });
     
-    // Filtra por data se aplicável
     if (isEntradaOuSaida && dataDaLinha && dataInicio && dataFim) {
         const dataLinha = new Date(dataDaLinha);
         const inicio = new Date(dataInicio);
         const fim = new Date(dataFim);
-        // Adiciona um dia ao fim para incluir a data final
         fim.setDate(fim.getDate() + 1); 
 
         if (dataLinha < inicio || dataLinha >= fim) {
@@ -6461,16 +6501,13 @@ function exportarTabelaExcel(idTabela, nomeArquivoBase, prefixo) {
       return;
   }
 
-  // 3. Cria o conteúdo CSV
   let csvContent = cabecalho.join(";") + "\n";
   dadosFiltrados.forEach(row => {
-    // Substitui vírgulas por pontos e vírgulas para evitar problemas de formatação em Excel
     csvContent += row.map(item => item.replace(/;/g, ",").replace(/\r?\n|\r/g, " ")).join(";") + "\n";
   });
 
-  // 4. Cria o Blob e baixa o arquivo
   const nomeCompleto = `${prefixo || ""}${nomeArquivoBase}_${new Date().toISOString().split('T')[0]}.csv`;
-  const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' }); // \uFEFF for BOM (UTF-8 encoding in Excel)
+  const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement("a");
   if (link.download !== undefined) {
     const url = URL.createObjectURL(blob);
@@ -6489,7 +6526,7 @@ function exportarListaExcel() {
 }
 
 /**
- * 🔹 Função para gerar Pedido de Orçamento em PDF (usando jspdf e autotable)
+ * 🧾 Função para gerar Pedido de Orçamento em PDF (usando jspdf e autotable)
  */
 function gerarPedidoPDF() {
     if (typeof jspdf === 'undefined' || typeof jspdf.jsPDF === 'undefined') {
@@ -6497,7 +6534,6 @@ function gerarPedidoPDF() {
         return;
     }
     
-    // Pega os dados da lista de compra ATUAL (o que está na tela)
     const tabela = document.getElementById("tabelaListaCompra");
     const tbody = tabela ? tabela.querySelector("tbody") : null;
     if (!tbody || tbody.textContent.includes("Nenhum item abaixo")) {
@@ -6506,11 +6542,10 @@ function gerarPedidoPDF() {
     }
     
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'mm', 'a4'); // Paisagem, milímetros, A4
+    const doc = new jsPDF('p', 'mm', 'a4');
     const larguraPagina = doc.internal.pageSize.getWidth();
     const dataAtual = new Date().toLocaleDateString('pt-BR');
     
-    // --- CABEÇALHO ---
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.text("ORAL UNIC CAMPO GRANDE", larguraPagina / 2, 20, { align: "center" });
@@ -6522,11 +6557,9 @@ function gerarPedidoPDF() {
     doc.text(`Data: ${dataAtual}`, 14, 38);
     doc.text(`Solicitante: ${document.getElementById("userName").textContent}`, 14, 44);
 
-    // --- LINHA SEPARADORA ---
     doc.setDrawColor(180);
     doc.line(14, 48, larguraPagina - 14, 48);
     
-    // --- TABELA ---
     const headers = [
         ['#', 'Produto', 'Cód. Barras', 'Categoria', 'Qtd Atual', 'Mínimo', 'Recomendação', 'Observação']
     ];
@@ -6534,16 +6567,16 @@ function gerarPedidoPDF() {
     const body = [];
     tbody.querySelectorAll("tr").forEach(tr => {
         const cols = tr.querySelectorAll("td");
-        if (cols.length > 1) { // Ignora linha de rodapé e linha de erro
+        if (cols.length > 1) {
             body.push([
                 cols[0].textContent.trim(),
                 cols[1].textContent.trim(),
-                cols2.textContent.trim(), // Cód. Barras
+                cols[2].textContent.trim(),
                 cols[3].textContent.trim(),
                 cols[4].textContent.trim(),
                 cols[5].textContent.trim(),
-                cols[6].textContent.trim(),
-                '' // Coluna vazia para observação manual do fornecedor
+                '',
+                ''
             ]);
         }
     });
@@ -6553,7 +6586,7 @@ function gerarPedidoPDF() {
         body: body,
         startY: 55,
         theme: 'striped',
-        headStyles: { fillColor: [13, 110, 253] }, // Azul
+        headStyles: { fillColor: [13, 110, 253] },
         columnStyles: {
             0: { cellWidth: 10 },
             1: { cellWidth: 40 },
@@ -6563,7 +6596,6 @@ function gerarPedidoPDF() {
         styles: { fontSize: 8, overflow: 'linebreak' },
     });
     
-    // --- RODAPÉ ---
     const finalY = doc.autoTable.previous.finalY;
     doc.setFontSize(10);
     doc.setFont("helvetica", "italic");
@@ -6572,6 +6604,7 @@ function gerarPedidoPDF() {
     doc.save(`Pedido_Orcamento_${new Date().toISOString().split('T')[0]}.pdf`);
     mostrarMensagem("Pedido de Orçamento exportado para PDF.", "sucesso");
 }
+
 
 
 
@@ -6846,6 +6879,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
