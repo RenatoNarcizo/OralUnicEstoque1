@@ -1735,6 +1735,21 @@ window.salvarErrosProblemasNoFirebase = async lista => {
   });
 };
 
+// ------------------------------------------------------------
+// ✅ Produtos (grava mínimo, máximo e outros campos)
+// ------------------------------------------------------------
+window.salvarProdutosNoFirebase = async lista => {
+  if (!Array.isArray(lista) || lista.length === 0) return;
+
+  const col = collection(db, "estoqueGlobal", "estoque", "produtos");
+
+  await executarNaFilaFirebase(async () => {
+    console.log(`📦 Gravando ${lista.length} produtos no Firestore...`);
+    adicionarLotesNaFila(lista, id => doc(col, id), "produtos");
+  });
+};
+	
+	
 // ============================================================
 // ?? Executor da fila — garante 1 commit por vez
 // ============================================================
@@ -5814,10 +5829,10 @@ function limparFiltroErros() {
 // ?? SALVAR / LIMPAR / FILTRAR LIMITES
 // ====================================================
 
-function salvarLimites(idProduto) {
+async function salvarLimites(idProduto) {
   const produtoRef = window.produtos.find(p =>
     String(p.codigo) === String(idProduto) ||
-    p.nome.replace(/\s+/g,'_') === idProduto
+    p.nome.replace(/\s+/g, '_') === idProduto
   );
 
   if (!produtoRef) {
@@ -5831,11 +5846,24 @@ function salvarLimites(idProduto) {
   produtoRef.minimo = Number(minEl?.value || 0);
   produtoRef.maximo = Number(maxEl?.value || 0);
 
- 
-  salvarTodosLocal();
+  // ✅ 1. Salva em memória local completa (sem slice)
+  try {
+    localStorage.setItem("produtos", JSON.stringify(window.produtos));
+  } catch (e) {
+    console.warn("Erro ao salvar localmente:", e);
+  }
 
+  // ✅ 2. Salva no Firestore (se função existir)
+  if (typeof window.salvarProdutosNoFirebase === "function") {
+    try {
+      await window.salvarProdutosNoFirebase([produtoRef]);
+    } catch (e) {
+      console.error("Erro ao salvar no Firestore:", e);
+    }
+  }
+
+  // ✅ 3. Atualiza visualmente
   mostrarMensagem(`Limites do produto "${produtoRef.nome}" salvos com sucesso!`, "sucesso");
-
   atualizarTabelaLimites();
 }
 
@@ -6812,6 +6840,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
