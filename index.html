@@ -676,27 +676,27 @@
   <h2><i class="fa fa-chart-pie"></i> 📊 Dashboard do Sistema</h2>
   <div class="dash-container">
     <div class="dash-card">
-      <h3><i class="fa fa-hourglass-half" style="color:#ff9800;"></i> 🕒 Produtos Próximos do Vencimento</h3>
+      <h3><i class="fa fa-hourglass-half" style="color:#ff9800;"></i>  Produtos Próximos do Vencimento</h3>
       <ul id="listaProximosVencer"></ul>
     </div>
     <div class="dash-card">
-      <h3><i class="fa fa-dollar-sign" style="color:#28a745;"></i> 💰 Produtos Mais Caros</h3>
+      <h3><i class="fa fa-dollar-sign" style="color:#28a745;"></i>  Produtos Mais Caros</h3>
       <ul id="listaMaisCaros"></ul>
     </div>
     <div class="dash-card">
-      <h3><i class="fa fa-arrow-up" style="color:#17a2b8;"></i> 📦 Produtos Mais Utilizados</h3>
+      <h3><i class="fa fa-arrow-up" style="color:#17a2b8;"></i>  Produtos Mais Utilizados</h3>
       <ul id="listaMaisSaidas"></ul>
     </div>
     <div class="dash-card">
-      <h3><i class="fa fa-arrow-down" style="color:#dc3545;"></i> 💤 Produtos com Menos Saídas</h3>
+      <h3><i class="fa fa-arrow-down" style="color:#dc3545;"></i> Produtos com Menos Saídas</h3>
       <ul id="listaMenosSaidas"></ul>
     </div>
     <div class="dash-card">
-      <h3><i class="fa fa-triangle-exclamation" style="color:#ff5722;"></i> ⚠️ Estoque Crítico</h3>
+      <h3><i class="fa fa-triangle-exclamation" style="color:#ff5722;"></i>  Estoque Crítico</h3>
       <ul id="listaEstoqueCritico"></ul>
     </div>
     <div class="dash-card">
-      <h3><i class="fa fa-clipboard-list" style="color:#6f42c1;"></i>📈 Resumo Geral</h3>
+      <h3><i class="fa fa-clipboard-list" style="color:#6f42c1;"></i> Resumo Geral</h3>
       <div id="resumoGeral"></div>
     </div>
   </div>
@@ -750,14 +750,14 @@
 
     <input id="produtoQtdEmbalagem" type="number" placeholder="Qtd por embalagem" style="width:140px" />
 
-    <input id="produtoCodigoBarras" type="text" placeholder="?? Código de Barras (opcional)" style="width:220px" />
+    <input id="produtoCodigoBarras" type="text" placeholder="📷 Código de Barras (opcional)" style="width:220px" />
 
     <!-- Botão para foto -->
     <div style="display:flex; flex-direction:column; align-items:flex-start; gap:4px;">
       <div style="display:flex; align-items:center; gap:6px;">
         <label for="produtoFoto"
   style="background:#007bff; color:white; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
-  <i class="fa fa-camera"></i> 📸 Inserir foto do produto
+  <i class="fa fa-camera"></i> Inserir foto do produto
 </label>
         <input id="produtoFoto" type="file" accept="image/*" style="display:none;">
       </div>
@@ -805,7 +805,7 @@
       <h2><i class="fa fa-arrow-down"></i> Entrada de Materiais</h2>
       <div class="input-row" style="margin-bottom:10px;gap:8px;">
       
-        <input id="entradaCodigoBarras" type="text" placeholder="?? Ler código de barras" style="min-width:200px;" oninput="buscarProdutoPorCodigo('entrada')" />
+        <input id="entradaCodigoBarras" type="text" placeholder="📷 Ler código de barras" style="min-width:200px;" oninput="buscarProdutoPorCodigo('entrada')" />
         <input id="entradaCodigoProduto" type="text" placeholder="Cód. Produto" style="min-width:140px;" oninput="buscarProdutoPorCodigoProduto()" />
         <input id="entradaProduto" type="text" placeholder="Nome do produto" list="listaProdutos" style="min-width:220px" />
         <datalist id="listaProdutos"></datalist>
@@ -6841,6 +6841,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
