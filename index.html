@@ -1477,7 +1477,7 @@ async function carregarProdutosMesclados() {
 }
 
 // ===================================================
-// ?? LOGIN E AUTENTICAÇÃO (com verificação automática de perfil)
+// 🔐 LOGIN E AUTENTICAÇÃO (com verificação automática de perfil)
 // ===================================================
 
 window.fazerLogin = async function () {
@@ -1494,7 +1494,7 @@ window.fazerLogin = async function () {
     if (msgEl) {
       msgEl.style.display = "block";
       msgEl.style.color = "red";
-      msgEl.textContent = "?? Preencha e-mail e senha!";
+      msgEl.textContent = "❌ Preencha e-mail e senha!";
     }
     return;
   }
@@ -1509,9 +1509,9 @@ window.fazerLogin = async function () {
     if (msgEl) {
       msgEl.style.display = "block";
       msgEl.style.color = "green";
-      msgEl.textContent = "? Login realizado com sucesso!";
+      msgEl.textContent = "✅ Login realizado com sucesso!";
     }
-    console.log("? Usuário logado:", user.email);
+    console.log("✅ Usuário logado:", user.email);
 
    // ===================================================
 // 🔐 GARANTE QUE O USUÁRIO TENHA PERFIL NO FIRESTORE
@@ -1558,11 +1558,11 @@ window.usuarioAtual = {
 mostrarSistema(user, dadosUsuario.perfil);
 
  } catch (error) {
-    console.error("? Erro ao logar:", error);
+    console.error("❌ Erro ao logar:", error);
     if (msgEl) {
       msgEl.style.display = "block";
       msgEl.style.color = "red";
-      msgEl.textContent = "? Erro ao fazer login.";
+      msgEl.textContent = "❌ Erro ao fazer login.";
     }
   }
 };
@@ -6841,6 +6841,7 @@ setTimeout(habilitarCorrecaoOrtografica, 1000);
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 		
+
 
 
 
