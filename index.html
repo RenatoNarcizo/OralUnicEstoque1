@@ -1603,59 +1603,53 @@ document.addEventListener("DOMContentLoaded", () => {
 	// ===================================================
 // ✅ Exibe o sistema APENAS com perfil válido
 // ===================================================
-window.mostrarSistema = function (user, perfil) {
-  // ?? FALLBACK PARA PERFIL: Garante que o sistema apareça mesmo que o perfil demore a carregar
-  const perfilReal = perfil || localStorage.getItem("perfil") || "ESTOQUISTA";
-  
-  console.log(`?? Mostrando sistema para ${user?.email} com perfil: ${perfilReal}`);
-
+// ===================================================
+// ✅ MOSTRAR SISTEMA — VERSÃO UNIFICADA E ROBUSTA
+// ===================================================
+window.mostrarSistema = async function (user, perfilForcado) {
   const loginView = document.getElementById("loginView");
   const mainApp = document.getElementById("mainApp");
   const sidebar = document.getElementById("sidebar");
 
-  if (loginView) loginView.style.display = "none";
-  if (mainApp) mainApp.style.display = "block";
+  if (!loginView || !mainApp) return;
 
+  // 1?? Exibe a estrutura básica imediatamente para evitar "tela branca"
+  loginView.style.display = "none";
+  mainApp.style.display = "block";
   if (sidebar) {
     sidebar.style.display = "block";
     sidebar.classList.add("active");
   }
 
-  aplicarPermissoesMenu(perfilReal);
+  // 2?? Determina o perfil (prioridade: perfilForcado > localStorage > Firestore > Default)
+  let perfil = perfilForcado || localStorage.getItem("perfil");
+  
+  // Se não tem perfil ainda, tenta buscar no Firestore (sem travar a tela)
+  if (!perfil) {
+     const dados = await carregarPerfilAntesDeMostrar(user);
+     perfil = dados ? normalizarPerfil(dados.perfil) : "GERENCIA";
+  }
 
-  document.getElementById("perfilBadge").textContent = perfilReal;
-  document.getElementById("userName").textContent =
-    user?.displayName || user?.email?.split("@")[0] || "Usuário";
+  window.usuarioAtual = {
+    nome: user.displayName || user.email.split("@")[0] || "Usuário",
+    email: user.email,
+    perfil: perfil
+  };
 
-  console.log(`✅ Sistema exibido com perfil: ${perfilReal}`);
+  localStorage.setItem("perfil", perfil);
+
+  // 3?? Atualiza a UI do usuário
+  document.getElementById("userName").textContent = window.usuarioAtual.nome;
+  document.getElementById("perfilBadge").textContent = "Perfil: " + perfil;
+  if (document.getElementById("nomeUsuarioBemVindo")) {
+    document.getElementById("nomeUsuarioBemVindo").textContent = window.usuarioAtual.nome;
+  }
+
+  // 4?? Aplica permissões no menu
+  aplicarPermissoesNoMenu();
+
+  console.log(`✅ Sistema exibido para ${user.email} com perfil: ${perfil}`);
 };
-
-
-
-	/* =========================
-   MENU LATERAL — CONTROLE
-   ========================= */
-function toggleSidebar() {
-  const sidebar = document.getElementById("sidebar");
-  if (!sidebar) return;
-
-  sidebar.classList.toggle("active");
-}
-
-// =============================
-// 🔐 APLICA PERMISSÕES NO MENU LATERAL (VERSÃO OFICIAL)
-// =============================
-function aplicarPermissoesMenu(perfil) {
-  const permissoes = window.PERMISSOES[perfil];
-  if (!permissoes) return;
-
-  document.querySelectorAll("#sidebar [data-view]").forEach(item => {
-    const view = item.dataset.view;
-    item.style.display = permissoes.canView.includes(view)
-      ? "block"
-      : "none";
-  });
-}
 
 // ============================================================
 // ? Firestore — Controle definitivo de gravação (fila + autoajuste + snapshot lock)
@@ -2393,47 +2387,7 @@ async function carregarPerfilAntesDeMostrar(user) {
 
 
 // === MOSTRAR SISTEMA (versão segura que espera o perfil carregar) ===
-async function mostrarSistema(user) {
-  const loginView = document.getElementById("loginView");
-  const mainApp = document.getElementById("mainApp");
-
-  loginView.style.display = "none";
-  mainApp.style.display = "block";
-
-  // ?? Aguarda Firestore trazer o perfil verdadeiro (EVITA PERFIL = USUARIO)
-  const dados = await carregarPerfilAntesDeMostrar(user);
-
-  let nome, perfil;
-
-  if (dados) {
-    nome = dados.nome;
-    perfil = normalizarPerfil(dados.perfil);
-  } else {
-    // ?? Se não encontrar perfil, usa GERENCIA PARA NÃO BLOQUEAR O SISTEMA
-    nome = user.email.split("@")[0];
-    perfil = "GERENCIA";
-  }
-
-  window.usuarioAtual = {
-    nome,
-    email: user.email,
-    perfil
-  };
-
-  // atualiza UI
-  document.getElementById("userName").textContent = nome;
-  document.getElementById("perfilBadge").textContent = "Perfil: " + perfil;
-  document.getElementById("nomeUsuarioBemVindo").textContent = nome;
-
-  // exibe boas-vindas
-  document.querySelectorAll("main section").forEach(sec => sec.style.display = "none");
-  document.getElementById("boasVindas").style.display = "block";
-
-  // aplica as permissões
-  aplicarPermissoesNoMenu();
-
-  console.log("? Perfil carregado corretamente:", window.usuarioAtual);
-}
+// (Função removida - substituída pela window.mostrarSistema na linha 1606)
 
 
 
@@ -2693,7 +2647,7 @@ document.addEventListener("click", (event) => {
 window.aplicarPermissoesNoMenu = function () {
   const user = window.usuarioAtual;
   if (!user || !user.perfil) {
-    // Oculta tudo se perfil inválido
+    console.warn("?? Perfil ausente ao aplicar permissões.");
     document.querySelectorAll("#sidebar button").forEach(b => b.style.display = "none");
     return;
   }
@@ -2701,16 +2655,35 @@ window.aplicarPermissoesNoMenu = function () {
   const perfil = normalizarPerfil(user.perfil);
   const regras = window.PERMISSOES[perfil];
 
-  if (!regras) return;
+  if (!regras) {
+    console.error(`❌ Perfil não reconhecido: ${perfil}`);
+    return;
+  }
 
-  // Oculta todos
+  console.log(`?? Aplicando acessos para: ${perfil}`);
+
+  // 1?? Oculta todos os botões do menu e cabeçalho primeiro
   document.querySelectorAll("#sidebar button").forEach(btn => btn.style.display = "none");
+  const btnErros = document.getElementById("btnErrosProblemas");
+  if (btnErros) btnErros.style.display = "none";
 
-  // Mostra somente permitidos
+  // 2?? Ativa apenas os permitidos
   regras.canView.forEach(secao => {
-    const btn = document.querySelector(`#sidebar button[data-section="${secao}"]`);
-    if (btn) btn.style.display = "block";
+    // No menu
+    const btnMenu = document.querySelector(`#sidebar button[data-section="${secao}"]`);
+    if (btnMenu) btnMenu.style.display = "block";
+    
+    // No cabeçalho (específico para Erros)
+    if (secao === "errosProblemas" && btnErros) {
+       btnErros.style.display = "block";
+    }
   });
+
+  // 3?? Redireciona para Boas-Vindas ou primeira opção válida
+  if (typeof showSection === "function") {
+    const defaultSec = regras.canView.includes("boasVindas") ? "boasVindas" : regras.canView[0];
+    showSection(defaultSec);
+  }
 };
 
 
