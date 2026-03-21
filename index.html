@@ -1552,9 +1552,9 @@ window.fazerLogin = async function () {
 
     // Mostra o sistema completo (menu lateral + dashboard)
     if (typeof mostrarSistema === "function") {
-      mostrarSistema(user);
+      mostrarSistema(user, dadosUsuario.perfil);
     } else {
-      console.warn("?? Função 'mostrarSistema' não encontrada — verifique se ela está definida no seu código principal.");
+      console.warn("?? Função 'mostrarSistema' não encontrada.");
     }
 
   } catch (error) {
@@ -1604,10 +1604,10 @@ document.addEventListener("DOMContentLoaded", () => {
 // ✅ Exibe o sistema APENAS com perfil válido
 // ===================================================
 window.mostrarSistema = function (user, perfil) {
-  if (!perfil) {
-    console.warn("⏳ Perfil ainda não carregado — sistema não exibido");
-    return;
-  }
+  // ?? FALLBACK PARA PERFIL: Garante que o sistema apareça mesmo que o perfil demore a carregar
+  const perfilReal = perfil || localStorage.getItem("perfil") || "ESTOQUISTA";
+  
+  console.log(`?? Mostrando sistema para ${user?.email} com perfil: ${perfilReal}`);
 
   const loginView = document.getElementById("loginView");
   const mainApp = document.getElementById("mainApp");
@@ -1621,13 +1621,13 @@ window.mostrarSistema = function (user, perfil) {
     sidebar.classList.add("active");
   }
 
-  aplicarPermissoesMenu(perfil);
+  aplicarPermissoesMenu(perfilReal);
 
-  document.getElementById("perfilBadge").textContent = perfil;
+  document.getElementById("perfilBadge").textContent = perfilReal;
   document.getElementById("userName").textContent =
     user?.displayName || user?.email?.split("@")[0] || "Usuário";
 
-  console.log(`✅ Sistema exibido com perfil REAL: ${perfil}`);
+  console.log(`✅ Sistema exibido com perfil: ${perfilReal}`);
 };
 
 
@@ -1883,9 +1883,14 @@ function abrirSecao(view) {
 // -----------------------------
 function salvarTodosLocal() {
   try {
-    // ?? Salva os dados completos no localStorage para redundância
+    // ?? Otimização: remove fotos para poupar espaço no localStorage (mantém no Firestore)
+    const produtosReduzidos = (window.produtos || []).map(p => {
+      const { foto, ...resto } = p;
+      return resto;
+    });
+
     const dadosSistema = {
-      produtos: window.produtos || [],
+      produtos: produtosReduzidos,
       entradas: window.entradas || [],
       saidas: window.saidas || [],
       usuarios: window.usuarios || [],
@@ -1894,26 +1899,19 @@ function salvarTodosLocal() {
     };
 
     localStorage.setItem("dadosSistema", JSON.stringify(dadosSistema));
-
-    console.log("?? Cache local atualizado:", {
-      produtos: dadosSistema.produtos.length,
-      entradas: dadosSistema.entradas.length,
-      saidas: dadosSistema.saidas.length,
-      usuarios: dadosSistema.usuarios.length,
-      errosProblemas: dadosSistema.errosProblemas.length
-    });
+    console.log("?? Cache local atualizado (sem fotos para otimizar espaço)");
   } catch (e) {
     if (e.name === 'QuotaExceededError') {
-      console.warn("?? Limite do localStorage atingido. Salvando apenas amostra.");
-      const dadosSistemaReduzido = {
-        produtos: (window.produtos || []).slice(0, 100),
-        entradas: (window.entradas || []).slice(0, 50),
-        saidas: (window.saidas || []).slice(0, 50),
-        usuarios: (window.usuarios || []).slice(0, 20),
+      console.warn("?? Limite do localStorage ainda atingido. Salvando amostra mínima.");
+      const dadosSistemaMinimo = {
+        produtos: (window.produtos || []).slice(0, 50).map(p => { const { foto, ...r } = p; return r; }),
+        entradas: (window.entradas || []).slice(0, 20),
+        saidas: (window.saidas || []).slice(0, 20),
+        usuarios: (window.usuarios || []).slice(0, 10),
         limites: window.limites || [],
-        errosProblemas: (window.errosProblemas || []).slice(0, 20)
+        errosProblemas: (window.errosProblemas || []).slice(0, 10)
       };
-      localStorage.setItem("dadosSistema", JSON.stringify(dadosSistemaReduzido));
+      localStorage.setItem("dadosSistema", JSON.stringify(dadosSistemaMinimo));
     } else {
       console.error("? Erro ao salvar cache local:", e);
     }
@@ -2472,7 +2470,9 @@ onAuthStateChanged(auth, async (user) => {
 
   // ✅ 1) MOSTRA O SISTEMA E O MENU IMEDIATAMENTE
   if (typeof window.mostrarSistema === "function") {
-    window.mostrarSistema(user);
+    // Tenta pegar o perfil salvo no localStorage para carregar a UI sem delay
+    const perfilSalvo = localStorage.getItem("perfil");
+    window.mostrarSistema(user, perfilSalvo);
   } else {
     console.error("❌ Função mostrarSistema não encontrada!");
   }
